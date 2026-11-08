@@ -2,7 +2,7 @@
   <author_agent>devops-engineer</author_agent>
   <timestamp>2026-11-08T11:20:00+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <input_files>
     <file>.trae/sdlc/project_profile.md</file>
     <file>project_workspace/ocap/architecture/architecture_design.md</file>

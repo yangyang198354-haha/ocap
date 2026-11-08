@@ -1,4 +1,4 @@
-<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T11:40:00+08:00">
+<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T12:05:00+08:00">
   <request><![CDATA[现在我要开发一个业主委员会的web 应用 + 微信小程序。整体技术选型，代码复用，都可以参考我github 上的Freeark 项目。 这个业主委员会的web 应用需求有：1.用户注册、登录。登录使用手机号注册，验证码确认，也可以微信扫码登录。微信小程序可以使用手机号，或者微信一键登录。 如果电脑上登录web。除了账号、手机号、邮箱登录。页可以微信扫码登录。如果在windows 有微信桌面版开启。也可以一键授权登录。 后台也业主清册存在数据库表。用户可以选择自己的专有部分。如果验证的手机号和清册手机号一致。则可以直接认证为产权业主。第一个认证的产权业主默认为户主。其他注册用户绑定一个专有部分的。产权业主可以审批，通过其为同住人。注册用户必须通过产权清册认证确认手机号码和登记的一致才能成为产权业主。其他的注册用户为游客。注册用户可以修改自己的头像，个人信息，昵称等等。微信用户可以用自己的微信昵称。用户可以注销自己的账号。 这是一部分需求，先整理这些需求。确认后再整理成用户故事。但是不要开始设计、开发。我把所有的需求输入完毕后。我让开始再开始。]]></request>
   <request batch="2" time="2026-11-07T18:09:22+08:00"><![CDATA[第二批需求： 1.管理员可以对已经存在的产权业主赋予业主委员会委员、业主委员会主任、业主委员会副主任身份。业主身份（游客，同住人、产权业主，业主委员会委员，主任、副主任身份可以显示，但用户自己无法编辑。 业委会主任、副主任可以发起业委会决议，有标题，内容和附件。决议可以配置审批流程。比如指定负责人审批通过。或者半数人员同意通过。 业委会委员可以发起报销或者备用金申请。由指定人员批准可以通过。审批流程可以配置。使用时可以选择。 也维护业委会主任、副主任可以发起业主代表投票（指定的若干用户）或者调查（按照范围：产权业主、 产权业主或同住人）可以手机一键，意见的形式可以定制（同意、反对、弃权） 或者打分制（参考腾讯问卷）。业委会决议，业主代表投票 都可以公开。任何用户都可以查看。 业委会成员可以录入收入表。 收入表需要经过配置好的审批人员确认后生效。 系统可以根据收入，支出数据，生成季度报表，年度报表。 财务报表所以用户都可以看到。 整理这批需求，确认后柴恩成用户故事]]></request>
   <profile version="1.2.0"/>
@@ -70,7 +70,7 @@
     <artifact path="project_workspace/ocap/testing/e2e_test_report.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D">被 0.2.0 取代</artifact>
     <artifact path="project_workspace/ocap/testing/e2e_test_report.md" version="0.2.0" status="SUPERSEDED" group="GROUP_D">经 GR-D-002 批准；被 0.3.0 取代</artifact>
     <artifact path="project_workspace/ocap/testing/e2e_test_report.md" version="0.3.0" status="APPROVED" group="GROUP_D">经 GR-D-003 批准</artifact>
-    <artifact path="project_workspace/ocap/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1">0.1.0 经 GR-E1-001 批准</artifact>
+    <artifact path="project_workspace/ocap/deployment/cicd_pipeline.md" version="1.1.0" status="APPROVED" group="GROUP_E1">1.0.0 经 GR-E1-001 批准；1.1.0 同步 PIPE-08 加 --legacy-peer-deps（CI 实跑验证通过）</artifact>
     <artifact path="project_workspace/ocap/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1">0.1.0 经 GR-E1-001 批准</artifact>
     <artifact path=".github/workflows/ci.yml" version="0.1.0" status="APPROVED" group="GROUP_E1">经 GR-E1-001 批准（GitHub Actions 工作流，无文件头）</artifact>
   </artifacts>
@@ -450,5 +450,6 @@
     <event time="2026-11-08T11:35:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer ocap-GROUP_E1-1（PHASE_10+11a），输入为已批准的 architecture/module/implementation/test_plan 与画像 P7/P8/P9；仅做计划，不连目标机。</event>
     <event time="2026-11-08T11:38:00+08:00" type="RUN" actor="pm-orchestrator">devops-engineer ocap-GROUP_E1-1 返回 SUCCESS；kb_inbox --check-response 输出 RESPONSE_OK invocation_id=ocap-GROUP_E1-1 status=SUCCESS；kb_inbox --agent 输出 appended=0 total_proposals=2。</event>
     <event time="2026-11-08T11:40:00+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS：GROUP_E1 APPROVED（PHASE_10/11a）；cicd_pipeline.md 1.0.0、deployment_plan.md 1.0.0、ci.yml 0.1.0 全部 APPROVED。核验：8 DEPLOY↔8 ROLLBACK 逆序、预检 11 项、验证 13 项、仅用测试环境、无 P8 禁用项、回滚用 tar 快照不破坏本地状态、迁移标 MANUAL_ROLLBACK_REQUIRED、远端引号正确。</event>
+    <event time="2026-11-08T12:05:00+08:00" type="RUN" actor="pm-orchestrator">GitHub Actions CI 实跑验证（run 42445291508）：仓库已设为 PUBLIC；3 个 job 全部 ✓——Backend "Ran 120 tests in 1.671s / OK"；Web frontend vitest(no tests, --passWithNoTests)+vite build 通过；Mini program "No test files found, exiting with code 0"。期间修复 2 处 CI 问题：miniprogram npm install 加 --legacy-peer-deps（uni-app peer 冲突）、显式声明 @vitejs/plugin-vue、新增 vitest.config.js 不加载 uni 插件。ci.yml 与 cicd_pipeline.md 同步更新。</event>
   </audit_log>
 </phase_status>

@@ -87,6 +87,8 @@ class AdminFlowDetailView(APIView):
         flow.scope = scope
         flow.mode = mode
         flow.name = str(data.get("name", flow.name))[:60]
+        if "is_active" in data:
+            flow.is_active = bool(data["is_active"])
         flow.save()
         flow.approvers.all().delete()
         FlowApprover.objects.bulk_create([FlowApprover(flow=flow, user_id=uid) for uid in approver_ids])

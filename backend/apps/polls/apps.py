@@ -11,5 +11,7 @@ class PollsConfig(AppConfig):
         from .models import Participant, Poll, PollResponse
 
         register_user_reference(Poll, "creator", on_conflict="move_all")
-        register_user_reference(Participant, "user", on_conflict="keep_primary")
-        register_user_reference(PollResponse, "user", on_conflict="delete_secondary")
+        from .services import merge_participants, merge_responses
+
+        register_user_reference(Participant, "user", on_conflict="custom", handler=merge_participants)
+        register_user_reference(PollResponse, "user", on_conflict="custom", handler=merge_responses)

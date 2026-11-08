@@ -62,14 +62,35 @@ class IncomeParseRuleTests(TestCase):
         self.assertEqual(ctx.exception.code, "IMPORT_COLUMNS_MISSING")
 
     def test_row_error_ratio_over_2_percent(self):
+        """AC-059-03：错误行跳过并提示，其余有效行照常导入（不再因错误率 >2% 整体拒绝）。"""
         rows = [self.HEADER]
         for i in range(40):
             rows.append(["2026-01-05", "10.00", "物业费", f"项目{i}", ""])
         rows += [["bad-date", "10.00", "物业费", "x", ""], ["2026-01-05", "-1", "物业费", "y", ""],
                  ["2026-01-05", "1.001", "物业费", "z", ""]]
-        with self.assertRaises(ApiError) as ctx:
-            _parse_rows(rows)
-        self.assertEqual(ctx.exception.code, "IMPORT_ROW_ERRORS")
+        parsed = _parse_rows(rows)
+        self.assertEqual(parsed["total"], 43)
+        self.assertEqual(len(parsed["records"]), 40)
+        self.assertEqual([e["row"] for e in parsed["errors"]], [42, 43, 44])
+        self.assertTrue(all(e["reason"] == "INVALID_FIELD" for e in parsed["errors"]))
+
+    def test_duplicate_rows_in_file_skipped(self):
+        """AC-059-02：文件内四项全同的重复行被跳过并带行号；任一项不同则不算重复。"""
+        rows = [self.HEADER,
+                ["2026-01-05", "10.00", "物业费", "A", ""],
+                ["2026-01-05", "10.00", "物业费", "A", "备注不同不影响判重"],
+                ["2026-01-05", "10.00", "物业费", "B", ""]]
+        parsed = _parse_rows(rows)
+        self.assertEqual(len(parsed["records"]), 2)
+        self.assertEqual(parsed["errors"], [{"row": 3, "reason": "DUPLICATE", "detail": "与文件内另一行重复"}])
+
+    def test_all_rows_skipped(self):
+        """AC-059-05：全部行错误/重复时有效记录为 0，不抛错（由视图决定不建表）。"""
+        rows = [self.HEADER, ["bad", "10.00", "物业费", "x", ""], ["2026-01-05", "0", "物业费", "y", ""]]
+        parsed = _parse_rows(rows)
+        self.assertEqual(parsed["records"], [])
+        self.assertEqual(len(parsed["errors"]), 2)
+        self.assertEqual(parsed["total"], 2)
 
     def test_row_error_ratio_within_2_percent(self):
         rows = [self.HEADER]

@@ -10,7 +10,7 @@ from .audit import AuditActor, AuditService
 from .config import EDITABLE_KEYS, SystemConfig
 from .errors import ApiError, NotFound
 from .models import AuditLog
-from .permissions import IsAdmin, IsMember
+from .permissions import IsAdmin, IsMember, IsMemberOrAdmin
 from .ratelimit import RateLimiter
 from .serializers import page_response
 
@@ -85,7 +85,7 @@ class AttachmentUploadView(APIView):
 
 
 class AttachmentDownloadView(APIView):
-    permission_classes = [IsMember]
+    permission_classes = [IsMemberOrAdmin]
 
     def get(self, request, attachment_id):
         return AttachmentService.open(attachment_id, request.user)

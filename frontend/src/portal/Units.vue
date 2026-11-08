@@ -14,7 +14,7 @@
           <el-option v-for="f in options.floors" :key="f" :label="f" :value="f" />
         </el-select>
         <el-select v-model="picked.unitId" placeholder="房号">
-          <el-option v-for="r in options.rooms" :key="r.id" :label="r.room || r.specific_part" :value="r.id" />
+          <el-option v-for="r in options.rooms" :key="r.unit_id" :label="r.value" :value="r.unit_id" />
         </el-select>
         <el-button type="primary" :disabled="!picked.unitId" @click="certify">认证</el-button>
       </div>
@@ -23,7 +23,6 @@
     <div class="card">
       <h3 class="title">认证申诉</h3>
       <p class="muted">清册手机号与当前手机号不一致时，可上传产权证明提交申诉，由管理员审核。</p>
-      <el-input v-model="appeal.reason" type="textarea" :rows="2" placeholder="申诉说明（选填）" />
       <div class="row" style="margin-top: 10px">
         <el-upload :show-file-list="false" :http-request="uploadProof" accept="image/*">
           <el-button>上传产权证明</el-button>
@@ -59,7 +58,7 @@ import { errorText } from '@/shared/format'
 
 const options = reactive({ buildings: [], units: [], floors: [], rooms: [] })
 const picked = reactive({ building: '', unitNo: '', floor: '', unitId: null })
-const appeal = reactive({ reason: '', attachmentId: null })
+const appeal = reactive({ attachmentId: null })
 const resident = reactive({ unitId: '', note: '' })
 const toReview = ref([])
 
@@ -75,22 +74,22 @@ async function loadOptions(params) {
 
 async function loadBuildings() {
   const data = await loadOptions({})
-  options.buildings = data.buildings || []
+  options.buildings = (data.options || []).map((o) => o.value)
 }
 
 async function loadUnits() {
   const data = await loadOptions({ building: picked.building })
-  options.units = data.units || []
+  options.units = (data.options || []).map((o) => o.value)
 }
 
 async function loadFloors() {
   const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo })
-  options.floors = data.floors || []
+  options.floors = (data.options || []).map((o) => o.value)
 }
 
 async function loadRooms() {
   const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo, floor: picked.floor })
-  options.rooms = data.rooms || []
+  options.rooms = data.options || []
 }
 
 async function certify() {
@@ -114,11 +113,8 @@ async function uploadProof({ file }) {
 
 async function submitAppeal() {
   try {
-    await unitApi.createAppeal({
-      unit_id: picked.unitId,
-      reason: appeal.reason,
-      attachment_ids: appeal.attachmentId ? [appeal.attachmentId] : []
-    })
+    if (!appeal.attachmentId) return ElMessage.warning('请先上传产权证明')
+    await unitApi.createAppeal({ unit_id: picked.unitId, proof_ids: [appeal.attachmentId] })
     ElMessage.success('申诉已提交，等待管理员审核')
   } catch (e) {
     ElMessage.error(errorText(e))

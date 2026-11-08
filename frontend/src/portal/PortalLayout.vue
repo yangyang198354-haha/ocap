@@ -7,6 +7,8 @@
           <router-link to="/units">我的房屋</router-link>
           <router-link to="/resolutions">决议</router-link>
           <router-link to="/polls">投票/调查</router-link>
+          <router-link to="/claims">报销/备用金</router-link>
+          <router-link v-if="auth.isCommittee" to="/income">收入表</router-link>
           <router-link to="/reports">财务报表</router-link>
           <router-link to="/tasks">待办</router-link>
           <router-link to="/me">个人中心</router-link>
@@ -19,11 +21,17 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+
+// 导航项按身份显示，需要先取 /me
+onMounted(() => {
+  if (!auth.me) auth.fetchMe().catch(() => null)
+})
 
 async function logout() {
   await auth.logout()

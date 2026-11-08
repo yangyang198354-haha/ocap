@@ -5,6 +5,44 @@ from django.utils import timezone
 from .models import Poll, PollAnswer
 
 
+def merge_responses(primary_id: int, secondary_id: int) -> list[str]:
+    """账号合并：两账号都已作答则保留 primary、丢弃 secondary 并审计；仅 secondary 作答则并入（REQ-FUNC-067）。"""
+    from apps.core.audit import AuditActor, AuditService
+
+    from .models import PollResponse
+
+    moved: list[str] = []
+    for response in list(PollResponse.objects.filter(user_id=secondary_id)):
+        poll_id = response.poll_id
+        if PollResponse.objects.filter(poll_id=poll_id, user_id=primary_id).exists():
+            response.delete()
+            AuditService.record(actor=AuditActor("SYSTEM", None, "系统"),
+                                action="MERGE_ANSWER_DISCARDED", object_type="poll",
+                                object_id=str(poll_id), result="SUCCESS",
+                                detail={"primary": primary_id, "secondary": secondary_id})
+            moved.append(f"discard_answer:{poll_id}")
+        else:
+            response.user_id = primary_id
+            response.save(update_fields=["user"])
+            moved.append(f"move_answer:{poll_id}")
+    return moved
+
+
+def merge_participants(primary_id: int, secondary_id: int) -> list[str]:
+    """账号合并：参与人名单并入 primary，重复则丢弃 secondary 的一条。"""
+    from .models import Participant
+
+    moved: list[str] = []
+    for row in list(Participant.objects.filter(user_id=secondary_id)):
+        if Participant.objects.filter(poll_id=row.poll_id, user_id=primary_id).exists():
+            row.delete()
+        else:
+            row.user_id = primary_id
+            row.save(update_fields=["user"])
+            moved.append(f"move_participant:{row.poll_id}")
+    return moved
+
+
 class PollService:
     @staticmethod
     def close_due(now=None) -> int:

@@ -31,11 +31,12 @@ class LedgerService:
     @staticmethod
     @transaction.atomic
     def post(*, direction, amount, occurred_on, entry_type, summary=None,
-             source_type, source_id, seq=0) -> LedgerEntry:
-        """写入或覆盖一条台账明细（同一 source 多次 post 会覆盖，不作废旧明细）。"""
+             source_type, source_id, seq=0, allow_negative=False) -> LedgerEntry:
+        """写入或覆盖一条台账明细（同一 source 多次 post 会覆盖，不作废旧明细）。
+        allow_negative 仅供备用金核销差额使用（多退为负，REQ-FUNC-058）。"""
         if direction not in {"INCOME", "EXPENSE"}:
             raise ApiError("INVALID_VALUE", "direction 不合法")
-        if amount is None or amount <= 0:
+        if amount is None or amount == 0 or (amount < 0 and not allow_negative):
             raise ApiError("INVALID_VALUE", "金额须为正数")
         entry, _ = LedgerEntry.objects.update_or_create(
             source_type=source_type, source_id=source_id, seq=seq,
@@ -107,15 +108,21 @@ class LedgerService:
 
     @staticmethod
     def generate_due(today: date | None = None) -> list[LedgerReport]:
-        """季度末/年末自动生成报表；已生成则置 stale 后重算，标记其他覆盖周期 stale。"""
+        """自动生成已结束周期的报表（REQ-FUNC-050，幂等）：
+        上一个已结束的季度、上一个已结束的年度；尚无报表或报表已过期（stale）才重算。"""
         today = today or date.today()
+        prev_year = today.year - 1
+        if today.month <= 3:
+            quarter_year, quarter = prev_year, 4
+        else:
+            quarter_year, quarter = today.year, (today.month - 1) // 3
+        targets = [("QUARTER", quarter_year, quarter), ("YEAR", prev_year, None)]
         reports = []
-        year = today.year
-        if today.month == 12 and today.day == 31:
-            reports.append(LedgerService.generate(period_type="YEAR", year=year,
-                                                  generated_by_type="SYSTEM"))
-        if today.month in (3, 6, 9, 12) and today.day == 28:  # 用该月最后一天近似
-            q = (today.month - 1) // 3 + 1
-            reports.append(LedgerService.generate(period_type="QUARTER", year=year, quarter=q,
+        for period_type, year, q in targets:
+            existing = LedgerReport.objects.filter(period_type=period_type, year=year,
+                                                   quarter=q).first()
+            if existing is not None and not existing.stale:
+                continue
+            reports.append(LedgerService.generate(period_type=period_type, year=year, quarter=q,
                                                   generated_by_type="SYSTEM"))
         return reports

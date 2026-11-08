@@ -9,6 +9,7 @@ from apps.committee.services import CommitteeCommands
 from apps.core.audit import AuditActor, AuditService
 from apps.core.config import SystemConfig
 from apps.core.models import AuditLog, JobRun
+from apps.ledger.services import LedgerService
 from apps.polls.services import PollService
 from apps.resolutions.services import ResolutionService
 
@@ -23,6 +24,7 @@ class Command(BaseCommand):
             summary["polls_closed"] = PollService.close_due(now)
             summary["resolutions_judged"] = ResolutionService.judge_all_due(now)
             summary["seats_expired"] = CommitteeCommands.expire_due(now.date())
+            summary["reports_generated"] = len(LedgerService.generate_due(now.date()))
             summary["tokens_purged"] = AuthToken.objects.filter(
                 last_active_at__lt=now - timedelta(days=30)).delete()[0]
             summary["codes_purged"] = VerificationCode.objects.filter(

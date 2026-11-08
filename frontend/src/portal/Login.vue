@@ -110,7 +110,8 @@ onMounted(async () => {
     const params = await authApi.wechatWebParams()
     const appid = params.appid || params.app_id
     if (!appid) return
-    const redirect = encodeURIComponent(`${location.origin}${import.meta.env.BASE_URL}login/wechat`)
+    // redirect_uri 由服务端配置并随参数返回（IFC-028），前端不得自带
+    const redirect = encodeURIComponent(params.redirect_uri)
     wechatUrl.value = `https://open.weixin.qq.com/connect/qrconnect?appid=${appid}&redirect_uri=${redirect}&response_type=code&scope=snsapi_login&state=${params.state}#wechat_redirect`
   } catch (e) {
     /* 未配置微信开放平台时隐藏入口 */

@@ -19,13 +19,14 @@ const auth = useAuthStore()
 const error = ref('')
 
 onMounted(async () => {
-  const code = route.query.code
-  if (!code) {
-    error.value = '缺少微信授权码'
+  // 后端回调重定向到 /login/wechat?ticket=<一次性票据>，失败为 ?error=<code>（IFC-029）
+  const ticket = route.query.ticket
+  if (!ticket) {
+    error.value = route.query.error ? `微信登录失败（${route.query.error}）` : '缺少登录票据'
     return
   }
   try {
-    const result = await authApi.wechatExchange(String(code))
+    const result = await authApi.wechatExchange(String(ticket))
     auth.setAuth(result.token, result.user)
     router.replace('/')
   } catch (e) {

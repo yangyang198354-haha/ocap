@@ -32,6 +32,15 @@ class IsMember(BasePermission):
         return True
 
 
+class IsMemberOrAdmin(BasePermission):
+    """附件下载：普通用户或管理员；具体可见性由各业务的附件策略决定。"""
+
+    def has_permission(self, request, view) -> bool:
+        if _is_member(request.user) or _is_admin(request.user):
+            return True
+        raise ApiError("UNAUTHORIZED", "请先登录", 401)
+
+
 class IsCommitteeMember(BasePermission):
     def has_permission(self, request, view) -> bool:
         if not _is_member(request.user):

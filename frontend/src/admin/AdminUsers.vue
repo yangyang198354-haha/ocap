@@ -29,16 +29,6 @@
       </el-table>
     </div>
 
-    <div class="card">
-      <h3 class="title">账号合并</h3>
-      <p class="muted">换号遇到他人账号时，以手机号原账号为主账号，空项由微信账号补全。</p>
-      <div class="row">
-        <el-input v-model="merge.primary" placeholder="主账号用户 ID" style="max-width: 180px" />
-        <el-input v-model="merge.secondary" placeholder="被合并用户 ID" style="max-width: 180px" />
-        <el-button type="warning" @click="mergeUsers">合并</el-button>
-      </div>
-    </div>
-
     <el-dialog v-model="showCreate" title="新建管理员" width="420px">
       <el-input v-model="createForm.username" placeholder="账号" />
       <el-input v-model="createForm.password" type="password" placeholder="初始密码" show-password style="margin-top: 8px" />
@@ -61,7 +51,6 @@ const users = ref([])
 const keyword = ref('')
 const showCreate = ref(false)
 const createForm = reactive({ username: '', password: '' })
-const merge = reactive({ primary: '', secondary: '' })
 
 async function load() {
   try {
@@ -100,16 +89,6 @@ async function reset(row) {
     ElMessage.success('已重置')
   } catch (e) {
     if (e !== 'cancel') ElMessage.error(errorText(e))
-  }
-}
-
-async function mergeUsers() {
-  try {
-    await admin.mergeUsers(Number(merge.primary), Number(merge.secondary))
-    ElMessage.success('已合并')
-    load()
-  } catch (e) {
-    ElMessage.error(errorText(e))
   }
 }
 

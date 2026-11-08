@@ -2,6 +2,7 @@
 from django.db import transaction
 from django.utils import timezone
 
+from apps.accounts.models import User
 from apps.accounts.services import AccountService
 from apps.committee.models import Seat
 from apps.committee.services import CommitteeCommands
@@ -49,14 +50,17 @@ class IdentityService:
             raise ApiError("INVALID_TARGET", "手机号格式不正确")
         if user.phone:
             raise ApiError("PHONE_ALREADY_BOUND", "已绑定手机号，请使用换绑", 409)
-        AccountService._check_phone_available(phone)
         AccountService.verify_code(target=phone, purpose="BIND_PHONE", code=code)
+        other = User.objects.filter(phone=phone).first()
+        if other is not None:
+            # REQ-FUNC-026：手机号属于其他账号 → 合并，主账号为手机号原有账号
+            return IdentityService._merge_by_phone(current=user, other=other, trigger="WECHAT_BIND")
         user.phone = phone
         user.save(update_fields=["phone"])
         AuditService.record(actor=AuditActor("MEMBER", user.id, user.identity_label),
                             action="PHONE_BOUND", object_type="user", object_id=str(user.id),
                             result="SUCCESS")
-        return {"phone": mask_phone(phone)}
+        return {"merged": False, "phone": mask_phone(phone), "primary": user}
 
     @staticmethod
     def change_phone(user, old_phone: str, new_phone: str, old_code: str, new_code: str) -> dict:
@@ -66,16 +70,36 @@ class IdentityService:
             raise ApiError("INVALID_TARGET", "手机号格式不正确")
         if new_phone == old_phone:
             raise ApiError("INVALID_VALUE", "新手机号不能与原手机号相同")
-        AccountService._check_phone_available(new_phone)
         AccountService.verify_code(target=old_phone, purpose="CHANGE_PHONE", code=old_code)
         AccountService.verify_code(target=new_phone, purpose="CHANGE_PHONE", code=new_code)
+        other = User.objects.filter(phone=new_phone).first()
+        if other is not None:
+            # REQ-FUNC-028：新手机号属于其他账号 → 合并，主账号为新手机号原有账号
+            return IdentityService._merge_by_phone(current=user, other=other, trigger="PHONE_CHANGE")
         user.phone = new_phone
         user.save(update_fields=["phone"])
         AuditService.record(actor=AuditActor("MEMBER", user.id, user.identity_label),
                             action="PHONE_CHANGED", object_type="user", object_id=str(user.id),
                             result="SUCCESS", detail={"before": mask_phone(old_phone),
                                                       "after": mask_phone(new_phone)})
-        return {"phone": mask_phone(new_phone)}
+        return {"merged": False, "phone": mask_phone(new_phone), "primary": user}
+
+    @staticmethod
+    def _merge_by_phone(*, current, other, trigger: str) -> dict:
+        """当前登录账号并入手机号原有账号（IFC-075）；按 id 升序加锁，整体一个事务。"""
+        if other.id == current.id:
+            raise ApiError("INVALID_VALUE", "手机号已绑定在当前账号")
+        with transaction.atomic():
+            locked = {u.id: u for u in User.objects.select_for_update()
+                      .filter(id__in=[current.id, other.id]).order_by("id")}
+            primary, secondary = locked.get(other.id), locked.get(current.id)
+            if primary is None or secondary is None:
+                raise ApiError("NOT_FOUND", "账号不存在", 404)
+            report = IdentityService.merge_accounts(
+                primary, secondary, actor=AuditActor("MEMBER", current.id, current.identity_label),
+                trigger=trigger)
+        return {"merged": True, "phone": mask_phone(primary.phone), "primary": primary,
+                "report": report}
 
     @staticmethod
     def cancel(user, phone: str, code: str) -> None:
@@ -121,7 +145,8 @@ class IdentityService:
         return {**result, "seat_invalidated": seat_invalidated}
 
     @staticmethod
-    def merge_accounts(primary, secondary, admin_id: int | None = None) -> dict:
+    def merge_accounts(primary, secondary, admin_id: int | None = None, *,
+                       actor: AuditActor | None = None, trigger: str | None = None) -> dict:
         if primary.id == secondary.id:
             raise ApiError("INVALID_VALUE", "不能合并同一账号")
         if primary.status != "ACTIVE" or secondary.status != "ACTIVE":
@@ -142,12 +167,13 @@ class IdentityService:
                 # keep_primary: 保留旧记录
             AccountService.fill_empty_profile_from(primary, secondary)
             AccountService.tombstone(secondary)
-            AuditService.record(actor=AuditActor("ADMIN", admin_id, f"管理员{admin_id}")
-                                if admin_id else AuditActor("SYSTEM", None, "系统"),
+            AuditService.record(actor=actor or (AuditActor("ADMIN", admin_id, f"管理员{admin_id}")
+                                                if admin_id else AuditActor("SYSTEM", None, "系统")),
                                 action="ACCOUNTS_MERGED", object_type="user",
                                 object_id=str(primary.id), result="SUCCESS",
                                 detail={"primary": primary.id, "secondary": secondary.id,
-                                        "moved": moved, "discarded": discarded})
+                                        "trigger": trigger, "moved": moved,
+                                        "discarded": discarded})
         return {"primary_id": primary.id, "secondary_id": secondary.id, "moved": moved,
                 "discarded": discarded}
 

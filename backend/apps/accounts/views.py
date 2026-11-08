@@ -174,9 +174,19 @@ class WebWechatCallbackView(APIView):
             exchanged = get_wechat_client().web_exchange_code(code)
         except WeChatError as exc:
             return HttpResponseRedirect(f"{frontend}?error={map_wechat_error(exc).code}")
-        user, _ = AccountService.get_or_create_wechat_user(
+        user, is_new = AccountService.get_or_create_wechat_user(
             channel="WEB", openid=exchanged.openid, unionid=exchanged.unionid,
         )
+        if is_new and not user.nickname:
+            # REQ-FUNC-016：Web 扫码首次登录取微信昵称；只填空值，不覆盖已有资料
+            try:
+                # [CODE: backend/apps/integrations/wechat.py:133 web_userinfo]
+                info = get_wechat_client().web_userinfo(exchanged.access_token, exchanged.openid)
+                if info.nickname:
+                    user.nickname = info.nickname[:30]
+                    user.save(update_fields=["nickname"])
+            except WeChatError:
+                pass  # 取昵称失败不影响登录
         return HttpResponseRedirect(f"{frontend}?ticket={create_login_ticket(user)}")
 
 
@@ -262,7 +272,9 @@ class EmailVerifyView(APIView):
 
     def post(self, request):
         data = request.data or {}
-        AccountService.verify_email(request.user, str(data.get("email", "")), str(data.get("code", "")))
+        # 前端拿到的邮箱是脱敏值，未传 email 时按本人当前填写的邮箱校验
+        email = str(data.get("email") or request.user.email or "")
+        AccountService.verify_email(request.user, email, str(data.get("code", "")))
         return Response({"email_state": "VERIFIED"})
 
 

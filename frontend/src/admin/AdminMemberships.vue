@@ -12,8 +12,10 @@
     <div class="card">
       <el-empty v-if="!items.length" description="暂无记录" />
       <el-table :data="items" size="small">
-        <el-table-column prop="user_id" label="用户" width="100" />
-        <el-table-column prop="unit_id" label="专有部分" width="120" />
+        <el-table-column label="用户" width="160">
+          <template #default="{ row }">{{ row.user?.nickname || row.user?.account_no }}（#{{ row.user?.id }}）</template>
+        </el-table-column>
+        <el-table-column prop="specific_part" label="专有部分" width="160" />
         <el-table-column prop="role" label="身份" width="120" />
         <el-table-column prop="certified_at" label="认证时间" width="180" />
         <el-table-column label="操作" width="140">
@@ -46,8 +48,8 @@ async function load() {
 
 async function revoke(row) {
   try {
-    await admin.revokeMembership(row.id)
-    ElMessage.success('已撤销')
+    const result = await admin.revokeMembership(row.user.id, row.unit_id)
+    ElMessage.success(result.was_head && result.new_head_id ? '已撤销，户主已由最早认证的产权业主接任' : '已撤销')
     load()
   } catch (e) {
     ElMessage.error(errorText(e))

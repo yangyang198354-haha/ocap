@@ -14,7 +14,7 @@
         <div class="row" style="justify-content: space-between">
           <div>
             <strong>#{{ item.id }}</strong>
-            <span class="muted" style="margin-left: 8px">{{ item.applicant?.nickname || item.applicant_id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
+            <span class="muted" style="margin-left: 8px">{{ item.applicant?.account_no || item.applicant?.id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
             <el-tag size="small" style="margin-left: 8px">{{ item.status }}</el-tag>
           </div>
           <div class="row" v-if="item.status === 'PENDING'">
@@ -22,7 +22,10 @@
             <el-button size="small" type="danger" @click="decide(item.id, 'REJECT')">拒绝</el-button>
           </div>
         </div>
-        <p class="muted">{{ item.reason }}</p>
+        <div class="row" v-if="item.proof?.length">
+          <el-link v-for="p in item.proof" :key="p.id" @click="openProof(p)">{{ p.name }}</el-link>
+        </div>
+        <p class="muted" v-if="item.reject_reason">拒绝原因：{{ item.reject_reason }}</p>
       </div>
     </div>
   </div>
@@ -30,7 +33,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
 import { errorText } from '@/shared/format'
 
@@ -46,13 +49,28 @@ async function load() {
   }
 }
 
-async function decide(id, action) {
+// 附件下载需要 Authorization 头，用 axios 取 blob 后在新窗口打开
+async function openProof(proof) {
   try {
-    await admin.decideAppeal(id, action)
+    const blob = await admin.downloadAttachment(proof.id)
+    window.open(URL.createObjectURL(blob), '_blank')
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function decide(id, decision) {
+  try {
+    let rejectReason
+    if (decision === 'REJECT') {
+      const { value } = await ElMessageBox.prompt('请输入拒绝原因（必填，≤500 字）', '拒绝申诉', { inputPattern: /\S+/, inputErrorMessage: '必填' })
+      rejectReason = value
+    }
+    await admin.decideAppeal(id, decision, rejectReason)
     ElMessage.success('已处理')
     load()
   } catch (e) {
-    ElMessage.error(errorText(e))
+    if (e !== 'cancel') ElMessage.error(errorText(e))
   }
 }
 

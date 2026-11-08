@@ -206,8 +206,8 @@ class PollResponseView(APIView):
                     score = int(value)
                 except ValueError:
                     raise ApiError("INVALID_VALUE", "打分须为整数") from None
-                if score < 0 or score > 100:
-                    raise ApiError("INVALID_VALUE", "打分须在 0~100 之间")
+                if score < 1 or score > 5:  # AC-055-02
+                    raise ApiError("INVALID_VALUE", "打分须在 1~5 之间")
             chosen[question_id] = value
         required_ids = {q.id for q in questions.values() if q.required}
         if not required_ids.issubset(chosen.keys()):
@@ -233,8 +233,7 @@ class PollResultView(APIView):
         poll = Poll.objects.filter(id=poll_id).first()
         if poll is None:
             raise ApiError("NOT_FOUND", "投票不存在", 404)
-        if poll.status != "CLOSED" and poll.creator_id != request.user.id \
-                and not request.user.is_admin_principal:
+        if poll.status != "CLOSED":  # REQ-FUNC-047：截止前任何人（含发起人）不可见结果
             raise ApiError("NOT_CLOSED", "投票尚未截止", 409)
         return Response({"id": poll.id, "status": poll.status,
                          "results": PollService.results(poll)})

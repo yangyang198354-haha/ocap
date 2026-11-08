@@ -20,23 +20,27 @@ export const meApi = {
   me: () => get('/me'),
   profile: () => get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),
-  setPassword: (data) => post('/me/password', data),
-  sendCode: (purpose, target) => post('/me/codes', { purpose, target }),
-  verifyEmail: (code) => post('/me/email/verify', { code }),
+  // data: { password, password_confirm, current_password? }，后端为 PUT
+  setPassword: (data) => http.put('/me/password', data),
+  sendCode: (purpose, target) => post('/me/codes', target ? { purpose, target } : { purpose }),
+  verifyEmail: (code, email) => post('/me/email/verify', email ? { email, code } : { code }),
+  // 绑定/换绑：后端遇到已属他人的手机号会合并账号，返回 { merged, token?, user? }（REQ-FUNC-026/028）
   bindPhone: (phone, code) => post('/me/phone/bind', { phone, code }),
-  changePhone: (phone, code) => post('/me/phone/change', { phone, code }),
-  cancelAccount: (code) => post('/me/cancel', { code })
+  changePhone: (oldPhone, newPhone, oldCode, newCode) =>
+    post('/me/phone/change', { old_phone: oldPhone, new_phone: newPhone, old_code: oldCode, new_code: newCode }),
+  cancelAccount: (phone, code) => post('/me/cancel', { phone, code })
 }
 
 export const unitApi = {
   options: (params) => get('/units/options', params),
   certify: (unitId) => post('/certifications', { unit_id: unitId }),
+  // data: { unit_id, proof_ids: [附件 id] }，后端要求至少一份产权证明
   createAppeal: (data) => post('/appeals', data),
   myAppeals: () => get('/appeals/mine'),
   createResidentApplication: (data) => post('/resident-applications', data),
   myResidentApplications: () => get('/resident-applications/mine'),
   residentApplicationsToReview: () => get('/resident-applications/to-review'),
-  decideResidentApplication: (id, action) => post(`/resident-applications/${id}/decision`, { action }),
+  decideResidentApplication: (id, decision) => post(`/resident-applications/${id}/decision`, { decision }),
   removeResident: (unitId, userId) => http.delete(`/units/${unitId}/residents/${userId}`),
   leaveUnit: (unitId) => post(`/units/${unitId}/leave`, {})
 }
@@ -52,27 +56,36 @@ export const resolutionApi = {
   create: (data) => post('/resolutions', data),
   detail: (id) => get(`/resolutions/${id}`),
   withdraw: (id) => post(`/resolutions/${id}/withdraw`, {}),
-  resubmit: (id, flowId) => post(`/resolutions/${id}/resubmit`, { approval_flow_id: flowId }),
+  // 重新提交需带标题、正文、流程（半数同意另需 vote_deadline），后端 _validate_submission
+  resubmit: (id, data) => post(`/resolutions/${id}/resubmit`, data),
   vote: (id, choice) => post(`/resolutions/${id}/votes`, { choice })
 }
 
 export const claimApi = {
-  create: (data) => post('/claims', data),
-  mine: (params) => get('/claims/mine', params),
+  // 报销：{ amount, reason, occurred_on, invoice_ids, approval_flow_id }
+  createReimbursement: (data) => post('/claims/reimbursements', data),
+  // 备用金预借：{ amount, reason, expected_usage, expected_settle_on, approval_flow_id }
+  createAdvance: (data) => post('/claims/advances', data),
+  // 核销：{ advance_id, reimbursement_ids, reason, approval_flow_id }，差额为负即多退
+  createSettlement: (data) => post('/claims/settlements', data),
+  // scope=mine（我提交的）| todo（待我审批）；可带 type、status
+  list: (params) => get('/claims', params),
   detail: (id) => get(`/claims/${id}`),
   withdraw: (id) => post(`/claims/${id}/withdraw`, {}),
-  resubmit: (id, flowId) => post(`/claims/${id}/resubmit`, { approval_flow_id: flowId }),
-  settlement: (data) => post('/settlements', data),
-  adminList: (params) => get('/admin/claims', params)
+  resubmit: (id, data) => post(`/claims/${id}/resubmit`, data)
 }
 
 export const incomeApi = {
+  // 收入表的录入/提交类接口路径带 /admin 前缀，但权限为业委会成员（普通用户令牌）
   adminList: (params) => get('/admin/income/sheets', params),
+  // 逐条录入：{ records: [{ occurred_on, amount, category, source_note, remark }], voucher_ids, title }
+  create: (data) => post('/admin/income/sheets', data),
   importFile: (file) => {
     const body = new FormData()
     body.append('file', file)
     return http.post('/admin/income/sheets/import', body)
   },
+  adminDetail: (id) => get(`/admin/income/sheets/${id}`),
   detail: (id) => get(`/income/sheets/${id}`),
   submit: (id, flowId) => post(`/admin/income/sheets/${id}/submit`, { approval_flow_id: flowId }),
   resubmit: (id, flowId) => post(`/admin/income/sheets/${id}/resubmit`, { approval_flow_id: flowId }),
@@ -83,14 +96,17 @@ export const incomeApi = {
 
 export const ledgerApi = {
   reports: (params) => get('/ledger/reports', params),
-  reportDetail: (id) => get(`/ledger/reports/${id}`)
+  reportDetail: (id) => get(`/ledger/reports/${id}`),
+  // 手动生成限业委会成员（普通用户令牌）：{ period_type: QUARTER|YEAR, year, quarter? }
+  generate: (data) => post('/ledger/reports/generate', data)
 }
 
 export const pollApi = {
   list: (params) => get('/polls', params),
   create: (data) => post('/polls', data),
   detail: (id) => get(`/polls/${id}`),
-  respond: (id, answers) => post(`/polls/${id}/response`, { answers }),
+  // answers: [{ question_id, value }]；多选题 value 为选项数组
+  respond: (id, answers) => post(`/polls/${id}/responses`, { answers }),
   result: (id) => get(`/polls/${id}/result`)
 }
 
@@ -121,10 +137,10 @@ const admin = {
     return adminHttp.post('/admin/registry/import', body)
   },
   appeals: (params) => adminHttp.get('/admin/appeals', { params }),
-  decideAppeal: (id, action, reason) => adminHttp.post(`/admin/appeals/${id}/decision`, { action, reason }),
+  decideAppeal: (id, decision, rejectReason) =>
+    adminHttp.post(`/admin/appeals/${id}/decision`, { decision, reject_reason: rejectReason }),
   memberships: (params) => adminHttp.get('/admin/memberships', { params }),
-  revokeMembership: (id) => adminHttp.post(`/admin/memberships/${id}/revoke`, {}),
-  mergeUsers: (primaryId, secondaryId) => adminHttp.post('/admin/users/merge', { primary_id: primaryId, secondary_id: secondaryId }),
+  revokeMembership: (userId, unitId) => adminHttp.post('/admin/memberships/revoke', { user_id: userId, unit_id: unitId }),
   seats: () => adminHttp.get('/admin/committee/seats'),
   createSeat: (data) => adminHttp.post('/admin/committee/seats', data),
   updateSeat: (id, data) => adminHttp.patch(`/admin/committee/seats/${id}`, data),
@@ -133,14 +149,14 @@ const admin = {
   updateCommitteeConfig: (data) => adminHttp.put('/admin/committee/config', data),
   flows: (params) => adminHttp.get('/admin/approval/flows', { params }),
   createFlow: (data) => adminHttp.post('/admin/approval/flows', data),
-  updateFlow: (id, data) => adminHttp.patch(`/admin/approval/flows/${id}`, data),
+  updateFlow: (id, data) => adminHttp.put(`/admin/approval/flows/${id}`, data),
   deleteFlow: (id) => adminHttp.delete(`/admin/approval/flows/${id}`),
   auditLogs: (params) => adminHttp.get('/admin/audit-logs', { params }),
   systemConfig: (key) => adminHttp.get(`/admin/system-config/${key}`),
   updateSystemConfig: (key, value) => adminHttp.put(`/admin/system-config/${key}`, { value }),
-  incomeSheets: (params) => adminHttp.get('/admin/income/sheets', { params }),
-  claims: (params) => adminHttp.get('/admin/claims', { params }),
-  createReport: (period) => adminHttp.post('/admin/ledger/reports', { period })
+  downloadAttachment: (id) => adminHttp.get(`/attachments/${id}/download`, { responseType: 'blob' }),
+  // 管理员令牌可读的财务数据：报销/备用金列表（/admin/claims）。收入表录入/生成报表属业委会成员权限，不在管理端
+  claims: (params) => adminHttp.get('/admin/claims', { params })
 }
 
 export { admin }

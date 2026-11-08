@@ -1,7 +1,7 @@
-<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T13:11:31+08:00">
+<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T23:11:15+08:00">
   <request><![CDATA[现在我要开发一个业主委员会的web 应用 + 微信小程序。整体技术选型，代码复用，都可以参考我github 上的Freeark 项目。 这个业主委员会的web 应用需求有：1.用户注册、登录。登录使用手机号注册，验证码确认，也可以微信扫码登录。微信小程序可以使用手机号，或者微信一键登录。 如果电脑上登录web。除了账号、手机号、邮箱登录。页可以微信扫码登录。如果在windows 有微信桌面版开启。也可以一键授权登录。 后台也业主清册存在数据库表。用户可以选择自己的专有部分。如果验证的手机号和清册手机号一致。则可以直接认证为产权业主。第一个认证的产权业主默认为户主。其他注册用户绑定一个专有部分的。产权业主可以审批，通过其为同住人。注册用户必须通过产权清册认证确认手机号码和登记的一致才能成为产权业主。其他的注册用户为游客。注册用户可以修改自己的头像，个人信息，昵称等等。微信用户可以用自己的微信昵称。用户可以注销自己的账号。 这是一部分需求，先整理这些需求。确认后再整理成用户故事。但是不要开始设计、开发。我把所有的需求输入完毕后。我让开始再开始。]]></request>
   <request batch="2" time="2026-11-07T18:09:22+08:00"><![CDATA[第二批需求： 1.管理员可以对已经存在的产权业主赋予业主委员会委员、业主委员会主任、业主委员会副主任身份。业主身份（游客，同住人、产权业主，业主委员会委员，主任、副主任身份可以显示，但用户自己无法编辑。 业委会主任、副主任可以发起业委会决议，有标题，内容和附件。决议可以配置审批流程。比如指定负责人审批通过。或者半数人员同意通过。 业委会委员可以发起报销或者备用金申请。由指定人员批准可以通过。审批流程可以配置。使用时可以选择。 也维护业委会主任、副主任可以发起业主代表投票（指定的若干用户）或者调查（按照范围：产权业主、 产权业主或同住人）可以手机一键，意见的形式可以定制（同意、反对、弃权） 或者打分制（参考腾讯问卷）。业委会决议，业主代表投票 都可以公开。任何用户都可以查看。 业委会成员可以录入收入表。 收入表需要经过配置好的审批人员确认后生效。 系统可以根据收入，支出数据，生成季度报表，年度报表。 财务报表所以用户都可以看到。 整理这批需求，确认后柴恩成用户故事]]></request>
-  <profile version="1.2.0"/>
+  <profile version="1.3.0"/>
   <groups>
     <group id="GROUP_A" agent="requirement-analyst" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_01" status="APPROVED"/><phase id="PHASE_02" status="APPROVED"/>
@@ -9,11 +9,11 @@
     <group id="GROUP_B" agent="system-architect" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_03" status="APPROVED"/><phase id="PHASE_04" status="APPROVED"/>
     </group>
-    <group id="GROUP_C" agent="software-developer" status="FAILED" gate_decision="FAIL" retries="2">
+    <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="3">
       <phase id="PHASE_05" status="APPROVED"/><phase id="PHASE_06" status="APPROVED"/>
     </group>
-    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS" retries="1" defect_loops="2">
-      <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
+    <group id="GROUP_D" agent="test-engineer" status="IN_PROGRESS" gate_decision="PENDING" retries="2" defect_loops="2">
+      <phase id="PHASE_07" status="IN_PROGRESS"/><phase id="PHASE_08" status="IN_PROGRESS"/><phase id="PHASE_09" status="IN_PROGRESS"/>
     </group>
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
@@ -56,10 +56,10 @@
     <artifact path="project_workspace/ocap/architecture/tech_stack.md" version="1.0.0" status="APPROVED" group="GROUP_B">0.2.0 经 GR-B-002 批准</artifact>
     <artifact path="project_workspace/ocap/development/implementation_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C">0.1.0 经 GR-C-001 批准；被 1.1.0 取代</artifact>
     <artifact path="project_workspace/ocap/development/implementation_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C">DEF-001~004 回流修复，经 GR-C-002 批准；被 1.2.0 取代</artifact>
-    <artifact path="project_workspace/ocap/development/implementation_plan.md" version="1.2.0" status="APPROVED" group="GROUP_C">G-001~G-014 设计对齐修复，经 GR-C-003 批准</artifact>
+    <artifact path="project_workspace/ocap/development/implementation_plan.md" version="1.2.0" status="SUPERSEDED" group="GROUP_C">G-001~G-014 设计对齐修复，经 GR-C-003 批准</artifact>
     <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C">0.1.0 经 GR-C-001 批准；被 1.1.0 取代</artifact>
     <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C">DEF-001~004 修复记录，经 GR-C-002 批准；被 1.2.0 取代</artifact>
-    <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.2.0" status="APPROVED" group="GROUP_C">G-001~G-014 修复记录，经 GR-C-003 批准</artifact>
+    <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.2.0" status="SUPERSEDED" group="GROUP_C">G-001~G-014 修复记录，经 GR-C-003 批准</artifact>
     <artifact path="project_workspace/ocap/testing/test_plan.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D">被 0.2.0 取代</artifact>
     <artifact path="project_workspace/ocap/testing/test_plan.md" version="0.2.0" status="SUPERSEDED" group="GROUP_D">经 GR-D-002 批准；被 0.3.0 取代</artifact>
     <artifact path="project_workspace/ocap/testing/test_plan.md" version="0.3.0" status="APPROVED" group="GROUP_D">经 GR-D-003 批准</artifact>
@@ -76,7 +76,9 @@
     <artifact path="project_workspace/ocap/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1">0.1.0 经 GR-E1-001 批准</artifact>
     <artifact path=".github/workflows/ci.yml" version="0.1.0" status="APPROVED" group="GROUP_E1">经 GR-E1-001 批准（GitHub Actions 工作流，无文件头）</artifact>
     <artifact path="project_workspace/ocap/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2">经 GR-E2-001 批准；最终状态 DEPLOYED_SUCCESSFULLY</artifact>
-    <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.3.0" status="DRAFT" group="GROUP_C">ocap-GROUP_C-4 完整性复核；GR-C-004 FAIL（针对代码，不针对评审文档）</artifact>
+    <artifact path="project_workspace/ocap/development/code_review_report.md" version="1.3.0" status="SUPERSEDED" group="GROUP_C">ocap-GROUP_C-4 完整性复核；GR-C-004 FAIL（针对代码，不针对评审文档）</artifact>
+    <artifact path="project_workspace/ocap/development/implementation_plan.md" version="2.0.0" status="APPROVED" group="GROUP_C">1.3.0 经 GR-C-005 批准（CR-011~024 返工）</artifact>
+    <artifact path="project_workspace/ocap/development/code_review_report.md" version="2.0.0" status="APPROVED" group="GROUP_C">1.4.0 经 GR-C-005 批准</artifact>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -408,6 +410,24 @@ miniprogram: npm test -> No test files found, exiting with code 1]]></verificati
       <criterion id="§L-2 无凭据" result="SATISFIED">grep password=/secret_key=/sk-/ghp_/AKIA/PRIVATE KEY 无命中。</criterion>
       <verification><![CDATA[grep DEPLOY/ROLLBACK ids -> 001..008 both; cred scan -> 0 hits; frontmatter name: ocap-deploy]]></verification>
     </gate_review>
+    <gate_review id="GR-C-005" invocation_id="ocap-GROUP_C-5" decision="PASS_WITH_CONDITIONS" time="2026-11-08T13:50:01+08:00">
+      <reviewed_files><file path="project_workspace/ocap/development/implementation_plan.md" version="1.3.0"/><file path="project_workspace/ocap/development/code_review_report.md" version="1.4.0"/></reviewed_files>
+      <criterion id="J-C 无未解决 CRITICAL" result="SATISFIED">CR-011：identity/services.py:57、78 经 _merge_by_phone 调用 merge_accounts（:98）。CR-012：stores/auth.js:10 读 identities.labels，后端 identity/services.py:43 返回 labels。CR-013：shared/api.js:66-74 改为 claims/reimbursements|advances|settlements、GET /claims。CR-014：api.js:109 与 miniprogram/utils/api.js:29 改为 /responses。</criterion>
+      <criterion id="J-C MAJOR 遗留" result="SATISFIED">CR-015~024 均 FIXED；CR-018 的 systemd timer 移交 devops。遗留 CR-025（接口偏离设计，属架构决策）MINOR、CR-026 部分完成 MINOR。</criterion>
+      <criterion id="J-C 迁移符合 P6" result="SATISFIED">3 个 0003 迁移去掉 docstring 后与 HEAD 的 AST 一致（PM 用 ast.dump 比对），首行不再是 &quot;Generated by Django&quot;，迁移名未变；makemigrations --check 无变化。</criterion>
+      <criterion id="J-C PM 复跑无新增失败" result="SATISFIED">120 个用例 118 个通过；2 个失败（IncomeTests.test_import_row_error_ratio、IncomeParseRuleTests.test_row_error_ratio_over_2_percent）断言的是旧规则（错误行超过 2% 整体拒绝），与已批准的 user_stories.md:755、757（AC-059-03/05：跳过错误行、导入其余行）矛盾，属测试缺陷，交 GROUP_D 更新。</criterion>
+      <criterion id="J-C 改动范围一致" result="SATISFIED">git diff --stat：56 个文件，均在 backend/、frontend/src/、miniprogram/ 和 development/ 内，与 implementation_plan §11 一致；未改测试文件。</criterion>
+      <finding id="GR-C-005-F01" severity="MINOR">范围外扩展：新增 IsMemberOrAdmin，管理员可下载附件；可见性仍由各附件策略决定，可接受，记入遗留。</finding>
+      <finding id="GR-C-005-F02" severity="MINOR">identity/services.py、portal/Resolutions.vue 是用 Python 脚本改的，没有用 Edit；结果已在 git diff 中核实。</finding>
+      <finding id="GR-C-005-F03" severity="MINOR">小程序没有跑过 uni 构建，只做了 SFC 编译检查；运行时可用性须在 GROUP_D 或人工验证中覆盖。</finding>
+      <condition>GROUP_D：按 AC-059-03/05 更新上述 2 个测试；补前后端契约测试（前端调用的路径、方法、字段与后端路由和序列化器一致）、Web 与小程序的 vitest，以及 code_review_report §9 建议的新用例（合并冲突、核销补差与退款、generate_due、逐条录入、重复导入、缺 SECRET_KEY 拒绝启动）。</condition>
+      <condition>GROUP_E：补 deploy/systemd/ 中 ocap-run-due-jobs 的 service 与 timer 模板；skill 外网入口改为 57279；部署前核对 .env 的 DJANGO_SECRET_KEY 非空（PM 已核验为非空）。</condition>
+      <verification><![CDATA[backend (venv Django 5.2.19): manage.py test -> Ran 120 tests / FAILED (failures=2) [两项见上]
+makemigrations --check --dry-run -> No changes detected
+ast.dump compare 0003 vs HEAD: claims/income/ledger AST identical
+frontend: npm run build -- --base=/ocap/ -> built in 35.75s
+target .env (ssh -p 57279, read-only, values not printed): DJANGO_SECRET_KEY non-empty, DJANGO_ALLOWED_HOSTS non-empty]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-07T17:02:34+08:00" answerer="用户">画像 Q1–Q5 全部按推荐：项目名 ocap；需求分析参考本地 Freeark（=github yangyang198354-haha/Freeark）；基础设施沿用 Freeark 约定、环境以后定；子代理不提交，PM 列待提交文件；外部服务资料架构阶段再补。</clarification>
@@ -430,6 +450,11 @@ miniprogram: npm test -> No test files found, exiting with code 1]]></verificati
     <clarification time="2026-11-07T20:42:22+08:00" answerer="用户"><![CDATA[架构开放问题答复（原文）："全部按推荐，2. B， 4，我打算以其他组织（业委会）申请"。即：OQ-01=A（REQ-FUNC-008 按微信组件快速登录理解，AC 微调，Mac 同样支持）；OQ-02=B 阿里云短信；OQ-03=A 事务邮件服务（SMTP）；OQ-04：小程序与开放平台以"其他组织（业委会）"主体申请（备案域名/HTTPS 未答）；建议值表（C-06/07/08/12 及延伸：密码失败锁定、会话有效期等）全部接受；暂定规则 OQ-05~OQ-16 全部按推荐/暂定接受；OQ-15 代码布局接受，允许 makemigrations --dry-run 辅助对照且不提交产物。]]></clarification>
     <clarification time="2026-11-08T13:03:06+08:00" id="RUN-20261108-Q1" answered_by="用户">测试依赖处理：A——会话临时目录建独立 venv 装 backend/requirements.txt（不装 mysqlclient / 阿里云 SDK），frontend、miniprogram 执行 npm ci；不改全局环境。</clarification>
     <clarification time="2026-11-08T13:03:06+08:00" id="RUN-20261108-Q2" answered_by="用户">测试环境 SSH 通道：B——用户原话 &quot;ssh yangyang@ai-freeark.xin:9999 免密&quot;。部署仍须用户在执行那一轮明确授权（规则 7）。</clarification>
+    <clarification time="2026-11-08T13:29:34+08:00" id="ESC-C-20261108-Q1" answered_by="用户">上报 pm_escalation_GROUP_C_20261108T1308 的处理：A——同意突破重试上限，修复 CR-011~023（CR-023 改为手写迁移），补前后端契约测试与前端测试，完整重测后再部署。</clarification>
+    <clarification time="2026-11-08T13:29:34+08:00" id="RUN-20261108-Q2b" answered_by="用户">SSH：&quot;参考 freeark 如何 ssh 到 ai-freeark.xin 的&quot;。PM 查到 Freeark skill 中记录的通道为 ssh -p 57279 yangyang@47.109.197.217，主机指纹与 Freeark 记录一致；只读核验 ocap-backend、nginx 均为 active。</clarification>
+    <clarification time="2026-11-08T13:29:34+08:00" id="RUN-20261108-Q4" answered_by="用户">&quot;先看 trae 的对不对，最好创建自己的一份&quot;：PM 核对 .trae 画像 1.2.0，修正 7 处，写入 .claude/agents/project_profile.md 1.3.0（修订清单在文末；其中 P9 的 E2 例外待用户确认）。</clarification>
+    <clarification time="2026-11-08T23:11:15+08:00" id="ESC-D-20261108-Q1" answered_by="用户">上报 pm_escalation_GROUP_D_20261108T2302 的处理：A——同意突破上限再修一轮：software-developer 修 DEF-005，test-engineer 补齐 11 个 Must Have 的映射与用例，PM 门控后进入部署。</clarification>
+    <clarification time="2026-11-08T23:11:15+08:00" id="ESC-D-20261108-Q3" answered_by="用户">确认画像 P9：E2 经用户当轮授权后由 devops-engineer 执行部署命令，ssh/scp 走 ask 规则。</clarification>
   </clarifications>
   <checkpoints/>
   <!-- 说明：GR-A-001 为 PHASE_01 范围的 PM 门控；按用户流程约束，requirements_spec 保持 DRAFT，待用户答复 Q1–Q20 并确认后再改 APPROVED，然后进入 PHASE_02。 -->
@@ -509,5 +534,14 @@ miniprogram: npm test -> No test files found, exiting with code 1]]></verificati
     <event time="2026-11-08T13:08:58+08:00" type="RUN" actor="pm-orchestrator">ssh -p 9999 yangyang@ai-freeark.xin 被拒绝连接（47.109.197.217:9999 refused，22 端口可达）；本次无法部署。PM 清理了 npm install 生成的 miniprogram/package-lock.json。</event>
     <event time="2026-11-08T13:09:43+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer ocap-GROUP_E1-2：把 .trae/skills/ocap-deploy/SKILL.md 移植为 Claude 版 .claude/skills/ocap-deploy/SKILL.md（用户本轮前一条要求）；只写文档，不 ssh、不部署。</event>
     <event time="2026-11-08T13:11:31+08:00" type="GATE" actor="pm-orchestrator">GR-E1-002 PASS：.claude/skills/ocap-deploy/SKILL.md（Claude 版部署 skill）核验通过；未执行任何远程命令。部署暂缓：9999 不可达，且 GROUP_C 处于 FAILED，等待用户决定。</event>
+    <event time="2026-11-08T13:29:34+08:00" type="RUN" actor="pm-orchestrator">用户答复 Q1=A、Q3=需要（已提交 eeb6063，未 push）、Q2=参考 Freeark（已确认 57279 通道）、Q4=自建画像（1.3.0）。画像版本 1.2.0→1.3.0：P3/P4/P7/P9/P10 有变化，影响 GROUP_C/D/E。</event>
+    <event time="2026-11-08T13:29:34+08:00" type="OVERRIDE" actor="pm-orchestrator">经用户明确同意（ESC-C-20261108-Q1=A），GROUP_C 突破重试上限，retries 2→3；escalation 处理结论：继续修复。</event>
+    <event time="2026-11-08T13:29:34+08:00" type="INVOCATION" actor="pm-orchestrator">调用 software-developer ocap-GROUP_C-5（PHASE_05+06 返工），REWORK_AUTHORIZED：development 两文档、产品代码；修复 CR-011~023。</event>
+    <event time="2026-11-08T13:50:01+08:00" type="GATE" actor="pm-orchestrator">GR-C-005 PASS_WITH_CONDITIONS：GROUP_C APPROVED；development 两文档 2.0.0 APPROVED，1.2.0/1.3.0 SUPERSEDED。后端 118/120，2 个失败经核对属测试与 AC-059 矛盾，交 GROUP_D。</event>
+    <event time="2026-11-08T13:50:01+08:00" type="INVOCATION" actor="pm-orchestrator">调用 test-engineer ocap-GROUP_D-6（PHASE_07~09 重测），REWORK_AUTHORIZED：testing/ 四文档与测试代码；special_instructions 含 GR-C-005 condition 1。</event>
+    <event time="2026-11-08T22:54:42+08:00" type="EXCEPTION" actor="pm-orchestrator">test-engineer ocap-GROUP_D-6 因 API 限额（HTTP 429 weekly limit）中途终止；测试代码已写出（backend 新增 4 个测试文件，frontend/tests、miniprogram/tests 新建 spec），4 份测试报告未更新（仍是 0.3.0）。PM 核验：GR-C-005 之后产品代码没有改动；当前后端 160 个用例 159 个通过（1 个失败：test_frontend_contract 发现 frontend/src/shared/api.js:132 GET /admin/registry/units/${id}，AdminUnitDetailView 不支持 GET），Web vitest 33/33，小程序 vitest 27/27。按规则 §5-4 重试一次，retries 1→2。</event>
+    <event time="2026-11-08T22:54:42+08:00" type="INVOCATION" actor="pm-orchestrator">重试 test-engineer ocap-GROUP_D-7：在已有测试代码的基础上收尾，生成 4 份报告，以 defects 回报契约缺陷。</event>
+    <event time="2026-11-08T23:11:15+08:00" type="RUN" actor="pm-orchestrator">用户答复 Q1=A、Q2=提交、Q3=确认 P9。画像 1.3.0 P9 去掉&quot;待用户确认&quot;标记（内容不变，不升版本）。</event>
+    <event time="2026-11-08T23:11:15+08:00" type="OVERRIDE" actor="pm-orchestrator">经用户明确同意（ESC-D-20261108-Q1=A），突破上限：defect_loops 2→3（DEF-005 回 GROUP_C），GROUP_D retries 2→3。</event>
   </audit_log>
 </phase_status>

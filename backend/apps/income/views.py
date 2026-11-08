@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from apps.approval.models import ApprovalFlow
 from apps.approval.services import ApprovalEngine
+from apps.core.attachments import AttachmentService, count_limit, linked_attachment_list
 from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError
 from apps.core.money import money
@@ -49,7 +50,17 @@ def _parse_amount(raw) -> Decimal:
     return amount
 
 
+_FIELD_ALIASES = {"occurred_on": "日期", "amount": "金额", "category": "收入类别",
+                  "source_note": "来源说明", "remark": "备注"}
+
+
 def _record_row(values: dict, line_no: int = 1) -> dict:
+    if not isinstance(values, dict):
+        raise ValueError("记录格式不正确")
+    # 接口 JSON 使用英文字段名（IFC-110），导入文件使用中文列名；统一成中文列名处理
+    values = {**{_FIELD_ALIASES.get(k, k): v for k, v in values.items()}}
+    if "日期" not in values or "金额" not in values:
+        raise ValueError("缺少日期或金额")
     occurred_on = _parse_date(values["日期"])
     category = str(values.get("收入类别", "") or "").strip()
     if len(category) > 32:
@@ -74,7 +85,8 @@ def _parse_rows(rows: list[list]) -> dict:
     if missing:
         raise ApiError("IMPORT_COLUMNS_MISSING", "缺少列", 400, {"columns": missing})
     index = {c: header.index(c) for c in COLUMNS}
-    valid, errors = [], []
+    valid, errors, valid_rows = [], [], []
+    seen: set = set()
     total = 0
     for row_no, row in enumerate(rows[1:], start=2):
         if not any(str(c).strip() for c in row if c is not None):
@@ -82,14 +94,33 @@ def _parse_rows(rows: list[list]) -> dict:
         total += 1
         values = {c: (row[index[c]] if index[c] < len(row) else "") for c in COLUMNS}
         try:
-            valid.append(_record_row(values, line_no=total))
+            parsed = _record_row(values, line_no=len(valid) + 1)
         except ValueError as exc:
-            errors.append({"row": row_no, "reason": str(exc)})
+            # REQ-FUNC-059 / AC-059-03：错误行跳过并提示，其余有效行照常导入
+            errors.append({"row": row_no, "reason": "INVALID_FIELD", "detail": str(exc)})
+            continue
+        key = duplicate_key(parsed)
+        if key in seen:  # AC-059-02：文件内四项全同的重复行跳过
+            errors.append({"row": row_no, "reason": "DUPLICATE", "detail": "与文件内另一行重复"})
+            continue
+        seen.add(key)
+        valid.append(parsed)
+        valid_rows.append(row_no)
     if total == 0:
         raise ApiError("IMPORT_FILE_INVALID", "文件没有数据行")
-    if len(errors) / total > 0.02:
-        raise ApiError("IMPORT_ROW_ERRORS", "行级错误超过 2%", 400, {"errors": errors[:100]})
-    return {"records": valid, "errors": errors, "total": total}
+    return {"records": valid, "errors": errors, "total": total, "row_numbers": valid_rows}
+
+
+def duplicate_key(record: dict) -> tuple:
+    """重复判定：日期、金额、类别、来源说明四项全同（OQ-12）。"""
+    return (record["occurred_on"], record["amount"], record["category"], record["source_note"])
+
+
+def _existing_duplicate_keys() -> set:
+    """已有 PENDING/EFFECTIVE 收入记录的四项键（REJECTED/WITHDRAWN/VOID 不算）。"""
+    rows = IncomeRecord.objects.filter(sheet__status__in=["PENDING", "EFFECTIVE"]).values_list(
+        "occurred_on", "amount", "category", "source_note")
+    return set(rows)
 
 
 class IncomeImportView(APIView):
@@ -113,6 +144,23 @@ class IncomeImportView(APIView):
         except Exception as exc:
             raise ApiError("IMPORT_FILE_INVALID", "文件无法解析") from exc
         parsed = _parse_rows(rows)
+        # AC-059-02：与已有 PENDING/EFFECTIVE 记录四项全同的行同样跳过
+        existing = _existing_duplicate_keys()
+        kept = []
+        for record, row_no in zip(parsed["records"], parsed["row_numbers"]):
+            if duplicate_key(record) in existing:
+                parsed["errors"].append({"row": row_no, "reason": "DUPLICATE",
+                                         "detail": "与已有收入记录重复"})
+            else:
+                kept.append(record)
+        for line_no, record in enumerate(kept, start=1):
+            record["line_no"] = line_no
+        parsed["records"] = kept
+        skipped = parsed["errors"][:100]
+        if not kept:  # AC-059-05：全部行重复或错误，不创建收入表
+            return Response({"sheet": None, "import_summary": {
+                "total_rows": parsed["total"], "imported": 0,
+                "failed": len(parsed["errors"]), "errors": skipped}})
         title = request.data.get("title") or None
         from apps.committee.services import CommitteeQuery
 
@@ -163,12 +211,58 @@ class AdminSheetListView(APIView):
                 qs = qs.filter(**{param: value})
         return page_response(qs, request, SheetSerializer)
 
+    def post(self, request):
+        """单条/多条逐条录入（REQ-FUNC-048，AC-058-01/-08）：创建只含所录记录的 DRAFT 收入表。"""
+        data = request.data or {}
+        rows = data.get("records")
+        if not isinstance(rows, list) or not (1 <= len(rows) <= 500):
+            raise ApiError("INVALID_VALUE", "records 须为 1~500 条")
+        valid, errors = [], []
+        for idx, raw in enumerate(rows, start=1):
+            try:
+                valid.append(_record_row(raw, line_no=idx))
+            except ValueError as exc:
+                errors.append({"row": idx, "reason": "INVALID_FIELD", "detail": str(exc)})
+        if errors:  # 逐条录入不跳过错误：整体拒绝，便于当场更正
+            raise ApiError("INCOME_RECORD_INVALID", "收入记录存在错误", 400, {"errors": errors[:100]})
+        voucher_ids = _voucher_ids(data.get("voucher_ids"))
+        from apps.committee.services import CommitteeQuery
+
+        with transaction.atomic():
+            sheet = IncomeSheet.objects.create(
+                title=data.get("title") or None, source="MANUAL",
+                creator_labels=",".join(CommitteeQuery.identity_labels(request.user.id)),
+                submitted_by=request.user)
+            IncomeRecord.objects.bulk_create([IncomeRecord(sheet=sheet, **row) for row in valid])
+            if voucher_ids:
+                AttachmentService.link(voucher_ids, linked_type="income_sheet",
+                                       linked_id=str(sheet.id), purpose="INCOME_VOUCHER",
+                                       owner=request.user)
+            recalculate(sheet)
+        return Response(sheet_detail_view(sheet), status=status.HTTP_201_CREATED)
+
+
+def _voucher_ids(values) -> list:
+    if not values:
+        return []
+    if not isinstance(values, list):
+        raise ApiError("INVALID_VALUE", "voucher_ids 须为列表")
+    if len(values) > int(count_limit("INCOME_VOUCHER")):
+        raise ApiError("ATTACHMENT_LIMIT", "凭证附件数量超过上限")
+    parsed = []
+    for raw in values:
+        try:
+            parsed.append(uuid.UUID(str(raw)))
+        except ValueError as exc:
+            raise ApiError("ATTACHMENT_LIMIT", "附件 id 不合法") from exc
+    return parsed
+
 
 class AdminSheetDetailView(APIView):
     permission_classes = [IsIncomeMember]
 
     def get(self, request, sheet_id: int):
-        return Response(sheet_view(_get_sheet(sheet_id)))
+        return Response(sheet_detail_view(_get_sheet(sheet_id)))
 
     def patch(self, request, sheet_id: int):
         sheet = _get_sheet(sheet_id)
@@ -178,22 +272,26 @@ class AdminSheetDetailView(APIView):
         rows = data.get("records")
         if rows is None:
             raise ApiError("INVALID_VALUE", "缺少 records")
-        total = len(rows)
+        if not isinstance(rows, list):
+            raise ApiError("INVALID_VALUE", "records 须为列表")
         valid, errors = [], []
         for idx, raw in enumerate(rows, start=1):
             try:
-                valid.append(_record_row(raw, line_no=idx))
+                valid.append(_record_row(raw, line_no=len(valid) + 1))
             except ValueError as exc:
-                errors.append({"row": idx, "reason": str(exc)})
-        if total and len(errors) / total > 0.02:
-            raise ApiError("IMPORT_ROW_ERRORS", "行级错误超过 2%", 400, {"errors": errors[:100]})
+                errors.append({"row": idx, "reason": "INVALID_FIELD", "detail": str(exc)})
+        voucher_ids = _voucher_ids(data.get("voucher_ids"))
         with transaction.atomic():
             sheet.records.all().delete()
             IncomeRecord.objects.bulk_create([IncomeRecord(sheet=sheet, **row) for row in valid])
             if "title" in data:
                 sheet.title = data["title"] or None
+            if voucher_ids:
+                AttachmentService.link(voucher_ids, linked_type="income_sheet",
+                                       linked_id=str(sheet.id), purpose="INCOME_VOUCHER",
+                                       owner=request.user)
             recalculate(sheet)
-        return Response({**sheet_view(sheet), "errors": errors})
+        return Response({**sheet_detail_view(sheet), "errors": errors})
 
 
 class SheetSubmitView(APIView):
@@ -312,7 +410,9 @@ def sheet_view(sheet: IncomeSheet) -> dict:
 
 
 def sheet_detail_view(sheet: IncomeSheet) -> dict:
-    return {**sheet_view(sheet), "records": [{
+    return {**sheet_view(sheet),
+            "attachments": linked_attachment_list("income_sheet", sheet.id),
+            "records": [{
         "id": r.id, "line_no": r.line_no, "occurred_on": r.occurred_on,
         "amount": money(r.amount), "category": r.category, "source_note": r.source_note,
         "remark": r.remark,

@@ -11,13 +11,13 @@ class ResolutionsConfig(AppConfig):
         from apps.core.user_refs import register_user_reference
 
         from .models import Resolution, Vote
-        from .services import on_approved, on_rejected, on_withdrawn
+        from .services import merge_votes, on_approved, on_rejected, on_withdrawn
 
         register_callbacks("resolution", on_approved=on_approved, on_rejected=on_rejected,
                            on_withdrawn=on_withdrawn)
         register_attachment_policy("resolution", ResolutionAttachmentPolicy())
         register_user_reference(Resolution, "initiator", on_conflict="move_all")
-        register_user_reference(Vote, "voter", on_conflict="delete_secondary")
+        register_user_reference(Vote, "voter", on_conflict="custom", handler=merge_votes)
 
 
 class ResolutionAttachmentPolicy:

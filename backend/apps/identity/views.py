@@ -3,13 +3,26 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.services import AccountService
 from apps.core.errors import ApiError
-from apps.core.masking import PHONE_RE
+from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.permissions import IsAdmin, IsMember
 from apps.core.serializers import page_response
 from apps.residency.models import Membership
 
 from .services import IdentityService
+
+
+def _merge_response(kind: str, result: dict) -> dict:
+    """合并成功后旧会话已失效：为主账号签发同类型的新令牌（IFC-071/072，AC-012-01）。"""
+    primary = result.pop("primary")
+    result.pop("report", None)
+    if result["merged"]:
+        result["token"] = AccountService.issue_token(primary, session_kind=kind)
+        result["user"] = {"id": primary.id, "account_no": primary.account_no,
+                          "nickname": primary.nickname, "avatar_url": primary.avatar_url,
+                          "status": primary.status}
+    return result
 
 
 class MeView(APIView):
@@ -24,8 +37,10 @@ class PhoneBindView(APIView):
 
     def post(self, request):
         data = request.data or {}
-        return Response(IdentityService.bind_phone(request.user, str(data.get("phone", "")),
-                                                   str(data.get("code", ""))))
+        kind = AccountService.session_kind_of(request.auth)  # 合并后旧令牌会被删除，先取类型
+        result = IdentityService.bind_phone(request.user, str(data.get("phone", "")),
+                                            str(data.get("code", "")))
+        return Response(_merge_response(kind, result))
 
 
 class PhoneChangeView(APIView):
@@ -33,10 +48,12 @@ class PhoneChangeView(APIView):
 
     def post(self, request):
         data = request.data or {}
-        return Response(IdentityService.change_phone(
+        kind = AccountService.session_kind_of(request.auth)
+        result = IdentityService.change_phone(
             request.user, str(data.get("old_phone", "")), str(data.get("new_phone", "")),
             str(data.get("old_code", "")), str(data.get("new_code", "")),
-        ))
+        )
+        return Response(_merge_response(kind, result))
 
 
 class CancelAccountView(APIView):

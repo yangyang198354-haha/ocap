@@ -1,14 +1,15 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-07T23:57:31+08:00</timestamp>
+  <timestamp>2026-11-08T13:43:16+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.2.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md</file>
     <file>requirements/user_stories.md</file>
     <file>architecture/architecture_design.md</file>
     <file>architecture/module_design.md</file>
     <file>architecture/tech_stack.md</file>
+    <file>development/code_review_report.md</file>
   </input_files>
   <phase>PHASE_05,PHASE_06</phase>
   <status>APPROVED</status>
@@ -132,7 +133,7 @@
 - `[ASSUMPTION] A-04`：半数同意分母取 `CommitteeQuery.denominator_for_half_majority`，票数分母模式来自 `SystemConfig`。
 - `[DEVIATION] D-01`：实际运行环境 Django 6.0.6 / DRF 3.17.1，目标画像为 Django 5.2；未降级，代码未使用 6.0 专属 API。
 - `[DEVIATION] D-02`：`openpyxl` 与阿里云短信 SDK 未安装，xlsx 导入返回 `IMPORT_UNAVAILABLE`（503），阿里云网关返回 `SDK_MISSING`；csv 导入与 console 短信网关可用。
-- `[DEVIATION] D-03`：迁移由 `makemigrations` 自动生成，未按 P6 手写；字段与约束已人工核对并通过 `--check`。
+- `[DEVIATION] D-03`：0001/0002 迁移由 `makemigrations` 自动生成，未按 P6 手写；字段与约束已人工核对并通过 `--check`。1.3.0 起三个 `0003_*` 已改为手写（见 §11.3），0001 仍属 CR-002，留待后续。
 - `[DEVIATION] D-04`：前端与小程序依赖未安装，未执行 `npm install` / 构建 / 组件测试，相关产物仅做静态实现与路由覆盖核对。
 
 ## 8. 未验证项与风险
@@ -166,3 +167,64 @@
 自验证：`python manage.py test tests.unit tests.integration tests.e2e --settings=config.test_settings -v 1` → `Ran 115 tests in 0.980s / OK`；`makemigrations --check --dry-run` → `No changes detected`。
 
 文档版本：1.0.0 → 1.1.0（MINOR）；旧版本 1.0.0 登记为 SUPERSEDED。
+
+## 11. 完整性复核缺陷修复（ocap-GROUP_C-5，CR-011 ~ CR-026）
+
+依据 code_review_report §8 与用户决定（2026-11-08，上报处理 Q1=A，`REWORK_AUTHORIZED`），修复全部 CRITICAL/MAJOR（CR-011 ~ 023）及可改的 MINOR。文档版本 1.2.0 → 1.3.0（MINOR），旧 1.2.0 请 PM 登记为 SUPERSEDED。
+
+### 11.1 改动清单（按依赖拓扑：core/accounts → 业务 app → identity/jobs → 前端 api 层 → 页面）
+
+| 序号 | MOD | 文件 | 新建/修改 | 依赖前置 | 复杂度 | 改动要点 | 状态 |
+|---|---|---|---|---|---|---|---|
+| 1 | MOD-001 | `backend/config/settings.py`、`config/test_settings.py` | 修改 | — | L | CR-024：去掉固定默认 SECRET_KEY（缺失且非 DEBUG 时拒绝启动，测试设置显式允许随机密钥）；`ALLOWED_HOSTS` 默认收敛为 localhost | DONE |
+| 2 | MOD-001 | `apps/core/permissions.py`、`core/views.py` | 修改 | — | L | 新增 `IsMemberOrAdmin`，附件下载允许管理员（审核申诉证明所需，具体可见性仍由附件策略决定） | DONE |
+| 3 | MOD-003 | `apps/accounts/services.py`、`views.py` | 修改 | 1 | M | `fill_empty_profile_from` 先释放 secondary 的唯一列 `verified_email`；新增 `session_kind_of`；Web 扫码首次登录取微信昵称（CR-026）；邮箱验证未传 email 时按本人邮箱校验 | DONE |
+| 4 | MOD-013 | `apps/polls/{apps,services,views}.py` | 修改 | 3 | M | 合并时作答冲突保留 primary 并审计 `MERGE_ANSWER_DISCARDED`（CR-011）；打分 1~5、截止前结果任何人不可见（CR-021） | DONE |
+| 5 | MOD-009 | `apps/resolutions/{apps,services}.py` | 修改 | 3 | L | 决议表决合并处理（同轮次冲突保留 primary） | DONE |
+| 6 | MOD-012 | `apps/ledger/services.py` | 修改 | — | M | `post(allow_negative)` 支持核销多退；`generate_due` 改为生成已结束的上一季度/上一年度（幂等）（CR-017/018） | DONE |
+| 7 | MOD-010 | `apps/claims/{services,views}.py` | 修改 | 6 | M | 核销通过：作废关联报销单台账、只记差额（可为负）；核销被拒/撤回释放关联；核销不可重提；取消"报销不得低于预借"限制（CR-017） | DONE |
+| 8 | MOD-011 | `apps/income/views.py` | 修改 | 6 | M | 单条/多条录入 `POST /admin/income/sheets`、凭证附件 `voucher_ids`、导入跳过重复/错误行（含与已有 PENDING/EFFECTIVE 记录比较）、明细接口（CR-016） | DONE |
+| 9 | MOD-014 | `apps/jobs/management/commands/run_due_jobs.py` | 修改 | 6 | L | `run_due_jobs` 调用 `LedgerService.generate_due`（CR-018） | DONE |
+| 10 | MOD-007 | `apps/identity/{services,views}.py` | 修改 | 3、4、5 | H | `bind_phone`/`change_phone` 遇已注册手机号走 `_merge_by_phone`（行锁、单事务、主账号=手机号原账号），返回 `{merged, token, user}`；`merge_accounts` 增 actor/trigger 审计；补 `mask_phone` 缺失导入（管理端房屋关系列表原会 500）（CR-011） | DONE |
+| 11 | MOD-008 | `apps/approval/views.py` | 修改 | — | L | 流程 PUT 支持 `is_active`（启用/停用，CR-015） | DONE |
+| 12 | 迁移 | `apps/{claims,income,ledger}/migrations/0003_*.py` | 修改 | — | L | 去掉 Generated 文件头改为手写，操作与索引名不变（CR-023） | DONE |
+| 13 | MOD-020 | `frontend/src/shared/api.js`、`stores/auth.js` | 修改 | 1~11 | M | 契约对齐：claims/polls/income/ledger/appeal/admin 路径与字段；`identities` 按对象读取（CR-012/013/014/015/019/022） | DONE |
+| 14 | MOD-020 | `frontend/src/portal/*.vue`（Home、PortalLayout、Resolutions、ResolutionDetail、Claims、Polls、PollDetail、Income、Reports、Me、Units、WechatCallback、Login） | 修改 | 13 | H | 导航增 `/claims`、`/income`；报销/备用金/核销 UI；投票 kind/题型；决议截止时间/附件/撤回/重提；手机号绑定/换绑/注销带 phone；收入逐条录入与导入提示 | DONE |
+| 15 | MOD-021 | `frontend/src/admin/{AdminSeats,AdminMemberships,AdminFinance,AdminUsers,AdminAppeals}.vue` | 修改 | 13 | M | 业主代表选项、撤销认证路径与参数、申诉决定字段与证明查看、去掉不存在的合并/生成接口入口 | DONE |
+| 16 | MOD-022 | `miniprogram/utils/{http,api}.js`、`pages/{login,index,me,units,claims,polls/detail}`、新增 `pages/phone/index.vue`、`pages.json` | 修改/新建 | 1~11 | H | 密码登录、`is_new` 触发资料页、`identities` 对象、申诉带证明、报销/备用金/核销、投票 `/responses`+`value`、绑定/换绑手机号页 | DONE |
+
+### 11.2 `/me` identities 契约裁定（CR-012）
+
+module_design IFC-070 规定 `identities` 为对象 `{is_guest, units, committee, labels}`，后端已符合，因此只改 Web 与小程序的读取处（Home.vue、PortalLayout、各页面的委员判断、小程序 index/me），后端不动。
+
+### 11.3 迁移
+
+| 项 | 内容 | 可逆 |
+|---|---|---|
+| `claims/0003_rename_claims_clai_status_a1b2c3_idx_…`、`income/0003_alter_incomerecord_options_and_more`、`ledger/0003_rename_ledger_lede_occurre_c39b98_idx_…` | **文件名与迁移名不变**（已应用于测试环境 MySQL）；去掉 `# Generated by Django 6.0.6` 头，改为手写文件（带说明 docstring、双引号风格）；`operations` 与依赖逐项相同，AST 与原文件一致（已用脚本比对，仅 docstring 不同）；索引名、`line_no` 字段选项均未变 | 是（RenameIndex/AlterField/AlterModelOptions 均可反向） |
+| 新增迁移 | 无。本次所有后端改动均不涉及模型字段 | — |
+
+`makemigrations --check --dry-run`（Django 5.2.19）输出 `No changes detected`，没有生成任何文件。
+
+### 11.4 架构偏差与假设
+
+| 编号 | 说明 |
+|---|---|
+| `[ASSUMPTION] A-06` | 备用金核销按 REQ-FUNC-041/058 实现：核销通过时作废关联凭票报销单的台账，只入核销差额；差额为负（多退）时 `Claim.amount` 与台账明细均记为负数。"谁登记退回现金"需求未规定，本次只体现为负差额。 |
+| `[ASSUMPTION] A-07` | `change_phone` 沿用既有"原号+新号双验证码"契约（`old_phone/new_phone/old_code/new_code`），未改为 IFC-072 的 `{new_phone, code}`，避免扩大变更面；与设计的差异归入 CR-025。 |
+| `[ASSUMPTION] A-08` | 导入的"重复"判定按 IFC-111/OQ-12：同文件内或与已有 PENDING/EFFECTIVE 记录的（日期、金额、类别、来源说明）四项全同。逐条录入（`POST /admin/income/sheets`）遇错整体拒绝（便于当场更正），不跳过。 |
+| `[ASSUMPTION] A-09` | `generate_due` 自动生成"上一已结束季度"与"上一已结束年度"，已有未过期报表则跳过，幂等；每日运行即可。 |
+| `[DEVIATION] D-05` | 截止前投票结果：IFC-133 设计为 403 `RESULT_NOT_PUBLIC`，保留既有实现 409 `NOT_CLOSED`（仅去掉发起人/管理员例外），避免无谓改动错误码；影响 IFC-133，归入 CR-025。 |
+
+### 11.5 开放问题 / 交接事项
+
+1. **交 devops-engineer（CR-018）**：`deploy/systemd/` 不在 software-developer 写权限内。需要新增 systemd 定时器（建议 `ocap-run-due-jobs.timer`，每日或每小时执行 `python manage.py run_due_jobs`），并在部署计划中验证；`run_due_jobs` 现已包含季度/年度报表生成。同时确认测试机 `backend/.env` 的 `DJANGO_SECRET_KEY`、`DJANGO_ALLOWED_HOSTS` 非空（CR-024 之后缺失 SECRET_KEY 会拒绝启动；ALLOWED_HOSTS 默认不再是 `*`）。
+2. **CR-025（MINOR，未处理）**：IFC-110/111/112/120/132/133/140 的路由与签名偏离设计（收入表路径带 `/admin` 前缀但权限为业委会成员、台账路径 `/ledger/reports`、`approval_flow_id` 对 `flow_id`、`--now/--only`、`generate_reports`/`purge_temp_attachments` 任务缺失等）。需 module_design 回写或另立变更，属架构决定，本次不改。
+3. **CR-026（MINOR，部分处理）**：Web 扫码首次登录已取微信昵称（头像转存仍未做：需要新增下载微信头像并转存附件的外部调用，P11 无出处，`TODO(IFC-027): [UNSOURCED]`）；前端自动化测试按约束留给 test-engineer。
+4. `change_phone` 与 IFC-072 契约差异（A-07）、Web/小程序资料页头像上传（CR-004）仍为遗留。
+5. 0001_initial 迁移仍为 makemigrations 产物（CR-002）；因已上线，本次不动。
+6. 管理端不再提供"合并账号"入口：合并只由用户绑定/换绑手机号触发（REQ-FUNC-026/028），管理员侧无对应需求。
+
+### 11.6 预期变更的现有测试（交 test-engineer，本次未改任何测试文件）
+
+见 code_review_report §9.3。

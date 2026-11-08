@@ -186,6 +186,7 @@ class IncomeTests(ApiTestBase):
         self.assert_error(resp, 403, "FORBIDDEN")
 
     def test_import_row_error_ratio(self):
+        """AC-059-03：错误率超过 2% 也不整体拒绝，错误行跳过、其余 40 行导入。"""
         rows = ["日期,金额,收入类别,来源说明,备注"]
         for i in range(40):
             rows.append(f"2026-06-01,10.00,物业费,项目{i},")
@@ -193,7 +194,23 @@ class IncomeTests(ApiTestBase):
                  "2026-06-01,1.001,物业费,,"]
         resp = self.upload("/admin/income/sheets/import", {"file": self._csv(rows)},
                            token=self.clerk_token)
-        self.assert_error(resp, 400, "IMPORT_ROW_ERRORS")
+        self.assert_ok(resp, 201)
+        summary = resp.data["import_summary"]
+        self.assertEqual((summary["total_rows"], summary["imported"], summary["failed"]), (43, 40, 3))
+        self.assertEqual(resp.data["total_amount"], "400.00")
+        self.assertEqual(IncomeSheet.objects.get(id=resp.data["id"]).records.count(), 40)
+
+    def test_import_all_rows_skipped_creates_nothing(self):
+        """AC-059-05：全部行错误时导入 0 条、不创建收入表。"""
+        before = IncomeSheet.objects.count()
+        rows = ["日期,金额,收入类别,来源说明,备注", "bad,10.00,物业费,,", "2026-06-01,-1,物业费,,"]
+        resp = self.upload("/admin/income/sheets/import", {"file": self._csv(rows)},
+                           token=self.clerk_token)
+        self.assert_ok(resp, 200)
+        self.assertIsNone(resp.data["sheet"])
+        self.assertEqual(resp.data["import_summary"]["imported"], 0)
+        self.assertEqual(resp.data["import_summary"]["failed"], 2)
+        self.assertEqual(IncomeSheet.objects.count(), before)
 
     def test_import_missing_columns(self):
         resp = self.upload("/admin/income/sheets/import",

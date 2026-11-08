@@ -140,6 +140,8 @@ class SettlementCreateView(APIView):
     def post(self, request):
         data = request.data or {}
         reason = str(data.get("reason", "")).strip()
+        if not (1 <= len(reason) <= 500):
+            raise ApiError("INVALID_VALUE", "事由须为 1~500 字符")
         flow = _flow(data, "EXPENSE")
         try:
             advance_id = int(data["advance_id"])
@@ -163,9 +165,8 @@ class SettlementCreateView(APIView):
             if any(r.settlement_id is not None for r in reimbursements):
                 raise ApiError("SETTLED", "部分报销单已结算", 409)
             total_reimburse = sum((r.amount for r in reimbursements), Decimal("0.00"))
+            # 差额 = 实际花费合计 − 预借额；负数即"多退"（REQ-FUNC-058），审批通过后冲减支出
             amount = total_reimburse - advance.amount
-            if amount < 0:
-                raise ApiError("INVALID_VALUE", "报销总额不得低于借款金额")
             settlement = Claim.objects.create(type="SETTLEMENT", submitter=request.user,
                                               applicant_labels=_applicant_labels(request.user),
                                               amount=amount, reason=reason,
@@ -252,8 +253,8 @@ class ClaimResubmitView(APIView):
         claim = Claim.objects.filter(id=claim_id, submitter=request.user).first()
         if claim is None:
             raise ApiError("NOT_FOUND", "申请不存在或非本人提交", 404)
-        if claim.status not in {"REJECTED", "WITHDRAWN"}:
-            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交", 409)
+        if claim.status not in {"REJECTED", "WITHDRAWN"} or claim.type == "SETTLEMENT":
+            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交（核销请重新发起）", 409)
         data = request.data or {}
         amount = _parse_amount(data.get("amount", claim.amount))
         reason = str(data.get("reason", claim.reason)).strip()

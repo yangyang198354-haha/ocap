@@ -1,74 +1,88 @@
 <file_header>
-  <author_agent>sdlc-test-engineer</author_agent>
-  <timestamp>2026-11-07T23:57:31+08:00</timestamp>
+  <author_agent>test-engineer</author_agent>
+  <timestamp>2026-11-08T22:59:07+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>0.3.0</version>
-  <input_files><file>testing/test_plan.md</file><file>requirements/user_stories.md</file><file>architecture/module_design.md</file></input_files>
+  <version>0.4.0</version>
+  <input_files><file>requirements/user_stories.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>testing/test_plan.md</file></input_files>
   <phase>PHASE_08</phase>
-  <status>APPROVED</status>
+  <status>DRAFT</status>
 </file_header>
 
-> 复跑说明（ocap-GROUP_D-2）：DEF-001~004 修复后复跑，原 6 条失败全部转绿。
+> 复跑说明（ocap-GROUP_D-7）：GROUP_C-5 返工后重跑。REWORK_AUTHORIZED: project_workspace/ocap/testing/。
 
 ## 摘要
 
-- 执行时间：2026-11-07 23:56 ~ 23:57（Asia/Shanghai，复跑）。
-- 环境：Windows，Python 3.14.6，Django 6.0.6，DRF 3.17.1，`config.test_settings`，SQLite `:memory:`，短信 / 邮件 / 微信均为 fake。
-- 命令：`python manage.py test tests.integration --settings=config.test_settings -v 1`（工作目录 `backend/`）。
-- total = pass + fail + skip + blocked + not_testable = 72 = 72 + 0 + 0 + 0 + 0。
-- 通过率 = pass/(pass+fail+blocked) = 72/(72+0+0) = 100.00%。
-- 判定模式与阈值：FULL_FLOW threshold，integration_pass ≥ 0.90。
-- **本层门控：PASSED**（100% ≥ 90%）；DEF-001~004 已修复。
+- 执行时间：2026-11-08 22:55 ~ 22:56（Asia/Shanghai）。
+- 环境：同单元层报告。
+- 命令：
+  - `(cd backend && python manage.py test tests.integration --settings=config.test_settings)`
+  - `(cd frontend && npx vitest run)`（pages.spec.js 归入本层）
+  - `(cd miniprogram && npx vitest run)`（pages.spec.js 归入本层）
+- 本层用例：后端 99（71 既有 + 28 新写）+ Web 页面挂载 14 + 小程序页面挂载 14 = 127。
+- total = pass + fail + skip + blocked + not_testable = 127 = 126 + 1 + 0 + 0 + 0。
+- 通过率 = pass/(pass+fail+blocked) = 126/(126+1+0) = 99.21%。
+- 判定模式与阈值：FULL_FLOW threshold，integration_pass = 0.90。
+- **本层门控：PASSED**（99.21% ≥ 90%）。唯一失败是产品缺陷 DEF-005，须回流 GROUP_C，见下。
 
 ## 执行输出
 
 ```
-python manage.py test tests.integration --settings=config.test_settings -v 1
-Ran 72 tests in 0.825s
+$ (cd backend && python manage.py test tests.integration --settings=config.test_settings)
+AssertionError: ... frontend/src/shared/api.js:132 GET /admin/registry/units/${id}: 视图 AdminUnitDetailView 不支持该方法
+Ran 99 tests in 4.424s
+FAILED (failures=1)
 
-OK
+$ (cd frontend && npx vitest run)
+ ✓ tests/api.spec.js (11 tests)
+ ✓ tests/auth.store.spec.js (8 tests)
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+
+$ (cd miniprogram && npx vitest run)
+ ✓ tests/pages.spec.js (14 tests)
+ ✓ tests/api.spec.js (11 tests)
+ ✓ tests/store.spec.js (2 tests)
+ Test Files  3 passed (3)
+      Tests  27 passed (27)
 ```
+
+Web 33 = 单元层 19 + 本层 14；小程序 27 = 单元层 13 + 本层 14。
 
 ## 分项结果
 
-| TC | AC | 描述 | 结果 | 实际输出（FAIL 时） | 根因分类 |
-|---|---|---|---|---|---|
-| TC-INT-001~009 | AC-001/003/004/005/008/009/069 | 注册、重复手机号、错码锁定、重发限流、验证码登录、密码登录与锁定、登出、小程序降级 | PASS（9） | — | — |
-| TC-INT-010~014 | AC-007/017/030/031 | 资料修改与字段保护、昵称长度、头像、邮箱验证与登录、注销 | PASS（5） | — | — |
-| TC-INT-015~017 | AC-011/034 | 管理员登录与审计、错误密码、越权拦截 | PASS（3） | — | — |
-| TC-INT-018~023 | AC-018/019/020/021/022/023/026 | 清册选项、CSV 导入、手机号维护、认证 HEAD/OWNER、422/409/404 | PASS（6） | — | — |
-| TC-INT-024~025 | AC-026 | 申诉凭证、管理员核准 / 拒绝理由 | PASS（2） | — | — |
-| TC-INT-026~028 | AC-024/029 | 同住人申请、审批、移除、主动离开 | PASS（3） | — | — |
-| TC-INT-029 | AC-027/036 | 撤销户主晋升与席位失效 | PASS（1） | — | — |
-| TC-INT-030~033 | AC-037/038/040 | 席位授予、上限校验、撤销、超额提示 | PASS（4） | — | — |
-| TC-INT-034~036 | AC-043/045/046 | 审批流程配置校验与可见性 | PASS（3） | — | — |
-| TC-INT-037 | AC-045/047 | 指定审批通过后公开详情 | PASS（1） | — | — |
-| TC-INT-038 | AC-047 | 审批结束后公开列表对任意登录用户可见 | PASS | — | DEF-001 已修复 |
-| TC-INT-039~042 | AC-044/045/048 | 审批中详情隔离、非审批人拦截、待办、撤回重提 | PASS（4） | — | — |
-| TC-INT-043~046 | AC-046/065 | 投票窗口、委员投票与重复、到期判定、过期拦截 | PASS（4） | — | — |
-| TC-INT-047~054 | AC-048/049/050/051/064/067 | 报销金额、审批、自批拦截、豁免重提、备用金权限、越权、管理端列表 | PASS（8） | — | — |
-| TC-INT-055~060 | AC-058/059/060 | 收入导入、权限、错误率、缺列、提交审批与作废、空表拦截 | PASS（6） | — | — |
-| TC-INT-061 | AC-063 | 已生效收入表对所有登录用户可见 | PASS | — | DEF-002 已修复 |
-| TC-INT-062 | AC-061 | 台账金额与精度 | PASS（1） | — | — |
-| TC-INT-063 | AC-063 | 台账报表对所有登录用户可见 | PASS | — | DEF-002 已修复 |
-| TC-INT-064 | AC-062 | 同期手动重新生成台账 | PASS | — | DEF-003 已修复 |
-| TC-INT-065 | AC-061 | 非业委会成员不可生成台账 | PASS（1） | — | — |
-| TC-INT-066~069 | AC-052/055/056 | 投票创建权限、窗口、委员应答与重复、选项校验 | PASS（4） | — | — |
-| TC-INT-070 | AC-054/056 | 产权业主参与调查 | PASS | — | DEF-004 已修复 |
-| TC-INT-071 | AC-052/053 | 业主代表参与代表投票 | PASS | — | DEF-004 已修复 |
-| TC-INT-072 | AC-057 | 截止后结果汇总与截止前拦截 | PASS（1） | — | — |
+| 集成边界 | TC | AC | 描述 | 结果 | 实际输出（FAIL 时） | 根因分类 |
+|---|---|---|---|---|---|---|
+| 既有 API 集成（auth / residency / approval / finance / polls） | TC-INT-001~072（不含 071 作废） | 见 test_plan | 既有 71 个用例（含已更新的 TC-INT-057） | PASS（71） | — | — |
+| 收入导入 ↔ 视图 | TC-INT-073 | AC-059-05 | 全部行错误：200、sheet=None、不建表 | PASS | — | — |
+| 前端 api.js ↔ 后端路由/视图（契约） | TC-INT-083、084 | 画像 P5 | 小程序 api.js 全部调用可解析且方法受支持；GR-C-004 错误路径不再出现 | PASS（2） | — | — |
+| Web api.js ↔ 后端路由/视图（契约） | TC-INT-082 | 画像 P5 | Web api.js 每个调用可解析路由且视图支持该 HTTP 方法 | **FAIL** | `frontend/src/shared/api.js:132 GET /admin/registry/units/${id}: 视图 AdminUnitDetailView 不支持该方法` | 产品缺陷（DEF-005） |
+| 前端字段 ↔ 后端响应（契约） | TC-INT-074~081 | US-001/003/036/040/041/049~059/012/014/028/070 | identities 对象与键、职位枚举、claims 载荷与旧结构拒绝、polls 创建与 responses、income sheets、手机号绑定/换绑响应、登录 is_new | PASS（8） | — | — |
+| identity ↔ polls/resolutions（账号合并） | TC-INT-085~089 | AC-012-01/02/03、AC-014-01、AC-072-01/02 | 绑定/换绑合并、答卷冲突保留主账号并审计、仅副账号作答并入、未占用号仅绑定、错码不合并 | PASS（5） | — | — |
+| claims ↔ ledger（核销） | TC-INT-090~094 | AC-051-01~06 | 预借通过计入；补差 1200；多退 800；恰好相等 1000；缺报销单与重复核销被拒 | PASS（5） | — | — |
+| jobs ↔ ledger | TC-INT-095 | AC-061-01/02 | run_due_jobs 生成上季/上年报表且幂等 | PASS | — | — |
+| income 逐条录入与导入 | TC-INT-096~099 | AC-058-01/02/03/08、AC-059-02/05 | 逐条录入；非法金额与非成员；文件内重复；与 PENDING 表重复 | PASS（4） | — | — |
+| attachments ↔ residency（管理员下载） | TC-INT-100 | US-026 | 管理员可下载申诉证明；无关用户 404；未登录 401 | PASS | — | — |
+| Web 页面 ↔ api/store（HTTP 层 mock） | TC-WEB-017~030 | US-041、049~057、012、014、017 | 首页身份、Claims 表单与核销、PollDetail、Me 手机号/改密/注销 | PASS（14） | — | — |
+| 小程序页面 ↔ api/store（uni 桩） | TC-MP-014~027 | US-003、012、014、041、045、049~057 | 首页与待办、claims、投票、手机号页、登录 | PASS（14） | — | — |
+
+计数核对：后端 71+1+2+1+8+5+5+1+4+1 = 99（通过 98，失败 1）；Web 14；小程序 14；合计 127（126 通过，1 失败）。契约三条路由用例的编号：Web = TC-INT-082（失败）、小程序 = TC-INT-083、已知错误路径 = TC-INT-084。
+
+## GR-C-005 condition 核对（本层相关）
+
+| 条件 | 结果 |
+|---|---|
+| ① AC-059-03/05 两条旧用例更新 | 已更新并通过：`IncomeTests::test_import_row_error_ratio`（201，imported=40、failed=3）、单元 `test_row_error_ratio_over_2_percent`；并新增 `test_import_all_rows_skipped_creates_nothing` |
+| ② 前后端契约测试（路由、方法、关键字段） | 已有 `tests/integration/test_frontend_contract.py` 11 个用例；覆盖 identities、claims、polls responses、income sheets、手机号绑定/换绑、登录响应；已发现 DEF-005 |
+| ③ Web/小程序 vitest（store、api 路径、页面挂载） | 已有：Web 33、小程序 27，全部通过 |
+| ④ §9 建议用例 | 合并冲突、核销补差/退款/恰好相等、generate_due 幂等、逐条录入与重复导入、管理员下载附件、缺 SECRET_KEY 拒绝启动均已覆盖 |
+| mock 层次 | 仅 http 层（Web `vi.mock('@/shared/http')`；小程序 `uni.request/uploadFile` 桩）；未 mock api.js、store 或页面自身（`git grep "vi.mock\|spyOn" frontend/tests miniprogram/tests` 仅见 http 层） |
 
 ## 与基线对比
 
-FULL_FLOW / greenfield，无既有基线。复跑后 72/72 全部通过，原 6 条缺陷失败已转绿，无回退、无新增失败。
+基线（画像 P4）：后端集成 71/71 通过。本次既有 71 个用例全部通过（TC-INT-057 按 AC-059-03 更新断言）。新写 28 个后端用例中 27 通过、1 失败（TC-INT-082，契约测试，产品缺陷）。新增失败 1 条：`RouteContractTests.test_web_api_routes_exist_and_support_method`（新增用例首次暴露，非既有失败，依据：基线中无该用例；根因为前端调用不存在的 GET 详情方法）。
 
-## 缺陷复核（原失败项）
+## 失败汇总（需路由给开发）
 
-| TC | 原现象 | 修复验证 | DEF | 状态 |
-|---|---|---|---|---|
-| TC-INT-038 | 普通登录用户 GET `/resolutions?scope=public` 返回 403 | 读写权限分离后返回 200 | DEF-001 | FIXED |
-| TC-INT-061 | 普通登录用户 GET `/income/sheets` 与 `/income/sheets/{id}` 返回 403 | 读接口改 `IsMember` 后返回 200 | DEF-002 | FIXED |
-| TC-INT-063 | 普通登录用户 GET `/ledger/reports` 返回 403 | 列表 GET 改 `IsMember` 后返回 200 | DEF-002 | FIXED |
-| TC-INT-064 | 同期二次生成台账返回 409 `LEDGER_LOCKED` | 覆盖原行且版本 +1，返回 201 | DEF-003 | FIXED |
-| TC-INT-070 | 产权业主应答调查返回 403 | 按调查范围校验后返回 201 | DEF-004 | FIXED |
-| TC-INT-071 | 业主代表应答投票返回 403 | 参与人快照 + 代表身份校验后返回 201 | DEF-004 | FIXED |
+| TC | 现象 | 疑似位置 | DEF |
+|---|---|---|---|
+| TC-INT-082（`test_web_api_routes_exist_and_support_method`） | Web `registryUnit(id)` 发 `GET /admin/registry/units/${id}`，后端 `AdminUnitDetailView` 只实现 patch/delete，GET 返回 405 | `frontend/src/shared/api.js:132`；`backend/apps/registry/views.py:62` | DEF-005 |

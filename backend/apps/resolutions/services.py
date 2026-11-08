@@ -33,6 +33,28 @@ def _close(subject_id: int, status: str, result: dict | None) -> None:
                         detail={"status": status, "result": result})
 
 
+def merge_votes(primary_id: int, secondary_id: int) -> list[str]:
+    """账号合并：同一决议同一轮次两账号都已表决则保留 primary，丢弃 secondary 并审计；其余并入。"""
+    from .models import Vote
+
+    moved: list[str] = []
+    for vote in list(Vote.objects.filter(voter_id=secondary_id)):
+        if Vote.objects.filter(resolution_id=vote.resolution_id, revision=vote.revision,
+                               voter_id=primary_id).exists():
+            resolution_id = vote.resolution_id
+            vote.delete()
+            AuditService.record(actor=AuditActor("SYSTEM", None, "系统"),
+                                action="MERGE_ANSWER_DISCARDED", object_type="resolution",
+                                object_id=str(resolution_id), result="SUCCESS",
+                                detail={"primary": primary_id, "secondary": secondary_id})
+            moved.append(f"discard_vote:{resolution_id}")
+        else:
+            vote.voter_id = primary_id
+            vote.save(update_fields=["voter"])
+            moved.append(f"move_vote:{vote.resolution_id}")
+    return moved
+
+
 class ResolutionService:
     @staticmethod
     def judge_if_due(resolution_id: int, now=None) -> str:

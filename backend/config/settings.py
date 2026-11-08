@@ -4,9 +4,20 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
-ALLOWED_HOSTS = [h for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",") if h]
+# CR-024：不再使用固定默认密钥。缺失时仅在 DEBUG 或显式允许（测试设置）下生成进程内随机值，否则拒绝启动。
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG or os.environ.get("DJANGO_ALLOW_EPHEMERAL_SECRET") == "1":
+        import secrets as _secrets
+
+        SECRET_KEY = _secrets.token_urlsafe(50)
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured("必须通过环境变量 DJANGO_SECRET_KEY 提供密钥")
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+                 if h.strip()]
 
 INSTALLED_APPS = [
     "rest_framework",

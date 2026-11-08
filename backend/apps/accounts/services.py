@@ -285,6 +285,11 @@ class AccountService:
         AuthToken.objects.filter(key_hash=_sha256(key)).delete()
 
     @staticmethod
+    def session_kind_of(key: str) -> str:
+        row = AuthToken.objects.filter(key_hash=_sha256(key)).first()
+        return row.session_kind if row is not None else "IDLE"
+
+    @staticmethod
     def revoke_tokens(user_id: int) -> int:
         return AuthToken.objects.filter(user_id=user_id).delete()[0]
 
@@ -394,6 +399,13 @@ class AccountService:
                   "gender", "birthday"]
         for field in fields:
             if not getattr(primary, field) and getattr(secondary, field):
+                if field == "verified_email":
+                    # 唯一列：先释放 secondary 的值再写入 primary，避免唯一约束冲突
+                    value = secondary.verified_email
+                    secondary.verified_email = None
+                    secondary.save(update_fields=["verified_email"])
+                    primary.verified_email = value
+                    continue
                 setattr(primary, field, getattr(secondary, field))
         if primary.email_state == "NONE" and secondary.email_state != "NONE":
             primary.email_state = secondary.email_state

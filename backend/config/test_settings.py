@@ -1,5 +1,9 @@
 """测试设置：SQLite 内存库；外部服务一律内存替身；禁连生产。"""
-from .settings import *  # noqa: F401,F403
+import os
+
+os.environ.setdefault("DJANGO_ALLOW_EPHEMERAL_SECRET", "1")  # 测试无需提供真实密钥
+
+from .settings import *  # noqa: F401,F403,E402
 
 DATABASES = {
     "default": {

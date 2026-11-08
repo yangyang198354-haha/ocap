@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@dcloudio/vite-plugin-uni": "^3.0.0-4060620250520001",
+    "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.4.6",
     "jsdom": "^25.0.1",
     "vite": "^5.2.8",

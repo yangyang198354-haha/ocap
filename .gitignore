@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 project_workspace/.hook_state/
 .claude/settings.local.json
+frontend/node_modules/
+frontend/dist/
+backend/db.sqlite3
+backend/var/
+miniprogram/node_modules/
+*.sqlite3-journal

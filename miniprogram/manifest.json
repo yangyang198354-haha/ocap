@@ -1,0 +1,16 @@
+{
+  "name": "ocap",
+  "appid": "",
+  "description": "业主委员会小程序",
+  "versionName": "0.1.0",
+  "versionCode": "1",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "",
+    "setting": { "urlCheck": false },
+    "usingComponents": true
+  },
+  "h5": {
+    "router": { "mode": "history" }
+  }
+}

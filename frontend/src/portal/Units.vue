@@ -1,0 +1,157 @@
+<template>
+  <div class="page">
+    <div class="card">
+      <h3 class="title">业主清册认证</h3>
+      <p class="muted">选择你的专有部分。清册登记手机号与当前手机号一致时可立即认证为产权业主；首位认证者为户主。</p>
+      <div class="row">
+        <el-select v-model="picked.building" placeholder="楼栋" @change="loadUnits">
+          <el-option v-for="b in options.buildings" :key="b" :label="b" :value="b" />
+        </el-select>
+        <el-select v-model="picked.unitNo" placeholder="单元" @change="loadFloors">
+          <el-option v-for="u in options.units" :key="u" :label="u" :value="u" />
+        </el-select>
+        <el-select v-model="picked.floor" placeholder="楼层" @change="loadRooms">
+          <el-option v-for="f in options.floors" :key="f" :label="f" :value="f" />
+        </el-select>
+        <el-select v-model="picked.unitId" placeholder="房号">
+          <el-option v-for="r in options.rooms" :key="r.id" :label="r.room || r.specific_part" :value="r.id" />
+        </el-select>
+        <el-button type="primary" :disabled="!picked.unitId" @click="certify">认证</el-button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="title">认证申诉</h3>
+      <p class="muted">清册手机号与当前手机号不一致时，可上传产权证明提交申诉，由管理员审核。</p>
+      <el-input v-model="appeal.reason" type="textarea" :rows="2" placeholder="申诉说明（选填）" />
+      <div class="row" style="margin-top: 10px">
+        <el-upload :show-file-list="false" :http-request="uploadProof" accept="image/*">
+          <el-button>上传产权证明</el-button>
+        </el-upload>
+        <span class="muted" v-if="appeal.attachmentId">已上传</span>
+        <el-button type="primary" :disabled="!picked.unitId" @click="submitAppeal">提交申诉</el-button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="title">同住人</h3>
+      <p class="muted">无产权业主时不允许申请同住人；由户主审批。</p>
+      <div class="row">
+        <el-input v-model="resident.unitId" placeholder="专有部分 ID" style="max-width: 160px" />
+        <el-input v-model="resident.note" placeholder="说明（选填）" style="max-width: 260px" />
+        <el-button @click="applyResident">申请成为同住人</el-button>
+        <el-button @click="loadToReview">查看待我审批</el-button>
+      </div>
+      <div v-for="item in toReview" :key="item.id" class="row" style="margin-top: 8px; border-top: 1px solid #f0f1f3; padding-top: 8px">
+        <span>{{ item.applicant?.nickname || item.applicant_id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
+        <el-button size="small" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
+        <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { attachmentApi, unitApi } from '@/shared/api'
+import { errorText } from '@/shared/format'
+
+const options = reactive({ buildings: [], units: [], floors: [], rooms: [] })
+const picked = reactive({ building: '', unitNo: '', floor: '', unitId: null })
+const appeal = reactive({ reason: '', attachmentId: null })
+const resident = reactive({ unitId: '', note: '' })
+const toReview = ref([])
+
+async function loadOptions(params) {
+  try {
+    const data = await unitApi.options(params)
+    return data
+  } catch (e) {
+    ElMessage.error(errorText(e))
+    return {}
+  }
+}
+
+async function loadBuildings() {
+  const data = await loadOptions({})
+  options.buildings = data.buildings || []
+}
+
+async function loadUnits() {
+  const data = await loadOptions({ building: picked.building })
+  options.units = data.units || []
+}
+
+async function loadFloors() {
+  const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo })
+  options.floors = data.floors || []
+}
+
+async function loadRooms() {
+  const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo, floor: picked.floor })
+  options.rooms = data.rooms || []
+}
+
+async function certify() {
+  try {
+    const result = await unitApi.certify(picked.unitId)
+    ElMessage.success(`认证成功，身份：${result.role}`)
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function uploadProof({ file }) {
+  try {
+    const uploaded = await attachmentApi.upload(file, 'APPEAL_PROOF')
+    appeal.attachmentId = uploaded.id
+    ElMessage.success('已上传')
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function submitAppeal() {
+  try {
+    await unitApi.createAppeal({
+      unit_id: picked.unitId,
+      reason: appeal.reason,
+      attachment_ids: appeal.attachmentId ? [appeal.attachmentId] : []
+    })
+    ElMessage.success('申诉已提交，等待管理员审核')
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function applyResident() {
+  try {
+    await unitApi.createResidentApplication({ unit_id: Number(resident.unitId), note: resident.note })
+    ElMessage.success('申请已提交')
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function loadToReview() {
+  try {
+    const data = await unitApi.residentApplicationsToReview()
+    toReview.value = data.results || data || []
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function decideResident(id, action) {
+  try {
+    await unitApi.decideResidentApplication(id, action)
+    ElMessage.success('已处理')
+    loadToReview()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+loadBuildings()
+</script>

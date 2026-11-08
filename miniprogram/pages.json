@@ -1,0 +1,30 @@
+{
+  "pages": [
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "业主委员会" } },
+    { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录" } },
+    { "path": "pages/profile-setup/index", "style": { "navigationBarTitleText": "完善资料" } },
+    { "path": "pages/units/index", "style": { "navigationBarTitleText": "我的房屋" } },
+    { "path": "pages/resolutions/index", "style": { "navigationBarTitleText": "决议" } },
+    { "path": "pages/resolutions/detail", "style": { "navigationBarTitleText": "决议详情" } },
+    { "path": "pages/polls/index", "style": { "navigationBarTitleText": "投票/调查" } },
+    { "path": "pages/polls/detail", "style": { "navigationBarTitleText": "投票详情" } },
+    { "path": "pages/claims/index", "style": { "navigationBarTitleText": "报销/备用金" } },
+    { "path": "pages/me/index", "style": { "navigationBarTitleText": "我的" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "业主委员会",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f6f8"
+  },
+  "tabBar": {
+    "color": "#8a919f",
+    "selectedColor": "#2563eb",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页" },
+      { "pagePath": "pages/resolutions/index", "text": "决议" },
+      { "pagePath": "pages/polls/index", "text": "投票" },
+      { "pagePath": "pages/me/index", "text": "我的" }
+    ]
+  }
+}

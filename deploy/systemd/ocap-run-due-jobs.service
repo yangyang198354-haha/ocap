@@ -1,0 +1,17 @@
+# ocap 到期任务（IFC-140）：投票截止、决议判定、席位到期、季报/年报生成、过期数据清理。
+# 安装位置：/etc/systemd/system/ocap-run-due-jobs.service（由 timer 触发，不单独 enable）。
+# 与 Freeark 无关：单元名前缀 ocap-，不使用 freeark-*。
+# 环境变量从 backend/.env 读取（文件内容不入仓库）；格式须为 KEY=VALUE（不含 export）。
+[Unit]
+Description=ocap run_due_jobs (due polls/resolutions/seats/reports and cleanup)
+After=network-online.target ocap-backend.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yangyang
+WorkingDirectory=/home/yangyang/ocap/backend
+EnvironmentFile=/home/yangyang/ocap/backend/.env
+ExecStart=/home/yangyang/ocap/backend/venv/bin/python manage.py run_due_jobs
+TimeoutStartSec=300
+Nice=10

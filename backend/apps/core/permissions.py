@@ -19,7 +19,9 @@ def _is_member(user) -> bool:
 class IsAdmin(BasePermission):
     def has_permission(self, request, view) -> bool:
         if not _is_admin(request.user):
-            raise ApiError("FORBIDDEN", "需要管理员权限", 403)
+            if _is_member(request.user):
+                raise ApiError("FORBIDDEN", "需要管理员权限", 403)
+            raise ApiError("UNAUTHORIZED", "请先登录", 401)
         return True
 
 

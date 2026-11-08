@@ -8,6 +8,7 @@ import Claims from '../pages/claims/index.vue'
 import PollDetail from '../pages/polls/detail.vue'
 import Phone from '../pages/phone/index.vue'
 import Login from '../pages/login/index.vue'
+import ProfileSetup from '../pages/profile-setup/index.vue'
 import { useAuthStore } from '@/store/auth'
 
 const ME = (labels, phone = '138****0000') => ({
@@ -256,5 +257,46 @@ describe('登录（CR-020）', () => {
     await wrapper.vm.loginCode()
     expect(requests()[0]).toMatchObject({ path: '/auth/login/code', data: { phone: '13800000001', code: '123456' } })
     expect(uni.reLaunch).toHaveBeenCalledWith({ url: '/pages/profile-setup/index' })
+  })
+})
+
+describe('首次微信登录后设置头像昵称（US-070）', () => {
+  it('TC-MP-028 设置页：选择头像回填预览；保存 PATCH /me/profile { nickname } 后进入首页（AC-070-01）', async () => {
+    respondWith({ 'PATCH /me/profile': { nickname: '微信小明' } })
+    const { wrapper } = await mountPage(ProfileSetup)
+    wrapper.vm.onChooseAvatar({ detail: { avatarUrl: 'wxfile://tmp_avatar.png' } })
+    wrapper.vm.nickname = '微信小明'
+    await wrapper.vm.save()
+    await flushPromises()
+    expect(wrapper.vm.avatarUrl).toBe('wxfile://tmp_avatar.png')
+    expect(requests()[0]).toMatchObject({ method: 'PATCH', path: '/me/profile', data: { nickname: '微信小明' } })
+    expect(uni.reLaunch).toHaveBeenCalledWith({ url: '/pages/index/index' })
+  })
+
+  it('TC-MP-029 设置页：保存失败提示后端文案且不跳转；“稍后再说”直接进入首页（AC-070-01 异常路径）', async () => {
+    uni.request.mockImplementation(({ success }) => {
+      success({ statusCode: 400, data: { code: 'INVALID_VALUE', message: '昵称长度不合法' } })
+    })
+    const { wrapper } = await mountPage(ProfileSetup)
+    wrapper.vm.nickname = 'x'.repeat(40)
+    await wrapper.vm.save()
+    await flushPromises()
+    expect(uni.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: '昵称长度不合法' }))
+    expect(uni.reLaunch).not.toHaveBeenCalled()
+    await wrapper.vm.skip()
+    expect(uni.reLaunch).toHaveBeenCalledWith({ url: '/pages/index/index' })
+  })
+
+  it('TC-MP-030 登录响应 is_new=false（手机号登录或已关联微信的再次登录）不进入设置页（AC-070-03）', async () => {
+    respondWith({
+      'POST /auth/login/code': { token: 'T3', user: { id: 3 }, is_new: false },
+      'GET /me': ME(['户主'])
+    })
+    const { wrapper } = await mountPage(Login, { token: '' })
+    wrapper.vm.phone = '13800000009'
+    wrapper.vm.code = '123456'
+    await wrapper.vm.loginCode()
+    expect(uni.reLaunch).toHaveBeenCalledWith({ url: '/pages/index/index' })
+    expect(uni.reLaunch).not.toHaveBeenCalledWith({ url: '/pages/profile-setup/index' })
   })
 })

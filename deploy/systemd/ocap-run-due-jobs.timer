@@ -1,0 +1,13 @@
+# 触发频率依据 module_design IFC-140 / architecture_design ADR-013：每分钟一次（任务幂等，另有读时惰性判定兜底）。
+# 若希望降低树莓派负载，可改为 OnCalendar=hourly（投票截止/席位到期的状态延迟最多 1 小时，用户可见状态由读时惰性判定兜底）。
+[Unit]
+Description=Run ocap run_due_jobs every minute
+
+[Timer]
+OnCalendar=minutely
+AccuracySec=10s
+Persistent=true
+Unit=ocap-run-due-jobs.service
+
+[Install]
+WantedBy=timers.target

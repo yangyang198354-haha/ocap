@@ -1,14 +1,16 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-08T22:57:55+08:00</timestamp>
+  <timestamp>2026-11-08T23:38:58+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>0.4.0</version>
+  <version>1.0.0</version>
   <input_files><file>requirements/user_stories.md</file><file>requirements/requirements_spec.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file></input_files>
   <phase>PHASE_07,PHASE_08,PHASE_09</phase>
-  <status>DRAFT</status>
+  <status>APPROVED</status>
 </file_header>
 
-> 复跑说明（ocap-GROUP_D-7，续 -6）：GROUP_C-5 修复 CR-011 ~ 024 后的返工。本版新增后端合并/核销/报表/录入/契约用例，新增 Web 与小程序 vitest，并按 AC-059-02/03/05 更新两条旧用例（TC-UNIT-021、TC-INT-057）。REWORK_AUTHORIZED: project_workspace/ocap/testing/ 下 4 份文件。
+> 复跑说明（ocap-GROUP_D-9，续 -8）：GR-C-007 收尾：DEF-006 CLOSED（TC-INT-106 PASS）、OBS-001 已修复；TC-INT-125/130/146 匿名断言收紧为只接受 401；全层重跑全部通过（后端 212/212，Web 36/36，小程序 30/30）。以下为 -8 的历史说明：GR-D-006 FAIL 修正。PM 按 AC 前缀比对 69 个 Must Have 故事，发现 US-006/010/013/025/028/035/042/068/070/071/073 共 11 个故事无 AC 映射（GR-D-006-F01）。本版逐 AC 补映射、补写新用例（后端集成 49、E2E 旅程 3、Web vitest 3、小程序 vitest 3），并追加 US → 用例总表（§US→用例总表）；DEF-005 复跑 TC-INT-082 通过，标 CLOSED；新用例暴露 DEF-006。REWORK_AUTHORIZED: testing/ 下 4 份文件与 backend/tests/**、frontend/tests/**、miniprogram/tests/**。
+>
+> 前次说明（ocap-GROUP_D-7，续 -6）：GROUP_C-5 修复 CR-011 ~ 024 后的返工。本版新增后端合并/核销/报表/录入/契约用例，新增 Web 与小程序 vitest，并按 AC-059-02/03/05 更新两条旧用例（TC-UNIT-021、TC-INT-057）。REWORK_AUTHORIZED: project_workspace/ocap/testing/ 下 4 份文件。
 
 ## 测试策略
 
@@ -21,10 +23,10 @@
   - 集成：`backend/tests/integration/`，DRF APIClient + 真实 ORM / 路由 / 权限，跨模块；
   - E2E：`backend/tests/e2e/`，多步用户旅程经真实 HTTP API 串联。
 - 判定模式：FULL_FLOW threshold（画像 P5）：unit_pass 0.80、integration_pass 0.90、critical_path 1.00。各层通过后再进入下一层。
-- 基线来源：画像 P4 ——后端 120/120 通过（2026-11-08）；前端与小程序此前无用例。FULL_FLOW threshold 判定，基线用于区分既有/新增失败。
+- 基线来源：画像 P4 ——后端 120/120 通过（2026-11-08）；前端与小程序此前无用例。FULL_FLOW threshold 判定，基线用于区分既有/新增失败。本次改动前先实跑一次：后端全量 160 个全部通过（含 TC-INT-082，DEF-005 已由 GR-C-006 修复）；本次新增后端 52 个（集成 49、E2E 3）与 vitest 6 个（Web 3、小程序 3）。
 - critical path 口径：替代——项目无浏览器/小程序 E2E 框架，用 `backend/tests/e2e/` 的多步 API 旅程作为最高层可执行端到端级用例；前后端契约由 `test_frontend_contract.py`（集成层）与 vitest 路径断言共同覆盖（画像 P5 补充）。
-- vitest 分层归属（Django 无 tag，分层按目录；vitest 按文件）：`frontend/tests/api.spec.js`、`auth.store.spec.js`、`miniprogram/tests/api.spec.js`、`store.spec.js`（单模块，HTTP 层 mock）→ **单元层**；`frontend/tests/pages.spec.js`、`miniprogram/tests/pages.spec.js`（挂载真实 .vue 组件 + 真实 api.js/store，仅 mock http 层）→ **集成层**。mock 只打在 http 模块（Web：`vi.mock('@/shared/http')`；小程序：`uni.request/uploadFile` 桩），未 mock 被测的 api.js、store 或页面本身。
-- 集成层实际可执行后端用例 99 个（表中 TC-INT-071 已作废，0.3.0 表中 4 处方法名与代码不符已更正）。
+- vitest 分层归属（Django 无 tag，分层按目录；vitest 按文件）：`frontend/tests/api.spec.js`、`auth.store.spec.js`、`miniprogram/tests/api.spec.js`、`store.spec.js`（单模块，HTTP 层 mock）→ **单元层**；`frontend/tests/pages.spec.js`、`frontend/tests/login.spec.js`、`miniprogram/tests/pages.spec.js`（挂载真实 .vue 组件 + 真实 api.js/store，仅 mock http 层）→ **集成层**。mock 只打在 http 模块（Web：`vi.mock('@/shared/http')`；小程序：`uni.request/uploadFile` 桩），未 mock 被测的 api.js、store 或页面本身。
+- 集成层实际可执行后端用例 148 个（71 既有 + 77 新写；表中 TC-INT-071 已作废；0.5.0 新增 TC-INT-101~149 共 49 个，位于 `backend/tests/integration/test_gap_must_have.py`）。E2E 旅程 16 个（0.5.0 新增 TC-E2E-014~016，位于 `backend/tests/e2e/test_gap_journeys.py`）。Web vitest 新增 `frontend/tests/login.spec.js`（TC-WEB-031~033，集成层）；小程序 `pages.spec.js` 追加 TC-MP-028~030（集成层）。
 - GR-C-005 condition 核对：①AC-059-03/05 两条旧用例已按 AC 更新（TC-UNIT-021、TC-INT-057），并新增 TC-UNIT-034/035、TC-INT-073；②前后端契约测试 TC-INT-074~084（路由与方法 3 个、字段 8 个，覆盖 identities、claims、polls responses、income sheets）；③Web/小程序 vitest：TC-WEB-001~030、TC-MP-001~027（store、api 路径、关键页面挂载）；④§9 建议用例：合并冲突 TC-INT-085~089、核销补差/退款/恰好相等 TC-INT-090~094、generate_due 幂等 TC-UNIT-037~039 与 TC-INT-095、逐条录入与重复导入 TC-INT-096~099、管理员下载附件 TC-INT-100、缺 SECRET_KEY TC-UNIT-040~043。
 
 
@@ -194,6 +196,55 @@
 | AC-059-02 | TC-INT-098 | 集成 | sim | 新写 | 同::test_import_skips_duplicate_rows_in_file | 文件内重复行跳过并给行号 | fixture 现造 |
 | AC-059-02/05 | TC-INT-099 | 集成 | sim | 新写 | 同::test_import_skips_rows_duplicating_pending_sheet | 与 PENDING 表重复行跳过；全部重复不建表 | fixture 现造 |
 | US-026（CR-015） | TC-INT-100 | 集成 | sim | 新写 | 同::AdminAttachmentDownloadTests::test_admin_downloads_appeal_proof | 管理员可下载申诉附件；无关用户 404；未登录 401 | fixture 现造 |
+| AC-006-01 | TC-INT-101 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_code_login_returns_token_for_registered_phone | 已注册手机号 + 有效验证码 → 200，令牌可访问 /me 且为同一用户。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-02 | TC-INT-102 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_password_login_by_phone_identifier | 设置密码后，用手机号 + 正确密码登录成功。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-03 | TC-INT-103 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_password_login_failure_message_is_uniform | 未设密码 / 手机号未注册 / 密码错误三种情形，返回相同的 code 与 message（不泄露账号是否存在）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-04 | TC-INT-104 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_wrong_login_code_rejected | 错误验证码 → 400 CODE_INVALID，且未签发令牌。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-04 | TC-INT-105 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_expired_login_code_rejected | 验证码超过有效期 → 400 CODE_EXPIRED。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-04 | TC-INT-106 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_login_code_invalidated_after_five_wrong_attempts | 同一验证码输错 5 次作废；之后即使输入正确验证码也不能登录。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-006-04 | TC-INT-107 | 集成 | sim | 新写 | test_gap_must_have.py::WebPhoneLoginTests::test_password_wrong_five_times_locks_account | 密码连续输错 5 次锁定（429 LOGIN_LOCKED，含 retry_after；锁定时长 15 分钟）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-010-01 | TC-INT-108 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_web_and_miniprogram_phone_logins_reach_same_account_and_identity | 产权业主分别以 Web 验证码登录、小程序（EXTENDED 会话）验证码登录、密码登录 → 同一 user id，身份均含“户主”。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-010-02 | TC-INT-109 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_wechat_bind_phone_then_wechat_and_phone_logins_same_account | 微信登录（新建账号）→ 绑定未被占用手机号 → 再微信登录 / 手机号登录 → 同一账号。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-010-03 | TC-INT-110 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_second_account_for_same_phone_rejected | 同一手机号不能再创建第二个账号：取注册码 409；微信账号绑定该号 → 合并为一个账号（总数不增加）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-070-01/02 | TC-INT-111 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_first_wechat_login_is_new_then_not_new_and_profile_kept | 首次小程序微信登录 is_new=true；保存昵称后再次微信登录 is_new=false，昵称保持用户最后设置的值。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-070-03 | TC-INT-112 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_phone_login_is_never_new | 已有账号手机号登录响应 is_new=false（不触发头像昵称设置页）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-070-04 | TC-INT-113 | 集成 | sim | 新写 | test_gap_must_have.py::SingleAccountAcrossEntriesTests::test_web_scan_first_login_takes_wechat_nickname_without_setup | Web 扫码首次微信登录 → 昵称取微信昵称（FakeWeChatClient 返回“微信用户”），不经头像昵称设置页。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-013-01 | TC-INT-114 | 集成 | sim | 新写 | test_gap_must_have.py::ReRegisterAfterCancelTests::test_reregister_creates_fresh_guest_account | 注销后同号注册 → 新 user id，身份“游客”，原户主身份/昵称不恢复，新旧账号无关联。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-013-02 | TC-INT-115 | 集成 | sim | 新写 | test_gap_must_have.py::ReRegisterAfterCancelTests::test_reregister_owner_must_certify_again | 原产权业主注销后同号注册 → 需重新清册认证（认证前无户主；认证 201 后才获得身份）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-013-03 | TC-INT-116 | 集成 | sim | 新写 | test_gap_must_have.py::ReRegisterAfterCancelTests::test_register_with_active_phone_rejected | 手机号账号未注销 → 注册被拒（409 PHONE_ALREADY_REGISTERED）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-025-02 | TC-INT-117 | 集成 | sim | 新写 | test_gap_must_have.py::GuestTests::test_guest_can_apply_for_certification_and_resident_binding | 游客可提交清册认证（201）与同住人申请（201）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-025-03 | TC-INT-118 | 集成 | sim | 新写 | test_gap_must_have.py::GuestTests::test_guest_cannot_do_owner_only_actions | 游客审批同住人申请 / 移除同住人 / 读取待审列表 → 403。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-028-01 | TC-INT-119 | 集成 | sim | 新写 | test_gap_must_have.py::ChangePhoneTests::test_change_to_free_phone_keeps_all_identities | 新号未属任何账号 → 更换成功，不合并，户主身份保留。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-028-02 | TC-INT-120 | 集成 | sim | 新写 | test_gap_must_have.py::ChangePhoneTests::test_change_with_wrong_new_code_changes_nothing | 新号验证码错误 → 400/429，原手机号与身份不变。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-028-04 | TC-INT-121 | 集成 | sim | 新写 | test_gap_must_have.py::ChangePhoneTests::test_old_phone_cannot_login_after_change | 更换成功后旧号登录失败（404 PHONE_NOT_REGISTERED），新号登录进入同一账号。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-035-01 | TC-INT-122 | 集成 | sim | 新写 | test_gap_must_have.py::RegistryPhoneChangeAfterCertificationTests::test_modify_registry_phone_keeps_owner | 管理员把清册手机号改成其他号码 → 用户仍是该专有部分的有效产权业主。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-035-02 | TC-INT-123 | 集成 | sim | 新写 | test_gap_must_have.py::RegistryPhoneChangeAfterCertificationTests::test_delete_registry_phone_keeps_head | 管理员把清册手机号全部删除 → 户主身份仍在。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-035-03 | TC-INT-124 | 集成 | sim | 新写 | test_gap_must_have.py::RegistryPhoneChangeAfterCertificationTests::test_certification_after_change_compares_new_registry | 清册手机号改动后，他人用原号码认证 → 422 PHONE_NOT_IN_REGISTRY 且可申诉；新号码持有者认证成功。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-035-04 | TC-INT-125 | 集成 | sim | 新写 | test_gap_must_have.py::RegistryPhoneChangeAfterCertificationTests::test_non_admin_cannot_modify_registry_phones | 普通用户 / 业委会成员修改清册手机号 → 403；未登录 → 401（已收紧），清册不变。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-042-01 | TC-INT-126 | 集成 | sim | 新写 | test_gap_must_have.py::RepresentativeGrantTests::test_grant_to_owner_succeeds_and_user_becomes_participant | 产权业主被赋予 → 201；/me 显示业主代表；之后发起的代表投票自动含其参与；审计新增 SEAT_GRANTED（AC-042-06）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-042-02 | TC-INT-127 | 集成 | sim | 新写 | test_gap_must_have.py::RepresentativeGrantTests::test_grant_to_resident_or_guest_rejected | 同住人 / 游客被赋予 → 422 NOT_AN_OWNER。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-042-03 | TC-INT-128 | 集成 | sim | 新写 | test_gap_must_have.py::RepresentativeGrantTests::test_grant_over_cap_rejected | 业主代表人数已达上限（cap_rep=1） → 409 CAP_REACHED。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-042-04 | TC-INT-129 | 集成 | sim | 新写 | test_gap_must_have.py::RepresentativeGrantTests::test_grant_to_committee_member_rejected | 已持有委员席位者不可再被赋予业主代表（不可兼任）→ 409 ALREADY_SEATED。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-042-05 | TC-INT-130 | 集成 | sim | 新写 | test_gap_must_have.py::RepresentativeGrantTests::test_non_admin_cannot_grant | 普通业主 / 主任赋予业主代表 → 403；未登录 → 401（已收紧），无席位产生。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-01 | TC-INT-131 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_initiator_seat_revoked_resolution_stays_pending_and_flow_continues | 发起人业委会身份被撤销 → 决议仍为审批中；原指定审批人仍可审批通过。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-02 | TC-INT-132 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_approver_seat_revoked_cannot_approve_and_claim_stays_pending | 指定审批人身份被撤销 → 审批 403；报销单保持审批中，不自动转交。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-03 | TC-INT-133 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_withdraw_and_resubmit_with_valid_flow_after_approvers_invalid | 审批人全部失效后，发起人撤回并选新的有效流程重新提交 → 重新进入审批中。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-04 | TC-INT-134 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_expired_representative_cannot_respond_but_earlier_answer_and_denominator_kept | 业主代表 R1 已提交、R2 任期到期后提交被拒 403；R1 的答卷保持，分母（participant_count）仍为发起时的 2。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-05 | TC-INT-135 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_public_resolution_still_shows_initiator_label_after_seat_revoked | 已公开决议在发起人身份失效后仍可读，且仍存在发起人信息（不被抹除）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-06 | TC-INT-136 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_invalidated_user_cannot_use_privileged_actions | 身份失效者发起决议 / 发起投票 / 审批 → 403。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-068-07 | TC-INT-137 | 集成 | sim | 新写 | test_gap_must_have.py::InFlightIdentityInvalidationTests::test_invalidated_initiator_can_withdraw_own_but_others_cannot | 发起人身份已失效仍可撤回自己的在途决议（WITHDRAWN）；其他委员 / 管理员撤回他人事项被拒。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-01 | TC-INT-138 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_any_one_of_two_approvers_passes | 流程指定 P1、P2，P1 同意 → 申请 APPROVED。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-02 | TC-INT-139 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_second_approver_after_decision_rejected_state_unchanged | P1 已通过后 P2 再通过 / 拒绝 → 409 ALREADY_DECIDED，状态与金额不变。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-03 | TC-INT-140 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_only_self_in_flow_rejects_claim_advance_and_income | 流程审批人只有申请人本人 → 报销 / 预借 / 收入表提交均 422 NO_ELIGIBLE_APPROVER，且不创建申请。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-04 | TC-INT-141 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_submitter_with_another_approver_cannot_self_approve | 审批人为 M 与 P → 提交成功（PENDING）；M 自批 403 SELF_APPROVAL_FORBIDDEN；P 批准成功。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-05 | TC-INT-142 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_chair_designated_self_may_approve_resolution | 主任发起指定负责人审批的决议，负责人就是本人 → 允许审批通过，状态 APPROVED。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-071-06 | TC-INT-143 | 集成 | sim | 新写 | test_gap_must_have.py::MultiApproverTests::test_chair_not_designated_cannot_approve_resolution | 指定负责人是另一人 Q，主任 D 审批 → 403 FORBIDDEN，决议保持 PENDING。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-073-01 | TC-INT-144 | 集成 | sim | 新写 | test_gap_must_have.py::AdminPasswordResetTests::test_admin_resets_other_admin_password | A 重置 B → 204；B 旧密码登录 400，新密码登录 200；B 的旧令牌失效；审计 ADMIN_PASSWORD_RESET。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-073-02 | TC-INT-145 | 集成 | sim | 新写 | test_gap_must_have.py::AdminPasswordResetTests::test_member_cannot_reset_admin_password | 普通用户 / 产权业主 / 业委会成员调用重置接口 → 403，被重置者密码不变。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-073-03 | TC-INT-146 | 集成 | sim | 新写 | test_gap_must_have.py::AdminPasswordResetTests::test_anonymous_cannot_reset_and_no_self_service_entry | 未登录访客重置 → 401；系统没有管理员自助注册 / 找回入口（对应路径 404/405）。 | fixture 现造（next_phone / make_owner / make_seat / make_flow / FakeWeChatClient） |
+| AC-002-02 | TC-INT-147 | 集成 | sim | 新写 | test_gap_must_have.py::WebWechatScanTests::test_second_scan_enters_existing_account | 同一微信再次扫码 → 进入已有账号，不新建账号 | FakeWeChatClient |
+| AC-002-03 | TC-INT-148 | 集成 | sim | 新写 | test_gap_must_have.py::WebWechatScanTests::test_invalid_state_or_wechat_error_creates_no_account | 二维码失效（state 无效）或微信侧失败 → 重定向带 error，不创建账号、不发 ticket | FakeWeChatClient |
+| AC-002-04 | TC-INT-149 | 集成 | sim | 新写 | test_gap_must_have.py::WebWechatScanTests::test_wechat_user_without_phone_must_bind_phone_before_certification | 未验证手机号的微信用户做清册认证 → 409 PHONE_REQUIRED；/me 不受限 | FakeWeChatClient |
 
 ### 集成层（vitest，页面挂载）
 
@@ -204,6 +255,13 @@
 | US-052~057（CR-014） | TC-WEB-025~027 | 集成 | sim | 新写 | 同 | PollDetail 按题型渲染、一键提交 /responses、选答题、已作答回填、截止后查看结果 |
 | US-012/014/017（CR-019） | TC-WEB-028~030 | 集成 | sim | 新写 | 同 | Me.vue 绑定/换绑（合并换令牌）、改密 PUT /me/password、注销带 phone+code |
 | US-041/045/049~057/012/014/003 | TC-MP-014~027 | 集成 | sim | 新写 | miniprogram/tests/pages.spec.js | 小程序首页身份与待办、claims 表单、投票详情、手机号页、密码/验证码登录（uni 桩） |
+| AC-006-01/02/04（0.5.0） | TC-WEB-031 | 集成 | sim | 新写 | frontend/tests/login.spec.js | Login.vue：发码 POST /auth/codes {purpose:LOGIN}；验证码登录 POST /auth/login/code；令牌保存 |
+| AC-006-02 | TC-WEB-032 | 集成 | sim | 新写 | 同 | 密码登录 POST /auth/login/password {identifier,password,remember_me}；令牌保存 |
+| AC-006-03/04 | TC-WEB-033 | 集成 | sim | 新写 | 同 | 失败提示后端统一文案；锁定附“900 秒后重试”；不保存令牌 |
+| AC-070-01 | TC-MP-028 | 集成 | sim | 新写 | miniprogram/tests/pages.spec.js | ProfileSetup：onChooseAvatar 回填预览；save → PATCH /me/profile { nickname } → 进首页 |
+| AC-070-01 | TC-MP-029 | 集成 | sim | 新写 | 同 | 保存失败 toast 后端文案且不跳转；skip 进首页 |
+| AC-070-03 | TC-MP-030 | 集成 | sim | 新写 | 同 | 登录响应 is_new=false 不进设置页 |
+| AC-070-01（既有） | TC-MP-027 | 集成 | sim | 现有 | 同 | 登录响应 is_new=true → 进设置页（已在 0.4.0 表中，此处补溯源到 AC-070-01） |
 
 ### E2E 层（TC-E2E）
 
@@ -222,8 +280,145 @@
 | AC-012-01、AC-015-*、AC-016-*、AC-066-*、AC-072-01 | TC-E2E-011 | E2E | sim | 新写 | test_rework_journeys.py::AccountMergeJourneyTests::test_wechat_user_binds_registered_phone_and_merges | 手机号注册户主 A；仅微信的 W 绑定 A 手机号 → 合并，答卷保留 A，新令牌身份=户主+同住人，旧令牌 401，审计可查 | fixture 现造 |
 | AC-049-*、AC-050-*、AC-051-*、AC-061-*、AC-063-* | TC-E2E-012 | E2E | sim | 新写 | 同::AdvanceSettlementJourneyTests::test_advance_reimbursement_settlement_and_public_report | 预借 1000 → 报销 1200 → 核销 → 报表支出合计 1200，普通业主可见 | fixture 现造 |
 | AC-058-*、AC-060-*、AC-061-*、AC-062-* | TC-E2E-013 | E2E | sim | 新写 | 同::IncomeManualEntryJourneyTests::test_manual_entry_submit_approve_report_then_void | 逐条录入 → 提交审批 → 生效计入报表 → 作废后重新生成，收入归零 | fixture 现造 |
+| AC-006-01、AC-010-01、AC-013-01/02、AC-025-01、AC-028-01/04、AC-035-03 | TC-E2E-014 | E2E | sim | 新写 | test_gap_journeys.py::AccountIdentityLifecycleJourneyTests::test_register_certify_change_phone_cancel_reregister_and_recertify | 注册 → 游客 → 认证户主 → 换号（身份保留，旧号不可登录，新号同账号）→ 注销 → 同号再注册为全新游客 → 清册未改时认证 422 → 管理员改清册为新号 → 认证 201 HEAD | 独立手机号 + 清册单元 + 管理员 |
+| AC-042-01/05、AC-068-01/02/04、AC-071-01 | TC-E2E-015 | E2E | sim | 新写 | 同::RepresentativeInFlightJourneyTests::test_grant_representatives_vote_then_seat_revoked_in_flight | 管理员赋予 2 名代表 → 主任发起代表投票与决议 → R1 作答 → 撤销 R2 后作答 403 → 撤销主任后决议仍 PENDING 且审批人可通过；participant_count 仍为 2 | 主任 + 审批人 + 2 代表 |
+| AC-011-*、AC-073-01/02 | TC-E2E-016 | E2E | sim | 新写 | 同::AdminPasswordResetJourneyTests::test_admin_creates_admin_then_resets_password | 管理员 A 建 B → B 登录 → 普通用户重置 403 → A 重置 → B 旧令牌 401、旧密码 400、新密码 200 | 两名管理员 + 普通用户 |
 
 另有冒烟层 `backend/tests/smoke/test_flows_smoke.py` 6 个既有用例（现有，回归用，不单独溯源），计入 E2E 层报告。
+
+## GR-D-006-F01：11 个故事逐 AC 映射（0.5.0）
+
+> 步骤：先 `git grep` 查 `backend/tests`、`frontend/tests`、`miniprogram/tests` 是否已覆盖；已覆盖的补映射行（标"现有"），缺口补写新用例（标"新写"）并执行。结果列为本次（2026-11-08 23:24 ~ 23:25）实测。
+
+| US | AC | 用例（现有 / 新写） | 位置 | 预期 | 结果 |
+|---|---|---|---|---|---|
+| US-006 | AC-006-01 | TC-INT-101（新写）；TC-INT-005（现有）；TC-WEB-031（新写） | test_gap_must_have.py::WebPhoneLoginTests::test_code_login_returns_token_for_registered_phone；login.spec.js | 有效验证码 → 200，令牌访问 /me 为同一用户；Web 页发码与提交字段正确 | PASS |
+| US-006 | AC-006-02 | TC-INT-102（新写）；TC-INT-007（现有）；TC-WEB-032 | 同类::test_password_login_by_phone_identifier | 手机号 + 正确密码 → 200 | PASS |
+| US-006 | AC-006-03 | TC-INT-103；TC-WEB-033 | 同类::test_password_login_failure_message_is_uniform | 未设密码 / 未注册 / 密码错误 三种情形 code=LOGIN_FAILED、message=统一文案，且三者完全相同 | PASS |
+| US-006 | AC-006-04 | TC-INT-104（错码 400 CODE_INVALID）、105（过期 CODE_EXPIRED）、**106（同一验证码输错 5 次作废）**、107（密码 5 次错锁定 15 分钟 retry_after=900）；现有 TC-INT-003/006、TC-UNIT-012~014；TC-WEB-033 | 同类 | 错码/过期被拒；5 次错后该码作废，再用正确码不得换取令牌；密码锁定 900 秒 | 104、105、107 PASS；106 PASS（DEF-006 已 CLOSED）。未直接执行：“同一手机号 30 分钟内累计输错 10 次锁定”（仅 TC-UNIT-013 覆盖通用限流机制） |
+| US-010 | AC-010-01 | TC-INT-108（新写）；TC-E2E-014、TC-E2E-011 | 同文件::SingleAccountAcrossEntriesTests::test_web_and_miniprogram_phone_logins_reach_same_account_and_identity | Web 验证码 / 小程序（remember_me）验证码 / 密码登录 → 同一 user id，/me 均含“户主” | PASS |
+| US-010 | AC-010-02 | TC-INT-109（新写，FakeWeChatClient） | 同类::test_wechat_bind_phone_then_wechat_and_phone_logins_same_account | 微信新账号绑定空闲手机号 → 再微信登录 is_new=false 同 id；手机号登录同 id | PASS |
+| US-010 | AC-010-03 | TC-INT-110（新写）；TC-INT-002（现有） | 同类::test_second_account_for_same_phone_rejected | 已有手机号取注册码 409；微信账号绑定该号 → 合并，ACTIVE 用户数不增加 | PASS |
+| US-013 | AC-013-01 | TC-INT-114；TC-E2E-014 | 同文件::ReRegisterAfterCancelTests::test_reregister_creates_fresh_guest_account | 新 user id；labels=["游客"]；昵称为空；无 Membership；旧账号 CANCELLED 且手机号已释放；旧令牌 401 | PASS |
+| US-013 | AC-013-02 | TC-INT-115；TC-E2E-014 | 同类::test_reregister_owner_must_certify_again | 再注册后无有效成员关系；重新认证 201 role=HEAD | PASS |
+| US-013 | AC-013-03 | TC-INT-116；TC-INT-002（现有） | 同类::test_register_with_active_phone_rejected | 409 PHONE_ALREADY_REGISTERED | PASS |
+| US-025 | AC-025-01 | TC-INT-001（现有）；TC-INT-117；TC-E2E-001（现有） | 同文件::GuestTests::test_guest_can_apply_for_certification_and_resident_binding | /me is_guest=true，labels=["游客"] | PASS |
+| US-025 | AC-025-02 | TC-INT-117；TC-E2E-001/002（现有） | 同类 | 游客可提交同住人申请 201 与清册认证 201 | PASS |
+| US-025 | AC-025-03 | TC-INT-118；TC-INT-027（现有） | 同类::test_guest_cannot_do_owner_only_actions | 游客审批同住人申请、移除同住人 → 403；产权业主读待审列表 200 | PASS |
+| US-028 | AC-028-01 | TC-INT-119；TC-E2E-014 | 同文件::ChangePhoneTests::test_change_to_free_phone_keeps_all_identities | 换到空闲号：merged=false，手机号更新，户主身份保留 | PASS |
+| US-028 | AC-028-02 | TC-INT-120 | 同类::test_change_with_wrong_new_code_changes_nothing | 新号错码 → 400/429，原手机号与身份不变 | PASS |
+| US-028 | AC-028-03 | TC-INT-089（现有） | test_rework_cr011_024.py::AccountMergeTests::test_change_phone_merges_into_new_phone_account | 新号属他人账号 → 合并，以新号账号为主 | PASS |
+| US-028 | AC-028-04 | TC-INT-121；TC-E2E-014 | 同类::test_old_phone_cannot_login_after_change | 旧号登录 404 PHONE_NOT_REGISTERED，库中无该号用户；新号登录同一账号 | PASS |
+| US-035 | AC-035-01 | TC-INT-122 | 同文件::RegistryPhoneChangeAfterCertificationTests::test_modify_registry_phone_keeps_owner | 清册号改动后成员关系仍有效，/me 含“户主” | PASS |
+| US-035 | AC-035-02 | TC-INT-123 | 同类::test_delete_registry_phone_keeps_head | 清册号全部删除后仍是 HEAD | PASS |
+| US-035 | AC-035-03 | TC-INT-124；TC-E2E-014 | 同类::test_certification_after_change_compares_new_registry | 原号码认证 422 PHONE_NOT_IN_REGISTRY 且 appeal_available；新号码认证 201 | PASS |
+| US-035 | AC-035-04 | TC-INT-125 | 同类::test_non_admin_cannot_modify_registry_phones | 普通用户 / 委员 403；未登录 401（已收紧）；清册不变 | PASS |
+| US-042 | AC-042-01 | TC-INT-126；TC-E2E-015；TC-E2E-009、TC-INT-030（现有） | 同文件::RepresentativeGrantTests::test_grant_to_owner_succeeds_and_user_becomes_participant | 201；/me 含“业主代表”；之后发起的代表投票参与者含该用户 | PASS |
+| US-042 | AC-042-02 | TC-INT-127 | 同类::test_grant_to_resident_or_guest_rejected | 同住人 / 游客 → 422 NOT_AN_OWNER | PASS |
+| US-042 | AC-042-03 | TC-INT-128；TC-INT-033（现有，副主任上限） | 同类::test_grant_over_cap_rejected | cap_rep=1 时第二人 409 CAP_REACHED | PASS |
+| US-042 | AC-042-04 | TC-INT-129 | 同类::test_grant_to_committee_member_rejected | 委员再被赋予 → 409 ALREADY_SEATED，席位数不变 | PASS |
+| US-042 | AC-042-05 | TC-INT-130；TC-E2E-015 | 同类::test_non_admin_cannot_grant | 普通业主 / 主任 403；未登录 401（已收紧）；无席位产生 | PASS |
+| US-042 | AC-042-06 | TC-INT-126 | 同类 | 审计 SEAT_GRANTED 增加 1 条 | PASS |
+| US-068 | AC-068-01 | TC-INT-131；TC-E2E-015 | 同文件::InFlightIdentityInvalidationTests::test_initiator_seat_revoked_resolution_stays_pending_and_flow_continues | 撤销发起人席位后决议仍 PENDING，审批人仍可通过 → APPROVED | PASS |
+| US-068 | AC-068-02 | TC-INT-132 | 同类::test_approver_seat_revoked_cannot_approve_and_claim_stays_pending | 审批人席位撤销后审批 403；实例与报销单仍 PENDING，审批人名单不变 | PASS |
+| US-068 | AC-068-03 | TC-INT-133 | 同类::test_withdraw_and_resubmit_with_valid_flow_after_approvers_invalid | 撤回后以新流程重提 → PENDING、revision=2 | PASS |
+| US-068 | AC-068-04 | TC-INT-134；TC-E2E-015 | 同类::test_expired_representative_cannot_respond_but_earlier_answer_and_denominator_kept | 任期到期代表作答 403；R1 答卷保持；participant_count 仍为 2，R2 仍在参与人名单 | PASS |
+| US-068 | AC-068-05 | TC-INT-135 | 同类::test_public_resolution_still_shows_initiator_label_after_seat_revoked | 已公开决议 initiator.labels 仍含“主任” | PASS |
+| US-068 | AC-068-06 | TC-INT-136；TC-INT-044（现有，非委员投票 403） | 同类::test_invalidated_user_cannot_use_privileged_actions | 失效者发起决议、发起投票、审批均 403 | PASS |
+| US-068 | AC-068-07 | TC-INT-137 | 同类::test_invalidated_initiator_can_withdraw_own_but_others_cannot | 其他委员/管理员撤回被拒，状态仍 PENDING；发起人撤回 → WITHDRAWN | PASS |
+| US-070 | AC-070-01 | TC-INT-111（is_new=true）；TC-MP-027（现有，is_new → 设置页）；TC-MP-028、029（新写，保存/失败/稍后）；**微信头像昵称填写组件：NOT_TESTABLE（TC-E2E-NT-005，MV-007）** | test_gap_must_have.py::SingleAccountAcrossEntriesTests；miniprogram/tests/pages.spec.js | 首登 is_new=true；设置页保存 PATCH /me/profile；资料页显示头像昵称属真机验证（MV-007） | 可测部分 PASS；组件部分 NOT_TESTABLE |
+| US-070 | AC-070-02 | TC-INT-111 | 同类::test_first_wechat_login_is_new_then_not_new_and_profile_kept | 保存昵称后再次微信登录 is_new=false，昵称保持 | PASS |
+| US-070 | AC-070-03 | TC-INT-112；TC-MP-026（现有）、TC-MP-030 | 同类::test_phone_login_is_never_new | 手机号登录 is_new=false，客户端进首页不进设置页 | PASS |
+| US-070 | AC-070-04 | TC-INT-113 | 同类::test_web_scan_first_login_takes_wechat_nickname_without_setup | Web 扫码首登昵称=微信昵称（fake） | PASS |
+| US-071 | AC-071-01 | TC-INT-138；TC-E2E-015 | 同文件::MultiApproverTests::test_any_one_of_two_approvers_passes | P1 同意 → APPROVED | PASS |
+| US-071 | AC-071-02 | TC-INT-139 | 同类::test_second_approver_after_decision_rejected_state_unchanged | P2 再通过/拒绝 → 409 ALREADY_DECIDED，状态 APPROVED、金额 200.00 不变 | PASS |
+| US-071 | AC-071-03 | TC-INT-140；TC-INT-049（现有） | 同类::test_only_self_in_flow_rejects_claim_advance_and_income | 报销 / 预借 422 NO_ELIGIBLE_APPROVER，无 PENDING 申请；收入表提交 409/422 且不进 PENDING | PASS |
+| US-071 | AC-071-04 | TC-INT-141 | 同类::test_submitter_with_another_approver_cannot_self_approve | 提交 201 PENDING；M 自批 403 SELF_APPROVAL_FORBIDDEN；P 批准 APPROVED | PASS |
+| US-071 | AC-071-05 | TC-INT-142 | 同类::test_chair_designated_self_may_approve_resolution | 主任自指定可审批，APPROVED | PASS |
+| US-071 | AC-071-06 | TC-INT-143；TC-INT-040（现有） | 同类::test_chair_not_designated_cannot_approve_resolution | 主任非指定负责人 → 403 FORBIDDEN，决议仍 PENDING | PASS |
+| US-073 | AC-073-01 | TC-INT-144；TC-E2E-016 | 同文件::AdminPasswordResetTests::test_admin_resets_other_admin_password | 重置 204；旧密码 400；新密码 200；B 旧令牌 401；审计 ADMIN_PASSWORD_RESET | PASS |
+| US-073 | AC-073-02 | TC-INT-145；TC-E2E-016 | 同类::test_member_cannot_reset_admin_password | 普通用户 / 业主 / 主任 403；被重置者原密码仍可登录 | PASS |
+| US-073 | AC-073-03 | TC-INT-146 | 同类::test_anonymous_cannot_reset_and_no_self_service_entry | 未登录 401（OBS-001 已修复）；/admin/auth/register、forgot-password、reset-password 路径 404/405 | PASS |
+
+观察 OBS-001：**已修复**（GR-C-007，`IsAdmin` 匿名 401、已登录普通会员 403）。TC-INT-125/130/146 的匿名断言已收紧为只接受 401，全部 PASS；TC-INT-106（DEF-006）PASS，DEF-006 CLOSED。
+
+## US → 用例总表（69 个 Must Have，0.5.0）
+
+> 生成方法：解析本文件各表中 AC / US 列，按 AC 前缀 `AC-NNN-*`、`US-NNN`、`US-AAA~BBB`、`US-A/B/C` 展开到故事，再用 `git grep` 人工核对 11 个补测故事。单元 / 集成列为后端 Django 用例，vitest 列为 Web / 小程序用例，E2E 列为 `tests/e2e` 多步旅程（冒烟与不可测不计入）。`—` 表示该层无用例。
+> 汇总：**69 / 69 个 Must Have 故事至少有 1 个真实执行的用例**（无 NOT_TESTABLE 单独支撑的故事）；其中 45 个有 E2E 旅程（critical path 覆盖率 45 / 69 = 65.22%），其余 24 个没有 E2E 旅程：US-002、003、004、005、007、008、014、017、018、019、020、022、027、036、037、038、039、040、041、043、048、067、069、070，均由单元 / 集成 / vitest 用例覆盖，属已知缺口。
+
+| US | 标题 | 单元 | 集成（后端） | vitest | E2E |
+|---|---|---|---|---|---|
+| US-001 | Web 端手机号 + 验证码注册 | — | INT-001~004,081 | — | E2E-001,010 |
+| US-002 | Web 端微信扫码登录 | — | INT-113,147~149 | — | — |
+| US-003 | 小程序端手机号登录 | — | INT-005~006,081 | MP-001~011,014~027 | — |
+| US-004 | 小程序端微信一键登录 | — | INT-009,109,111 | — | — |
+| US-005 | Web 端账号 + 密码登录 | — | INT-007 | — | — |
+| US-006 | Web 端手机号登录（验证码或密码） | — | INT-003,005~007,101~107 | WEB-031~033 | E2E-014 |
+| US-007 | Web 端邮箱验证码登录与邮箱验证 | — | INT-013 | — | — |
+| US-008 | Windows 微信桌面版一键授权登录 | — | INT-009 | — | — |
+| US-009 | 登录后设置密码 | UNIT-006~009 | INT-007 | — | E2E-010 |
+| US-010 | 手机号为账号唯一标识（三入口同一账号） | — | INT-002,085,088,108~110 | — | E2E-011,014 |
+| US-011 | 管理员独立登录管理后台 | — | INT-015~017 | — | E2E-016 |
+| US-012 | 微信绑定的手机号已属他人账号时合并 | — | INT-080,085,087~088 | MP-001~011,014~027；WEB-028~030 | E2E-011 |
+| US-013 | 账号注销后同一手机号可作为全新账号再注册 | — | INT-002,014,114~116 | — | E2E-010,014 |
+| US-014 | 已认证用户更换手机号遇他人账号时合并 | — | INT-080,089 | MP-001~011,014~027；WEB-028~030 | — |
+| US-015 | 账号合并时的资料与凭据规则 | — | — | — | E2E-011 |
+| US-016 | 账号合并时的身份冲突规则 | — | — | — | E2E-011 |
+| US-017 | 选填邮箱重复时先验证者获得，修改后需重新验证 | — | INT-013 | WEB-028~030 | — |
+| US-018 | 保存业主清册 | — | INT-020 | — | — |
+| US-019 | 管理员批量导入与单条修改清册 | — | INT-019 | — | — |
+| US-020 | 逐级选择专有部分 | — | INT-018 | — | — |
+| US-021 | 手机号与清册一致时直接认证为产权业主 | — | INT-020,023 | — | E2E-001 |
+| US-022 | 仅清册一致或申诉通过方可成为产权业主 | — | INT-021~022 | — | — |
+| US-023 | 第一位认证的产权业主为户主 | — | INT-020,022 | — | E2E-001 |
+| US-024 | 申请成为同住人与产权业主审批 | — | INT-026~027 | — | E2E-002 |
+| US-025 | 游客身份与可执行操作 | — | INT-001,027,117~118 | — | E2E-001~002,014 |
+| US-026 | 产权认证申诉与管理员审核 | — | INT-021,024~025,100 | — | E2E-003 |
+| US-027 | 户主注销时由认证时间最早的产权业主接任 | UNIT-032~033 | INT-029 | — | — |
+| US-028 | 已认证用户更换手机号 | — | INT-080,089,119~121 | — | E2E-014 |
+| US-029 | 同住人申请被拒、产权业主移除、同住人退出 | — | INT-026,028 | — | E2E-002 |
+| US-035 | 清册手机号被修改或删除后已认证身份保留 | — | INT-020~021,122~125 | — | E2E-014 |
+| US-036 | 管理员手动撤销产权业主认证 | — | INT-029,074 | WEB-001~005 | — |
+| US-030 | 修改个人资料 | — | INT-010~012 | — | E2E-001 |
+| US-031 | 注销账号 | — | INT-014 | — | E2E-010 |
+| US-037 | 管理员赋予业委会身份 | — | INT-030 | — | — |
+| US-038 | 管理员撤销或变更业委会身份与业主代表身份 | — | INT-032 | — | — |
+| US-039 | 业委会/业主代表身份的唯一性、不可兼任与自动失效 | UNIT-031 | — | — | — |
+| US-040 | 管理员配置业委会与业主代表的人数上限与任期 | UNIT-010~011 | INT-031,033,075 | — | — |
+| US-041 | 身份在个人信息中只读显示 | — | INT-074 | WEB-001~005,017~018；MP-012~027 | — |
+| US-042 | 管理员赋予业主代表身份 | — | INT-030~031,033,126~130 | — | E2E-009,015 |
+| US-043 | 管理员配置审批流程 | — | INT-034~036 | — | — |
+| US-044 | 主任/副主任发起业委会决议 | — | INT-039 | — | E2E-004 |
+| US-045 | 决议审批方式一——指定负责人审批 | — | INT-034,037,040~041 | MP-014~027 | E2E-004 |
+| US-046 | 决议审批方式二——半数人员同意通过 | UNIT-027~028 | INT-035,043~046 | — | E2E-005 |
+| US-047 | 审批结束的决议对所有已登录用户公开 | — | INT-037~038 | — | E2E-004~005 |
+| US-048 | 撤回、被拒后重新提交与通过后不可修改 | — | INT-039,042,050 | — | — |
+| US-049 | 业委会成员发起报销或备用金申请 | UNIT-001~003,015~018 | INT-047,050,053~054,076~077 | WEB-006~016,019~024；MP-001~011,014~027 | E2E-006,012 |
+| US-050 | 审批报销/备用金并自动计入支出 | — | INT-048,076 | WEB-006~016,019~024；MP-014~027 | E2E-006,012 |
+| US-051 | 备用金事后核销 | — | INT-051~052,076,090~094 | WEB-006~016,019~024；MP-001~011,014~027 | E2E-012 |
+| US-052 | 主任/副主任发起业主代表投票 | — | INT-066~068,078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-008 |
+| US-053 | 业主代表投票的结论判定 | — | INT-078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-008 |
+| US-054 | 主任/副主任发起调查 | — | INT-070,078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-009 |
+| US-055 | 一次投票/调查含多道题与可定制题型 | UNIT-023~025 | INT-069,078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-009 |
+| US-056 | 参与者在手机上一键提交意见 | — | INT-068~070,078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-009 |
+| US-057 | 投票/调查结果在截止后以汇总形式公开 | UNIT-026 | INT-072,078 | WEB-006~016,025~027；MP-001~011,014~027 | E2E-008 |
+| US-058 | 业委会成员单条录入收入表 | — | INT-055~056,079,096~097 | WEB-006~016 | E2E-006,013 |
+| US-059 | 业委会成员批量导入收入表 | UNIT-019~022,034~036 | INT-055,057~058,073,079,098~099 | WEB-006~016 | E2E-006 |
+| US-060 | 收入表审批生效与作废 | — | INT-059~060 | — | E2E-006,013 |
+| US-061 | 系统自动生成季度/年度财务报表 | UNIT-001~002,037~039 | INT-062,065,095 | — | E2E-006,012~013 |
+| US-062 | 业委会成员手动重新生成报表 | — | INT-064 | — | E2E-013 |
+| US-063 | 所有已登录用户可查看财务报表 | — | INT-061,063 | — | E2E-007,012 |
+| US-065 | 半数同意决议在表决截止时间结束时判定通过/未通过 | UNIT-027,029~030 | INT-043,045 | — | E2E-005 |
+| US-066 | 账号合并时业委会/业主代表身份保留较高者 | — | — | — | E2E-011 |
+| US-067 | 财务类事项申请人不得审批自己的申请 | — | INT-049 | — | — |
+| US-068 | 身份失效时在途事项保持不变 | — | INT-029,044,131~137 | — | E2E-015 |
+| US-069 | 登录会话有效期与"记住我" | — | INT-008 | — | — |
+| US-070 | 小程序首次微信登录后设置头像昵称 | — | INT-081,111~113 | MP-027~030 | — |
+| US-071 | 审批中的多审批人规则与自批边界 | — | INT-034,040,048~049,138~143 | — | E2E-015 |
+| US-072 | 账号合并时处理进行中的投票、调查与待办 | — | INT-085~086,089 | — | E2E-011 |
+| US-073 | 管理员重置其他管理员的密码 | — | INT-015,017,144~146 | — | E2E-016 |
+
 
 ## 测试数据需求
 
@@ -235,13 +430,15 @@
 - 附件：`SimpleUploadedFile` 伪造 PNG 字节流（`\x89PNG\r\n\x1a\n` + 填充），不依赖真实图片。
 - `[DATA_REQUIRED: 微信小程序登录 code / openid]`：无真实凭据，相关 AC 不可测（见下表）。
 - `[DATA_REQUIRED: xlsx 收入表样例]`：本机缺 `openpyxl`，xlsx 导入路径未执行。
+- 微信替身：`FakeWeChatClient`（`apps/integrations/fakes.py`）经 `set_wechat_client()` 注入，用例在 `addCleanup` 中复位为 None，避免跨用例污染；Web 扫码回调用 `create_wechat_state()` 生成 state。
 - vitest 数据：全部为内联固定对象（`frontend/tests/helpers.js`、`http.mock.js`、`miniprogram/tests/helpers.js`），不写持久存储。
 
 ## 不可测项
 
 | AC | 原因 |
 |---|---|
-| AC-002-*、AC-004-*、AC-008-*（微信扫码 / 小程序一键登录真实链路） | 无微信 SDK 与真实凭据；画像 P11-3 只允许 fake。登记为 TC-E2E-NT-001，见人工验证清单 MV-001。 |
+| AC-002-*、AC-004-*、AC-008-*（微信扫码 / 小程序一键登录真实链路） | 无微信 SDK 与真实凭据；画像 P11-3 只允许 fake。登记为 TC-E2E-NT-001，见人工验证清单 MV-001。0.5.0：经 FakeWeChatClient 可测的部分（回调、ticket 兑换、再次扫码同账号、state 失效、PHONE_REQUIRED、首次登录 is_new）已由 TC-INT-109/111/113/147~149 真实执行。 |
+| AC-070-01 中“通过微信头像昵称填写能力（`open-type=chooseAvatar`、`type=nickname`）选择头像”（US-070） | 该组件仅在微信真机/开发者工具提供，vitest 只能调用页面的 `onChooseAvatar` 回调（TC-MP-028）。登记为 TC-E2E-NT-005，MV-007。 |
 | 小程序 uni-app 运行时（页面渲染、tabBar 跳转、`uni.chooseImage`/`uploadFile` 真机行为） | vitest 只用桩，无 HBuilderX/uni 构建环境；登记 TC-E2E-NT-002，MV-004。 |
 | 微信开发者工具/真机下小程序登录与手机号授权 | 需真实微信环境；TC-E2E-NT-003，MV-005。 |
 | 小程序端到端业务流程（登录 → 报销/投票 → 绑定手机号）真机走查 | 同上；TC-E2E-NT-004，MV-006。 |

@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-08T13:44:45+08:00</timestamp>
+  <timestamp>2026-11-08T23:34:00+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>2.0.0</version>
+  <version>4.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md</file>
     <file>requirements/user_stories.md</file>
@@ -453,3 +453,45 @@ No test files found, exiting with code 0
 - 问题统计：CRITICAL 4（CR-011 ~ 014）全部 FIXED；MAJOR 9（CR-015 ~ 023）全部 FIXED（CR-018 代码侧已修，systemd 模板交 devops-engineer）；MINOR 3：CR-024 FIXED，CR-025 OPEN，CR-026 部分 OPEN。
 - 遗留 MAJOR（旧）CR-001（前端未运行时验证；现已能 `npm run build`，仍缺组件测试，建议 GROUP_D 补）、CR-002（0001 迁移为生成产物，已上线不改）、CR-003（Django 版本偏差：本次已用 5.2.19 验证，可视为关闭）。
 - 新发现并顺手修复（非 §8.8 条目）：管理端房屋关系列表 `mask_phone` 缺导入；注册合并策略 `delete_secondary` 误删无冲突作答；`verified_email` 唯一列在合并时会冲突；前端改密/邮箱验证/性别/清册选项/微信回调/管理端申诉决定等多处契约不符。
+
+## 10. 缺陷修复（2.1.0，DEF-005）
+
+| DEF | 位置 | 根因 | 修改说明 |
+|---|---|---|---|
+| DEF-005（MINOR） | `frontend/src/shared/api.js:132`（已删除） | 前端定义了 `registryUnit(id)` 发 GET，后端 `AdminUnitDetailView`（`backend/apps/registry/views.py:62`）无 GET，405；该函数无调用方，属死代码 | 删除该函数；`git diff --stat`：api.js 1 行删除，无其他产品代码改动 |
+
+自验证：
+- 后端 `python manage.py test --settings=config.test_settings`：`Ran 160 tests ... OK`。
+- 前端 `npx vitest run`：3 files passed，33/33 passed。
+- 前端 `npm run build -- --base=/ocap/`：`built in 27.67s`（仅 chunk 体积警告）。
+
+CR 统计：本次无新增 CR；CRITICAL/MAJOR/MINOR 计数同 §9.4。无现有测试调整。
+
+## 11. 缺陷修复 DEF-006 与 OBS-001（3.1.0）
+
+### 11.1 缺陷修复
+
+| DEF | 位置 | 根因 | 修改说明 |
+|---|---|---|---|
+| DEF-006（MAJOR） | `backend/apps/accounts/services.py` `verify_code` | 错误次数只累加 `attempts`，从不据此拒绝或作废验证码；第 5 次错后行仍未消费，随后正确码仍通过 | 比对前检查 `attempts >= max_wrong_per_code`，达到即置 `consumed_at` 并返回 429 `CODE_LOCKED`；达上限那次错误同时置 `consumed_at`；无未消费行时按最近一条是否因达上限作废仍返回 `CODE_LOCKED`。错误码依据 module_design IFC-022（错误达上限 → 429 `CODE_LOCKED`）；AC-006-04 / AC-001-02 只要求作废。 |
+| OBS-001（MINOR） | `backend/apps/core/permissions.py` `IsAdmin` | 非管理员一律 403，与 AC-073-03「要求登录」不符 | 已登录普通用户 403；匿名 401 `UNAUTHORIZED` |
+
+共用路径：注册、验证码登录、邮箱登录、邮箱验证、绑定/换绑手机号、注销都经 `verify_code`，全量测试均通过。
+
+### 11.2 自验证
+
+- `(cd backend && python manage.py test --settings=config.test_settings)`：`Ran 212 tests ... OK`（含 TC-INT-106 由失败转通过）。
+- `makemigrations --check --dry-run`：`No changes detected`；`manage.py check`：no issues。
+- `git diff --stat -- backend`：services.py、permissions.py 两个文件。
+
+### 11.3 评审
+
+| CR | 级别 | 位置 | 描述 | 状态 |
+|---|---|---|---|---|
+| CR-027 | MINOR | `services.py` verify_code | 达上限分支 `retry_after` 取固定值 1（单码作废无自然解锁时间，用户重新获取验证码即可） | OPEN |
+
+本次无新增 CRITICAL / MAJOR。五维（仅本次范围）：Correctness 8、Security 8、Performance 8、Maintainability 7、Testability 7。
+
+### 11.4 现有测试调整
+
+无（未改任何测试文件）。OBS-001 未使现有测试失败：全量 212 通过。TC-INT-145（匿名重置管理员密码）若断言限定为 403，需由 test-engineer 复核其断言（现返回 401）；当前实跑已通过。

@@ -119,19 +119,36 @@ class AccountService:
                .filter(target=target, purpose=purpose, consumed_at__isnull=True)
                .order_by("-created_at").first())
         if row is None:
+            # DEF-006：最近一条验证码若因错误达上限而作废，继续按 CODE_LOCKED 返回（module_design IFC-022）
+            latest = (VerificationCode.objects.filter(target=target, purpose=purpose)
+                      .order_by("-created_at").first())
+            if (latest is not None and latest.expires_at > timezone.now()
+                    and latest.attempts >= int(SystemConfig.get("code.max_wrong_per_code"))):
+                raise ApiError("CODE_LOCKED", "验证码尝试过多，请稍后再试", 429, {"retry_after": 1})
             raise ApiError("CODE_INVALID", "验证码错误")
         if row.expires_at <= timezone.now():
             raise ApiError("CODE_EXPIRED", "验证码已过期")
+        max_wrong = int(SystemConfig.get("code.max_wrong_per_code"))
+        if row.attempts >= max_wrong:
+            # DEF-006：单码错误达上限即作废，不再比对（防御：正常路径下达上限那次已置 consumed_at）
+            row.consumed_at = timezone.now()
+            row.save(update_fields=["consumed_at"])
+            raise ApiError("CODE_LOCKED", "验证码尝试过多，请稍后再试", 429, {"retry_after": 1})
         if not hmac.compare_digest(row.code_hmac, _code_hmac(target, purpose, code)):
             row.attempts += 1
-            row.save(update_fields=["attempts"])
+            update_fields = ["attempts"]
+            if row.attempts >= max_wrong:
+                # DEF-006：达到上限的那次失败使该验证码作废（AC-006-04 / AC-001-02）
+                row.consumed_at = timezone.now()
+                update_fields.append("consumed_at")
+            row.save(update_fields=update_fields)
             decision = RateLimiter.register_failure(
                 f"codefail:{target}",
                 limit=int(SystemConfig.get("code.target_lock_after_wrong")),
                 window_seconds=int(SystemConfig.get("code.target_lock_seconds")),
                 lock_seconds=int(SystemConfig.get("code.target_lock_seconds")),
             )
-            if not decision.allowed or row.attempts >= int(SystemConfig.get("code.max_wrong_per_code")):
+            if not decision.allowed or row.attempts >= max_wrong:
                 raise ApiError("CODE_LOCKED", "验证码尝试过多，请稍后再试", 429,
                                {"retry_after": decision.retry_after or 1})
             raise ApiError("CODE_INVALID", "验证码错误")

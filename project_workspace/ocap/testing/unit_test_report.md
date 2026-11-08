@@ -1,18 +1,18 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-08T22:58:45+08:00</timestamp>
+  <timestamp>2026-11-08T23:38:58+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>0.4.0</version>
+  <version>1.0.0</version>
   <input_files><file>requirements/user_stories.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>testing/test_plan.md</file></input_files>
   <phase>PHASE_07</phase>
-  <status>DRAFT</status>
+  <status>APPROVED</status>
 </file_header>
 
-> 复跑说明（ocap-GROUP_D-7）：GROUP_C-5 返工后重跑。REWORK_AUTHORIZED: project_workspace/ocap/testing/。
+> 复跑说明（ocap-GROUP_D-9，续 -8）：GR-C-007 收尾：DEF-006 CLOSED（TC-INT-106 PASS）、OBS-001 已修复；TC-INT-125/130/146 匿名断言收紧为只接受 401；全层重跑全部通过（后端 212/212，Web 36/36，小程序 30/30）。以下为 -8 的历史说明：GR-D-006 FAIL 修正，全层重跑。本层 74 个用例的组成不变（0.5.0 新增用例集中在集成与 E2E 层）。REWORK_AUTHORIZED: testing/ 下 4 份文件与三处测试代码目录。
 
 ## 摘要
 
-- 执行时间：2026-11-08 22:55 ~ 22:56（Asia/Shanghai）。
+- 执行时间：2026-11-08 23:36 ~ 23:38（Asia/Shanghai，ocap-GROUP_D-9 最后一次执行）。
 - 环境：Linux，Python 3.12.3，Django 5.2.19，DRF 3.18.3，`config.test_settings`，SQLite `:memory:`；Node v22.23.3，vitest 2.1.9。
 - 命令：
   - `(cd backend && python manage.py test tests.unit --settings=config.test_settings)`
@@ -29,11 +29,11 @@
 ```
 $ (cd backend && python manage.py test tests.unit --settings=config.test_settings)
 ..........................................
-Ran 42 tests in 0.368s
+Ran 42 tests in 0.327s
 OK
 ```
 
-vitest 的单元层文件按文件名拆分，全量 `npx vitest run` 的计数在集成报告中给出（Web：3 个文件 33 passed；小程序：3 个文件 27 passed）。本层引用的文件：Web `api.spec.js`（11）、`auth.store.spec.js`（8）；小程序 `api.spec.js`（11）、`store.spec.js`（2）。
+vitest 的单元层文件按文件名拆分，全量 `npx vitest run` 的计数在集成报告中给出（Web：4 个文件 36 passed；小程序：3 个文件 30 passed）。本层引用的文件：Web `api.spec.js`（11）、`auth.store.spec.js`（8）；小程序 `api.spec.js`（11）、`store.spec.js`（2）。
 
 ## 分项结果
 
@@ -53,7 +53,7 @@ vitest 的单元层文件按文件名拆分，全量 `npx vitest run` 的计数�
 
 ## 与基线对比
 
-基线（画像 P4）：后端单元 33/33 通过。本层既有用例 33 个：32 个未改仍通过；TC-UNIT-021（`test_row_error_ratio_over_2_percent`）按 AC-059-03 更新断言后通过（原断言与 Q93 取代的旧阈值冲突，非回归）。新增失败：0。前端与小程序无基线（此前无用例）。
+基线（画像 P4）：后端单元 33/33 通过；本次改动前实跑后端全量 160/160 通过。本层既有用例 33 个：32 个未改仍通过；TC-UNIT-021（`test_row_error_ratio_over_2_percent`）按 AC-059-03 更新断言后通过（原断言与 Q93 取代的旧阈值冲突，非回归）。新增失败：0。前端与小程序无基线（此前无用例）。
 
 ## 失败汇总（需路由给开发）
 

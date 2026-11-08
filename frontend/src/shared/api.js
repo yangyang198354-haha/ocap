@@ -129,7 +129,6 @@ const admin = {
   createRegistryUnit: (data) => adminHttp.post('/admin/registry/units', data),
   updateRegistryUnit: (id, data) => adminHttp.patch(`/admin/registry/units/${id}`, data),
   deleteRegistryUnit: (id) => adminHttp.delete(`/admin/registry/units/${id}`),
-  registryUnit: (id) => adminHttp.get(`/admin/registry/units/${id}`),
   registryUnitPhones: (id, phones) => adminHttp.put(`/admin/registry/units/${id}/phones`, { phones }),
   importRegistry: (file) => {
     const body = new FormData()

@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-08T13:43:16+08:00</timestamp>
+  <timestamp>2026-11-08T23:34:00+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>2.0.0</version>
+  <version>4.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md</file>
     <file>requirements/user_stories.md</file>
@@ -228,3 +228,21 @@ module_design IFC-070 规定 `identities` 为对象 `{is_guest, units, committee
 ### 11.6 预期变更的现有测试（交 test-engineer，本次未改任何测试文件）
 
 见 code_review_report §9.3。
+
+## 12. 缺陷修复 DEF-005（2.1.0）
+
+- 缺陷：`frontend/src/shared/api.js` 的 `registryUnit(id)` 发 GET `/admin/registry/units/${id}`，后端 `AdminUnitDetailView` 只实现 patch/delete，返回 405（TC-INT-082）。
+- 决定：删除该前端函数，不给后端补 GET。改前执行 `git grep -nE "registryUnit\(" -- frontend/src miniprogram`，无调用方（`registryUnit` 全仓仅此一处定义）。
+- 改动文件：`frontend/src/shared/api.js`（删 1 行）。无迁移，无架构偏差，无新增假设。
+
+## 13. 缺陷修复 DEF-006 与 OBS-001（3.1.0）
+
+| 序号 | 文件 | 新建/修改 | 改动要点 | 状态 |
+|---|---|---|---|---|
+| 1 | `backend/apps/accounts/services.py`（`verify_code`） | 修改 | 比对 HMAC 前先判断 `row.attempts >= code.max_wrong_per_code`，达到则置 `consumed_at` 并返回 429 `CODE_LOCKED`；达上限的那次错误同时置 `consumed_at` 作废该码；无未消费行时，若最近一条未过期验证码因错误达上限而作废，仍返回 `CODE_LOCKED`（否则第 6 次起变 400，破坏现有测试 `test_wrong_code_then_locked`）；"同号 30 分钟累计 10 次锁 30 分钟"逻辑未动 | DONE |
+| 2 | `backend/apps/core/permissions.py`（`IsAdmin`） | 修改 | 非管理员时：已登录普通用户 403 `FORBIDDEN`；其余（匿名等）401 `UNAUTHORIZED`，写法同 `IsMember` | DONE |
+
+- 错误码依据：module_design IFC-022「错误达上限 → 429 `CODE_LOCKED`」，AC-006-04 / AC-001-02 只要求"作废"，未指定码，故沿用 `CODE_LOCKED`。
+- 迁移：无（`attempts`、`consumed_at` 已存在；`makemigrations --check`：No changes detected）。
+- 架构偏差：无。开放问题：`[ASSUMPTION] A-10` 无未消费行时以"最近一条未过期且 attempts 达上限"判定为作废（返回 CODE_LOCKED，retry_after 固定 1）。
+- 副作用：`IsAdmin` 对"已停用管理员/非 ACTIVE 用户"原为 403，现为 401（认证层本就拒绝其令牌，实际难以到达）。

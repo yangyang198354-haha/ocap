@@ -5,7 +5,7 @@ description: 把 ocap 后端（Django/gunicorn）和 Web 前端（Vue SPA 静态
 
 # ocap-deploy：ocap 测试环境部署与回滚
 
-依据：已批准的 `project_workspace/ocap/deployment/deployment_plan.md`（1.0.0）、`cicd_pipeline.md`（1.1.0），以及 `deployment_report.md`（1.0.0）的实际执行经验。步骤编号 DEPLOY-NNN / ROLLBACK-NNN 与计划一一对应。
+依据：`project_workspace/ocap/deployment/deployment_plan.md`（1.1.0，含 DEPLOY-009 timer）、`cicd_pipeline.md`（1.2.0），以及 `deployment_report.md`（1.0.0）的实际执行经验。步骤编号 DEPLOY-NNN / ROLLBACK-NNN 与计划一一对应。
 
 ## 0. 授权与安全（先读）
 
@@ -17,15 +17,16 @@ description: 把 ocap 后端（Django/gunicorn）和 Web 前端（Vue SPA 静态
   - 提交 `makemigrations` 全量产物（迁移必须手写、单 app 范围）；
   - 测试连接生产数据库（本项目无生产环境）。
 - 回滚不得使用 `git reset --hard`、`git clean`、`git stash`（目标机无 git，也不应有）；只用 tar 快照解包。
-- 画像 P9：子代理不得 ssh / 部署，由主会话在用户授权后执行。
+- 画像 P9：除 E2 外子代理不得 ssh / 部署；E2 须用户当轮授权，每条 ssh/scp 仍经 ask 规则确认。
+- 用户未授权 push 时，不得以“提交已在远端”为前置；以本地 HEAD/工作树打包，记录 `git rev-parse HEAD` 与 `git status --short` 摘要作为版本标识，部署后建议用户提交并推送。
 
 ## 1. 适用范围与前置条件
 
-- 范围：后端代码 + 依赖 + 迁移 + 重启；前端构建产物替换；按需更新 nginx。不含小程序（RU-4）、不含定时任务 RU-2（见 §9）。
+- 范围：后端代码 + 依赖 + 迁移 + 重启；前端构建产物替换；按需更新 nginx；安装 `ocap-run-due-jobs` timer（RU-2，DEPLOY-009）。不含小程序（RU-4）。
 - 前置：
-  1. 待部署提交已 push 到 `origin/main`：`git rev-parse HEAD` 与 `git ls-remote origin main` 哈希一致，且本地工作树干净。
+  1. 版本标识已记录：`git rev-parse HEAD` 与 `git status --short` 摘要（未授权 push 时以本地工作树打包；已授权 push 时再要求与 `git ls-remote origin main` 一致）。
   2. 能通过 SSH 免密登录目标机并有 sudo。
-  3. 目标机 `/home/yangyang/ocap/backend/.env` 已存在（含 `DB_SSL_DISABLED=1`、数据库连接、`SMS_GATEWAY_BACKEND=console`）。
+  3. 目标机 `/home/yangyang/ocap/backend/.env` 已存在（含 `DB_SSL_DISABLED=1`、数据库连接、`SMS_GATEWAY_BACKEND=console`），且 `DJANGO_SECRET_KEY` 非空（代码缺该键时拒绝启动，见 §4 第 12 项）。
   4. 本地迁移无漂移（见 §4 第 7 项）。
 
 ## 2. 接入方式与变量
@@ -33,15 +34,18 @@ description: 把 ocap 后端（Django/gunicorn）和 Web 前端（Vue SPA 静态
 SSH/scp 目标写成变量，先设置再执行。两种接入方式二选一：
 
 ```bash
-# 方式 A：内网（开发机在 192.168.31.x 网段）
-OCAP_HOST=192.168.31.51
-OCAP_PORT=22
+# 方式 A：外网（Claude 主会话/开发机在内网之外，默认用这条）
+# 阿里云 VPS + frp → 树莓派:22，密钥认证。首次连接必须核对主机 ED25519 指纹：
+#   SHA256:TfpCSrSLuK1UspD2mpikebK0bE0IFnPH8bSigERWnmk
+# 指纹不一致 → 停止并上报，不得接受。
+OCAP_HOST=47.109.197.217
+OCAP_PORT=57279
 
-# 方式 B：外网
-# 注意：此地址与端口由用户于 2026-11-08 提供；PM 当时测试连接被拒绝。
-# 使用前必须先确认端口可达（例如 nc -zv -w 5 ai-freeark.xin 9999），不可达则停止并向用户确认，不要反复重试。
-# OCAP_HOST=ai-freeark.xin
-# OCAP_PORT=9999
+# 方式 B：内网（开发机在 192.168.31.x 网段）
+# OCAP_HOST=192.168.31.51
+# OCAP_PORT=22
+
+# 注意：ai-freeark.xin:9999 不可用（2026-11-08 实测 Connection refused），不要使用。
 
 OCAP_USER=yangyang
 OCAP_SSH="ssh -p $OCAP_PORT $OCAP_USER@$OCAP_HOST"
@@ -82,17 +86,19 @@ Freeark 同机共存（画像 P7，不得违反）：
 
 | # | 检查 | 命令 | 通过标准 |
 |---|---|---|---|
-| 1 | 提交已在远端 | 本地：`git rev-parse HEAD`；`git ls-remote origin main` | 哈希一致 |
+| 1 | 版本标识 | 本地：`git rev-parse HEAD`；`git status --short` | 已记录（未授权 push 时不要求与远端一致） |
 | 2 | 磁盘 | `df -h /home` | 可用 ≥ 2 GB |
 | 3 | 内存 | `free -m` | 可用 ≥ 500 MB |
 | 4 | 端口归属 | `ss -ltn` | 8000/8080/80 非 ocap 占用；9000/8090 仅 ocap |
 | 5 | 目标机目录 | `ls -la /home/yangyang/ocap` | 仅 `backend/`、`web/`、`snapshots/`（无未纳入快照的东西） |
 | 6 | env 文件 | `test -f /home/yangyang/ocap/backend/.env && echo OK` | `OK`（不打印内容） |
 | 7 | 迁移无漂移 | 本地 `backend/`：`python manage.py makemigrations --check --dry-run --settings=config.test_settings` | 退出码 0。非 0 说明模型有未反映到迁移的变更：**停止**，交回开发修复（手写 scoped 迁移，提交推送后再部署）。不得在目标机上生成迁移，也不得提交 makemigrations 全量产物 |
-| 8 | 依赖可装 | `cd /home/yangyang/ocap/backend && venv/bin/pip install --dry-run -r requirements.txt` | 退出码 0 |
-| 9 | 迁移可列出 | 同目录：`venv/bin/python manage.py showmigrations --plan`（需先加载 `.env`，见 DEPLOY-004） | 无报错 |
+| 8 | 依赖可装 | `cd /home/yangyang/ocap/backend && venv/bin/pip install --dry-run -r requirements.txt`（DEPLOY-002 解包新 requirements 之后、DEPLOY-003 之前执行） | 退出码 0 |
+| 9 | 迁移状态 | 同目录：`set -a && . ./.env && set +a && venv/bin/python manage.py showmigrations --plan > /tmp/mig_before.txt; grep -c "^\[ \]" /tmp/mig_before.txt` | 无报错；未应用条数为 0（与“自 a7d7fcd 无新增迁移”一致）。本地 `git diff --name-status a7d7fcd HEAD -- backend/apps \| grep migrations` 应无 `A` |
 | 10 | nginx 语法 | `sudo nginx -t` | `syntax is ok` / `test is successful` |
 | 11 | Freeark 基线 | `curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8080/` | `200` |
+| 12 | SECRET_KEY 非空（不打印值） | `grep -Eq "^DJANGO_SECRET_KEY=.+" /home/yangyang/ocap/backend/.env && echo SECRET_KEY_SET` | 输出 `SECRET_KEY_SET`；不 `cat .env`。`DJANGO_ALLOWED_HOSTS` 同理 |
+| 13 | timer 单元尚不存在 | `systemctl list-unit-files "ocap-run-due-jobs*" --no-legend` | 无输出（保证 ROLLBACK-009 为严格逆操作） |
 
 预检或 DEPLOY-001 失败、目标机尚无变更 → 停止，报告 `DEPLOYMENT_FAILED`，无需回滚。
 
@@ -190,27 +196,46 @@ $OCAP_SSH 'sudo systemctl reload nginx && systemctl is-active nginx'
 
 预期：`active`。不得 `restart`（会中断 Freeark 连接）。
 
+### DEPLOY-009：安装 ocap-run-due-jobs timer（目标机）　回滚：ROLLBACK-009
+
+模板在仓库 `deploy/systemd/ocap-run-due-jobs.{service,timer}`（service 为 oneshot，User=yangyang，WorkingDirectory 为 backend，用 venv python，`EnvironmentFile` 指向 `backend/.env`；timer 每分钟，Persistent=true）。放在最后一步：新代码和重启验证完成后再启用。
+
+```bash
+tar -czf /tmp/ocap_systemd.tar.gz -C deploy/systemd ocap-run-due-jobs.service ocap-run-due-jobs.timer
+$OCAP_SCP /tmp/ocap_systemd.tar.gz "$OCAP_DEST:/tmp/"
+$OCAP_SSH 'rm -rf /tmp/ocap_systemd && mkdir /tmp/ocap_systemd && tar xzf /tmp/ocap_systemd.tar.gz -C /tmp/ocap_systemd \
+  && sudo install -m 644 /tmp/ocap_systemd/ocap-run-due-jobs.service /tmp/ocap_systemd/ocap-run-due-jobs.timer /etc/systemd/system/ \
+  && sudo systemd-analyze verify /etc/systemd/system/ocap-run-due-jobs.service /etc/systemd/system/ocap-run-due-jobs.timer \
+  && sudo systemctl daemon-reload && sudo systemctl enable --now ocap-run-due-jobs.timer'
+$OCAP_SSH 'systemctl is-enabled ocap-run-due-jobs.timer; systemctl is-active ocap-run-due-jobs.timer; systemctl list-timers --no-pager | grep ocap-run-due-jobs'
+```
+
+预期：`enabled`、`active`，list-timers 有 NEXT。只 enable timer，不 enable service。
+
 ## 6. 部署后验证
 
 | 检查 | 命令 / URL | 成功标准 |
 |---|---|---|
 | 后端存活 | `$OCAP_SSH 'systemctl is-active ocap-backend'` | `active` |
 | 后端日志 | `$OCAP_SSH "sudo journalctl -u ocap-backend --since '-5 min' --no-pager"` | 无 `Traceback` / `ERROR` |
-| 内网 API 可达 | 目标机上 `curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:9000/api/v1/admin/auth/login`（用错误凭据，不使用真实口令） | 返回 400/401（端点可达，非 5xx/连接失败） |
+| 管理端 API 可达 | 目标机上 `curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:9000/api/v1/admin/auth/login`（错误凭据，不使用真实口令） | 400/401（非 5xx/连接失败） |
+| DEF-006 后登录接口可用 | `$OCAP_SSH "curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{\"identifier\":\"nobody_$TS\",\"password\":\"wrong\"}' http://127.0.0.1:9000/api/v1/auth/login/password"` | `400`（`LOGIN_FAILED`） |
+| timer 已注册 | `$OCAP_SSH 'systemctl list-timers --no-pager \| grep ocap-run-due-jobs'` | 有一行，NEXT 非 `n/a` |
+| 手动执行一次任务 | `$OCAP_SSH 'sudo systemctl start ocap-run-due-jobs.service; echo exit=$?; systemctl show ocap-run-due-jobs.service -p Result -p ExecMainStatus'` | `exit=0`，`Result=success`，`ExecMainStatus=0`；此次执行会真实运行到期任务/清理，在报告中记录 |
 | 内网前端 | `GET http://192.168.31.51:8090/ocap/` | 200，`text/html` |
 | 内网静态 | `GET http://192.168.31.51:8090/ocap/assets/<构建产物>.js` | 200，非空 |
 | 外网前端 | `GET https://ai-freeark.xin/ocap/` | 200 |
 | 外网静态 | `GET https://ai-freeark.xin/ocap/assets/<构建产物>.js` | 200（404 → 检查 `^~ /ocap/`） |
 | SPA 回退 | `GET https://ai-freeark.xin/ocap/admin/login` | 200，返回 index.html |
 | Freeark 未受影响 | `GET https://ai-freeark.xin/` | 200 |
-| Freeark 服务 | `$OCAP_SSH 'systemctl --state=failed --no-pager'` | 无 `freeark-*` 失败单元 |
+| Freeark 服务 | `$OCAP_SSH 'systemctl --state=failed --no-pager'` | 无 `freeark-*`、`ocap-*` 失败单元 |
 | 端口归属 | `$OCAP_SSH 'ss -ltnp'` 过滤 8000/8080/8090/9000 | 8000/8080 属 Freeark，8090/9000 属 ocap |
 
 写库的冒烟（如登录以外的写入）数据必须唯一化。全部通过 → `DEPLOYED_SUCCESSFULLY`；部分失败 → `DEPLOYED_WITH_ISSUES`，列出失败项，由用户决定是否回滚。
 
 ## 7. 回滚（逆序；锚点为 DEPLOY-001 的 `TS`）
 
-任一 DEPLOY 步骤失败且目标机已有变更 → 立即停止后续步骤，从失败步骤起逆序执行对应 ROLLBACK。遇 `[MANUAL_ROLLBACK_REQUIRED]` 步骤（ROLLBACK-004）→ 暂停，由人决定，不自行处理。
+任一 DEPLOY 步骤失败且目标机已有变更 → 立即停止后续步骤，从失败步骤起逆序执行对应 ROLLBACK。遇 `[MANUAL_ROLLBACK_REQUIRED]` 步骤（ROLLBACK-004，或 DEPLOY-009 之后已生成/已清理的数据）→ 暂停，由人决定，不自行处理。
 
 **执行前核验锚点变量**（必须做）：
 
@@ -222,6 +247,14 @@ $OCAP_SSH "ls -l /home/yangyang/ocap/snapshots/backend-$TS.tar.gz /home/yangyang
 
 四个文件都存在才继续。下面所有远端命令用双引号，使 `$TS` 在本地展开；执行前可先 `echo` 命令核对。
 
+- **ROLLBACK-009**（卸载 timer，最先执行，早于恢复旧代码）：
+  ```bash
+  $OCAP_SSH 'sudo systemctl disable --now ocap-run-due-jobs.timer; sudo systemctl stop ocap-run-due-jobs.service; \
+    sudo rm -f /etc/systemd/system/ocap-run-due-jobs.timer /etc/systemd/system/ocap-run-due-jobs.service; \
+    sudo systemctl daemon-reload; sudo systemctl reset-failed "ocap-run-due-jobs*"'
+  $OCAP_SSH 'systemctl list-unit-files "ocap-run-due-jobs*" --no-legend | wc -l'    # 期望 0
+  ```
+  已生成的报表/已清理的过期数据不随之撤销（见部署计划“不可逆步骤汇总”）。
 - **ROLLBACK-008**（对应 DEPLOY-008）：无持久状态，真正恢复由 007 完成。
 - **ROLLBACK-007**（恢复 nginx）：
   ```bash
@@ -257,14 +290,14 @@ $OCAP_SSH "ls -l /home/yangyang/ocap/snapshots/backend-$TS.tar.gz /home/yangyang
 
 ## 9. 已知问题与缺口
 
-已知问题（本 skill 不处理，只登记）：
+已知问题 / 状态：
 
-1. **CR-023**：`deployment_report.md` 中提交 `c275c46` 的三个 0003 迁移（claims/income/ledger）是在部署时由 `makemigrations` 生成的产物，与画像 P6/P8"手写 scoped 迁移、不提交 makemigrations 全量产物"冲突，已登记为 CR-023。本 skill 的预检第 7 项即为避免再次发生。
-2. **CR-018**：仓库中缺少 `deploy/systemd/` 目录（画像 P3 约定放 systemd 模板），`ocap-backend.service` 等 unit 的受控来源缺失，已登记为 CR-018。
+1. **CR-023**：已修复（0003 迁移改为手写，PM 以 AST 比对确认与原文件等价；自 `a7d7fcd` 无新增迁移文件）。预检第 7、9 项继续防止复发；不得用 Django 6.x 生成或校验迁移。
+2. **CR-018**：已有模板 `deploy/systemd/ocap-run-due-jobs.{service,timer}`，由 DEPLOY-009 安装。`ocap-backend.service` 的受控模板仍不在仓库中（目标机现有单元为准）。
 
-其他已知缺口（来自部署计划/报告）：
+其他已知缺口：
 
-- RU-2：测试环境未创建 `ocap-scheduler.timer`，`run_due_jobs` 不会自动执行。
-- 目标机无 git，回滚锚点为时间戳 + tar 快照，无提交号对应。
+- timer 频率按 IFC-140/ADR-013 为每分钟；负载高可改 `OnCalendar=hourly`。
+- 目标机无 git，回滚锚点为时间戳 + tar 快照，无提交号对应；未授权 push 时版本标识为本地 HEAD + 工作树摘要。
 - 短信为 `console` 替身，微信未配置，上线前需补齐 `WECHAT_*`。
-- 外网 SSH 入口（`ai-freeark.xin:9999`）未经验证，见 §2。
+- 外网 SSH 入口为 57279 通道（§2）；`ai-freeark.xin:9999` 不可用。

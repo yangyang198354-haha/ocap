@@ -47,7 +47,7 @@
 | PIPE-05 | 前端依赖 | 同上 | `npm ci`（`frontend/package-lock.json`） | 退出码 0 | abort-and-notify |
 | PIPE-06 | 前端测试 | 同上 | `npx vitest run --passWithNoTests` | 退出码 0；当前无用例时明确输出跳过 | abort-and-notify |
 | PIPE-07 | 前端构建 | 同上 | `VITE_API_BASE=/ocap/api/v1 npm run build -- --base=/ocap/` | 退出码 0，生成 `frontend/dist/index.html` 且资源路径以 `/ocap/assets/` 开头 | abort-and-notify |
-| PIPE-08 | 小程序依赖 | 同上 | `npm install --no-audit --no-fund`（无 lock 文件） | 退出码 0 | abort-and-notify |
+| PIPE-08 | 小程序依赖 | 同上 | `npm install --no-audit --no-fund --legacy-peer-deps`（无 lock 文件；uni-app 依赖存在 peer 冲突，需 `--legacy-peer-deps`） | 退出码 0 | abort-and-notify |
 | PIPE-09 | 小程序测试 | 同上 | `npx vitest run --passWithNoTests` | 退出码 0 | abort-and-notify |
 
 ## 环境矩阵

@@ -1,4 +1,4 @@
-<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T12:05:00+08:00">
+<phase_status project="ocap" mode="FULL_FLOW" created="2026-11-07T17:02:34+08:00" updated="2026-11-08T12:45:00+08:00">
   <request><![CDATA[现在我要开发一个业主委员会的web 应用 + 微信小程序。整体技术选型，代码复用，都可以参考我github 上的Freeark 项目。 这个业主委员会的web 应用需求有：1.用户注册、登录。登录使用手机号注册，验证码确认，也可以微信扫码登录。微信小程序可以使用手机号，或者微信一键登录。 如果电脑上登录web。除了账号、手机号、邮箱登录。页可以微信扫码登录。如果在windows 有微信桌面版开启。也可以一键授权登录。 后台也业主清册存在数据库表。用户可以选择自己的专有部分。如果验证的手机号和清册手机号一致。则可以直接认证为产权业主。第一个认证的产权业主默认为户主。其他注册用户绑定一个专有部分的。产权业主可以审批，通过其为同住人。注册用户必须通过产权清册认证确认手机号码和登记的一致才能成为产权业主。其他的注册用户为游客。注册用户可以修改自己的头像，个人信息，昵称等等。微信用户可以用自己的微信昵称。用户可以注销自己的账号。 这是一部分需求，先整理这些需求。确认后再整理成用户故事。但是不要开始设计、开发。我把所有的需求输入完毕后。我让开始再开始。]]></request>
   <request batch="2" time="2026-11-07T18:09:22+08:00"><![CDATA[第二批需求： 1.管理员可以对已经存在的产权业主赋予业主委员会委员、业主委员会主任、业主委员会副主任身份。业主身份（游客，同住人、产权业主，业主委员会委员，主任、副主任身份可以显示，但用户自己无法编辑。 业委会主任、副主任可以发起业委会决议，有标题，内容和附件。决议可以配置审批流程。比如指定负责人审批通过。或者半数人员同意通过。 业委会委员可以发起报销或者备用金申请。由指定人员批准可以通过。审批流程可以配置。使用时可以选择。 也维护业委会主任、副主任可以发起业主代表投票（指定的若干用户）或者调查（按照范围：产权业主、 产权业主或同住人）可以手机一键，意见的形式可以定制（同意、反对、弃权） 或者打分制（参考腾讯问卷）。业委会决议，业主代表投票 都可以公开。任何用户都可以查看。 业委会成员可以录入收入表。 收入表需要经过配置好的审批人员确认后生效。 系统可以根据收入，支出数据，生成季度报表，年度报表。 财务报表所以用户都可以看到。 整理这批需求，确认后柴恩成用户故事]]></request>
   <profile version="1.2.0"/>
@@ -18,7 +18,9 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0" environment="测试环境">
+      <phase id="PHASE_11b" status="APPROVED"/>
+    </group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap/requirements/requirements_spec.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
@@ -73,6 +75,7 @@
     <artifact path="project_workspace/ocap/deployment/cicd_pipeline.md" version="1.1.0" status="APPROVED" group="GROUP_E1">1.0.0 经 GR-E1-001 批准；1.1.0 同步 PIPE-08 加 --legacy-peer-deps（CI 实跑验证通过）</artifact>
     <artifact path="project_workspace/ocap/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1">0.1.0 经 GR-E1-001 批准</artifact>
     <artifact path=".github/workflows/ci.yml" version="0.1.0" status="APPROVED" group="GROUP_E1">经 GR-E1-001 批准（GitHub Actions 工作流，无文件头）</artifact>
+    <artifact path="project_workspace/ocap/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2">经 GR-E2-001 批准；最终状态 DEPLOYED_SUCCESSFULLY</artifact>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -99,6 +102,7 @@
     <invocation id="ocap-GROUP_C-3" agent="software-developer" start="2026-11-08T00:10:00+08:00" end="2026-11-08T01:00:00+08:00" result="SUCCESS">G-001~G-014 设计对齐修复：ledger 模型重写、claims 分端+字段、income 列/状态、polls title/options/value、revoke 路由、jobs HTTP、MeView 嵌套；全量 120/120 OK</invocation>
     <invocation id="ocap-GROUP_D-3" agent="test-engineer" start="2026-11-08T01:00:00+08:00" end="2026-11-08T01:05:00+08:00" result="SUCCESS">复跑全量：unit 33/33、integration 74/74、e2e 12/12、smoke 6/6，合计 125 测试，全绿</invocation>
     <invocation id="ocap-GROUP_E1-1" agent="devops-engineer" start="2026-11-08T11:18:00+08:00" end="2026-11-08T11:25:00+08:00" result="SUCCESS">PHASE_10+11a：cicd_pipeline.md（9 阶段 3 job，不部署）、deployment_plan.md（8 DEPLOY+8 ROLLBACK，recreate）、ci.yml；测试门控已通过，未执行任何目标机变更</invocation>
+    <invocation id="ocap-GROUP_E2-1" agent="devops-engineer" start="2026-11-08T12:35:00+08:00" end="2026-11-08T12:44:00+08:00" result="SUCCESS">PHASE_11b 部署到测试环境：后端代码（含 G-001~G-014 修复）+ 前端（/ocap/ 子路径）。DEPLOY-001~006 成功，007/008 跳过（nginx 未变）。期间发现 claims/income/ledger 模型缺迁移，生成 3 个 0003 迁移并应用。10 项验证全通过，Freeark 未受影响。最终 DEPLOYED_SUCCESSFULLY。</invocation>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap-GROUP_A-1" decision="PASS" time="2026-11-07T17:04:53+08:00">
@@ -367,6 +371,17 @@
       <criterion id="J-E1 CI 结构与已知缺口" result="SATISFIED">ci.yml 3 个 job（backend/frontend/miniprogram），backend 含 apt 装 mysqlclient 构建依赖 + Django check + 全量测试；前端用 `npm ci`（有 package-lock.json）+ vitest + vite build；小程序用 `npm install`（无 lock）+ vitest；`--passWithNoTests` 已在 cicd_pipeline「已知缺口」登记。</criterion>
       <criterion id="J-E1 凭据安全" result="SATISFIED">三份文档均未出现凭据值；`.env` 标注为目标机本地文件，不入仓库。</criterion>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap-GROUP_E2-1" decision="PASS" time="2026-11-08T12:45:00+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="J-E2 授权核对" result="SATISFIED">用户本轮授权原话「授权在树莓派部署后端和web」+ 下一轮「确认部署」；环境名=计划环境名=画像 P7 环境名=测试环境；deployment_plan 1.0.0 = APPROVED 版本。</criterion>
+      <criterion id="J-E2 分步执行有实际输出" result="SATISFIED">DEPLOY-001 快照锚点 20261108123556；002 后端 93KB 解压 OK；003 依赖已满足；004 迁移 claims/income/ledger 0003 全部 OK；005 gunicorn 26.2.0 active 4 workers；006 前端构建 12.59s 解压 OK；007/008 跳过（nginx 未变）。</criterion>
+      <criterion id="J-E2 部署后验证全通过" result="SATISFIED">10 项验证：后端 active、日志无错误、内网 API 400（端点可达）、内网前端 200、内网静态 200、外网前端 200、外网静态 200、SPA 回退 200、Freeark 首页 200、Freeark 无失败服务。</criterion>
+      <criterion id="J-E2 Freeark 未受影响" result="SATISFIED">未重启/停止任何 freeark-* 服务；未改动 Freeark 代码/库；Freeark 首页 200，无失败服务。</criterion>
+      <criterion id="J-E2 不可逆步骤" result="SATISFIED">DEPLOY-004 迁移为索引重命名 + line_no 移除 default（无数据丢失风险），标 MANUAL_ROLLBACK_REQUIRED；回滚锚点快照保留。</criterion>
+      <criterion id="J-E2 最终状态" result="SATISFIED">DEPLOYED_SUCCESSFULLY；无需回滚。</criterion>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-07T17:02:34+08:00" answerer="用户">画像 Q1–Q5 全部按推荐：项目名 ocap；需求分析参考本地 Freeark（=github yangyang198354-haha/Freeark）；基础设施沿用 Freeark 约定、环境以后定；子代理不提交，PM 列待提交文件；外部服务资料架构阶段再补。</clarification>
@@ -451,5 +466,9 @@
     <event time="2026-11-08T11:38:00+08:00" type="RUN" actor="pm-orchestrator">devops-engineer ocap-GROUP_E1-1 返回 SUCCESS；kb_inbox --check-response 输出 RESPONSE_OK invocation_id=ocap-GROUP_E1-1 status=SUCCESS；kb_inbox --agent 输出 appended=0 total_proposals=2。</event>
     <event time="2026-11-08T11:40:00+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS：GROUP_E1 APPROVED（PHASE_10/11a）；cicd_pipeline.md 1.0.0、deployment_plan.md 1.0.0、ci.yml 0.1.0 全部 APPROVED。核验：8 DEPLOY↔8 ROLLBACK 逆序、预检 11 项、验证 13 项、仅用测试环境、无 P8 禁用项、回滚用 tar 快照不破坏本地状态、迁移标 MANUAL_ROLLBACK_REQUIRED、远端引号正确。</event>
     <event time="2026-11-08T12:05:00+08:00" type="RUN" actor="pm-orchestrator">GitHub Actions CI 实跑验证（run 42445291508）：仓库已设为 PUBLIC；3 个 job 全部 ✓——Backend "Ran 120 tests in 1.671s / OK"；Web frontend vitest(no tests, --passWithNoTests)+vite build 通过；Mini program "No test files found, exiting with code 0"。期间修复 2 处 CI 问题：miniprogram npm install 加 --legacy-peer-deps（uni-app peer 冲突）、显式声明 @vitejs/plugin-vue、新增 vitest.config.js 不加载 uni 插件。ci.yml 与 cicd_pipeline.md 同步更新。</event>
+    <event time="2026-11-08T12:34:00+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户授权「授权在树莓派部署后端和web」+「确认部署」；目标环境=测试环境；deployment_plan 1.0.0；写入 PRODUCTION_DEPLOY_CONFIRM=true。</event>
+    <event time="2026-11-08T12:35:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer ocap-GROUP_E2-1（PHASE_11b），执行测试环境部署（后端+前端）。</event>
+    <event time="2026-11-08T12:44:00+08:00" type="RUN" actor="pm-orchestrator">E2 执行完成：DEPLOY-001~006 成功，007/008 跳过。期间发现 claims/income/ledger 缺迁移，生成 3 个 0003 迁移（索引重命名+line_no 移除 default）并应用，提交 c275c46。回滚锚点 20261108123556。</event>
+    <event time="2026-11-08T12:45:00+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS：GROUP_E2 APPROVED（PHASE_11b）；deployment_report.md 1.0.0 APPROVED；最终状态 DEPLOYED_SUCCESSFULLY。10 项验证全通过，Freeark 未受影响。</event>
   </audit_log>
 </phase_status>

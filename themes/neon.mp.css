@@ -1,0 +1,5 @@
+/* 小程序风格 A：Hero 描边与辉光；不用 backdrop-filter，不设循环动画 */
+.theme-neon .home-hero { border: 1px solid rgba(169,150,255,.35); }
+.theme-neon .btn { background: var(--accent-bg); box-shadow: 0 10rpx 30rpx rgba(124,92,255,.4); }
+.theme-neon .home-q:nth-child(2n) { border-color: rgba(34,211,238,.35); }
+.theme-neon .vote-agree { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }

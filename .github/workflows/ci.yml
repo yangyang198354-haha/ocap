@@ -68,6 +68,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Theme definitions check (validate + generated files not drifted)
+        working-directory: .
+        run: node scripts/themes/build.mjs --strict --check
+
       - name: Run tests (skipped when no spec files)
         run: npx vitest run --passWithNoTests
 

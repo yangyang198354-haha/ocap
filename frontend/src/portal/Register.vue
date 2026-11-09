@@ -23,6 +23,7 @@ import { ElMessage } from 'element-plus'
 import { authApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
+import { useThemeStore } from '@/theme/store'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -49,6 +50,7 @@ async function submit() {
   try {
     const result = await authApi.register(form.phone, form.code)
     auth.setAuth(result.token, result.user)
+    await useThemeStore().reconcileAfterLogin()
     ElMessage.success('注册成功')
     router.replace('/')
   } catch (e) {

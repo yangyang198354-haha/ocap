@@ -25,6 +25,8 @@ class User(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_login_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    # MOD-023：界面风格偏好；NULL = 未选择（客户端按默认风格 bento 解释）
+    theme_key = models.CharField(max_length=32, null=True, blank=True)
 
     is_admin_principal = False
     is_authenticated = True

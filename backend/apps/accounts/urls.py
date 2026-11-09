@@ -4,7 +4,7 @@ from .views import (
     AdminAccountListCreateView, AdminLoginView, AdminPasswordResetView, AdminUserListView,
     AvatarUploadView, CodeRequestView, EmailVerifyView, LoginByCodeView, LoginByEmailView,
     LoginByPasswordView, LogoutView, MeCodeRequestView, MiniappLoginView, PasswordUpdateView,
-    ProfileView, RegisterView, WebWechatCallbackView, WebWechatExchangeView, WebWechatParamsView,
+    ProfileView, RegisterView, ThemePreferenceView, WebWechatCallbackView, WebWechatExchangeView, WebWechatParamsView,
 )
 
 urlpatterns = [
@@ -21,6 +21,7 @@ urlpatterns = [
     path("auth/wechat/web/exchange", WebWechatExchangeView.as_view()),
     path("me/password", PasswordUpdateView.as_view()),
     path("me/profile", ProfileView.as_view()),
+    path("me/theme", ThemePreferenceView.as_view()),
     path("me/avatar", AvatarUploadView.as_view()),
     path("me/email/verify", EmailVerifyView.as_view()),
     path("admin/auth/login", AdminLoginView.as_view()),

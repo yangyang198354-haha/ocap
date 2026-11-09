@@ -6,3 +6,4 @@
 - [M-DE-004] CI 对无用例的包用 `--passWithNoTests` 时，要在 cicd_pipeline 登记为已知缺口，否则掩盖测试缺失（本项目曾 vitest 无用例） — conf 0.6 · 证据 ci.yml:72,98、cicd_pipeline.md:25,51、GR-C-004-F02 · 首见 2026-11-08 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
+- [P-DE-001] 回滚含可空列迁移时：旧代码与多出的可空列兼容，默认只回退代码、保留列；DROP 列的迁移逆向列为可选 MANUAL_ROLLBACK，且必须在恢复旧代码之前执行 — 自记 2026-11-09 · 证据 ocap_ui_theme deployment_plan ROLLBACK-003

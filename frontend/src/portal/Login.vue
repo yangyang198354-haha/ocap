@@ -43,10 +43,12 @@ import { ElMessage } from 'element-plus'
 import { authApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
+import { useThemeStore } from '@/theme/store'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const themeStore = useThemeStore()
 const tab = ref('code')
 const loading = ref(false)
 const counting = ref(0)
@@ -84,15 +86,17 @@ async function sendEmailCode() {
   }
 }
 
-function done(result) {
+async function done(result) {
   auth.setAuth(result.token, result.user)
+  // 先对账账号级风格再跳转，登录页保持原风格直到新账号风格就绪（ADR-027 第 4 条）
+  await themeStore.reconcileAfterLogin()
   router.replace(route.query.redirect || '/')
 }
 
 async function run(fn) {
   loading.value = true
   try {
-    done(await fn())
+    await done(await fn())
   } catch (e) {
     ElMessage.error(errorText(e))
   } finally {

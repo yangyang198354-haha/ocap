@@ -320,6 +320,21 @@ class FieldContractTests(ApiTestBase):
         self.assertIn(denied.status_code, (401, 403), denied.content)
 
     # ---------- phone bind / change ----------
+    def test_theme_preference_contract(self):
+        """IFC-142/143/150/151：两端 api.js 调用 /me/theme 的方法与字段名与后端一致（AC-078-04、AC-091-02）。"""
+        web = self._src("frontend/src/shared/api.js")
+        mini = self._src("miniprogram/utils/api.js")
+        self.assertRegex(web, r"get\('/me/theme'\)")
+        self.assertRegex(web, r"http\.put\('/me/theme',\s*\{\s*theme\s*\}\)")
+        self.assertRegex(mini, r"http\.get\('/me/theme'\)")
+        self.assertRegex(mini, r"http\.put\('/me/theme',\s*\{\s*theme\s*\}\)")
+        _, token = self.make_user()
+        resp = self.api("get", "/me/theme", token=token)
+        self.assertEqual(set(resp.data), {"theme"})
+        resp = self.api("put", "/me/theme", {"theme": "neon"}, token=token)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(set(resp.data), {"theme"})
+
     def test_phone_bind_change_contract(self):
         """US-012/014/028：前端 bindPhone {phone, code}、changePhone {old_phone,new_phone,old_code,new_code}、
         合并响应 {merged, token, user}，与后端一致；注销 {phone, code}；改密 PUT /me/password {password,password_confirm}。"""

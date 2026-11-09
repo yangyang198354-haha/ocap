@@ -41,7 +41,7 @@
         <el-button @click="applyResident">申请成为同住人</el-button>
         <el-button @click="loadToReview">查看待我审批</el-button>
       </div>
-      <div v-for="item in toReview" :key="item.id" class="row" style="margin-top: 8px; border-top: 1px solid #f0f1f3; padding-top: 8px">
+      <div v-for="item in toReview" :key="item.id" class="row list-item-top">
         <span>{{ item.applicant?.nickname || item.applicant_id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
         <el-button size="small" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
         <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>

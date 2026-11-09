@@ -1,8 +1,9 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card" v-if="item">
       <view class="title">{{ item.title }}</view>
-      <view class="muted">{{ item.status }} · {{ item.approval_mode }}</view>
+      <view class="muted"><StatusTag :status="item.status" /> · {{ item.approval_mode }}</view>
       <view style="margin-top: 16rpx; white-space: pre-wrap">{{ item.content }}</view>
       <view v-if="item.status === 'PENDING' && item.approval_mode === 'HALF_MAJORITY'" class="row" style="margin-top: 24rpx">
         <button size="mini" @click="vote('AGREE')">同意</button>
@@ -14,9 +15,12 @@
       <view class="muted">决议不存在或无权查看</view>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
+import StatusTag from '@/components/StatusTag.vue'
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'

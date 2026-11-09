@@ -9,7 +9,7 @@
     </div>
     <div class="card">
       <el-empty v-if="!items.length" description="暂无投票或调查" />
-      <div v-for="item in items" :key="item.id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
+      <div v-for="item in items" :key="item.id" class="list-item">
         <router-link :to="`/polls/${item.id}`">{{ item.title }}</router-link>
         <span class="muted" style="margin-left: 8px">
           {{ item.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · {{ item.status }} · 截止 {{ item.deadline }}
@@ -29,7 +29,7 @@
       <el-input v-model="form.title" placeholder="标题" maxlength="200" style="margin-top: 10px" />
       <el-input v-model="form.description" type="textarea" :rows="2" placeholder="说明（选填）" style="margin-top: 10px" />
       <el-date-picker v-model="form.deadline" type="datetime" placeholder="截止时间" style="margin-top: 10px; width: 100%" />
-      <div v-for="(q, qi) in form.questions" :key="qi" style="margin-top: 12px; border-top: 1px solid #f0f1f3; padding-top: 8px">
+      <div v-for="(q, qi) in form.questions" :key="qi" class="list-item-top" style="margin-top: 12px">
         <el-input v-model="q.title" :placeholder="`题目 ${qi + 1}`" />
         <div class="row" style="margin-top: 6px">
           <el-select v-model="q.qtype" style="width: 200px" @change="resetOptions(q)">

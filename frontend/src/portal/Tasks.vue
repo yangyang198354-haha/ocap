@@ -10,7 +10,7 @@
     </div>
     <div class="card">
       <el-empty v-if="!tasks.length" description="暂无待办" />
-      <div v-for="task in tasks" :key="task.instance_id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
+      <div v-for="task in tasks" :key="task.instance_id" class="list-item">
         <div class="row" style="justify-content: space-between">
           <div>
             <strong>{{ task.title || task.subject_title || task.scope }}</strong>

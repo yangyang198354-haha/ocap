@@ -1,0 +1,7 @@
+/* 小程序风格 B：深浅交替数据块、大圆角入口 */
+.theme-bento .home-stat.is-odd { background: #11121A; color: #fff; }
+.theme-bento .home-stat.is-odd .label { color: #B7BBCB; }
+.theme-bento .home-q { border-radius: 44rpx; box-shadow: var(--shadow); }
+.theme-bento .vote-bar { background: #EEF0F6; }
+.theme-bento .vote-disagree { background: #FF5C8A; }
+.theme-bento .vote-abstain { background: #C9CDDA; opacity: 1; }

@@ -20,6 +20,9 @@ export const meApi = {
   me: () => get('/me'),
   profile: () => get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),
+  // 界面风格偏好（IFC-142/143）：{ theme: string | null }
+  theme: () => get('/me/theme'),
+  setTheme: (theme) => http.put('/me/theme', { theme }),
   // data: { password, password_confirm, current_password? }，后端为 PUT
   setPassword: (data) => http.put('/me/password', data),
   sendCode: (purpose, target) => post('/me/codes', target ? { purpose, target } : { purpose }),

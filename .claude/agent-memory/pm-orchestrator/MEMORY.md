@@ -5,4 +5,5 @@
 - [M-PM-003] 写 phase_status 的 python 脚本不与 `grep -c` 用 && 串联（计数 0 返回码 1，脚本静默不执行）；替换后打印每处匹配数并核对状态 — conf 0.6 · 证据 phase_status SELF_CORRECTION 2026-11-08T23:41:59 · 首见 2026-11-08 · 命中 1
 ## 用户偏好与禁止项
 - [Requirements first](feedback_requirements_first.md) — 需求分批、阶段逐一放行；提交与部署需当轮确认
+- [Push triggers deploy](feedback_push_triggers_deploy.md) — 推送前读画像 P7/P8 与 workflow；push 触发生产部署时须单独授权
 ## 待验证

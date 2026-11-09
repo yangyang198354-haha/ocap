@@ -22,7 +22,7 @@
     </div>
     <div class="card">
       <el-empty v-if="!items.length" description="暂无收入表" />
-      <div v-for="item in items" :key="item.id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
+      <div v-for="item in items" :key="item.id" class="list-item">
         <div class="row" style="justify-content: space-between">
           <div>
             <strong>¥{{ item.total_amount }}</strong>
@@ -42,7 +42,7 @@
     </div>
 
     <el-dialog v-model="showCreate" title="逐条录入收入" width="560px">
-      <div v-for="(r, i) in form.records" :key="i" style="border-bottom: 1px solid #f0f1f3; padding-bottom: 8px; margin-bottom: 8px">
+      <div v-for="(r, i) in form.records" :key="i" class="list-item" style="padding-top: 0; margin-bottom: 8px">
         <el-date-picker v-model="r.occurred_on" type="date" value-format="YYYY-MM-DD" placeholder="日期" style="width: 100%" />
         <el-input v-model="r.amount" placeholder="金额（最多两位小数）" style="margin-top: 6px" />
         <el-input v-model="r.category" placeholder="收入类别" maxlength="32" style="margin-top: 6px" />

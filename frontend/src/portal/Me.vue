@@ -1,6 +1,22 @@
 <template>
   <div class="page">
     <div class="card">
+      <h3 class="title">界面风格</h3>
+      <ThemePicker />
+    </div>
+
+    <div class="card">
+      <h3 class="title">常用入口</h3>
+      <div class="row">
+        <el-button @click="router.push('/units')">我的房屋</el-button>
+        <el-button @click="router.push('/tasks')">待办</el-button>
+        <el-button v-if="auth.isCommittee" @click="router.push('/income')">收入表</el-button>
+        <el-button @click="router.push('/reports')">财务报表</el-button>
+        <el-button @click="logoutNow">退出登录</el-button>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="title">个人资料</h3>
       <div class="row">
         <el-input v-model="profile.nickname" placeholder="昵称" style="max-width: 240px" />
@@ -85,6 +101,7 @@ import { ElMessage } from 'element-plus'
 import { attachmentApi, meApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
+import ThemePicker from '@/theme/ThemePicker.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -95,6 +112,11 @@ const change = reactive({ oldPhone: '', newPhone: '', oldCode: '', newCode: '' }
 const cancel = reactive({ phone: '', code: '' })
 const email = ref('')
 const emailCode = ref('')
+
+async function logoutNow() {
+  await auth.logout()
+  router.replace('/login')
+}
 
 async function loadProfile() {
   try {

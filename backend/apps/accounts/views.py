@@ -249,6 +249,19 @@ def profile_view(user: User) -> dict:
     }
 
 
+class ThemePreferenceView(APIView):
+    """MOD-023 / IFC-142、IFC-143：仅作用于 request.user，不接受用户 id。"""
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        return Response({"theme": request.user.theme_key})
+
+    def put(self, request):
+        body = request.data if hasattr(request.data, "get") else {}
+        user = AccountService.set_theme(request.user, body.get("theme"))
+        return Response({"theme": user.theme_key})
+
+
 class AvatarUploadView(APIView):
     permission_classes = [IsMember]
     parser_classes = [MultiPartParser, FormParser]

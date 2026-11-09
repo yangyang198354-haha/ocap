@@ -1,11 +1,12 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card" v-if="!hasPhone">
       <view class="title">绑定手机号</view>
       <view class="muted">若该手机号已注册，两个账号将合并（以该手机号原账号为主）。</view>
-      <input v-model="phone" placeholder="手机号" maxlength="11" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
+      <input v-model="phone" placeholder="手机号" maxlength="11" class="field mt-16" />
       <view class="row" style="margin-top: 16rpx">
-        <input v-model="code" placeholder="验证码" maxlength="6" style="flex: 1; border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx" />
+        <input v-model="code" placeholder="验证码" maxlength="6" class="field" style="flex: 1" />
         <button size="mini" @click="sendCode('BIND_PHONE', phone)">获取验证码</button>
       </view>
       <button class="btn" style="margin-top: 24rpx" @click="bind">绑定</button>
@@ -13,22 +14,24 @@
     <view class="card" v-else>
       <view class="title">更换手机号</view>
       <view class="muted">需要原手机号与新手机号各自的验证码。新手机号若已属于其他账号，两个账号将合并（以新手机号原账号为主）。</view>
-      <input v-model="oldPhone" placeholder="原手机号" maxlength="11" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
+      <input v-model="oldPhone" placeholder="原手机号" maxlength="11" class="field mt-16" />
       <view class="row" style="margin-top: 16rpx">
-        <input v-model="oldCode" placeholder="原号验证码" maxlength="6" style="flex: 1; border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx" />
+        <input v-model="oldCode" placeholder="原号验证码" maxlength="6" class="field" style="flex: 1" />
         <button size="mini" @click="sendCode('CHANGE_PHONE', oldPhone)">获取</button>
       </view>
-      <input v-model="newPhone" placeholder="新手机号" maxlength="11" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
+      <input v-model="newPhone" placeholder="新手机号" maxlength="11" class="field mt-16" />
       <view class="row" style="margin-top: 16rpx">
-        <input v-model="newCode" placeholder="新号验证码" maxlength="6" style="flex: 1; border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx" />
+        <input v-model="newCode" placeholder="新号验证码" maxlength="6" class="field" style="flex: 1" />
         <button size="mini" @click="sendCode('CHANGE_PHONE', newPhone)">获取</button>
       </view>
       <button class="btn" style="margin-top: 24rpx" @click="change">更换</button>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
 import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'

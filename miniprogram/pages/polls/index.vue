@@ -1,4 +1,5 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card">
       <view class="title">投票 / 调查</view>
@@ -6,15 +7,18 @@
     </view>
     <view class="card">
       <view v-if="!items.length" class="muted">暂无投票或调查</view>
-      <view v-for="item in items" :key="item.id" style="padding: 16rpx 0; border-bottom: 1px solid #f0f1f3" @click="open(item)">
+      <view v-for="item in items" :key="item.id" class="list-item" @click="open(item)">
         <text>{{ item.title }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ item.status }}</text>
+        <StatusTag class="muted-gap" :status="item.status" />
       </view>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
+import StatusTag from '@/components/StatusTag.vue'
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'

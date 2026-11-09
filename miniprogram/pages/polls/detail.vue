@@ -1,4 +1,5 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card" v-if="poll">
       <view class="title">{{ poll.title }}</view>
@@ -29,7 +30,7 @@
             <text>{{ n }}</text>
           </label>
         </radio-group>
-        <textarea v-else @input="(e) => choose(q.id, e.detail.value)" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; width: 100%" />
+        <textarea v-else @input="(e) => choose(q.id, e.detail.value)" class="field" style="width: 100%" />
       </view>
       <button v-if="poll.status === 'OPEN' && poll.can_respond && !poll.my_response" class="btn" style="margin-top: 24rpx" @click="submit">提交</button>
       <view v-else-if="poll.my_response" class="muted" style="margin-top: 24rpx">你已提交</view>
@@ -48,9 +49,11 @@
     </view>
     <view class="card" v-else><view class="muted">投票不存在或无权查看</view></view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
 import { reactive, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'

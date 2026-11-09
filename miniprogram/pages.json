@@ -15,12 +15,14 @@
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "业主委员会",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f5f6f8"
+    "navigationBarBackgroundColor": "#F3F4FA",
+    "backgroundColor": "#F3F4FA"
   },
   "tabBar": {
-    "color": "#8a919f",
-    "selectedColor": "#2563eb",
+    "color": "#5E6378",
+    "selectedColor": "#4F46E5",
+    "backgroundColor": "#F3F4FA",
+    "borderStyle": "black",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页" },
       { "pagePath": "pages/resolutions/index", "text": "决议" },

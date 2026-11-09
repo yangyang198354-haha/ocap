@@ -7,3 +7,6 @@
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
+- [P-TE-002] 验证"权限零回归"时，把新写的角色×操作矩阵原样复制到 `git archive HEAD` 导出的基线树（scratchpad，同一 venv）各跑一次，两边都通过才算与改动前一致；探测列表接口时顺带暴露了基线即存在的 GET /admin/appeals 500 — 自记 2026-11-09 · 证据 ocap_ui_theme GROUP_D TC-INT-009、DEF-001
+- [P-TE-003] vitest 的 `beforeEach(() => mock.mockImplementation(...))` 箭头函数会把 mock 函数当返回值，被当作清理函数无参调用而报"未预期的请求 undefined"，beforeEach 里要用花括号；含 `<router-view>` 的布局组件若又嵌在自身路由下会渲染两次 — 自记 2026-11-09 · 证据 frontend/tests/qa_int_theme.spec.js 调试记录
+- [P-TE-004] 无浏览器时用 jsdom 挂载真实 App + 真实路由 + 假服务端做 E2E 替代口径；整页加载语义要先执行 index.html 的内联脚本（vm/new Function）再挂载，路由是单例须在用例间复位；懒加载页面跳转要用 vi.waitFor 等路径变化 — 自记 2026-11-09 · 证据 frontend/tests/qa_e2e_theme.spec.js

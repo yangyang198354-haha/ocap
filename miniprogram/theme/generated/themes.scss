@@ -1,0 +1,60 @@
+/* 由 scripts/themes/build.mjs 生成，请勿手改；修改 themes/ 后重新运行。 */
+
+page {
+  --bg: #F3F4FA;
+  --surface: #FFFFFF;
+  --overlay: #FFFFFF;
+  --text: #11121A;
+  --muted: #5E6378;
+  --line: #E6E8F0;
+  --accent: #4F46E5;
+  --accent-2: #FF5C8A;
+  --accent-text: #4F46E5;
+  --on-accent: #FFFFFF;
+  --accent-bg: #11121A;
+  --success: #047857;
+  --warning: #B45309;
+  --danger: #BE123C;
+  --success-bg: #E7F6EF;
+  --warning-bg: #FEF3E2;
+  --danger-bg: #FDE8EC;
+  --hero: linear-gradient(135deg, #4F46E5 0%, #7C3AED 55%, #DB2777 100%);
+  --on-hero: #FFFFFF;
+  --radius-sm: 16px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-btn: 999px;
+  --shadow: 0 1px 2px rgba(17,18,26,.04), 0 12px 32px -12px rgba(49,46,129,.14);
+  --font: "MiSans", "HarmonyOS Sans SC", "PingFang SC", system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --glass: #F6F7FB;
+  --glass-low-end: #FFFFFF;
+  --blur: none;
+  --decor: 1;
+}
+
+/* themes/neon.mp.css */
+/* 小程序风格 A：Hero 描边与辉光；不用 backdrop-filter，不设循环动画 */
+.theme-neon .home-hero { border: 1px solid rgba(169,150,255,.35); }
+.theme-neon .btn { background: var(--accent-bg); box-shadow: 0 10rpx 30rpx rgba(124,92,255,.4); }
+.theme-neon .home-q:nth-child(2n) { border-color: rgba(34,211,238,.35); }
+.theme-neon .vote-agree { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+/* themes/bento.mp.css */
+/* 小程序风格 B：深浅交替数据块、大圆角入口 */
+.theme-bento .home-stat.is-odd { background: #11121A; color: #fff; }
+.theme-bento .home-stat.is-odd .label { color: #B7BBCB; }
+.theme-bento .home-q { border-radius: 44rpx; box-shadow: var(--shadow); }
+.theme-bento .vote-bar { background: #EEF0F6; }
+.theme-bento .vote-disagree { background: #FF5C8A; }
+.theme-bento .vote-abstain { background: #C9CDDA; opacity: 1; }
+
+/* themes/terminal.mp.css */
+/* 小程序风格 C：直角、编号入口、扫描线（静态）、等宽数据；不设循环动画 */
+.theme-terminal .card, .theme-terminal .home-q { border-radius: 4px; }
+.theme-terminal .home-q-key { display: block; }
+.theme-terminal .home-q-label, .theme-terminal .title, .theme-terminal .label { font-family: var(--mono); letter-spacing: 1px; }
+.theme-terminal .home-hero-scan { display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, rgba(198,255,61,.05) 0 1px, transparent 1px 4px); }
+.theme-terminal .stat-value { font-family: var(--mono); }
+.theme-terminal .vote-disagree { background: var(--accent-2); }
+.theme-terminal .vote-bar { border-radius: 0; }

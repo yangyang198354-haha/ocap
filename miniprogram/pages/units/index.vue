@@ -1,4 +1,5 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card">
       <view class="title">业主清册认证</view>
@@ -24,9 +25,11 @@
       <button style="margin-top: 16rpx" @click="submitAppeal">提交申诉</button>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
 import { computed, reactive, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'

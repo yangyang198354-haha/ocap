@@ -3,7 +3,7 @@
     <div class="card" v-if="item">
       <h3 class="title">{{ item.title }}</h3>
       <p class="muted">
-        状态：{{ item.status }} · 审批方式：{{ item.approval_mode }}
+        状态：<StatusTag :status="item.status" /> · 审批方式：{{ item.approval_mode }}
         <span v-if="item.vote_deadline">· 表决截止：{{ item.vote_deadline }}</span>
       </p>
       <p style="white-space: pre-wrap">{{ item.content }}</p>
@@ -57,6 +57,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { approvalApi, resolutionApi } from '@/shared/api'
+import StatusTag from './StatusTag.vue'
 import { apiUrl } from '@/shared/http'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'

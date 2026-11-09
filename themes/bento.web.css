@@ -1,0 +1,50 @@
+/* 风格 B 结构性差异：极光背景、胶囊导航、柔和投影、4 栏 Bento 首页、深浅交替数据块 */
+html[data-theme="bento"] body {
+  background:
+    radial-gradient(900px 420px at 10% -10%, rgba(124,108,255,.28), transparent 60%),
+    radial-gradient(700px 380px at 95% 0%, rgba(255,92,138,.22), transparent 60%),
+    radial-gradient(800px 500px at 60% 110%, rgba(0,179,155,.16), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+html[data-theme="bento"] .topnav { background: var(--surface); border-radius: 999px; padding: 4px; box-shadow: 0 1px 2px rgba(17,18,26,.06); }
+html[data-theme="bento"] .topnav a { border-radius: 999px; }
+html[data-theme="bento"] .topnav a.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+html[data-theme="bento"] .card { border-color: rgba(17,18,26,.04); }
+html[data-theme="bento"] .chip { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); color: var(--on-hero); }
+html[data-theme="bento"] .home-hero::after {
+  content: ""; position: absolute; right: -60px; bottom: -80px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,.35), transparent 65%);
+}
+html[data-theme="bento"] .home-hero { border: 0; }
+
+/* 4 栏 Bento：Hero 与待办各占 2x2；数据块 1x1；入口整行；投票 / 最新各 2 */
+@media (min-width: 768px) {
+  html[data-theme="bento"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(120px, auto); }
+  html[data-theme="bento"] .home-hero { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="bento"] .home-todo { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="bento"] .home-stat { grid-column: span 1; }
+  html[data-theme="bento"] .home-quick { grid-column: span 4; }
+  html[data-theme="bento"] .home-poll { grid-column: span 2; }
+  html[data-theme="bento"] .home-latest { grid-column: span 2; }
+}
+/* 深浅交替数据块 */
+html[data-theme="bento"] .home-stat.is-odd { background: #11121A; color: #fff; }
+html[data-theme="bento"] .home-stat.is-odd .label, html[data-theme="bento"] .home-stat.is-odd .stat-note { color: #B7BBCB; }
+html[data-theme="bento"] .home-q { border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); }
+html[data-theme="bento"] .home-q:nth-child(6n+1) .home-q-icon { background: #ECEBFD; color: #4F46E5; }
+html[data-theme="bento"] .home-q:nth-child(6n+2) .home-q-icon { background: #FFE8EF; color: #BE123C; }
+html[data-theme="bento"] .home-q:nth-child(6n+3) .home-q-icon { background: #DFF7F2; color: #047C6B; }
+html[data-theme="bento"] .home-q:nth-child(6n+4) .home-q-icon { background: #FFF1DE; color: #B45309; }
+html[data-theme="bento"] .home-q:nth-child(6n+5) .home-q-icon { background: #E6F0FF; color: #1D4ED8; }
+html[data-theme="bento"] .home-q:nth-child(6n+6) .home-q-icon { background: #F3E8FF; color: #7C3AED; }
+html[data-theme="bento"] .home-countdown > div { background: #F6F7FB; }
+html[data-theme="bento"] .vote-bar { background: #EEF0F6; }
+html[data-theme="bento"] .vote-disagree { background: #FF5C8A; }
+html[data-theme="bento"] .vote-abstain { background: #C9CDDA; opacity: 1; }
+html[data-theme="bento"] .type-card { border-radius: 20px; box-shadow: var(--shadow); }
+html[data-theme="bento"] .type-card.is-selected { box-shadow: 0 0 0 2px #4F46E5, 0 12px 32px -12px rgba(79,70,229,.4); }
+html[data-theme="bento"] .money-input { border-radius: 16px; border-width: 1.5px; }
+html[data-theme="bento"] .drop-zone .el-upload-dragger { border: 2px dashed #CBD0E0; border-radius: 20px; background: #F8F9FC; }
+html[data-theme="bento"] .claim-step.is-done .claim-step-node { background: #11121A; border-color: #11121A; }
+html[data-theme="bento"] .claim-step.is-current .claim-step-node { background: #4F46E5; border-color: #4F46E5; color: #fff; box-shadow: 0 0 0 5px rgba(79,70,229,.18); }

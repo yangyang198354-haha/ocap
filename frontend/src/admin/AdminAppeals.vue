@@ -10,7 +10,7 @@
     </div>
     <div class="card">
       <el-empty v-if="!items.length" description="暂无申诉" />
-      <div v-for="item in items" :key="item.id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
+      <div v-for="item in items" :key="item.id" class="list-item">
         <div class="row" style="justify-content: space-between">
           <div>
             <strong>#{{ item.id }}</strong>

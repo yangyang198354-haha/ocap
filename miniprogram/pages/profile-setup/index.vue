@@ -1,17 +1,20 @@
 <template>
+  <ThemeRoot>
   <view class="card">
     <view class="title">完善资料</view>
     <button open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
       <image v-if="avatarUrl" :src="avatarUrl" style="width: 120rpx; height: 120rpx; border-radius: 60rpx" />
       <text v-else>选择头像</text>
     </button>
-    <input v-model="nickname" type="nickname" placeholder="昵称" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 24rpx" />
+    <input v-model="nickname" type="nickname" placeholder="昵称" class="field" style="margin-top: 24rpx" />
     <button class="btn" style="margin-top: 24rpx" @click="save">保存并进入</button>
     <button style="margin-top: 16rpx" @click="skip">稍后再说</button>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
 import { ref } from 'vue'
 import { api } from '@/utils/api'
 

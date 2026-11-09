@@ -1,6 +1,7 @@
 """账号服务（MOD-003 / IFC-038）。"""
 import hashlib
 import hmac
+import re
 import secrets
 from datetime import timedelta
 
@@ -19,6 +20,8 @@ from apps.integrations.sms import SmsSendError, get_sms_gateway
 from apps.integrations.wechat import WeChatError
 
 from .models import AuthToken, LoginTicket, User, VerificationCode, WeChatIdentity, WeChatLoginState
+
+THEME_KEY_RE = re.compile(r"^[a-z][a-z0-9_-]{1,31}\Z")
 
 WEAK_PASSWORDS = {"12345678", "password", "password1", "abc12345", "11111111", "00000000", "qwerty123"}
 
@@ -325,6 +328,15 @@ class AccountService:
         validate_password(password, user=user)
         user.password = make_password(password)
         user.save(update_fields=["password"])
+
+    @staticmethod
+    def set_theme(user: User, theme) -> User:
+        """MOD-023 / IFC-143：只校验格式（ADR-025），不维护启用风格集合。"""
+        if not isinstance(theme, str) or not THEME_KEY_RE.match(theme):
+            raise ApiError("INVALID_VALUE", "风格标识不合法")
+        user.theme_key = theme
+        user.save(update_fields=["theme_key"])
+        return user
 
     @staticmethod
     def update_profile(user: User, data: dict) -> User:

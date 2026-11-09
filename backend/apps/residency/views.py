@@ -113,7 +113,7 @@ class AdminAppealListView(APIView):
 
 
 class AppealAdminSerializer:
-    def __init__(self, rows, many=False):
+    def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
         self.data = [self._one(r) for r in rows]
 

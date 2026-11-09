@@ -18,7 +18,7 @@
     </div>
     <div class="card">
       <el-empty v-if="!reports.length" description="暂无已生成报表" />
-      <div v-for="item in reports" :key="item.id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
+      <div v-for="item in reports" :key="item.id" class="list-item">
         <a href="javascript:void(0)" @click="open(item)">{{ label(item) }}</a>
         <el-tag v-if="item.stale" size="small" type="warning" style="margin-left: 8px">已过期，待重新生成</el-tag>
         <span class="muted" style="margin-left: 8px">收入 ¥{{ item.total_income }} · 支出 ¥{{ item.total_expense }}</span>

@@ -1,5 +1,23 @@
 <template>
+  <ThemeRoot>
   <view>
+    <view class="card">
+      <view class="title">界面风格</view>
+      <view class="row">
+        <view
+          v-for="item in theme.list"
+          :key="item.key"
+          class="theme-option"
+          :class="{ 'is-selected': theme.current === item.key }"
+          :data-theme-key="item.key"
+          @click="pickTheme(item.key)"
+        >
+          <view class="theme-swatch"><view v-for="(c, i) in item.swatch" :key="i" :style="{ background: c }" /></view>
+          <text class="theme-name">{{ item.name }}</text>
+          <text v-if="theme.current === item.key" class="muted">已选</text>
+        </view>
+      </view>
+    </view>
     <view class="card">
       <view class="title">{{ auth.me?.profile?.nickname || '业主' }}</view>
       <view class="muted">身份：{{ (auth.me?.identities?.labels || []).join('、') || '游客' }}</view>
@@ -8,7 +26,7 @@
     <view class="card">
       <view class="title">财务报表</view>
       <view v-if="!reports.length" class="muted">暂无已生成报表</view>
-      <view v-for="item in reports" :key="item.id" style="padding: 12rpx 0; border-bottom: 1px solid #f0f1f3">
+      <view v-for="item in reports" :key="item.id" class="list-item">
         <text>{{ label(item) }}</text>
         <text class="muted" style="margin-left: 12rpx">收入 ¥{{ item.total_income }} · 支出 ¥{{ item.total_expense }}</text>
       </view>
@@ -21,6 +39,7 @@
       <button style="margin-top: 16rpx" @click="logout">退出登录</button>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
@@ -28,8 +47,21 @@ import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 import { useAuthStore } from '@/store/auth'
+import { useThemeStore } from '@/store/theme'
+import ThemeRoot from '@/components/ThemeRoot.vue'
 
 const auth = useAuthStore()
+const theme = useThemeStore()
+
+// 点选即时生效；保存失败回滚并提示（AC-077-04）
+async function pickTheme(key) {
+  if (key === theme.current) return
+  try {
+    await theme.select(key)
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
 const reports = ref([])
 
 const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year} 年第 ${r.quarter} 季度`)

@@ -12,13 +12,39 @@
       </el-radio-group>
     </div>
 
-    <div class="card">
-      <el-empty v-if="!items.length" description="暂无决议" />
-      <div v-for="item in items" :key="item.id" style="padding: 10px 0; border-bottom: 1px solid #f0f1f3">
-        <router-link :to="`/resolutions/${item.id}`">{{ item.title }}</router-link>
-        <span class="muted" style="margin-left: 8px">{{ item.status }} · {{ item.approval_mode }}</span>
-        <span class="muted" style="margin-left: 8px">{{ (item.initiator?.labels || []).join('、') }}</span>
-      </div>
+    <div v-if="!items.length" class="card">
+      <el-empty description="暂无决议" />
+    </div>
+    <div v-else class="res-grid">
+      <article v-for="item in items" :key="item.id" class="card res-card">
+        <div class="res-top">
+          <div>
+            <div class="res-idx mono">{{ resNo(item.id) }}</div>
+            <router-link class="res-title" :to="`/resolutions/${item.id}`">{{ item.title }}</router-link>
+          </div>
+          <StatusTag :status="item.status" />
+        </div>
+        <template v-if="item.vote_counts">
+          <div class="vote-bar" role="img" :aria-label="`同意 ${share(item).agree}，反对 ${share(item).disagree}，弃权 ${share(item).abstain}`">
+            <i class="vote-agree" :style="{ width: share(item).agreePct + '%' }" />
+            <i class="vote-disagree" :style="{ width: share(item).disagreePct + '%' }" />
+            <i class="vote-abstain" :style="{ width: share(item).abstainPct + '%' }" />
+          </div>
+          <div class="vote-legend">
+            <span>同意 <b class="mono">{{ share(item).agree }}</b></span>
+            <span>反对 <b class="mono">{{ share(item).disagree }}</b></span>
+            <span>弃权 <b class="mono">{{ share(item).abstain }}</b></span>
+          </div>
+        </template>
+        <div v-else class="vote-legend"><span>{{ modeText(item.approval_mode) }}：由指定负责人审批</span></div>
+        <div class="res-foot">
+          <span>
+            {{ (item.initiator?.labels || []).join('、') || '发起人' }}
+            <span class="mode-tag">{{ modeText(item.approval_mode) }}</span>
+          </span>
+          <span v-if="item.vote_deadline" class="mono">截止 {{ datetime(item.vote_deadline) }}</span>
+        </div>
+      </article>
     </div>
 
     <el-dialog v-model="showCreate" title="发起决议" width="560px">
@@ -41,8 +67,10 @@
         <span class="muted">{{ attachmentIds.length }} 个附件</span>
       </div>
       <template #footer>
-        <el-button @click="showCreate = false">取消</el-button>
-        <el-button type="primary" @click="create">提交</el-button>
+        <div class="form-actions-sticky">
+          <el-button @click="showCreate = false">取消</el-button>
+          <el-button type="primary" @click="create">提交</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -52,8 +80,10 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, resolutionApi } from '@/shared/api'
+import StatusTag from './StatusTag.vue'
 import { useAuthStore } from '@/stores/auth'
-import { errorText } from '@/shared/format'
+import { datetime, errorText } from '@/shared/format'
+import { voteShare } from '@/shared/voteShare'
 
 const auth = useAuthStore()
 const scope = ref('public')
@@ -63,6 +93,11 @@ const showCreate = ref(false)
 const form = reactive({ title: '', content: '', approval_flow_id: null, vote_deadline: null })
 const attachmentIds = ref([])
 const needDeadline = computed(() => flows.value.find((f) => f.id === form.approval_flow_id)?.mode === 'HALF_MAJORITY')
+
+// 卡片展示用：编号由 id 派生（接口无决议编号字段）；比例见 shared/voteShare
+const resNo = (id) => `R-${String(id).padStart(4, '0')}`
+const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
+const share = (item) => voteShare(item.vote_counts)
 
 async function load() {
   try {

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { getToken } from '@/shared/http'
+import { useThemeStore } from '@/theme/store'
 
 const routes = [
   { path: '/login', component: () => import('@/portal/Login.vue'), meta: { public: true } },
@@ -50,6 +51,17 @@ router.beforeEach((to) => {
     return getToken(true) ? true : '/admin/login'
   }
   return getToken() ? true : { path: '/login', query: { redirect: to.fullPath } }
+})
+
+// 风格（ADR-027/030）：管理端固定 bento；用户端按设备记忆，登录态下再与账号偏好对账
+router.afterEach((to, from) => {
+  const theme = useThemeStore()
+  if (to.meta.admin) {
+    theme.forAdminRoute()
+    return
+  }
+  if (!theme.ready || from.meta.admin) theme.initFromDevice()
+  if (getToken() && !theme.reconciled) theme.reconcileAfterLogin()
 })
 
 export default router

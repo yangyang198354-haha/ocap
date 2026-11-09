@@ -10,6 +10,9 @@ export const api = {
   me: () => http.get('/me'),
   profile: () => http.get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),
+  // 界面风格偏好（IFC-142/143）
+  theme: () => http.get('/me/theme'),
+  setTheme: (theme) => http.put('/me/theme', { theme }),
   // 绑定/换绑手机号；遇到已属他人的手机号后端会合并账号，返回 { merged, token?, user? }
   sendMeCode: (purpose, target) => http.post('/me/codes', target ? { purpose, target } : { purpose }),
   bindPhone: (phone, code) => http.post('/me/phone/bind', { phone, code }),

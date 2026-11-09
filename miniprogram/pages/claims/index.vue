@@ -1,4 +1,5 @@
 <template>
+  <ThemeRoot>
   <view>
     <view class="card">
       <view class="title">报销 / 备用金</view>
@@ -6,14 +7,25 @@
     </view>
     <view class="card">
       <view class="title">新建申请</view>
-      <picker :range="typeLabels" @change="pickType">
-        <view class="muted">类型：{{ typeLabels[typeIndex] }}</view>
-      </picker>
+      <view class="type-cards">
+        <view v-for="(label, i) in typeLabels" :key="label" class="type-card" :class="{ 'is-selected': typeIndex === i }" @click="pickType({ detail: { value: i } })">
+          <view class="type-card-title">{{ label }}</view>
+          <view class="muted">{{ typeHints[i] }}</view>
+        </view>
+      </view>
       <picker :range="flowLabels" @change="pickFlow">
         <view class="muted">审批流程：{{ flowLabels[flowIndex] || '请选择' }}</view>
       </picker>
-      <input v-model="amount" placeholder="金额（最多两位小数）" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
-      <textarea v-model="reason" placeholder="事由（1~500 字）" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx; width: 100%" />
+      <view class="money-input mt-16">
+        <text class="money-cur">¥</text>
+        <input v-model="amount" placeholder="0.00" class="money-field" />
+      </view>
+      <view class="muted">最多两位小数</view>
+      <textarea v-model="reason" placeholder="事由（1~500 字）" class="field mt-16" style="width: 100%" />
+      <view class="muted field-count">{{ reason.length }} / 500</view>
+      <view class="claim-steps">
+        <view class="muted">审批流程：提交申请 → {{ flowLabels[flowIndex] || '审批' }}（不可审批本人提交的申请） → 审批结果</view>
+      </view>
       <template v-if="typeIndex === 0">
         <picker mode="date" :value="occurredOn" @change="(e) => (occurredOn = e.detail.value)">
           <view class="muted">费用发生日期：{{ occurredOn || '请选择' }}</view>
@@ -21,7 +33,7 @@
         <button style="margin-top: 16rpx" @click="chooseInvoice">上传发票（已选 {{ invoiceIds.length }} 张）</button>
       </template>
       <template v-else>
-        <input v-model="expectedUsage" placeholder="预计用途" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
+        <input v-model="expectedUsage" placeholder="预计用途" class="field mt-16" />
         <picker mode="date" :value="expectedSettleOn" @change="(e) => (expectedSettleOn = e.detail.value)">
           <view class="muted">预计核销日期：{{ expectedSettleOn || '请选择（须晚于今日）' }}</view>
         </picker>
@@ -41,27 +53,31 @@
         </label>
       </checkbox-group>
       <view class="muted" style="margin-top: 12rpx">差额：{{ diffText }}</view>
-      <input v-model="settle.reason" placeholder="核销说明" style="border: 1px solid #e5e7eb; border-radius: 8rpx; padding: 16rpx; margin-top: 16rpx" />
+      <input v-model="settle.reason" placeholder="核销说明" class="field mt-16" />
       <button class="btn" style="margin-top: 20rpx" @click="submitSettle">提交核销</button>
     </view>
     <view class="card">
       <view class="title">我的申请</view>
       <view v-if="!items.length" class="muted">暂无申请</view>
-      <view v-for="item in items" :key="item.id" style="padding: 16rpx 0; border-bottom: 1px solid #f0f1f3">
+      <view v-for="item in items" :key="item.id" class="list-item">
         <text>{{ label(item.type) }} ¥{{ item.amount }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ item.status }}</text>
+        <StatusTag class="muted-gap" :status="item.status" />
         <button v-if="item.status === 'PENDING'" size="mini" style="margin-left: 12rpx" @click="withdraw(item.id)">撤回</button>
       </view>
     </view>
   </view>
+  </ThemeRoot>
 </template>
 
 <script setup>
+import ThemeRoot from '@/components/ThemeRoot.vue'
+import StatusTag from '@/components/StatusTag.vue'
 import { computed, reactive, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 
 const typeLabels = ['报销', '备用金预借']
+const typeHints = ['已垫付费用，凭票报销', '先借后用，事后核销']
 const typeIndex = ref(0)
 const flows = ref([])
 const flowIndex = ref(-1)

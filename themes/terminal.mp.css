@@ -1,0 +1,8 @@
+/* 小程序风格 C：直角、编号入口、扫描线（静态）、等宽数据；不设循环动画 */
+.theme-terminal .card, .theme-terminal .home-q { border-radius: 4px; }
+.theme-terminal .home-q-key { display: block; }
+.theme-terminal .home-q-label, .theme-terminal .title, .theme-terminal .label { font-family: var(--mono); letter-spacing: 1px; }
+.theme-terminal .home-hero-scan { display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(0deg, rgba(198,255,61,.05) 0 1px, transparent 1px 4px); }
+.theme-terminal .stat-value { font-family: var(--mono); }
+.theme-terminal .vote-disagree { background: var(--accent-2); }
+.theme-terminal .vote-bar { border-radius: 0; }

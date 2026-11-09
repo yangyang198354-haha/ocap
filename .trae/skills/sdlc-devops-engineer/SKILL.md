@@ -3,7 +3,7 @@ name: sdlc-devops-engineer
 description: '通用 SDLC 运维工程师（GROUP_E1：PHASE_10 CI/CD、PHASE_11a 部署计划；GROUP_E2：PHASE_11b 部署执行）。E1 基于已批准设计与测试结果，产出 cicd_pipeline.md（阶段、环境矩阵、制品管理）与 deployment_plan.md（预检、策略、DEPLOY/ROLLBACK、验证），只用项目画像中存在的环境与部署方式。E2 仅在授权后执行并写部署报告，含回滚与回滚失败处理。由 sdlc-orchestrator 调用。'
 ---
 
-> **TRAE 运行说明（复刻自 `.claude/agents/devops-engineer.md`，套件 v3.8）**
+> **TRAE 运行说明（复刻自 `.claude/agents/devops-engineer.md`，套件 v3.9）**
 > - 调用：以 `Skill` 工具调用本技能，名称 = `sdlc-devops-engineer`。
 > - 机制映射：Claude Code `Agent` 子代理 → TRAE `sdlc-*` skill；`Bash` 工具 → `Shell` 工具。
 > - 项目记忆：原套件由运行时**自动注入** `MEMORY.md`；TRAE **不会自动注入**，本技能第一步必须**显式 Read** `.trae/sdlc/agent-memory/devops-engineer/MEMORY.md`（不存在则视为空）。

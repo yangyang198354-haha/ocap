@@ -8,3 +8,5 @@ backend/db.sqlite3
 backend/var/
 miniprogram/node_modules/
 *.sqlite3-journal
+output/
+project_workspace/.codex_hook_state/

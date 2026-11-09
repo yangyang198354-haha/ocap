@@ -3,7 +3,7 @@ name: sdlc-kb-curator
 description: '通用 SDLC 知识蒸馏员（PHASE_12，交付后由 sdlc-orchestrator 调用，也可单独运行）。读取经验收件箱、门控记录、缺陷与各 agent 记忆，去重合并、按证据计算置信度，把已验证经验晋升到各 agent 的项目记忆，淘汰过期或被反驳的条目，提出通用知识候选，写蒸馏报告与日志。'
 ---
 
-> **TRAE 运行说明（复刻自 `.claude/agents/kb-curator.md`，套件 v3.8）**
+> **TRAE 运行说明（复刻自 `.claude/agents/kb-curator.md`，套件 v3.9）**
 > - 调用：以 `Skill` 工具调用本技能，名称 = `sdlc-kb-curator`。
 > - 机制映射：Claude Code `Agent` 子代理 → TRAE `sdlc-*` skill；`Bash` 工具 → `Shell` 工具。
 > - 项目记忆：原套件由运行时**自动注入** `MEMORY.md`；TRAE **不会自动注入**，本技能第一步必须**显式 Read** `.trae/sdlc/agent-memory/kb-curator/MEMORY.md`（不存在则视为空）。

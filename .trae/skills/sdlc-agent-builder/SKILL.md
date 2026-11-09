@@ -3,7 +3,7 @@ name: sdlc-agent-builder
 description: 'Agent 构建与评审专家（套件辅助成员，不属于 SDLC 阶段；由用户或主会话按需调用）。给 Claude Code 子代理、TRAE 技能（`.trae/skills/`）或对话式提示词做可复现的百分制合规打分（固定 6 维细则，每条扣分带行号证据），按扣分点优化存量 agent 并输出变更日志，或按需求生成新 agent；生成物按画像注入安全合规约束、记忆与知识模块（独立 agent 内嵌，套件成员引用共享协议）。评审本套件成员时按 shared_protocol 口径打分。'
 ---
 
-> **TRAE 运行说明（复刻自 `.claude/agents/agent-builder.md`，套件 v3.8）**
+> **TRAE 运行说明（复刻自 `.claude/agents/agent-builder.md`，套件 v3.9）**
 > - 调用：以 `Skill` 工具调用本技能，名称 = `sdlc-agent-builder`。
 > - 机制映射：Claude Code `Agent` 子代理 → TRAE `sdlc-*` skill；`Bash` 工具 → `Shell` 工具。
 > - 项目记忆：原套件由运行时**自动注入** `MEMORY.md`；TRAE **不会自动注入**，本技能第一步必须**显式 Read** `.trae/sdlc/agent-memory/agent-builder/MEMORY.md`（不存在则视为空）。

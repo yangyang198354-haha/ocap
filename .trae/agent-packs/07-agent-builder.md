@@ -1,11 +1,11 @@
-<!-- agent-pack: sdlc-agent-builder | source: .claude/agents/agent-builder.md@v3.8 | generator: .trae/sdlc/scripts/port_from_claude.py -->
+<!-- agent-pack: sdlc-agent-builder | source: .claude/agents/agent-builder.md@v3.9 | generator: .trae/sdlc/scripts/port_from_claude.py -->
 # Agent Pack — sdlc-agent-builder
 
 > 单文件注册包：正文与 `.trae/skills/sdlc-agent-builder/SKILL.md` **逐字一致**（不含 frontmatter）。
 > 用法：在不支持 skills 的会话中，把本文件全文作为该角色的系统提示；
 > 在 TRAE 中优先直接加载 `Skill: sdlc-agent-builder`。
 
-> **TRAE 运行说明（复刻自 `.claude/agents/agent-builder.md`，套件 v3.8）**
+> **TRAE 运行说明（复刻自 `.claude/agents/agent-builder.md`，套件 v3.9）**
 > - 调用：以 `Skill` 工具调用本技能，名称 = `sdlc-agent-builder`。
 > - 机制映射：Claude Code `Agent` 子代理 → TRAE `sdlc-*` skill；`Bash` 工具 → `Shell` 工具。
 > - 项目记忆：原套件由运行时**自动注入** `MEMORY.md`；TRAE **不会自动注入**，本技能第一步必须**显式 Read** `.trae/sdlc/agent-memory/agent-builder/MEMORY.md`（不存在则视为空）。

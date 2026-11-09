@@ -3,7 +3,7 @@ name: sdlc-system-architect
 description: '通用 SDLC 系统架构师（GROUP_B：PHASE_03 架构选型、PHASE_04 模块设计）。基于已批准需求与现有代码，产出 architecture_design.md（带 Status 的 ADR）、module_design.md（类型化接口契约、依赖图、迁移与运行单元影响）、tech_stack.md（选型与风险）。遵守项目画像中的既有技术栈与禁用项。由 sdlc-orchestrator 调用。'
 ---
 
-> **TRAE 运行说明（复刻自 `.claude/agents/system-architect.md`，套件 v3.8）**
+> **TRAE 运行说明（复刻自 `.claude/agents/system-architect.md`，套件 v3.9）**
 > - 调用：以 `Skill` 工具调用本技能，名称 = `sdlc-system-architect`。
 > - 机制映射：Claude Code `Agent` 子代理 → TRAE `sdlc-*` skill；`Bash` 工具 → `Shell` 工具。
 > - 项目记忆：原套件由运行时**自动注入** `MEMORY.md`；TRAE **不会自动注入**，本技能第一步必须**显式 Read** `.trae/sdlc/agent-memory/system-architect/MEMORY.md`（不存在则视为空）。

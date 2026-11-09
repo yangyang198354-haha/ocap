@@ -1,4 +1,4 @@
-# TRAE 单文件注册包（SDLC Agent Suite v3.8）
+# TRAE 单文件注册包（SDLC Agent Suite v3.9）
 
 > 由 `.trae/sdlc/scripts/port_from_claude.py` 从 `.claude/agents/*.md` 生成。
 > 每个 pack 的正文与对应 `.trae/skills/<skill>/SKILL.md` 的正文**逐字一致**（不含 frontmatter），

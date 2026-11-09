@@ -26,7 +26,7 @@ PACKS = os.path.join(ROOT, ".trae", "agent-packs")
 RUNTIME = os.path.join(ROOT, ".trae", "sdlc")
 
 # Source suite version (kept in one place; bump when .claude/agents changes).
-SUITE_VERSION = "v3.8"
+SUITE_VERSION = "v3.9"
 
 # Single-file pack output order (kept compatible with the previous port names).
 PACK_ORDER = [

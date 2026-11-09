@@ -1,0 +1,375 @@
+{
+  "source_version": "3.9",
+  "source_commit": "934ff13654108701612c2f49e19f5ef16d894599",
+  "built_at": "2026-11-09T09:47:35.839585+08:00",
+  "roles": {
+    "agent-builder": {
+      "name": "agent-builder",
+      "description": "Agent 构建与评审专家（套件辅助成员，不属于 SDLC 阶段；由用户或主会话按需调用）。给 Claude Code 子代理或对话式提示词做可复现的百分制合规打分（固定 6 维细则，每条扣分带行号证据），按扣分点优化存量 agent 并输出变更日志，或按需求生成新 agent；生成物按画像注入安全合规约束、记忆与知识模块（独立 agent 内嵌，套件成员引用共享协议）。评审本套件成员时按 shared_protocol 口径打分。",
+      "tools": "Read, Write, Edit, Bash, Glob, Grep, WebFetch",
+      "model": "sonnet",
+      "color": "pink",
+      "memory": "project"
+    },
+    "devops-engineer": {
+      "name": "devops-engineer",
+      "description": "通用 SDLC 运维工程师（GROUP_E1：PHASE_10 CI/CD、PHASE_11a 部署计划；GROUP_E2：PHASE_11b 部署执行）。E1 基于已批准设计与测试结果，产出 cicd_pipeline.md（阶段、环境矩阵、制品管理）与 deployment_plan.md（预检、策略、DEPLOY/ROLLBACK、验证），只用项目画像中存在的环境与部署方式。E2 仅在授权后执行并写部署报告，含回滚与回滚失败处理。由 pm-orchestrator 调用。",
+      "tools": "Read, Write, Edit, Bash, Glob, Grep",
+      "model": "sonnet",
+      "color": "red",
+      "memory": "project"
+    },
+    "kb-curator": {
+      "name": "kb-curator",
+      "description": "通用 SDLC 知识蒸馏员（PHASE_12，交付后由 pm-orchestrator 调用，也可单独运行）。读取经验收件箱、门控记录、缺陷与各 agent 记忆，去重合并、按证据计算置信度，把已验证经验晋升到各 agent 的项目记忆，淘汰过期或被反驳的条目，提出通用知识候选，写蒸馏报告与日志。",
+      "tools": "Read, Write, Edit, Bash, Glob, Grep",
+      "model": "sonnet",
+      "color": "cyan",
+      "memory": "project"
+    },
+    "pm-orchestrator": {
+      "name": "pm-orchestrator",
+      "description": "通用 SDLC 项目经理，双模式运行：主会话模式（`claude --agent pm-orchestrator` 启动，可当场澄清、可授权生产部署）；子代理模式（普通会话中 @pm-orchestrator，自主跑到检查点或部署计划为止，返回待用户决定的问题，再次调用时从断点续跑，不执行任何部署）。读取项目画像与项目记忆，串行编排需求→架构→开发→测试→CI/部署五个阶段组并在交付后调用 kb-curator 做知识蒸馏，对每组产出做门控评审（亲自复跑测试核验），处理澄清、缺陷回流、用户中断与上报。无画像时先扫描仓库生成画像初稿。生产部署必须用户本轮明确授权。",
+      "tools": "Agent, Read, Write, Edit, Bash, Glob, Grep",
+      "model": "opus",
+      "color": "purple",
+      "memory": "project"
+    },
+    "requirement-analyst": {
+      "name": "requirement-analyst",
+      "description": "通用 SDLC 需求分析师（GROUP_A：PHASE_01 需求分析、PHASE_02 用户故事）。把业务需求转成 requirements_spec.md 与 user_stories.md（MoSCoW 优先级、故事点、Given/When/Then 验收标准）。增量需求以现有代码/文档为基线，每条需求标注来源。由 pm-orchestrator 调用。",
+      "tools": "Read, Write, Bash, Glob, Grep, WebSearch, WebFetch",
+      "model": "sonnet",
+      "color": "blue",
+      "memory": "project"
+    },
+    "software-developer": {
+      "name": "software-developer",
+      "description": "通用 SDLC 开发工程师（GROUP_C：PHASE_05 开发、PHASE_06 代码评审）。按已批准的模块设计，按依赖拓扑顺序实现（已有代码库做最小改动，全新项目按模块组织），运行相关测试自验证，五维评分自评审，产出 implementation_plan.md 与 code_review_report.md。也负责修复 test-engineer 报告的缺陷。由 pm-orchestrator 调用。",
+      "tools": "Read, Write, Edit, Bash, Glob, Grep",
+      "model": "sonnet",
+      "color": "yellow",
+      "memory": "project"
+    },
+    "system-architect": {
+      "name": "system-architect",
+      "description": "通用 SDLC 系统架构师（GROUP_B：PHASE_03 架构选型、PHASE_04 模块设计）。基于已批准需求与现有代码，产出 architecture_design.md（带 Status 的 ADR）、module_design.md（类型化接口契约、依赖图、迁移与运行单元影响）、tech_stack.md（选型与风险）。遵守项目画像中的既有技术栈与禁用项。由 pm-orchestrator 调用。",
+      "tools": "Read, Write, Bash, Glob, Grep, WebSearch, WebFetch",
+      "model": "sonnet",
+      "color": "green",
+      "memory": "project"
+    },
+    "test-engineer": {
+      "name": "test-engineer",
+      "description": "通用 SDLC 测试工程师（GROUP_D：PHASE_07 单元、PHASE_08 集成、PHASE_09 E2E）。把验收标准映射到现有测试与新写测试，按层串行真实执行（阈值模式或基线零新增失败模式），产出 test_plan.md 与单元/集成/E2E 三份报告（含 critical path 覆盖率）；发现产品缺陷以 <defects> 回报，不改产品代码。由 pm-orchestrator 调用。",
+      "tools": "Read, Write, Edit, Bash, Glob, Grep",
+      "model": "sonnet",
+      "color": "orange",
+      "memory": "project"
+    }
+  },
+  "files": [
+    {
+      "target": ".codex/agents/agent-builder.toml",
+      "source": ".claude/agents/agent-builder.md",
+      "source_sha256": "26f1dcc2765b032875821f1337c50b090ebf41287f999cea14d1c7988d867381",
+      "previous_sha256": "a5f8a347a87bb00ca202cd62c19444d39468140d18aa79baae66fddda235a3e3",
+      "sha256": "a5f8a347a87bb00ca202cd62c19444d39468140d18aa79baae66fddda235a3e3",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/devops-engineer.toml",
+      "source": ".claude/agents/devops-engineer.md",
+      "source_sha256": "e02e8cce4651e9cd7689f4fb46dc73292b27e0e629ec225c54765cc6d99f2d81",
+      "previous_sha256": "2898ce3b869eaa03e796d2d025020e1a2c0abd460155bd0d714bfcec9f64a2cc",
+      "sha256": "2898ce3b869eaa03e796d2d025020e1a2c0abd460155bd0d714bfcec9f64a2cc",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/kb-curator.toml",
+      "source": ".claude/agents/kb-curator.md",
+      "source_sha256": "9ad074d769b7f684beb8672ea467f1dae4ed00363f9a1f3c8ac26d42c7a8f3da",
+      "previous_sha256": "e80c1f1a810b200412edd307d6b16ac19571f17c1296b62eeb23bf8142a4d9e3",
+      "sha256": "e80c1f1a810b200412edd307d6b16ac19571f17c1296b62eeb23bf8142a4d9e3",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/pm-orchestrator.toml",
+      "source": ".claude/agents/pm-orchestrator.md",
+      "source_sha256": "1c8363b4164413c5141d2d8fd78639382b9513d52e9d3bb68af72cde38453b80",
+      "previous_sha256": "4e66a811af8909164f90dd0a9c0b6e504b828d529aab4d4e548d17d7daf1ad58",
+      "sha256": "1ca3117d5b204f4944ddbb4fe4bdb4a4362a0830d290a238d79ecb7c797026cf",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/pm-orchestrator.md",
+      "source": ".claude/agents/pm-orchestrator.md",
+      "source_sha256": "1c8363b4164413c5141d2d8fd78639382b9513d52e9d3bb68af72cde38453b80",
+      "previous_sha256": "d90af5c7bf4f01288a0b719441877db3b91e89b5891fec298a7ffc811ec00d46",
+      "sha256": "9dbd20101cc79d69acedd11b354303e574a3e5f5a5fed92f32c5251e5ceebbe7",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/requirement-analyst.toml",
+      "source": ".claude/agents/requirement-analyst.md",
+      "source_sha256": "0352f0aa40b7f177ac5f8187b7b5e4dd1513d9b686906e82575916a16abe21cf",
+      "previous_sha256": "4f94014d8844b5365221c876fb7d246cdf0220be945e3d0b16a9061bb9600b6d",
+      "sha256": "4f94014d8844b5365221c876fb7d246cdf0220be945e3d0b16a9061bb9600b6d",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/software-developer.toml",
+      "source": ".claude/agents/software-developer.md",
+      "source_sha256": "913d4b91a23216723524990295c44194dbc32730f6851ff8b718127f1b5ac30b",
+      "previous_sha256": "25ee8d9a28da20ef669f74c352d1551b168f6bfe2f08b9eeb57d7596a0c4803b",
+      "sha256": "301b3724c04150d37152bb8aab9a2bb63b044743839e68592c0a7ae22473edc9",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/system-architect.toml",
+      "source": ".claude/agents/system-architect.md",
+      "source_sha256": "1628f494e06d1721e1bf4519f2fde058c7ad907958e755a9939d3690e527bdf4",
+      "previous_sha256": "e8bee10ed197303913df74c4c1a428e3a86426deda16206898741b692a5bdc2f",
+      "sha256": "e8bee10ed197303913df74c4c1a428e3a86426deda16206898741b692a5bdc2f",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agents/test-engineer.toml",
+      "source": ".claude/agents/test-engineer.md",
+      "source_sha256": "e6cd9490c7addd82735727e78a0d8e4f436d333ae0c80f4547df6b926b96990c",
+      "previous_sha256": "c699e3059b2722b627521c8ec5a96fad6d83a836b05424a2ee832ae1f11dc58c",
+      "sha256": "c699e3059b2722b627521c8ec5a96fad6d83a836b05424a2ee832ae1f11dc58c",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/runtime_adapter.md",
+      "source": "scripts/codex_sdlc/runtime_adapter.md",
+      "source_sha256": "ff4035b96fea8be9bed437f4bf346c27ba2fbf0d7ca1eb1495015b942f41f746",
+      "previous_sha256": "ff4035b96fea8be9bed437f4bf346c27ba2fbf0d7ca1eb1495015b942f41f746",
+      "sha256": "ff4035b96fea8be9bed437f4bf346c27ba2fbf0d7ca1eb1495015b942f41f746",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/README.md",
+      "source": ".claude/agents/knowledge_base/README.md",
+      "source_sha256": "38e63d722c2164960fe5519cad9d1cdb273877d9b1e68f7ee1ca9048ed493b2f",
+      "previous_sha256": "46b2ec4bad15b552c36dac606e488d9526daf3785413c7a3ddb3b9121d4e20c7",
+      "sha256": "46b2ec4bad15b552c36dac606e488d9526daf3785413c7a3ddb3b9121d4e20c7",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/agent-builder.md",
+      "source": ".claude/agents/knowledge_base/generic/agent-builder.md",
+      "source_sha256": "055e6679813d60375cfe83071d1d7f788519a6b86e7fcee89ff3b3c0b5e31352",
+      "previous_sha256": "f631b7ad34f473aa03c586a330aa3907aac6e0300a8f53c9ad68e48ae175aafa",
+      "sha256": "f631b7ad34f473aa03c586a330aa3907aac6e0300a8f53c9ad68e48ae175aafa",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/devops-engineer.md",
+      "source": ".claude/agents/knowledge_base/generic/devops-engineer.md",
+      "source_sha256": "75cef04a403c1cccbffc51e3a02c46d91654d2964873c8890218891d0585b6c7",
+      "previous_sha256": "75cef04a403c1cccbffc51e3a02c46d91654d2964873c8890218891d0585b6c7",
+      "sha256": "75cef04a403c1cccbffc51e3a02c46d91654d2964873c8890218891d0585b6c7",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/kb-curator.md",
+      "source": ".claude/agents/knowledge_base/generic/kb-curator.md",
+      "source_sha256": "3f339024f6800985d58f2de390bd4d8eeed67e7cb4ad8d34ae0c2c7dec8af8c4",
+      "previous_sha256": "8adbd118757565dc50c9276bbb26f9cbd0a765c108c4b914ed4eee069ea12ba3",
+      "sha256": "8adbd118757565dc50c9276bbb26f9cbd0a765c108c4b914ed4eee069ea12ba3",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/pm-orchestrator.md",
+      "source": ".claude/agents/knowledge_base/generic/pm-orchestrator.md",
+      "source_sha256": "4e887b13270342c20a8f2f03cde152bb5f792ea26fdb1ccf5edbe4c8a242549d",
+      "previous_sha256": "d221b4e3a1efc8f660bc7d7785c5ce15def5dc20f896997c7e15815037e690d9",
+      "sha256": "d221b4e3a1efc8f660bc7d7785c5ce15def5dc20f896997c7e15815037e690d9",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/requirement-analyst.md",
+      "source": ".claude/agents/knowledge_base/generic/requirement-analyst.md",
+      "source_sha256": "79c34151e93562305d4884bfe6c6060923c99c419f413fda5f77f23e0441efd5",
+      "previous_sha256": "79c34151e93562305d4884bfe6c6060923c99c419f413fda5f77f23e0441efd5",
+      "sha256": "79c34151e93562305d4884bfe6c6060923c99c419f413fda5f77f23e0441efd5",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/software-developer.md",
+      "source": ".claude/agents/knowledge_base/generic/software-developer.md",
+      "source_sha256": "49cff9f114bfdbc22e83e26f68fc7c7f2f459b5300e1bc5d3087cdaa48473f32",
+      "previous_sha256": "49cff9f114bfdbc22e83e26f68fc7c7f2f459b5300e1bc5d3087cdaa48473f32",
+      "sha256": "49cff9f114bfdbc22e83e26f68fc7c7f2f459b5300e1bc5d3087cdaa48473f32",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/system-architect.md",
+      "source": ".claude/agents/knowledge_base/generic/system-architect.md",
+      "source_sha256": "1d324f9a5715e2c2b3c6096228d9af9f49890ced12af8454b24ce40555d34859",
+      "previous_sha256": "1d324f9a5715e2c2b3c6096228d9af9f49890ced12af8454b24ce40555d34859",
+      "sha256": "1d324f9a5715e2c2b3c6096228d9af9f49890ced12af8454b24ce40555d34859",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/knowledge_base/generic/test-engineer.md",
+      "source": ".claude/agents/knowledge_base/generic/test-engineer.md",
+      "source_sha256": "471bfb1add5ad28022c919df108ad5ba9272050d1d91b5eb75c0492ecc428860",
+      "previous_sha256": "471bfb1add5ad28022c919df108ad5ba9272050d1d91b5eb75c0492ecc428860",
+      "sha256": "471bfb1add5ad28022c919df108ad5ba9272050d1d91b5eb75c0492ecc428860",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/project_profile.md",
+      "source": ".claude/agents/project_profile.md",
+      "source_sha256": "4cc215516eee2b12f6089bac457a7932e6fcb86e2c62d9f509fdf1b60987f3cb",
+      "previous_sha256": "080d0bf8b654e5bb45084388730dffdd64bdbc32f8666ce67dc0499663de1396",
+      "sha256": "080d0bf8b654e5bb45084388730dffdd64bdbc32f8666ce67dc0499663de1396",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/shared_protocol.md",
+      "source": ".claude/agents/shared_protocol.md",
+      "source_sha256": "6c5938aa8ad96b3d863338512b7087664385ecd4fab04a4db104d15bcb3a672b",
+      "previous_sha256": "e194a8f3bf171bd382615e0b368971170e380b4beecfe291055ba15e8faa44d0",
+      "sha256": "778cd0e381b3ccc774a4e5e2675abff7e3a1348735ff10aae5edee72738b5da3",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/templates/agent_builder_templates.md",
+      "source": ".claude/agents/templates/agent_builder_templates.md",
+      "source_sha256": "a287bd117c1a61c63eb43f01065b0d82502881f2f4e8e768c3aa50f574be05a9",
+      "previous_sha256": "ba338a24c8452ef7d328e41111e9107c9314cd6e4bd69cb1d51f9699de5e52b1",
+      "sha256": "ba338a24c8452ef7d328e41111e9107c9314cd6e4bd69cb1d51f9699de5e52b1",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/sdlc/templates/project_profile.template.md",
+      "source": ".claude/agents/templates/project_profile.template.md",
+      "source_sha256": "9ccf7c0bf22201346078c67a867734cac6ddfc925a5d82a1d6e6ef83883ca4f3",
+      "previous_sha256": "da7ac5cfe8a469892a86d0897cf0d260f80482e75bbb8cef93ec64d05e75cdff",
+      "sha256": "da7ac5cfe8a469892a86d0897cf0d260f80482e75bbb8cef93ec64d05e75cdff",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/agent-memory/agent-builder/MEMORY.md",
+      "source": null,
+      "source_sha256": null,
+      "previous_sha256": "59e43cf5ac7c249202f7f27d5880bf27f2e54c4d85e03a1ed21a76163ef3f124",
+      "sha256": "59e43cf5ac7c249202f7f27d5880bf27f2e54c4d85e03a1ed21a76163ef3f124",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/devops-engineer/MEMORY.md",
+      "source": ".claude/agent-memory/devops-engineer/MEMORY.md",
+      "source_sha256": "1203404f47a275789428a669026866b97663e0a271ee1ef429b2bfdf6d8c748f",
+      "previous_sha256": "89c688c3157f55c2c4d42ef2c48b677255c66ca16ad2b82ec418c9aa3ffce59b",
+      "sha256": "89c688c3157f55c2c4d42ef2c48b677255c66ca16ad2b82ec418c9aa3ffce59b",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/kb-curator/MEMORY.md",
+      "source": null,
+      "source_sha256": null,
+      "previous_sha256": "0ef833b65dd0b51dc44eed16b624e6d4cac8de6aa34cdda57f1a949f5f9bf4b3",
+      "sha256": "0ef833b65dd0b51dc44eed16b624e6d4cac8de6aa34cdda57f1a949f5f9bf4b3",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/pm-orchestrator/MEMORY.md",
+      "source": ".claude/agent-memory/pm-orchestrator/MEMORY.md",
+      "source_sha256": "d8bce8a7a26c23ecf7c29e0872c7b037969429892c767e5439f6d784d46ac400",
+      "previous_sha256": "052f4c1b0797495bdaa7a165f753fc985312b9389fb8a39bc0ad31a770ae328d",
+      "sha256": "052f4c1b0797495bdaa7a165f753fc985312b9389fb8a39bc0ad31a770ae328d",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/requirement-analyst/MEMORY.md",
+      "source": ".claude/agent-memory/requirement-analyst/MEMORY.md",
+      "source_sha256": "6421418e7041f031074e702395b7ed7dd0a67b850dccb65272eea57e5b3e066f",
+      "previous_sha256": "55adb7d96fea06eaee220a137dbd2b2ddf67df0ca1e3401c8f73996c2a8c5a0c",
+      "sha256": "55adb7d96fea06eaee220a137dbd2b2ddf67df0ca1e3401c8f73996c2a8c5a0c",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/software-developer/MEMORY.md",
+      "source": ".claude/agent-memory/software-developer/MEMORY.md",
+      "source_sha256": "79685d96ba189c6860010cfe2e80eb52cfba7ff712a6c27218dd765b2dcf0c72",
+      "previous_sha256": "f6c8030ec44500098b4d3bfab280931d1be7c0eca18bb3b5861a50f252c42007",
+      "sha256": "f6c8030ec44500098b4d3bfab280931d1be7c0eca18bb3b5861a50f252c42007",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/system-architect/MEMORY.md",
+      "source": ".claude/agent-memory/system-architect/MEMORY.md",
+      "source_sha256": "31982d7dab16ad54ef5a806ffa5c8f0087c7962c939dfbb24d6c1737d79c6c23",
+      "previous_sha256": "e3ca00fe469011abc25b202d90d38885371bf00b595ad74676a2c78601ab1c84",
+      "sha256": "e3ca00fe469011abc25b202d90d38885371bf00b595ad74676a2c78601ab1c84",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/test-engineer/MEMORY.md",
+      "source": ".claude/agent-memory/test-engineer/MEMORY.md",
+      "source_sha256": "41abe7a3625f03334bdd764cfc91492fc929599bcf1893aeacdbe697ed927532",
+      "previous_sha256": "16da0c6e13f12db60f94ea27a36cc5aba70ab9c213e968dd096c8b0aada71dd9",
+      "sha256": "16da0c6e13f12db60f94ea27a36cc5aba70ab9c213e968dd096c8b0aada71dd9",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/agent-memory/pm-orchestrator/feedback_requirements_first.md",
+      "source": ".claude/agent-memory/pm-orchestrator/feedback_requirements_first.md",
+      "source_sha256": "a0377c7756b4136e39b038626463c97c2ace519779f7f7fc4eb69e02237a2d3d",
+      "previous_sha256": "a0377c7756b4136e39b038626463c97c2ace519779f7f7fc4eb69e02237a2d3d",
+      "sha256": "a0377c7756b4136e39b038626463c97c2ace519779f7f7fc4eb69e02237a2d3d",
+      "preserve_on_rerun": true
+    },
+    {
+      "target": ".codex/hooks.json",
+      "source": ".claude/settings.json",
+      "source_sha256": "00c2b09af2ba500d0cecf27e71db29956c7cdde0c32600426e14843f65d2c350",
+      "previous_sha256": "d9fe850675448483edb3df693a6b5016a012e7980560d42f7fa9614fcc5dc5c1",
+      "sha256": "d9fe850675448483edb3df693a6b5016a012e7980560d42f7fa9614fcc5dc5c1",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/config.toml",
+      "source": null,
+      "source_sha256": null,
+      "previous_sha256": "181a223ce5e499fdcd28410a5ecdb20447cf4170cfabfc7a9829d55aa4d69e34",
+      "sha256": "181a223ce5e499fdcd28410a5ecdb20447cf4170cfabfc7a9829d55aa4d69e34",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".codex/rules/sdlc.rules",
+      "source": ".claude/settings.json",
+      "source_sha256": "00c2b09af2ba500d0cecf27e71db29956c7cdde0c32600426e14843f65d2c350",
+      "previous_sha256": "d9ee73957dab9da8b47ffae704024b2da07c52b83eca1468506ef21005d187e6",
+      "sha256": "d9ee73957dab9da8b47ffae704024b2da07c52b83eca1468506ef21005d187e6",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": ".agents/skills/ocap-deploy/SKILL.md",
+      "source": ".claude/skills/ocap-deploy/SKILL.md",
+      "source_sha256": "f2baf4acffb2cf7edf94dae280a5a988fd7f696f86fbd0ef01378c0975d747e9",
+      "previous_sha256": "f2baf4acffb2cf7edf94dae280a5a988fd7f696f86fbd0ef01378c0975d747e9",
+      "sha256": "f2baf4acffb2cf7edf94dae280a5a988fd7f696f86fbd0ef01378c0975d747e9",
+      "preserve_on_rerun": false
+    },
+    {
+      "target": "AGENTS.md",
+      "source": null,
+      "source_sha256": null,
+      "previous_sha256": "fd92b80c3f7ad7836b13a308c1b3fa1de0b2a9c78777eef8a6fbfb5873f81bb0",
+      "sha256": "fd92b80c3f7ad7836b13a308c1b3fa1de0b2a9c78777eef8a6fbfb5873f81bb0",
+      "preserve_on_rerun": true
+    }
+  ],
+  "runtime_activation": "PENDING_USER_HOOK_TRUST_AND_REAL_SESSION_VALIDATION",
+  "limitations": [
+    "No native Claude tools whitelist equivalent",
+    "Hosted WebSearch bypasses PreToolUse",
+    "Tool hook role metadata must be verified in host"
+  ]
+}

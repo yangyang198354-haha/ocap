@@ -1,6 +1,8 @@
 # system-architect 项目记忆 — ocap
 ## 已验证
 - [M-SA-001] "有效记录唯一"约束要在生产 MySQL 与测试 SQLite 同时生效：用可空槽位列加普通唯一索引，不用条件唯一索引（MySQL 上被忽略） — conf 0.8 · 证据 backend/apps/approval/models.py:40,44 pending_slot · 首见 2026-11-07 · 命中 2
+- [M-SA-002] uni-app 运行期换肤：uni.scss 是编译期变量，运行期由页面根组件注入 CSS 变量，再用 uni.setTabBarStyle / uni.setNavigationBarColor 同步原生部分（frontColor 仅支持 #ffffff/#000000，据官方文档）；非 tabBar 页调用 setTabBarStyle 会失败须吞错 — conf 0.6 · 证据 miniprogram/store/theme.js:58-66 · 首见 2026-11-09 · 命中 1
+- [M-SA-003] Element Plus 运行期换主色时 --el-color-primary 的 light-3~9、dark-2 梯度不自动派生，须显式输出；深色另加 html.dark 并引入 element-plus/theme-chalk/dark/css-vars.css — conf 0.6 · 证据 frontend/src/main.js:5、frontend/src/theme/generated/themes.css:36 · 首见 2026-11-09 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SA-001] 取微信官方服务端接口文档时，用 `developers.weixin.qq.com/miniprogram/dev/server/API/<分类>/<api_xxx>.md`（带 .md）可拿到干净正文；`/framework/open-ability/*.html` 页面正文过长，WebFetch 只返回导航 — 自记 2026-11-07 · 证据 WebFetch 结果（不可核验）

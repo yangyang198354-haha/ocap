@@ -1,4 +1,4 @@
-<phase_status project="ocap_ui_theme" mode="INCREMENTAL" created="2026-11-09T13:43:01+08:00" updated="2026-11-09T22:35:46+08:00">
+<phase_status project="ocap_ui_theme" mode="INCREMENTAL" created="2026-11-09T13:43:01+08:00" updated="2026-11-09T22:56:37+08:00">
   <request time="2026-11-09T13:43:01+08:00"><![CDATA[ocap 的三套ui 我全都要。用户登录默认用B，但是可以在用户中心设置自己设置风格。系统保持开口以后可以扩展更多的风格。增加一个需求把这个UI的需求作为SDLC 实现到整个ocap 项目。]]></request>
   <request_context><![CDATA[三套 UI 指 project_workspace/ocap/design/prototype.html 与 design_spec.md 0.1.0（DRAFT，PM 设计探索产物，commit 8597cef）中的 A 霓虹玻璃 / B 极光 Bento / C 赛博终端。]]></request_context>
   <profile version="1.3.0"/>
@@ -19,7 +19,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0" environment="测试环境"/>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_ui_theme/requirements/requirements_spec.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -43,6 +43,8 @@
     <artifact path="project_workspace/ocap_ui_theme/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_ui_theme/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_ui_theme/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_ui_theme/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_ui_theme/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
   </artifacts>
   <legacy_baseline>project_workspace/ocap/ 下 1.x APPROVED 产物（需求、架构、开发、测试）作为现有系统基线，只读参考。</legacy_baseline>
   <invocations>
@@ -56,6 +58,8 @@
     <invocation id="ocap_ui_theme-GROUP_C-3" agent="software-developer" end="2026-11-09T22:22:21+08:00" result="SUCCESS"/>
     <invocation id="ocap_ui_theme-GROUP_D-2" agent="test-engineer" end="2026-11-09T22:31:09+08:00" result="SUCCESS"/>
     <invocation id="ocap_ui_theme-GROUP_E1-1" agent="devops-engineer" end="2026-11-09T22:35:46+08:00" result="SUCCESS"/>
+    <invocation id="ocap_ui_theme-GROUP_E2-1" agent="devops-engineer" end="2026-11-09T22:53:56+08:00" result="SUCCESS"/>
+    <invocation id="ocap_ui_theme-GROUP_Z-1" agent="kb-curator" end="2026-11-09T22:56:37+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_ui_theme-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-09T13:46:24+08:00">
@@ -173,6 +177,14 @@ miniprogram vitest: Tests 69 passed (69)]]></verification>
       <finding id="GR-E1-001-F02" severity="MINOR">Node 20 未实测（只做了 API 静态检索）；首次 CI 运行即验证。</finding>
       <condition>E2 需用户当轮授权；管理员接口验证需用户当轮提供凭据（不入文件），否则降级为只读检查并交人工；小程序不在部署范围（CR-007）。</condition>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_ui_theme-GROUP_E2-1" decision="PASS" time="2026-11-09T22:53:56+08:00">
+      <reviewed_files><file path="project_workspace/ocap_ui_theme/deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2 DEPLOYED_SUCCESSFULLY 且验证有实际结果" result="SATISFIED">报告每步含实际输出；PM 只读复核一致。</criterion>
+      <finding id="GR-E2-001-F01" severity="MINOR">管理员带令牌 GET /admin/appeals 未端到端验证（无凭据），降级为进程内检查，交人工。</finding>
+      <verification><![CDATA[curl https://ai-freeark.xin/ocap/ -> 200（data-theme 计数 2）；/ocap/api/v1/me/theme -> 401；https://ai-freeark.xin/ -> 200（Freeark）
+ssh（只读）: ocap-backend active, nginx active; residency/views.py context=None 计数 1; migrations 含 0002_user_theme_key.py
+index.html sha256 前缀：目标机 973b397c567a3247 = 本地 frontend/dist 973b397c567a3247]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-09T13:43:01+08:00" answered_by="用户">design_spec §7 Q1：三套全部要；登录后默认 B；用户中心可自选；保留扩展更多风格的能力。Q4：实现到整个 ocap 项目。Q2（深浅切换）、Q3（品牌名/Logo）未明确答复，交需求分析确认。</clarification>
@@ -182,6 +194,7 @@ miniprogram vitest: Tests 69 passed (69)]]></verification>
     <clarification time="2026-11-09T17:35:21+08:00" answered_by="用户">用户原话："开始开发"，放行 GROUP_C。</clarification>
     <clarification time="2026-11-09T18:30:09+08:00" answered_by="用户">用户原话："开始测试"，放行 GROUP_D。</clarification>
     <clarification time="2026-11-09T22:19:36+08:00" answered_by="用户">用户原话："1.A 2.要"。DEF-001 本期修复（缺陷回流 C→D）；放行 GROUP_E1（在回流完成后执行）。</clarification>
+    <clarification time="2026-11-09T22:39:42+08:00" answered_by="用户">用户原话："1 选 A，授权部署测试环境"。先提交并推送，再部署测试环境。</clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -207,5 +220,10 @@ miniprogram vitest: Tests 69 passed (69)]]></verification>
     <event time="2026-11-09T22:22:21+08:00" type="GATE" actor="pm-orchestrator">GR-C-003 PASS（DEF-001 一行修复），development 2.0.0 APPROVED。调用 test-engineer ocap_ui_theme-GROUP_D-2 补回归用例并全量复跑。</event>
     <event time="2026-11-09T22:31:09+08:00" type="GATE" actor="pm-orchestrator">GR-D-002 PASS_WITH_CONDITIONS，testing 2.0.0 APPROVED，DEF-001 关闭。按用户放行调用 devops-engineer ocap_ui_theme-GROUP_E1-1。</event>
     <event time="2026-11-09T22:35:46+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS，GROUP_E1 APPROVED。等待用户授权 E2（测试环境）。</event>
+    <event time="2026-11-09T22:39:42+08:00" type="RUN" actor="pm-orchestrator">本地提交 600fb34（110 个文件；凭据扫描仅命中测试夹具假密码）。推送 origin/main 被权限策略拒绝（Out-of-Place Publication），未绕过，交用户处理；部署不依赖推送。</event>
+    <event time="2026-11-09T22:39:42+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮原话"授权部署测试环境"：授权 E2 一次，环境=测试（树莓派），版本=600fb34。</event>
+    <event time="2026-11-09T22:39:42+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer ocap_ui_theme-GROUP_E2-1（PHASE_11b）。</event>
+    <event time="2026-11-09T22:53:56+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS：测试环境 DEPLOYED_SUCCESSFULLY（600fb34，TS=20261109224336），PM 只读复核一致。写 delivery_report.md 1.0.0，最终状态 DELIVERED_WITH_ISSUES。</event>
+    <event time="2026-11-09T22:56:37+08:00" type="RUN" actor="pm-orchestrator">kb-curator ocap_ui_theme-GROUP_Z-1 SUCCESS：晋升 14、合并 1、保留 2、淘汰 2，通用候选 0；报告 project_workspace/_kb_distillation/distill_20261109T2300.md。</event>
   </audit_log>
 </phase_status>

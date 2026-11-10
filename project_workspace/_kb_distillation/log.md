@@ -54,3 +54,37 @@
 | 2026-11-09T22:56:16+08:00 | ocap_ui_theme-GROUP_E1-1-2 | 淘汰：临时状态，目录已入库 600fb34 | committed |
 | 2026-11-09T22:56:16+08:00 | ocap_ui_theme-GROUP_E2-1-1 | 淘汰：含运行耗时数字，临时状态 | committed |
 | 2026-11-09T22:56:16+08:00 | memory:P-PM-001 | 晋升→M-PM-004 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_ui_theme-PM-1 | 保留→P-PM-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-1-1 | 晋升→M-RA-003 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-1-2 | 晋升→M-RA-004 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-2-1 | 晋升→M-RA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-2-2 | 晋升→M-RA-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-1 | 晋升→M-SA-004 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-2 | 晋升→M-SA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-3 | 晋升→M-SA-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-2-1 | 保留→P-SA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_C-1-1 | 晋升→M-SD-012 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_C-1-2 | 晋升→M-SD-013 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_D-1-1 | 晋升→M-TE-009 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_D-1-2 | 晋升→M-TE-010 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E1-1-1 | 晋升→M-DE-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E1-1-2 | 晋升→M-DE-007（合并 E2-1-2） | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E2-1-1 | 晋升→M-DE-008 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E2-1-2 | 合并→M-DE-007 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_ui_theme-PM-1 | 保留→P-PM-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-1-1 | 晋升→M-RA-003 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-1-2 | 晋升→M-RA-004 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-2-1 | 晋升→M-RA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_A-2-2 | 晋升→M-RA-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-1 | 晋升→M-SA-004 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-2 | 晋升→M-SA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-1-3 | 晋升→M-SA-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_B-2-1 | 保留→P-SA-005 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_C-1-1 | 晋升→M-SD-012 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_C-1-2 | 晋升→M-SD-013 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_D-1-1 | 晋升→M-TE-009 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_D-1-2 | 晋升→M-TE-010 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E1-1-1 | 晋升→M-DE-006 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E1-1-2 | 晋升→M-DE-007（合并 E2-1-2） | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E2-1-1 | 晋升→M-DE-008 | committed |
+| 2026-11-10T23:32:12+08:00 | ocap_registry_import-GROUP_E2-1-2 | 合并→M-DE-007 | committed |

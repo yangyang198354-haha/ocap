@@ -1,13 +1,14 @@
-# system-architect 项目记忆 — {PROJECT_NAME}
+# system-architect 项目记忆 — ocap_registry_import
 
 > TRAE 不自动注入记忆：本文件由对应 `sdlc-*` 技能在开始时**显式 Read**。
 > 只允许 agent 自己追加「待验证」区；「已验证」「用户偏好与禁止项」由 kb-curator 维护。
 
 ## 已验证
-<!-- - [M-SA-001] 一句话经验 — conf 0.8 · 证据 GR-B-002 / DEF-003 / commit abc123 / 用户确认 · 首见 YYYY-MM-DD · 命中 1 -->
+- [M-SA-004] DRF 查询参数不要用 `format`（会被渲染器后缀拦截），文件类型参数用 `file_type` — conf 0.6 · 证据 GR-B-001 / module_design IFC-158 / TC-INT-105 · 首见 2026-11-10 · 命中 1
+- [M-SA-005] Django `bulk_create` 在 MySQL 不回填主键，需按业务键回查；`bulk_update` 不刷新 auto_now — conf 0.6 · 证据 GR-B-001 / apps/registry/importing.py 计划与应用实现 · 首见 2026-11-10 · 命中 1
+- [M-SA-006] `Membership.source` 仅 12 字符，新来源值须 ≤12，否则把来源放进审计 detail — conf 0.6 · 证据 GR-B-001 / apps/residency/models.py:16 · 首见 2026-11-10 · 命中 1
 
 ## 用户偏好与禁止项
-<!-- - [M-SA-002] … — 来源：用户原话 / YYYY-MM-DD -->
 
 ## 待验证
-<!-- - [P-SA-001] 一句话 — 自记 YYYY-MM-DD · 证据（可空） -->
+- [P-SA-005] 迁移拆分旧版无归属数据时，要提前定义“同人多号吸收并入”规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）

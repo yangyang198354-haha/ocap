@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-10T22:04:35+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-10T22:07:39+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -96,5 +96,6 @@
     <event time="2026-11-10T21:55:29+08:00" type="RUN" actor="pm-orchestrator">GROUP_B-1 CLARIFICATION_NEEDED：architecture 三份 0.1.0 DRAFT 已写（ADR-034~044、MOD-030~038、IFC-152~164），CRITICAL Q1（既有手机号迁移为无名业主）、Q2（同文件同专有部分面积冲突）及 NORMAL Q3、Q4、Q6 转问用户；PM 核实 http.js:25 axios 超时 15000ms、小程序 units/phone 页面存在。</event>
     <event time="2026-11-10T22:00:57+08:00" type="INVOCATION" actor="pm-orchestrator">带用户答复调用 system-architect ocap_registry_import-GROUP_B-2 修订 architecture 0.1.0。</event>
     <event time="2026-11-10T22:04:35+08:00" type="GATE" actor="pm-orchestrator">GR-B-001 PASS_WITH_CONDITIONS，GROUP_B APPROVED（architecture 三份 1.0.0；0.1.0 SUPERSEDED，0.2.0 为门控评审版本）。GROUP_C 待用户放行。</event>
+    <event time="2026-11-10T22:07:39+08:00" type="RUN" actor="pm-orchestrator">用户本轮原话"git commit push， 我再另外一台机去开发"：提交 cf7f11e（需求、架构、phase_status、kb_inbox），凭据扫描无命中；推送 dfd188e..cf7f11e 成功。ci.yml 仅 push/PR/workflow_dispatch 触发 CI，无部署步骤。GROUP_C 未开始，用户将在另一台机器续跑。</event>
   </audit_log>
 </phase_status>

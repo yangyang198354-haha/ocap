@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-10T23:26:00+08:00</timestamp>
+  <timestamp>2026-11-11T00:21:15+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md (1.0.0 APPROVED)</file>
     <file>requirements/user_stories.md (1.0.0 APPROVED)</file>
@@ -65,8 +65,8 @@
 | US-092 | AC-092-05 | `views.AdminRegistryImportView.post`（`MAX_FILE_BYTES`） | DONE | 413 + "文件超过 5 MB" |
 | US-093 | AC-093-01 | `import_template.build_xlsx` | DONE | 数据表 4 行示例（一单元 3 行、无手机号业主、车位）+ 第二个"填写说明"工作表；xlsx 生成路径因环境缺 `openpyxl` 未运行验证 |
 | US-093 | AC-093-02 | `import_template.build_csv` | DONE | UTF-8 BOM，Excel 打开中文不乱码 |
-| US-093 | AC-093-03 | `importing.read_rows`（按表头名映射、只读首个工作表） | DONE | 隐藏列/合并单元格不影响；xlsx 分支同上未运行验证 |
-| US-093 | AC-093-04 | `importing.cell_text` | DONE | 文本原样保留（含前导零），浮点整数显示为 "3" 而非 "3.0" |
+| US-093 | AC-093-03 | `importing.read_rows` + `_fill_merged_cells`（普通模式读取，合并区域左上角值填充，按表头名映射，仅首个工作表） | DONE | DEF-008 修复后合并单元格非首行也取到值；隐藏列/第二个工作表不受影响；已用 venv 构造含合并单元格工作簿验证 |
+| US-093 | AC-093-04 | `importing.cell_text` + `import_template.build_xlsx`（楼栋/单元/楼层/户号/手机号列 number_format="@"）+ `import_spec.spec_payload.notes`（CSV 提示） | DONE | DEF-007：模板列为文本格式，Excel 键入 0801 保持文本；文本原样保留，浮点整数显示为 "3"；CSV 无法控制 Excel 行为，以说明文案提示 |
 | US-093 | AC-093-05 | `AdminRegistryTemplateView`（`IsAdmin`） | DONE | 非管理员 403 |
 | US-093 | AC-093-06 | `importing.ImportColumnsMissing` | DONE | "缺少列：…，请使用新模板" |
 | US-094 | AC-094-01 | `importing.plan_import` / `apply_plan`（业主按行累积） | DONE | 同一专有部分多行、业主数量不限；手机号逐个落库供认证比对 |
@@ -166,3 +166,27 @@
 - `[ASSUMPTION]` `updated` 计数口径为"本次被改动的既有专有部分数（含业主/手机号变化）"（AC-099-01）。
 - 环境缺 `openpyxl`（`requirements.txt` 已声明）：xlsx 解析/模板生成返回 503 `IMPORT_UNAVAILABLE`，CSV 全链路可用；xlsx 路径待环境安装后由 GROUP_D 验证。
 </file_header>
+
+## 缺陷修复（DEF-007~012）
+
+用户授权交付后回流（REWORK_AUTHORIZED）。均为最小改动，无迁移。
+
+| DEF | 级别 | 根因 | 改动（文件:函数） | 自验证 |
+|---|---|---|---|---|
+| DEF-007 | MAJOR | `build_xlsx` 所有单元格为 General，Excel 键入 0801 被存成数字 801 | `import_template.py`：`build_xlsx` 对 A/B/C/D/H 列设 `column_dimensions[col].number_format="@"`（整列，新输入行继承）并对示例行单元格设 "@"；`_NOTES`、`import_spec.spec_payload["notes"]` 增补"请勿用 Excel 直接另存 csv 改写编号，推荐使用 xlsx 模板" | 读回模板：第 2 行 A-D、H 列 "@"，E-G 为 General，D 列 column format "@" |
+| DEF-008 | MAJOR | `read_rows` 用 `read_only=True`，该模式无 `merged_cells`，合并区域非首行读到空值 | `importing.py`：`read_rows` 改普通模式 `load_workbook(data_only=True)`，新增 `_fill_merged_cells(grid, ranges)`，把左上角值填入区域内其余单元格（范围按实际网格截断，避免超大合并区域越界） | 构造 A2:A4 合并的工作簿：读出 3 行楼栋均为"1栋"，"0801"保持文本；20000 行 + 超大合并区域 J2:J20001 读取 4.78 s（预算 60 s） |
+| DEF-009 | MINOR | `auto_bind` 遇非 ALREADY_CERTIFIED 的 ApiError 或其他异常即 `break`，后续专有部分不再绑定 | `auto_bind.py`：`break` 改 `continue`；每个单元的 `certify_owner` 包 `transaction.atomic()` savepoint，单个失败只回滚自身 | 全量后端测试通过；见"开放问题"中测试缺口 |
+| DEF-010 | MINOR | `bool(request.data.get("dry_run"))` 把表单 "false"/"0" 当真 | `views.py`：`AdminRegistryImportView.post` 表单值改为 `str(...).lower() in {"1","true"}`，与查询参数一致 | 全量后端测试通过 |
+| DEF-011 | MINOR | `_fill_names` 的 `bulk_update` 含 `updated_at` 但 bulk 不触发 `auto_now`，字段未赋值 | `importing.py`：`_fill_names` 赋 `owner.updated_at = timezone.now()` | 全量后端测试通过 |
+| DEF-012 | MINOR | `downloadBlob` 在 `click()` 后立即 `revokeObjectURL`，部分浏览器取消下载 | `frontend/src/admin/registryImport.js`：`setTimeout(() => URL.revokeObjectURL(url), 1000)` | 前端构建成功；现有 1 条用例因同步断言失败，见下 |
+
+### 取舍记录（DEF-008）
+read_only 模式内存低但不暴露 merged_cells；改普通模式后 5 MB / 20000 行文件实测解析 4.78 s，远低于 60 s 预算，内存为全量单元格对象（20000×8 级别，可接受）。备选"read_only + 手工解析 sheet XML 的 mergeCells"实现更复杂、风险更高，未采用。并发导入加锁、`shared/api.js` 反向依赖、`miniprogram/package-lock.json`、小程序发布均不在范围，未改动。
+
+### 现有测试受影响（须 test-engineer 调整）
+`frontend/tests/registry_import.spec.js` 的 `TC-UNIT-114 / AC-100-02`（第 61 行）同步断言 `revokeObjectURL` 被调用，DEF-012 改为延迟释放后该断言失败（前端 vitest 125/126）。按约束不改测试代码；建议用 `vi.useFakeTimers()` 并 `vi.advanceTimersByTime(1000)` 后断言。
+
+### 开放问题（本次新增）
+- 缺少针对 DEF-007~011 的专门用例（合并单元格 xlsx、文本格式模板、auto_bind 单元失败后继续、dry_run 表单 "false"、补填姓名 updated_at），建议 test-engineer 补。
+- `[ASSUMPTION]` 文本格式列仅覆盖楼栋/单元/楼层/户号/手机号；面积列保持 General。
+- `[ASSUMPTION]` revoke 延迟取 1000 ms。

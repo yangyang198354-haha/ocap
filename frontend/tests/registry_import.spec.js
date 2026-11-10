@@ -55,9 +55,20 @@ describe('downloadText', () => {
     const revokeObjectURL = vi.fn()
     global.URL.createObjectURL = createObjectURL
     global.URL.revokeObjectURL = revokeObjectURL
-    downloadText('errors.csv', '"行号"\r\n"7"')
-    expect(createObjectURL).toHaveBeenCalledTimes(1)
-    expect(click).toHaveBeenCalledTimes(1)
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock')
+    // DEF-012：revokeObjectURL 延迟 1 s 释放，用 fake timers 推进后断言，最后恢复真实计时器
+    vi.useFakeTimers()
+    try {
+      downloadText('errors.csv', '"行号"\r\n"7"')
+      expect(createObjectURL).toHaveBeenCalledTimes(1)
+      expect(click).toHaveBeenCalledTimes(1)
+      expect(revokeObjectURL).not.toHaveBeenCalled()
+      vi.advanceTimersByTime(999)
+      expect(revokeObjectURL).not.toHaveBeenCalled()
+      vi.advanceTimersByTime(1)
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1)
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:mock')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

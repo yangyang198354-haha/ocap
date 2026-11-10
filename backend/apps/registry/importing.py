@@ -210,6 +210,20 @@ def _normalize_header(values: list) -> tuple[dict[str, int], list[str]]:
     return index, missing
 
 
+def _fill_merged_cells(grid: list[list], ranges) -> None:
+    """把合并区域左上角的值填充到区域内其余单元格（DEF-008）；范围按实际网格截断。"""
+    for merged in ranges:
+        if merged.min_row > len(grid):
+            continue
+        top_left = grid[merged.min_row - 1][merged.min_col - 1] if merged.min_col <= len(grid[merged.min_row - 1]) else None
+        if top_left is None:
+            continue
+        for r in range(merged.min_row, min(merged.max_row, len(grid)) + 1):
+            row = grid[r - 1]
+            for c in range(merged.min_col, min(merged.max_col, len(row)) + 1):
+                row[c - 1] = top_left
+
+
 def read_rows(name: str, raw: bytes, deadline: Deadline) -> list[RawRow]:
     """按扩展名解析 xlsx/csv，返回非空数据行（row_no 为文件物理行号，表头=1）。"""
     lowered = (name or "").lower()
@@ -219,9 +233,13 @@ def read_rows(name: str, raw: bytes, deadline: Deadline) -> list[RawRow]:
         except ImportError as exc:  # pragma: no cover - 依赖缺失属部署问题
             raise ApiError("IMPORT_UNAVAILABLE", "服务器缺少表格解析组件", 503) from exc
         try:
-            workbook = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+            # DEF-008：read_only 模式没有 merged_cells，需普通模式读取才能展开合并单元格
+            workbook = load_workbook(io.BytesIO(raw), data_only=True)
             sheet = workbook.worksheets[0]
-            raw_rows = [[cell_text(c) for c in row] for row in sheet.iter_rows(values_only=True)]
+            grid = [list(row) for row in sheet.iter_rows(values_only=True)]
+            deadline.check("parse")
+            _fill_merged_cells(grid, sheet.merged_cells.ranges)
+            raw_rows = [[cell_text(c) for c in row] for row in grid]
             workbook.close()
         except Exception as exc:  # noqa: BLE001 - 任何解析异常都归一为文件无法解析
             raise ImportFileError("文件无法解析") from exc
@@ -603,10 +621,12 @@ def _fill_names(plan: ImportPlan, deadline: Deadline) -> None:
         owner.id: owner
         for owner in RegistryOwner.objects.filter(id__in=[f.owner_id for f in plan.owner_names_to_fill])
     }
+    now = timezone.now()
     for fill in plan.owner_names_to_fill:
         owner = owners.get(fill.owner_id)
         if owner is not None:
             owner.name = fill.name
+            owner.updated_at = now
     if owners:
         RegistryOwner.objects.bulk_update(list(owners.values()), ["name", "updated_at"], batch_size=500)
     deadline.check("apply")

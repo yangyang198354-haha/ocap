@@ -2,6 +2,8 @@
 import logging
 from dataclasses import dataclass
 
+from django.db import transaction
+
 from apps.core.errors import ApiError
 from apps.registry.services import RegistryService
 
@@ -33,16 +35,18 @@ class AutoBindService:
             if MembershipService.is_owner_of(user.id, unit.id):
                 continue
             try:
-                role = MembershipService.certify_owner(
-                    user.id, unit.id, "REGISTRY", origin="REGISTRY_AUTO"
-                )
+                # DEF-009：每个单元独立 savepoint，单个失败回滚自身且不影响后续单元
+                with transaction.atomic():
+                    role = MembershipService.certify_owner(
+                        user.id, unit.id, "REGISTRY", origin="REGISTRY_AUTO"
+                    )
             except ApiError as exc:
                 if exc.code == "ALREADY_CERTIFIED":
                     continue
                 logger.warning("清册自动绑定失败 user=%s unit=%s code=%s", user.id, unit.id, exc.code)
-                break
+                continue
             except Exception:  # noqa: BLE001 - 自动绑定不得影响注册/绑定主流程
                 logger.exception("清册自动绑定异常 user=%s unit=%s", user.id, unit.id)
-                break
+                continue
             bound.append(AutoBound(unit_id=unit.id, specific_part=unit.specific_part, role=role))
         return bound

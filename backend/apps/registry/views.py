@@ -297,9 +297,9 @@ class AdminRegistryImportView(APIView):
         if not name.endswith((".csv", ".xlsx")):
             raise ApiError("IMPORT_FILE_INVALID", "仅支持 xlsx 或 csv")
 
-        dry_run = str(request.query_params.get("dry_run", "")).lower() in {"1", "true"} or bool(
-            (request.data or {}).get("dry_run")
-        )
+        dry_run = str(request.query_params.get("dry_run", "")).lower() in {"1", "true"} or str(
+            (request.data or {}).get("dry_run", "")
+        ).lower() in {"1", "true"}
         rows = read_rows(name, file.read(), deadline)
         plan = plan_import(rows, deadline)
         if not dry_run:

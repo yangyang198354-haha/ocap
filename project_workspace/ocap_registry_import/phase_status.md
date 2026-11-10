@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-10T23:33:31+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T00:51:07+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -19,7 +19,7 @@
     <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_05" status="APPROVED"/><phase id="PHASE_06" status="APPROVED"/>
     </group>
-    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" defect_loops="0">
+    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" defect_loops="1">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
@@ -45,12 +45,24 @@
     <artifact path="project_workspace/ocap_registry_import/architecture/module_design.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
     <artifact path="project_workspace/ocap_registry_import/architecture/tech_stack.md" version="0.1.0" status="SUPERSEDED" group="GROUP_B"/>
     <artifact path="project_workspace/ocap_registry_import/architecture/tech_stack.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
-    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="2.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="2.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
@@ -69,6 +81,8 @@
     <invocation id="ocap_registry_import-GROUP_E1-1" agent="devops-engineer" start="2026-11-10T23:14:10+08:00" end="2026-11-10T23:16:12+08:00" result="SUCCESS"/>
     <invocation id="ocap_registry_import-GROUP_E2-1" agent="devops-engineer" start="2026-11-10T23:22:00+08:00" end="2026-11-10T23:29:12+08:00" result="SUCCESS"/>
     <invocation id="ocap_registry_import-GROUP_Z-1" agent="kb-curator" start="2026-11-10T23:30:35+08:00" end="2026-11-10T23:33:31+08:00" result="SUCCESS"/>
+  <invocation id="ocap_registry_import-GROUP_C-2" agent="software-developer" start="2026-11-11T00:16:32+08:00" end="2026-11-11T00:24:19+08:00" result="PARTIAL_SUCCESS"/>
+  <invocation id="ocap_registry_import-GROUP_D-2" agent="test-engineer" start="2026-11-11T00:24:19+08:00" end="2026-11-11T00:39:49+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_registry_import-GROUP_A-3" decision="PASS_WITH_CONDITIONS" time="2026-11-10T21:30:18+08:00">
@@ -175,6 +189,35 @@ https://ai-freeark.xin/ocap/api/v1/admin/registry/import/spec = 401
 V-08 xlsx: LEN 6419 / ZIP True / ['清册导入','填写说明']
 V-09: VALID 1.30s；WITH_10PCT_ERRORS 1.01s（errors=2000）]]></verification>
     </gate_review>
+    <gate_review id="GR-C-002" invocation_id="ocap_registry_import-GROUP_C-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T00:24:19+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.1.0"/><file path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-C-范围" result="SATISFIED">git diff --stat：仅 registry/{import_spec,import_template,importing,views}.py、residency/auto_bind.py、frontend/src/admin/registryImport.js 与 development 两份文档，与 DEF-007~012 一致；无迁移、无测试代码改动。</criterion>
+      <criterion id="J-C-DEF-007" result="SATISFIED">PM 实测 build_xlsx 的 sheet1.xml：A/B/C/D/H 列 &lt;col style=&quot;1&quot;&gt;（文本 @），示例行单元格 @。</criterion>
+      <criterion id="J-C-DEF-008" result="SATISFIED">PM 构造 A2:A3 合并的 xlsx，read_rows 两行楼栋均为"1栋"，户号 "0801" 保持文本。开发自测 20000 行+大合并区域 4.78 s。</criterion>
+      <criterion id="J-C-DEF-009~012" result="SATISFIED">auto_bind.py 每单元 transaction.atomic savepoint + continue；views.py dry_run 表单值按 "1"/"true" 判定；_fill_names 设 updated_at；revokeObjectURL 延迟 1 s。</criterion>
+      <criterion id="J-C-PM复跑" result="NOT_SATISFIED">后端 check 无问题、makemigrations --check 无变更、全量 Ran 327 OK；前端 vitest 1 failed | 125 passed：tests/registry_import.spec.js TC-UNIT-114 第 61 行断言同步调用 revokeObjectURL——系 DEF-012 有意改变的行为，用例需随修复更新，非产品回归；前端 build 成功（开发证据）。</criterion>
+      <verification><![CDATA[(cd backend && venv/python manage.py test --settings=config.test_settings) -> Ran 327 tests ... OK
+(cd frontend && npx vitest run --passWithNoTests) -> Tests 1 failed | 125 passed (126)；FAIL tests/registry_import.spec.js > downloadText > TC-UNIT-114
+PM xlsx 实测：cols style=1 on A,B,C,D,H；merged A2:A3 -> [('1栋','0801'),('1栋','0801')]]]></verification>
+      <finding id="GR-C-002-F01" severity="MAJOR">前端既有用例 TC-UNIT-114 因 DEF-012 行为变更而失败，需 test-engineer 改为 fake timers 后断言；PM 判断为预期的用例过时而非产品缺陷，放行至 GROUP_D 并作为必须条件。</finding>
+      <finding id="GR-C-002-F02" severity="MINOR">开发未读 phase_status.md、requirements_spec.md、module_design.md（required_reading 列出），产出无误；下次点名。</finding>
+      <finding id="GR-C-002-F03" severity="MINOR">xlsx 改为普通模式读取，内存占用高于 read_only；5 MB 文件在树莓派上的内存峰值未实测，建议部署后验证。</finding>
+      <condition>GROUP_D：修正 TC-UNIT-114（vi.useFakeTimers + advanceTimersByTime）使前端全绿；补 xlsx 上传用例（文本格式前导零、合并单元格、隐藏列、第二工作表）、DEF-009（多单元其一失败其余仍绑定）、DEF-010（表单 dry_run=false 为正式导入）、DEF-011（updated_at 更新）；补前端导入对话框组件级用例；三层全量重跑，零新增失败。</condition>
+    </gate_review>
+    <gate_review id="GR-D-002" invocation_id="ocap_registry_import-GROUP_D-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T00:39:49+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.1.0"/><file path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-D-复跑一致" result="SATISFIED">PM 复跑：unit 66 / integration 245 / e2e 25 / smoke 6，全量 Ran 342 OK；前端 128/128（14 文件）；小程序 69/69。与报告一致（unit 报告 72 = 后端 66 + 前端 6，公式见 unit_test_report.md:22）。</criterion>
+      <criterion id="J-D-基线" result="SATISFIED">相对修复前基线（后端 327、前端 126、小程序 69）新增失败 0；TC-UNIT-114 已改为 fake timers 并通过。</criterion>
+      <criterion id="J-D-GR-C-002条件" result="SATISFIED">新增 TC-UNIT-307~310、TC-INT-304~311、TC-E2E-302~304、前端 TC-UNIT-115/116（RegistryImportDialog 组件级）；覆盖 xlsx 前导零/合并单元格/隐藏列/第二工作表/模板文本列、DEF-009（仅 patch MembershipService.certify_owner，被测 AutoBindService 真实执行）、DEF-010、DEF-011、20000 行预检+正式。agent 自述把新用例放到修复前树运行 15 个中 10 个失败，证明能抓住缺陷。</criterion>
+      <criterion id="J-D-冻结" result="SATISFIED">测试文件最后修改 00:27:24，报告 00:35:27；产品代码最后修改 00:17:34（GROUP_C），测试阶段未改产品代码。</criterion>
+      <criterion id="J-D-跳过" result="SATISFIED">新用例 skipUnless(openpyxl) 在 PM venv 与 CI（ci.yml:43 pip install -r requirements.txt，含 openpyxl）下均执行；-v 2 输出无 skipped 计数（命中的"skipped"仅为既有用例名）。</criterion>
+      <verification><![CDATA[(cd backend && venv/python manage.py test tests.{unit,integration,e2e,smoke} --settings=config.test_settings) -> 66 / 245 / 25 / 6 OK；全量 Ran 342 tests OK
+(cd frontend && npx vitest run --passWithNoTests) -> Test Files 14 passed (14) / Tests 128 passed (128)
+(cd miniprogram && npx vitest run --passWithNoTests) -> Test Files 10 passed (10) / Tests 69 passed (69)]]></verification>
+      <finding id="GR-D-002-F01" severity="MINOR">20000 行计时为测试环境 SQLite 口径（预检 1.1~1.2 s、正式 5.3~5.7 s），目标机 MySQL/树莓派口径与 xlsx 普通模式读取的内存峰值仍待部署后人工验证（M-04~M-06）。</finding>
+      <finding id="GR-D-002-F02" severity="MINOR">agent 未读 user_stories.md 全文（自述），故事覆盖核对表 PM 抽查 AC-093-03/04 已有执行用例。</finding>
+      <condition>部署（如用户授权）后：在测试环境用 20000 行 xlsx 做一次预检+正式导入，记录耗时与 ocap-backend 内存峰值。</condition>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-10T21:13:55+08:00" responder="用户"><![CDATA[用户原话："Q-RI-02 手机号选填，如果用户用这个手机号注册并且认证成功，可以自动绑定这个专有部分。Q-RI-04 车位面积必须填。Q-RI-06 同一专有部分导入，只要产权业主名字不同，就认为是同意部分的多个产权人。Q-RI-10 文件上线5 MB 20000行。 Q-RI-11： 要显示面积。 Q-RI-12：A， 其他按照推荐"
@@ -182,6 +225,7 @@ V-09: VALID 1.30s；WITH_10PCT_ERRORS 1.01s（errors=2000）]]></verification>
     <clarification time="2026-11-10T21:26:27+08:00" responder="用户"><![CDATA[用户原话："Q-RI-18=B，Q-RI-22 上限 60 秒，其他按推荐"。映射：Q-RI-13=A、14=A、15=A、16=A、17=A、18=B、19=A、20=A、21=A、22=A（同步等待，上限 60 秒）。]]></clarification>
     <clarification time="2026-11-10T22:00:57+08:00" responder="用户"><![CDATA[GROUP_B-1 问题。用户原话："Q1：初次使用，管理员同一上传业主清册， Q2：A， Q3：按照推荐， Q4：A Q6：B"
 映射：Q1=系统为初次使用，清册由管理员用新模板统一上传全量数据，不需要为既有数据设计补名流程。PM 落地口径（待用户确认）：迁移不删除任何既有数据；既有手机号按技术上最简方式保留为无名业主，管理员统一上传时按手机号匹配补上姓名（即 A 的机制，但不作为业务流程设计）。Q2=A；Q3=A；Q4=A；Q6=B（60 秒验收限定内网入口）。]]></clarification>
+    <clarification time="2026-11-11T00:16:32+08:00" responder="用户"><![CDATA[用户原话："A，先修复上一批的问题"。即回流修复交付后评审问题：GROUP_C 修 DEF-007~012，GROUP_D 补 xlsx/合并单元格/组件用例并重跑；部署前再问用户。miniprogram/package-lock.json 去留、小程序发布：用户未答复，不处理。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -214,5 +258,20 @@ V-09: VALID 1.30s；WITH_10PCT_ERRORS 1.01s（errors=2000）]]></verification>
     <event time="2026-11-10T23:33:31+08:00" type="INVOCATION" actor="pm-orchestrator">GROUP_Z-1 结束（kb-curator，SUCCESS）：未处理 17 条 → 16 条；晋升 14、保留 2、淘汰 0、通用候选 0；记忆写入 RA/SA/SD/TE/DE/PM 六个 MEMORY.md；无 pending_patch。</event>
     <event time="2026-11-10T23:33:31+08:00" type="DELIVERY" actor="pm-orchestrator">PHASE_01~12 全部 APPROVED；delivery_report.md 1.0.0；最终状态 DELIVERED_WITH_ISSUES（遗留：真实 HTTP 20000 行端到端计时、xlsx 上传解析、2 个既有前端失败）。测试环境已部署（锚点 20261110232450）。</event>
     <event time="2026-11-10T23:48:36+08:00" type="POST_DELIVERY_REVIEW" actor="pm-orchestrator">用户要求复核需求/用户故事完成度与测试覆盖。PM 只读核验：21 条 REQ 全部映射到故事（无未映射）；87 条 AC 全部在 implementation_plan（84 DONE、3 PARTIAL=性能）；test_plan 映射 87/87、81 个用例 ID 全部存在于测试代码且全量 327 OK；Must Have 故事 11/11 有执行用例、13/13 故事至少 1 个用例。缺口：AC-093-03、AC-094-07、AC-100-08 无自动化用例；AC-093-01/093-04 的 xlsx 分支与 AC-100-07 的 60 秒计时仅部分覆盖；前端对话框/小程序页面无组件级运行时用例（仅 helper 单测 + 静态契约）。结论：功能完成，测试覆盖非 100%；不改变交付状态 DELIVERED_WITH_ISSUES。</event>
+    <event time="2026-11-11T00:13:25+08:00" type="POST_DELIVERY_REVIEW" actor="pm-orchestrator"><![CDATA[用户要求全面评审远端 4 个提交（9c66dce、567b137、e718510、96be0b8）。PM（Claude 主会话）亲自复跑：manage.py check 无问题；makemigrations --check 无变更；后端 unit 62 / integration 237 / e2e 22 / smoke 6 = 327 OK；前端 vitest 126/126、build 成功；小程序 vitest 69/69。代码审读发现：
+F1 MAJOR AC-093-04/REQ-NFUNC-013：xlsx 模板各列为 General 格式（import_template.py build_xlsx 未设文本格式），管理员在 Excel 键入 0801 会被存成 801（PM 用 openpyxl 实测 cell_text(801)="801"），"08"与"8"会生成不同专有部分标识。
+F2 MAJOR AC-093-03：楼栋等列合并单元格时，非首行读到空值报"缺少楼栋"（PM 用 openpyxl 合并 A2:A3 实测）。隐藏列、第二工作表实测正常。
+F3 MAJOR 测试覆盖：后端测试无任何 xlsx 上传解析用例（tests 中无 load_workbook/Workbook）；AC-093-03、AC-094-07、AC-100-08 无自动化；前端导入对话框、小程序 units 页无运行时组件用例。
+F4 MINOR residency/auto_bind.py：非 ALREADY_CERTIFIED 的异常用 break 中止后续专有部分绑定，与 REQ-FUNC-096"全部自动绑定"不一致（目前 certify_owner 只抛 ALREADY_CERTIFIED，潜在）。
+F5 MINOR registry/views.py:300 dry_run 取表单值用 bool()，"false"/"0" 会被当作预检；前端只用查询参数，未触发。
+F6 MINOR 画像 P4 禁止提交小程序本地 package-lock.json，9c66dce 提交了 miniprogram/package-lock.json（7942 行），文档未说明。
+F7 MINOR 并发：两次正式导入并发时无锁，业主表无 (unit,name) 唯一约束，可能重复建业主；_fill_names 的 bulk_update 未刷新 updated_at；registryImport.js 点击后立即 revokeObjectURL，部分浏览器可能取消下载；shared/api.js 反向依赖 admin/registryImport.js。
+F8 MINOR 发布：后端已部署新逐级选择语义（skipped/has_empty），小程序未发布（RU-4）；线上旧版小程序对既有住宅数据兼容，但无法选择无单元/楼层的新车位类专有部分。
+F9 MINOR 交付报告单元测试计数 66 与实跑 62 不符（总数 327 一致）。
+结论：功能主体已实现，测试全绿；但 AC-093-03、AC-093-04 实际未满足，xlsx 路径无自动化测试。建议经用户同意后回流 GROUP_C 修复 F1/F2/F4/F5，GROUP_D 补 xlsx 与组件用例。]]></event>
+    <event time="2026-11-11T00:16:32+08:00" type="INVOCATION" actor="pm-orchestrator">交付后缺陷回流（用户授权）：GROUP_C APPROVED→IN_PROGRESS，调用 software-developer（ocap_registry_import-GROUP_C-2），缺陷 DEF-007~012；GROUP_D 随后重跑（defect_loops 计 1）。</event>
+  <event time="2026-11-11T00:24:19+08:00" type="GATE" actor="pm-orchestrator">GR-C-002 PASS_WITH_CONDITIONS；development 两份文档 2.0.0 APPROVED（1.0.0/1.1.0 SUPERSEDED）。defect_loops=1，调用 test-engineer（ocap_registry_import-GROUP_D-2）。</event>
+  <event time="2026-11-11T00:39:49+08:00" type="GATE" actor="pm-orchestrator">GR-D-002 PASS_WITH_CONDITIONS；testing 四份文档 2.0.0 APPROVED。缺陷回流完成（defect_loops=1）。部署与提交待用户授权。</event>
+  <event time="2026-11-11T00:51:07+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交并推送，授权部署测试环境"。授权范围：提交并推送本次缺陷修复；部署测试环境（画像 P7 树莓派）一次。推送前检查：git fetch 无新远端提交；ci.yml 无部署 job。]]></event>
   </audit_log>
 </phase_status>

@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-10T23:07:55.7566991+08:00</timestamp>
+  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>1.0.0</version>
-  <input_files><file>requirements/user_stories.md</file><file>requirements/requirements_spec.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>architecture/module_design.md</file></input_files>
+  <version>2.0.0</version>
+  <input_files><file>testing/test_plan.md（1.0.0）</file><file>requirements/user_stories.md</file><file>requirements/requirements_spec.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>architecture/module_design.md</file></input_files>
   <phase>PHASE_07,PHASE_08,PHASE_09</phase>
   <status>APPROVED</status>
 </file_header>
@@ -23,11 +23,19 @@
 **Out of scope**
 - 真实微信、阿里云短信、邮件服务（按画像 P11-3 只用 `apps/integrations/fakes.py`）。
 - 生产/测试机部署行为（GROUP_E1/E2）；浏览器渲染与视觉回归（项目无浏览器 E2E 框架）。
-- 20000 行性能压测与 xlsx 解析/模板生成：见"不可测项"。
+- 目标机（树莓派 + MySQL）上的 20000 行耗时：见 e2e 报告人工验证清单 M-04~M-06（本版仅在测试环境 SQLite 计时）。
 
-**环境**：Python 3.14.6 + Django（本机 6.0.6）；`config.test_settings`（SQLite 内存库、`MIGRATION_MODULES` 置空、短信/邮件内存替身、外部服务 fake）；前端 vitest；小程序 vitest。严禁连接生产库或生产服务。
+**环境**：1.0.0 为 Python 3.14.6 + Django 6.0.6；1.1.0 缺陷回流复测用 PM venv（Python 3.12.3 + Django 5.2.19 + openpyxl 3.1.5，符合画像 P4 的 5.2.x 要求）；`config.test_settings`（SQLite 内存库、`MIGRATION_MODULES` 置空、短信/邮件内存替身、外部服务 fake）；前端 vitest；小程序 vitest。严禁连接生产库或生产服务。
 
 **判定模式与阈值**：INCREMENTAL，baseline 模式（画像 P5）——各层相对基线零新增失败，且新写用例全部通过才进入下一层。基线：GROUP_C 收尾时全量 `Ran 247 tests / OK`（前端 122 用例中 2 个既有环境失败）。
+
+**1.1.0 修订（缺陷回流 DEF-007~012，GR-C-002 condition）**：
+1. 修正 `frontend/tests/registry_import.spec.js::TC-UNIT-114`（DEF-012 延迟 1 s 释放，改用 fake timers，结束恢复真实计时器）。
+2. 补 DEF-007~011 专门用例（CR-017）：xlsx 上传经 API（文本单元格、合并单元格、隐藏列/第二工作表、模板文本列）、auto_bind 单元失败隔离、dry_run 表单值、补填姓名 `updated_at`。
+3. 20000 行规模（AC-094-07、AC-100-07/08）在 e2e 层执行，计时口径为测试环境 SQLite（非目标机）。
+4. 前端组件级用例 `RegistryImportDialog.vue`（`@vue/test-utils` 已在 devDependencies，未安装任何依赖）。
+5. 基线（PM 2026-11-11 修复前实跑）：后端 unit 62 / integration 237 / e2e 22 / smoke 6 = 327 OK；前端 126/126；小程序 69/69。编号续接：TC-UNIT-307 起、TC-INT-304 起、TC-E2E-302 起（核对前后端最大号：TC-UNIT-114、TC-INT-166、TC-E2E-104，TC-xxx-3NN 此前无使用）；前端组件用例沿前端序列取 TC-UNIT-115/116。
+6. 新增测试文件：`backend/tests/unit/test_registry_import_defects.py`（U-DEF）、`backend/tests/integration/test_registry_import_xlsx_defects.py`（I-XLS）、`backend/tests/e2e/test_registry_import_scale_journeys.py`（E-SCL）、`frontend/tests/registry_import_dialog.spec.js`（F-DLG）。xlsx 用例用 `skipUnless(openpyxl)` 守卫，PM venv 含 openpyxl 故全部实际执行。
 
 **基线来源**：画像 P4（greenfield 无既有失败）+ GROUP_C 门控实测（后端 247 OK；前端 120 passed/2 failed；小程序 69 passed）。
 
@@ -48,10 +56,10 @@
 | AC-092-03 | TC-INT-103 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_103_too_many_rows_rejected | 管理员令牌 | 上传 20001 数据行 | 400，提示"文件行数超过 20000"，清册 0 条 | 20001 行 csv |
 | AC-092-04 | TC-INT-104 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_104_bad_extension_and_oversize | 管理员令牌 | 上传 .xls / 6 MB csv | 400"仅支持 xlsx 或 csv" / 413"文件超过 5 MB" | 假扩展名、>5 MB |
 | AC-092-05 | TC-INT-104 | I | 新写 | 同上 | 同上 | 上传超 5 MB 文件 | 413 FILE_TOO_LARGE | 6 MB bytes |
-| AC-093-01 | TC-UNIT-110、TC-INT-105（csv 部分）；xlsx 分支 [BLOCKED] | U/I | 新写 | U-RULES::CsvTemplateTests::test_tc_unit_110_…；I-ENH::SpecAndTemplateTests::test_tc_int_105_csv_template | 管理员令牌 | 下载 csv 模板 | UTF-8 BOM、8 列表头、多业主/空手机号/车位示例；xlsx 工作簿结构未验证 | 内置示例 |
+| AC-093-01 | TC-UNIT-110、TC-INT-105（csv）；TC-UNIT-307、TC-INT-307、TC-INT-311、TC-E2E-304（xlsx，1.1.0 新增） | U/I/E | 新写 | U-RULES::CsvTemplateTests::test_tc_unit_110_…；I-ENH::SpecAndTemplateTests::test_tc_int_105_csv_template；U-DEF::XlsxUnitTests::test_tc_unit_307_template_text_columns；I-XLS::XlsxImportTests::test_tc_int_307_downloaded_template_text_columns、test_tc_int_311_downloaded_template_imports_back；E-SCL::XlsxTemplateJourneyTests::test_tc_e2e_304_… | 管理员令牌 | 下载 csv/xlsx 模板；xlsx 原样回传 | csv：BOM、8 列表头、示例齐全；xlsx：首工作表 8 列表头、第二表"填写说明"、示例行回传 4 行 0 失败 | 内置示例；openpyxl 现读 |
 | AC-093-02 | TC-UNIT-110 | U | 新写 | 同上 | 无 | 读取 csv 模板字节 | 以 BOM 开头，Excel 打开中文不乱码 | 内置示例 |
-| AC-093-03 | [NOT_TESTABLE] | — | — | — | — | — | xlsx 解析依赖 openpyxl，本机未安装（画像 P4 不自行安装） | — |
-| AC-093-04 | TC-UNIT-105、TC-UNIT-101 | U | 新写 | U-RULES::UnitFieldRuleTests::test_tc_unit_105_cell_text_normalization；ParseAreaTests::test_tc_unit_101_valid_areas | 无 | 传入 int/float/Decimal/date 单元格 | "0801" 与 "13800000000" 保形，无 "3.0"；面积两位小数 | 3.0、Decimal("89.50") |
+| AC-093-03 | TC-UNIT-309、TC-INT-305、TC-INT-306、TC-E2E-304（1.1.0 新增，原 NOT_TESTABLE 已解除） | U/I/E | 新写 | U-DEF::XlsxUnitTests::test_tc_unit_309_…；I-XLS::XlsxImportTests::test_tc_int_305_merged_building_cells_span_owners、test_tc_int_306_hidden_column_and_second_sheet_ignored；E-SCL::test_tc_e2e_304 | 管理员令牌；测试内 openpyxl 构造工作簿 | 楼栋 A2:A4 合并跨 3 位业主；隐藏列 F；第二工作表含同表头干扰行 | 3 行楼栋均为"1栋"，3 业主全部成功；仅首表被读取，干扰业主不入库 | 现场构造的 xlsx |
+| AC-093-04 | TC-UNIT-105、TC-UNIT-101；TC-UNIT-307、TC-UNIT-310、TC-INT-304、TC-INT-307、TC-E2E-304（1.1.0 新增 xlsx 分支） | U/I/E | 新写 | U-RULES::UnitFieldRuleTests::test_tc_unit_105_cell_text_normalization；ParseAreaTests::test_tc_unit_101_valid_areas；U-DEF::test_tc_unit_307、test_tc_unit_310_read_rows_text_cells_kept；I-XLS::test_tc_int_304_text_cells_preserved、test_tc_int_307 | 无 / xlsx 文本格式单元格 | 传入 int/float/Decimal/date 单元格；xlsx 经 API 上传 "0801"/"08"/"13800000000" | "0801" 与 "13800000000" 保形，无 "3.0"；库中 unit_no="08"、room="0801"、phone="13800000000"；模板 A/B/C/D/H 列为 "@"，E/F/G 为 General（DEF-007） | 3.0、Decimal("89.50")、文本单元格 |
 | AC-093-05 | TC-INT-102 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_102_non_admin_denied | 普通用户 | GET template | 401/403 | 普通用户令牌 |
 | AC-093-06 | TC-INT-106 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_106_old_template_rejected | 管理员令牌 | 上传旧 5 列模板 | 400 IMPORT_COLUMNS_MISSING，details.columns 含 3 列，"请使用新模板" | 旧表头 csv |
 | AC-094-01 | TC-INT-107 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_107_six_owners_with_four_phones | 管理员令牌 | 同单元 6 行导入 | 1 单元 6 业主，4 个手机号各可认证 | 6 行/4 手机号 |
@@ -60,7 +68,7 @@
 | AC-094-04 | TC-INT-102 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_102_non_admin_denied | 普通用户 | POST import | 401/403，清册 0 条 | 普通用户令牌 |
 | AC-094-05 | TC-INT-110 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_110_duplicate_rows_merge | 管理员令牌 | 两行同姓名同手机号 | 1 业主 1 手机号，无重复 | 同姓名两行 |
 | AC-094-06 | TC-INT-112 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_112_import_audit_has_no_pii | 管理员令牌 | 导入后查审计 | REGISTRY_IMPORTED 含计数，无姓名/手机号明文 | 1 单元 1 业主 |
-| AC-094-07 | [NOT_TESTABLE] | — | — | — | — | — | 缺 20000 行合法样本与 60 秒计量口径（见不可测项 P-01） | — |
+| AC-094-07 | TC-E2E-302（1.1.0 新增；测试环境口径，目标机见人工清单 M-04） | E | 新写 | E-SCL::ScaleJourneyTests::test_tc_e2e_302_twenty_thousand_valid_rows | 管理员令牌；现场生成 20000 行合法 csv（<5 MB） | 预检 → 正式导入 | 预检不写库；正式：rows_total=rows_ok=20000、failed=0、imported/owners/phones 均 20000；库中 20000 条；耗时 <60 s（HTTP 往返与 elapsed_ms 均断言） | 程序生成，唯一手机号 137+8 位序号 |
 | AC-094-08 | TC-INT-111 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_111_empty_phone_ok_and_empty_name_failed | 管理员令牌 | 王芳手机号为空 | 导入成功，手机号为空，不报错 | 空手机号行 |
 | AC-094-09 | TC-INT-111 | I | 新写 | 同上 | 管理员令牌 | 姓名为空 + 合法手机号 | 该行失败"业主姓名不能为空"，其他行成功 | 空姓名行 |
 | AC-095-01 | TC-INT-113 | I | 新写 | I-ENH::SingleEntryTests::test_tc_int_113_put_twelve_owners | 管理员+单元 | PUT 12 位业主 | 200，12 位业主，无 10 个上限提示 | 12 人名单 |
@@ -106,8 +114,8 @@
 | AC-100-04 | TC-INT-146 | I | 新写 | I-ENH::DryRunTests::test_tc_int_146_bad_phone_row_counted_once | 一行 3 个手机号其中 1 个非法 | 预检 | failed=1，该行不计 imported/updated | 3 手机号 |
 | AC-100-05 | TC-UNIT-111、TC-INT-165 | F/I | 新写 | F-RI::registryImport helpers::TC-UNIT-111；I-CON::test_tc_int_165 | 导入结果对象 | 生成摘要文案 | 纯文字"共 100 行：新增 98 个…失败 0 行"，无 JSON 原文 | 结果对象 |
 | AC-100-06 | TC-INT-102 | I | 新写 | I-ENH::SpecAndTemplateTests::test_tc_int_102_non_admin_denied | 普通用户 | POST import?dry_run | 401/403 | 普通用户令牌 |
-| AC-100-07 | TC-UNIT-112、[NOT_TESTABLE 性能] | F | 新写 | F-RI::TC-UNIT-112 | 超时错误 | 生成提示 | "导入超时，请缩小文件后重试"；20000 行 60 秒未测 | ECONNABORTED |
-| AC-100-08 | [NOT_TESTABLE] | — | — | — | — | — | 缺 20000 行含 10% 错误样本与 60 秒计量口径（P-02） | — |
+| AC-100-07 | TC-UNIT-112、TC-E2E-302、TC-E2E-303（1.1.0 新增预检计时） | F/E | 新写 | F-RI::TC-UNIT-112；E-SCL::test_tc_e2e_302、test_tc_e2e_303 | 超时错误；20000 行文件 | 生成提示；预检 | "导入超时，请缩小文件后重试"；预检 <60 s 且 20000 行不写库 | ECONNABORTED；20000 行 csv |
+| AC-100-08 | TC-E2E-303（1.1.0 新增；测试环境口径，目标机见 M-06） | E | 新写 | E-SCL::ScaleJourneyTests::test_tc_e2e_303_twenty_thousand_rows_ten_percent_invalid | 20000 行，每第 10 行手机号非法（2000 行） | 预检 + 正式导入 | rows_total=20000，rows_ok=18000 + failed=2000 = 20000；预检与正式各计数逐项一致；errors 列出手机号字段；库中 18000 单元，第 0 行未写入；<60 s | 程序生成 |
 | AC-101-01 | TC-INT-147 | I | 新写 | I-ENH::LegacyCompatibilityTests::test_tc_int_147_legacy_unit_listed_unset | 既有空类型单元 | GET units?unit_type=UNSET | 返回该单元，类型/面积为 null | 旧单元 |
 | AC-101-02 | TC-INT-148 | I | 新写 | I-ENH::LegacyCompatibilityTests::test_tc_int_148_legacy_certification_unchanged | 既有单元+手机号 | 手机号认证 | 行为与上线前一致，201 | 旧单元 |
 | AC-101-03 | TC-INT-149、TC-E2E-102 | I/E | 新写 | I-ENH::LegacyCompatibilityTests::test_tc_int_149_backfill_keeps_membership | 已认证旧单元 | 补录类型面积 | 更新成功，业主与认证保留 | 已认证账号 |
@@ -131,40 +139,52 @@
 | AC-104-03 | TC-INT-162 | I | 新写 | I-ENH::OptionLabelAndAppealTests::test_tc_int_162_certify_requires_phone | 账号未绑手机号 | POST /certifications | 400/409"请先绑定手机号" | 无手机号账号 |
 | AC-104-04 | TC-INT-163、TC-INT-158 | I | 新写 | I-ENH::OptionLabelAndAppealTests::test_tc_int_163_admin_adds_phone_then_certify | 管理员补录手机号 | 同一用户再认证 | 201 HEAD，无需申诉；不自动绑定 | 补录手机号 |
 
+**1.1.0 新增映射（缺陷回流 DEF-007~012；位置缩写：U-DEF=`tests/unit/test_registry_import_defects.py`、I-XLS=`tests/integration/test_registry_import_xlsx_defects.py`、E-SCL=`tests/e2e/test_registry_import_scale_journeys.py`、F-DLG=`frontend/tests/registry_import_dialog.spec.js`）**
+
+| AC | 用例 ID | 级别 | 现有/新写 | 位置（文件::类::方法） | 前置 | 动作 | 预期 | 测试数据 |
+|---|---|---|---|---|---|---|---|---|
+| AC-100-02（DEF-012） | TC-UNIT-114（修正现有） | F | 现有·修正 | F-RI::downloadText::TC-UNIT-114 | spy createElement、createObjectURL/revokeObjectURL；`vi.useFakeTimers()` | 调 `downloadText`，推进 999 ms 与再 1 ms | click 后立即未 revoke；999 ms 未 revoke；累计 1000 ms 后 revoke 一次且参数 `blob:mock`；finally 恢复真实计时器 | 错误清单文本 |
+| AC-102-02（DEF-009） | TC-UNIT-308 | U | 新写 | U-DEF::AutoBindIsolationUnitTests::test_tc_unit_308_… | 同号登记 3 个专有部分；对 `MembershipService.certify_owner` 按单元打补丁（RuntimeError 与 ApiError 各一轮），被测 AutoBindService 为真实 | `AutoBindService.bind_by_phone(user)` | 其余 2 个单元绑定为 HEAD，失败单元无 membership，日志有记录 | 3 单元同号 |
+| AC-102-02（DEF-009） | TC-INT-308 | I | 新写 | I-XLS::AutoBindDefectTests::test_tc_int_308_… | 同上，经注册 API | POST /auth/register | 201，`auto_bound` 仅含 2 个单元；库中 2 条 active membership（HEAD/REGISTRY），失败单元 0 条 | 3 单元同号 |
+| AC-100-01（DEF-010） | TC-INT-309 | I | 新写 | I-XLS::DryRunFormAndNameFillTests::test_tc_int_309_… | multipart 表单 `dry_run` | 分别提交 "false"/"0"/"true"/"1"/"TRUE" | "false"/"0"：dry_run=False 且写入 1 单元；"true"/"1"/"TRUE"：dry_run=True，库 0 条，imported=1 | 单行 csv |
+| AC-099-02（DEF-011） | TC-INT-310 | I | 新写 | I-XLS::DryRunFormAndNameFillTests::test_tc_int_310_… | 清册既有 name=NULL 业主+手机号，updated_at 设为 30 天前 | 导入同手机号行（姓名"张三"） | owners_named=1，name 补填，updated_at 晚于旧值（>29 天），业主数不变 | 旧业主 |
+| AC-093-03 / AC-093-04 | TC-UNIT-309、TC-UNIT-310 | U | 新写 | U-DEF::XlsxUnitTests | openpyxl 工作簿 | `read_rows` | 见上表 AC-093-03/04 | 现场构造 |
+| AC-100-01、AC-100-05 | TC-UNIT-115 | F | 新写 | F-DLG::RegistryImportDialog::TC-UNIT-115 | 真实组件+真实 api.js，仅 mock HTTP | 打开→选文件→预检→确认导入 | 打开时 GET spec；未选文件预检/确认均禁用；预检请求带 `params={dry_run:1}`，文案"共 3 行：新增 1 个专有部分、更新 0 个、业主 3 位，失败 0 行（预检结果，尚未写入）"，确认导入按钮可用；确认导入请求无 dry_run，显示不含"预检结果"的结果文案并 emit `imported` | 预检/正式响应对象 |
+| AC-100-02 | TC-UNIT-116 | F | 新写 | F-DLG::TC-UNIT-116 | 预检响应含 1 条错误 | 预检；点击"下载错误清单" | 出现按钮；创建 text/csv Blob；下载文件名 `registry_import_errors.csv`；1 s 后释放；成功响应无该按钮（TC-UNIT-115 断言） | 含失败行响应 |
+| AC-093-01、AC-093-03、AC-093-04、AC-102-01 | TC-E2E-304 | E | 新写 | E-SCL::XlsxTemplateJourneyTests::test_tc_e2e_304_… | 管理员；xlsx 模板 | 下载模板→清空示例→填 08/0801 文本与合并楼栋→预检→导入→业主注册 | 预检 0 库变更；导入 failed=0、owners_created=2、specific_part="1栋-08-8-0801"；注册后 HEAD/REGISTRY | 现场构造 |
+
 ## 测试数据需求
 
 - 全部测试数据在用例内构造，使用 `next_phone()` / `next_account_no()` 或固定测试号段（137/138/139 前缀），不写持久存储；每次运行由 SQLite 内存库重建，无重复运行冲突。
 - 导入文件由 `csv_bytes()` 现生成，不落地。
 - 微信登录使用 `apps.integrations.fakes.FakeWeChatClient`；短信使用 `FakeSmsGateway`（`config.test_settings` 的 `SMS_GATEWAY_BACKEND=memory`）。
 - 管理员：`make_admin()`；注册用户：`register()`（验证码从 FakeSmsGateway 读取）。
-- [DATA_REQUIRED: 20000 行合法样本 / 20000 行含 10% 错误样本（AC-094-07、AC-100-07、AC-100-08）] —— 当前未提供，见不可测项。
-- [DATA_REQUIRED: 可复现的 xlsx 模板/数据文件（AC-093-01/03/04 的 xlsx 分支）] —— 依赖 `openpyxl`，本机未安装且画像 P4 禁止自行安装。
+- 1.1.0：20000 行样本由 `scale_rows()` 现场程序生成（合法 / 每 10 行非法手机号），不落地；xlsx 工作簿在测试内用 openpyxl 构造，不入库二进制文件。原 [DATA_REQUIRED] 两项已解除。
 
 ## 不可测项
 
-| AC | 原因 |
+1.1.0：无 `[NOT_TESTABLE]` 的 AC。1.0.0 的 AC-093-01 xlsx、AC-093-03、AC-093-04 xlsx、AC-094-07、AC-100-07、AC-100-08 均已有真实执行的用例（见 AC 映射）。
+
+遗留的口径限制（不计入不可测，仅为说明）：
+
+| AC | 说明 |
 |---|---|
-| AC-093-01（xlsx 模板结构部分） | BLOCKED：`openpyxl` 未安装（`ModuleNotFoundError`），画像 P4 明确"缺依赖不自行安装"。csv 模板分支已实测。 |
-| AC-093-03 | BLOCKED：xlsx 解析路径依赖 `openpyxl`，同上。 |
-| AC-093-04（xlsx 单元格部分） | BLOCKED：xlsx 读取路径未执行；单元格归一化规则已由 TC-UNIT-105 在 `cell_text` 层验证。 |
-| AC-094-07 | NOT_TESTABLE：无 20000 行合法样本，且 60 秒计量口径依赖测试机硬件（Q-RI-23 默认口径）；未做压测。 |
-| AC-100-07 | NOT_TESTABLE：同上（预检 20000 行计时）；超时提示文案由 TC-UNIT-112 覆盖。 |
-| AC-100-08 | NOT_TESTABLE：需 20000 行含约 10% 错误样本与 60 秒计量口径，样本未提供。 |
+| AC-094-07、AC-100-07、AC-100-08 | 耗时在测试环境（开发机、SQLite 内存库、单进程）计时，**非目标机口径**；目标机（树莓派 + MySQL）耗时由 e2e 报告人工验证清单 M-04~M-06 复核。 |
 
 ## 故事覆盖核对
 
 | Must Have US | 用例 ID（已执行） | 层 |
 |---|---|---|
 | US-092 | TC-UNIT-107、TC-INT-101、TC-INT-102、TC-INT-103、TC-INT-104、TC-INT-164、TC-E2E-101 | U/I/E |
-| US-093 | TC-UNIT-110、TC-INT-105、TC-INT-106、TC-INT-102、TC-E2E-101（xlsx 分支见不可测项） | U/I/E |
-| US-094 | TC-INT-107、TC-INT-108、TC-INT-109、TC-INT-110、TC-INT-111、TC-INT-112、TC-E2E-101 | I/E |
+| US-093 | TC-UNIT-110、TC-INT-105、TC-INT-106、TC-INT-102、TC-E2E-101；1.1.0 xlsx：AC-093-01 → TC-UNIT-307、TC-INT-307、TC-INT-311、TC-E2E-304；AC-093-03 → TC-UNIT-309、TC-INT-305、TC-INT-306、TC-E2E-304；AC-093-04 → TC-UNIT-307、TC-UNIT-310、TC-INT-304、TC-E2E-304 | U/I/E |
+| US-094 | TC-INT-107、TC-INT-108、TC-INT-109、TC-INT-110、TC-INT-111、TC-INT-112、TC-E2E-101；1.1.0：AC-094-07 → TC-E2E-302 | I/E |
 | US-095 | TC-INT-113 ~ TC-INT-118、TC-E2E-102 | I/E |
 | US-096 | TC-INT-119 ~ TC-INT-124、TC-UNIT-102、TC-UNIT-103、TC-E2E-101、TC-E2E-102 | U/I/E |
 | US-097 | TC-INT-125 ~ TC-INT-130、TC-E2E-104 | I/E |
 | US-098 | TC-INT-131 ~ TC-INT-136、TC-UNIT-104、TC-UNIT-106、TC-E2E-101 | U/I/E |
 | US-099 | TC-INT-137 ~ TC-INT-143、TC-E2E-102 | I/E |
-| US-102 | TC-INT-151 ~ TC-INT-158、TC-INT-166、TC-E2E-101、TC-E2E-103 | I/E |
+| US-102 | TC-INT-151 ~ TC-INT-158、TC-INT-166、TC-E2E-101、TC-E2E-103；1.1.0：TC-UNIT-308、TC-INT-308（DEF-009）、TC-E2E-304 | U/I/E |
 | US-103 | TC-INT-159、TC-INT-160、TC-E2E-101 | I/E |
 | US-104 | TC-INT-161 ~ TC-INT-163、TC-E2E-103 | I/E |
 
-Should Have（不参与 critical path 统计）：US-100 → TC-INT-144~146、TC-UNIT-111~113、TC-INT-165；US-101 → TC-INT-147~150、TC-E2E-102。
+Should Have（不参与 critical path 统计）：US-100 → TC-INT-144~146、TC-UNIT-111~116、TC-INT-165、TC-INT-309（DEF-010）、TC-E2E-302（AC-100-07）、TC-E2E-303（AC-100-07/08）；US-101 → TC-INT-147~150、TC-E2E-102；US-099 DEF-011 → TC-INT-310。

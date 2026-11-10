@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-10T23:08:49.4033974+08:00</timestamp>
+  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>1.0.0</version>
-  <input_files><file>testing/test_plan.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file></input_files>
+  <version>2.0.0</version>
+  <input_files><file>testing/integration_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file></input_files>
   <phase>PHASE_08</phase>
   <status>APPROVED</status>
 </file_header>
@@ -12,34 +12,35 @@
 
 ## 摘要
 
-- 执行时间：2026-11-10 23:07–23:08（Asia/Shanghai）
-- 环境：Python 3.14.6、Django 6.0.6；`config.test_settings`（SQLite 内存库、真实 DRF 路由器与 ORM、微信/短信 fake）
-- 范围：`backend/tests/integration` 全量 237 个用例，其中本次新写 66 个（TC-INT-101 ~ TC-INT-166，含 2 个前后端契约用例）
-- 命令：`python manage.py test tests.integration --settings=config.test_settings`
+- 执行时间：1.0.0 为 2026-11-10 23:07–23:08；**1.1.0 缺陷回流复测 2026-11-11 00:28（Asia/Shanghai）**
+- 环境：PM venv（Python 3.12.3、Django 5.2.19、openpyxl 3.1.5）；`config.test_settings`（SQLite 内存库、真实 DRF 路由器与 ORM、微信/短信 fake）
+- 范围：`backend/tests/integration` 全量 245 个用例 = 基线 237 + 本次新写 8（TC-INT-304 ~ TC-INT-311，文件 `test_registry_import_xlsx_defects.py`）；契约用例 TC-INT-164/165 随全量再次执行
+- 命令：`(cd backend && <venv python> manage.py test tests.integration --settings=config.test_settings)`
 
-**metrics**：total = pass + fail + skip + blocked + not_testable = 237 = 237 + 0 + 0 + 0 + 0
+**metrics**：total = pass + fail + skip + blocked + not_testable = 245 = 245 + 0 + 0 + 0 + 0
 
-通过率 = pass / (pass + fail + blocked) = 237 / 237 = **100%**
+通过率 = pass / (pass + fail + blocked) = 245 / 245 = **100%**
 
-判定模式：INCREMENTAL baseline（零新增失败）；新写用例 66/66 通过 → **本层门控：PASSED**
+判定模式：INCREMENTAL baseline（零新增失败）；新写用例 8/8 通过 → **本层门控：PASSED**
 
 ## 执行输出
 
 ```
-$ python manage.py test tests.integration --settings=config.test_settings
-Found 237 test(s).
-System check identified no issues (0 silenced).
-Ran 237 tests in 2.860s
+$ (cd backend && <venv python> manage.py test tests.integration --settings=config.test_settings)
+Ran 245 tests in 8.445s
 OK
+Found 245 test(s).
 ```
 
-契约用例（同文件独立运行，作为 237 的子集再次确认）：
+前端组件级用例属单元层（见 unit_test_report TC-UNIT-115/116）；前端全量：
 
 ```
-$ npx vitest run tests/registry_import.spec.js   # frontend/
- Test Files  1 passed (1)
-      Tests  4 passed (4)
+$ (cd frontend && npx vitest run --passWithNoTests)
+ Test Files  14 passed (14)
+      Tests  128 passed (128)
 ```
+
+有效性验证：新写的集成用例在 `git archive HEAD`（修复前）基线树上运行，TC-INT-305、307、308、309、310 失败（对应 DEF-008、007、009、010、011），TC-INT-304、306、311 在基线树通过（属既有行为保持的回归证据）；修复后树 8/8 通过。
 
 ## 分项结果
 
@@ -164,6 +165,19 @@ $ npx vitest run tests/registry_import.spec.js   # frontend/
 | TC-INT-162 | AC-104-03 | 未绑手机号 → 提示先绑定 | PASS |
 | TC-INT-163 | AC-104-04 | 管理员补录手机号后同一用户认证 201 HEAD | PASS |
 
+### 1.1.0 缺陷回流新增（xlsx 上传、auto_bind 隔离、dry_run 表单、补填姓名）
+
+| TC | AC | 描述 | 结果 | 根因分类 |
+|---|---|---|---|---|
+| TC-INT-304 | AC-093-04 | xlsx 文本单元格 "0801"/"08"/"13800000000" 经 API 导入后库中 room="0801"、unit_no="08"、phone="13800000000"，specific_part="1-08-8-0801" | PASS | — |
+| TC-INT-305 | AC-093-03（DEF-008） | 楼栋 A2:A4 合并单元格跨 3 位业主：rows_total=3、failed=0、owners_created=3，楼栋"1栋" | PASS | — |
+| TC-INT-306 | AC-093-03 | 隐藏列 F + 第二工作表含干扰业主：仅导入首表 1 行，干扰业主未入库，面积 89.50 | PASS | — |
+| TC-INT-307 | AC-093-01、AC-093-04（DEF-007） | API 下载 xlsx 模板：首表表头 = 8 列，A/B/C/D/H 列 column 与示例行为 "@"，第二表"填写说明" | PASS | — |
+| TC-INT-308 | AC-102-02（DEF-009） | 同号 3 专有部分，按单元对 `MembershipService.certify_owner` 打补丁令其中 1 个抛 RuntimeError；注册 201，`auto_bound` 仅另 2 个，库中 2 条 HEAD/REGISTRY membership，失败单元 0 条 | PASS | — |
+| TC-INT-309 | AC-100-01（DEF-010） | multipart `dry_run`："false"/"0" 正式导入（写 1 单元，dry_run=False）；"true"/"1"/"TRUE" 预检（库 0 条，imported=1，dry_run=True） | PASS | — |
+| TC-INT-310 | AC-099-02（DEF-011） | 既有 name=NULL 业主按同手机号补填"张三"，owners_named=1，updated_at 较 30 天前旧值更新，业主数仍 1 | PASS | — |
+| TC-INT-311 | AC-093-01 | 下载的 xlsx 模板不改动回传：4 行 0 失败，2 个专有部分 | PASS | — |
+
 ### 前后端契约（frontend / miniprogram ↔ backend）
 
 | TC | AC | 描述 | 结果 |
@@ -175,9 +189,10 @@ $ npx vitest run tests/registry_import.spec.js   # frontend/
 
 | 项 | 基线（GROUP_C 收尾） | 本次 | 结论 |
 |---|---|---|---|
-| 后端全量 | Ran 247 / OK | Ran 327 / OK | 新增失败 0（+80 用例） |
-| 前端全量 | 120 passed / 2 failed（126 中 2 个环境失败） | 124 passed / 2 failed（126） | 新增失败 0，失败项仍为 `theme.spec.js`、`theme_build.spec.js` 既有环境问题 |
-| 小程序全量 | 69 passed | 69 passed | 新增失败 0 |
+| 后端 integration | 237 OK（PM 2026-11-11 修复前实跑） | 245 OK | 新增失败 0（+8 新写） |
+| 后端全量 | 327 OK（unit 62 / integration 237 / e2e 22 / smoke 6） | 342 OK（66 / 245 / 25 / 6） | 新增失败 0（+15 新写） |
+| 前端全量 | 126/126（修复前）；修复后 PM 实跑 1 failed（TC-UNIT-114） | 128/128（+2 新写，TC-UNIT-114 已修正） | 新增失败 0 |
+| 小程序全量 | 69/69 | 69/69 | 新增失败 0 |
 
 ## 失败汇总（需路由给开发）
 
@@ -186,5 +201,6 @@ $ npx vitest run tests/registry_import.spec.js   # frontend/
 ## 备注
 
 - AC-095-05 中"同号再次比对不通过"因手机号唯一无法新建同号账号，TC-INT-117 以"清册中该手机号已删除 + 既有 membership 保留"作为等价证据。
-- xlsx 解析/模板生成（AC-093-01 xlsx 部分、AC-093-03、AC-093-04 xlsx 部分）未执行：本机缺 `openpyxl`，画像 P4 禁止自行安装；列入 e2e 报告人工验证清单。
-- 20000 行性能 AC（AC-094-07、AC-100-07、AC-100-08）未做压测，列入 test_plan 不可测项。
+- xlsx 解析/模板生成：1.0.0 因缺 openpyxl 为 BLOCKED，1.1.0 用 PM venv（含 openpyxl，未安装任何依赖）实际执行 TC-INT-304~307、311；用例带 `skipUnless(openpyxl)` 守卫。
+- 20000 行规模（AC-094-07、AC-100-07、AC-100-08）放在 e2e 层执行（TC-E2E-302/303），见 e2e 报告。
+- 1.0.0 报告中"前端 2 个既有环境失败"为 Windows 开发机问题，Linux 复测不复现，本版基线按 PM 2026-11-11 实跑的 126/126 口径。

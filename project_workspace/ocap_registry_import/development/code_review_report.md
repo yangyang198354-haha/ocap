@@ -1,14 +1,14 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-10T23:52:00+08:00</timestamp>
+  <timestamp>2026-11-11T00:21:15+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md (1.0.0 APPROVED)</file>
     <file>requirements/user_stories.md (1.0.0 APPROVED)</file>
     <file>architecture/module_design.md (1.0.0 APPROVED)</file>
     <file>architecture/architecture_design.md (0.2.0 门控版本)</file>
-    <file>development/implementation_plan.md (1.0.0)</file>
+    <file>development/implementation_plan.md (1.1.0 DRAFT)</file>
   </input_files>
   <phase>PHASE_06</phase>
   <status>APPROVED</status>
@@ -17,6 +17,8 @@
 # 代码评审报告：业主清册导入增强（GROUP_C）
 
 ## 摘要
+
+- **1.1.0 缺陷回流（DEF-007~012）**：改动 6 个文件（import_spec/import_template/importing/views/auto_bind/registryImport.js），均为最小改动；新增问题 CR-015~CR-017（MINOR，见下）。后端 327/327 OK；前端 vitest 125/126（1 条既有用例因 DEF-012 同步 revoke 断言失败，见"现有测试调整"）、前端构建成功。以下 1.0.0 摘要保留为历史。
 
 - 改动范围：`git diff --stat` 22 个已跟踪文件（+802 / -271）；另有 10 个新建文件（未跟踪）。合计 32 个代码/测试文件，不含本目录文档。
 - 冻结接口：IFC-152 ~ IFC-164；模块 MOD-030 ~ MOD-038 全部 DONE。
@@ -255,7 +257,26 @@
 
 ## 缺陷修复
 
-不适用（本次为首次开发，非 `REWORK_AUTHORIZED` 缺陷修复模式）。CR-001 ~ CR-004、CR-008 ~ CR-009 的修复过程已记入对应模块的 CR 问题表。
+1.1.0（REWORK_AUTHORIZED）：
+
+| DEF | 位置 | 根因 | 修改说明 |
+|---|---|---|---|
+| DEF-007 | `registry/import_template.py:build_xlsx`、`import_spec.py:spec_payload` | 模板单元格 General，Excel 将 0801 存为数字 | A/B/C/D/H 列整列及示例行设文本格式 "@"；说明与 notes 增补 CSV 提示 |
+| DEF-008 | `registry/importing.py:read_rows/_fill_merged_cells` | read_only 模式无 merged_cells | 改普通模式读取并展开合并区域；20000 行实测 4.78 s |
+| DEF-009 | `residency/auto_bind.py:bind_by_phone` | 失败即 break | 改 continue；每单元 `transaction.atomic()` savepoint |
+| DEF-010 | `registry/views.py:AdminRegistryImportView.post` | 表单 dry_run 用 bool() | 与查询参数同样判定 "1"/"true" |
+| DEF-011 | `registry/importing.py:_fill_names` | bulk_update 不触发 auto_now | 显式赋 `updated_at=timezone.now()` |
+| DEF-012 | `frontend/src/admin/registryImport.js:downloadBlob` | click 后立即 revoke | `setTimeout` 1000 ms 后 revoke |
+
+1.1.0 新增评审（五维：Correctness 8.5 / Security 9 / Performance 8 / Maintainability 9 / Testability 7，均≥6）：
+
+| CR | 级别 | 位置 | 描述 | 状态 |
+|---|---|---|---|---|
+| CR-015 | MINOR | `importing.py:read_rows` | 普通模式加载整个工作簿，内存高于 read_only；受 5 MB/20000 行上限约束，实测 4.78 s，可接受 | OPEN（已记取舍） |
+| CR-016 | MINOR | `frontend/tests/registry_import.spec.js:61` | 既有用例同步断言 revoke，与 DEF-012 延迟释放冲突，须 test-engineer 调整 | OPEN |
+| CR-017 | MINOR | `auto_bind.py`、`importing.py` | DEF-007~011 无专门测试覆盖（现有 327 个后端测试均未覆盖这些路径，故全绿并不证明修复） | OPEN（交 test-engineer） |
+
+自验证（1.1.0）：`(cd backend && venv python manage.py test --settings=config.test_settings)` → `Ran 327 tests ... OK`；`python3 -m compileall -q backend` 通过；`(cd frontend && npx vitest run --passWithNoTests)` → `Tests 1 failed | 125 passed (126)`；`npm run build -- --base=/ocap/` → `built in 25.49s`；临时脚本（scratchpad，不入库）验证模板格式、合并单元格读取与 20000 行性能。小程序未改动，未重跑。CRITICAL 0 / MAJOR 0 新增 / MINOR 3 新增（均 OPEN）。CR-001 ~ CR-004、CR-008 ~ CR-009 的修复过程已记入对应模块的 CR 问题表。
 
 ## 现有测试调整
 
@@ -268,3 +289,6 @@
 | `backend/tests/e2e/test_gap_journeys.py` | TC-E2E-014 改为断言注册即自动绑定（`auto_bound == [unit.id]`、身份含"户主"），删除手动 `/certifications`；`/phones` 改 `/owners` | US-102：手机号命中清册的注册用户无需手动认证 |
 
 以上调整均为契约或语义变更的必要适配，未削弱既有断言强度；全量 247 个测试通过，无新增失败。
+
+### 1.1.0 补充
+`frontend/tests/registry_import.spec.js` TC-UNIT-114：未改（约束禁止），失败原因与建议修法见 implementation_plan 1.1.0"缺陷修复"节。

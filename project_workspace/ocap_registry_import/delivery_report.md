@@ -96,3 +96,11 @@
 - 仅有 1 条历史 RUN 校正记录（GROUP_C 未来时间戳改为实际 22:52），无注入、无凭据泄露。
 - 部署期间 `mysqldump` 因目标 MySQL 自签证书使用 `--skip-ssl`；未打印数据库密码。
 - 子代理 `<security_events>` 均为“无异常”。
+
+## 交付后返工 R2（2026-11-11T01:04:38+08:00）
+- 起因：用户要求复核远端 4 个提交（POST_DELIVERY_REVIEW），发现 AC-093-03（合并单元格）、AC-093-04（前导零）未满足及 4 项 MINOR。
+- 修复：DEF-007~012（提交 a0a0b3a）；GR-C-002、GR-D-002、GR-E1-002、GR-E2-002 均 PASS_WITH_CONDITIONS；defect_loops=1。
+- PM 复跑：后端 342 OK（unit 66 / integration 245 / e2e 25 / smoke 6）、前端 128/128、小程序 69/69；相对修复前基线新增失败 0。
+- 部署：测试环境 R2 增量重部署 DEPLOYED_SUCCESSFULLY，锚点 20261111005708；PM 外网复核 /ocap/ 200、import/spec 与 template 401、Freeark 200。
+- 仍开放：M-04~M-06（页面 20000 行 xlsx 实测耗时与内存峰值）；miniprogram/package-lock.json 去留与小程序发布（RU-4）待用户决定；并发导入加锁未处理。
+- 最终状态：DELIVERED_WITH_ISSUES。

@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T00:51:07+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T01:04:38+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -64,8 +64,12 @@
     <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
-    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
-    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="2.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="2.0.0" status="APPROVED" group="GROUP_E2"/>
     <artifact path="project_workspace/ocap_registry_import/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
     <artifact path="project_workspace/_kb_distillation/distill_20261110T2332.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
   </artifacts>
@@ -83,6 +87,8 @@
     <invocation id="ocap_registry_import-GROUP_Z-1" agent="kb-curator" start="2026-11-10T23:30:35+08:00" end="2026-11-10T23:33:31+08:00" result="SUCCESS"/>
   <invocation id="ocap_registry_import-GROUP_C-2" agent="software-developer" start="2026-11-11T00:16:32+08:00" end="2026-11-11T00:24:19+08:00" result="PARTIAL_SUCCESS"/>
   <invocation id="ocap_registry_import-GROUP_D-2" agent="test-engineer" start="2026-11-11T00:24:19+08:00" end="2026-11-11T00:39:49+08:00" result="SUCCESS"/>
+  <invocation id="ocap_registry_import-GROUP_E1-2" agent="devops-engineer" start="2026-11-11T00:51:34+08:00" end="2026-11-11T00:54:39+08:00" result="SUCCESS"/>
+  <invocation id="ocap_registry_import-GROUP_E2-2" agent="devops-engineer" start="2026-11-11T00:54:39+08:00" end="2026-11-11T01:04:38+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_registry_import-GROUP_A-3" decision="PASS_WITH_CONDITIONS" time="2026-11-10T21:30:18+08:00">
@@ -218,6 +224,32 @@ PM xlsx 实测：cols style=1 on A,B,C,D,H；merged A2:A3 -> [('1栋','0801'),('
       <finding id="GR-D-002-F02" severity="MINOR">agent 未读 user_stories.md 全文（自述），故事覆盖核对表 PM 抽查 AC-093-03/04 已有执行用例。</finding>
       <condition>部署（如用户授权）后：在测试环境用 20000 行 xlsx 做一次预检+正式导入，记录耗时与 ocap-backend 内存峰值。</condition>
     </gate_review>
+    <gate_review id="GR-E1-002" invocation_id="ocap_registry_import-GROUP_E1-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T00:54:39+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-E1-回滚" result="SATISFIED">R2-DEPLOY-001~004 对应 R2-ROLLBACK-001~004（deployment_plan.md:346-450）；后端回滚为叠加解包，不删 venv/.env/var；无 git reset/clean。</criterion>
+      <criterion id="J-E1-预检" result="SATISFIED">R2-PRE-001~012：版本一致、工作树干净、无迁移/依赖变更、目标机迁移全应用（只读）、1.0.0 参数仍有效、磁盘内存、端口与 Freeark 基线、env/快照目录、运行时目录体量、旧版本锚点。</criterion>
+      <criterion id="J-E1-环境" result="SATISFIED">仅画像 P7 测试环境；外网 SSH 57279 + 指纹核对；不触碰 Freeark/nginx 其他段/frp。</criterion>
+      <criterion id="J-E1-变量" result="SATISFIED">TS 本地取一次并做 14 位校验，含 $TS 的远端命令用双引号；回滚前核验快照存在与 manage.py 计数。</criterion>
+      <criterion id="J-E1-验证" result="SATISFIED">R2-8 沿用 V-01~V-07（V-03 改写）、新增 V-08/V-12，人工 M-04~M-06 含内存峰值采样。</criterion>
+      <criterion id="J-E1-快照膨胀" result="SATISFIED">快照排除 backend/venv、backend/var、.env、__pycache__（GR-B 遗留处理）。</criterion>
+      <finding id="GR-E1-002-F01" severity="MINOR">R2-DEPLOY-003 远端 `rm -rf /home/yangyang/ocap/web/ocap/*` 与 tar 解包未用 sudo，而 1.0.0 DEPLOY-007 以 sudo 写入该目录（文件可能属 root）；E2 执行前须先只读检查 web/ocap 属主，属 root 则用 sudo，避免半删除状态。</finding>
+      <finding id="GR-E1-002-F02" severity="MINOR">1.0.0 正文仍保留内网/PowerShell 命令，仅作历史；E2 只执行 R2 节。</finding>
+      <condition>E2：只执行 R2-PRE/R2-DEPLOY/R2-ROLLBACK；DEPLOY-003 前检查 web/ocap 属主并按需加 sudo；任一步失败立即按 R2-6 逆序回滚。</condition>
+    </gate_review>
+    <gate_review id="GR-E2-002" invocation_id="ocap_registry_import-GROUP_E2-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T01:04:38+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/deployment/deployment_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-E2-结果" result="SATISFIED">deployment_report R2 节：DEPLOYED_SUCCESSFULLY，ANCHOR_TS=20261111005708，两端 SHA256 一致（后端 05c88066…a73d8、前端 c53e788f…ca06），V-01~V-08、V-10~V-12 均有实际输出。</criterion>
+      <verification><![CDATA[PM 外网只读复核：
+200 https://ai-freeark.xin/ocap/
+200 https://ai-freeark.xin/ocap/admin/login
+401 https://ai-freeark.xin/ocap/api/v1/admin/registry/import/spec
+401 https://ai-freeark.xin/ocap/api/v1/admin/registry/import/template?file_type=xlsx
+200 https://ai-freeark.xin/   (Freeark)
+首页引用 index-B6HXhS2D.js（与报告新包一致）]]></verification>
+      <finding id="GR-E2-002-F01" severity="MINOR">M-04~M-06（页面 20000 行 xlsx 预检+正式导入的耗时与内存峰值）未执行，待用户操作后 PM 只读采样。</finding>
+      <finding id="GR-E2-002-F02" severity="MINOR">外网 SSH 通道对连续新建连接间歇性 Connection closed（4 次，均在步骤生效前、重试成功）。</finding>
+      <condition>用户在页面完成 M-04~M-06 后，PM 按 deployment_report R2 节的只读命令采样并回填。</condition>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-10T21:13:55+08:00" responder="用户"><![CDATA[用户原话："Q-RI-02 手机号选填，如果用户用这个手机号注册并且认证成功，可以自动绑定这个专有部分。Q-RI-04 车位面积必须填。Q-RI-06 同一专有部分导入，只要产权业主名字不同，就认为是同意部分的多个产权人。Q-RI-10 文件上线5 MB 20000行。 Q-RI-11： 要显示面积。 Q-RI-12：A， 其他按照推荐"
@@ -273,5 +305,8 @@ F9 MINOR 交付报告单元测试计数 66 与实跑 62 不符（总数 327 一�
   <event time="2026-11-11T00:24:19+08:00" type="GATE" actor="pm-orchestrator">GR-C-002 PASS_WITH_CONDITIONS；development 两份文档 2.0.0 APPROVED（1.0.0/1.1.0 SUPERSEDED）。defect_loops=1，调用 test-engineer（ocap_registry_import-GROUP_D-2）。</event>
   <event time="2026-11-11T00:39:49+08:00" type="GATE" actor="pm-orchestrator">GR-D-002 PASS_WITH_CONDITIONS；testing 四份文档 2.0.0 APPROVED。缺陷回流完成（defect_loops=1）。部署与提交待用户授权。</event>
   <event time="2026-11-11T00:51:07+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交并推送，授权部署测试环境"。授权范围：提交并推送本次缺陷修复；部署测试环境（画像 P7 树莓派）一次。推送前检查：git fetch 无新远端提交；ci.yml 无部署 job。]]></event>
+  <event time="2026-11-11T00:51:34+08:00" type="INVOCATION" actor="pm-orchestrator">提交 a0a0b3a 已推送（b0a0159..a0a0b3a）。缺陷修复为纯代码改动（无迁移、无新依赖），原 deployment_plan 1.0.0 含迁移/依赖/nginx 步骤且走内网 SSH，不直接复用；调用 devops-engineer（GROUP_E1-2）出增量重部署计划 1.1.0，门控后再执行 E2。</event>
+  <event time="2026-11-11T00:54:39+08:00" type="GATE" actor="pm-orchestrator">GR-E1-002 PASS_WITH_CONDITIONS；deployment_plan 2.0.0 APPROVED。依据用户本轮授权（DEPLOY_AUTH 同轮）调用 devops-engineer E2（GROUP_E2-2），环境=测试。</event>
+  <event time="2026-11-11T01:04:38+08:00" type="GATE" actor="pm-orchestrator">GR-E2-002 PASS_WITH_CONDITIONS；deployment_report 2.0.0 APPROVED。交付后返工（DEF-007~012）已部署测试环境，状态仍为 DELIVERED_WITH_ISSUES（待 M-04~M-06）。</event>
   </audit_log>
 </phase_status>

@@ -13,7 +13,7 @@ from apps.accounts.models import AdminAccount, User
 from apps.accounts.services import AccountService
 from apps.committee.models import Seat
 from apps.integrations.fakes import FakeSmsGateway
-from apps.registry.models import RegistryPhone, RegistryUnit
+from apps.registry.models import RegistryOwner, RegistryPhone, RegistryUnit
 
 PASSWORD = "Abc12345"
 
@@ -58,7 +58,8 @@ class ApiSmokeTest(TestCase):
     def make_unit(self, phone=None):
         unit = RegistryUnit.objects.create(building="1", unit_no="1", floor="1", room="101")
         if phone:
-            RegistryPhone.objects.create(unit=unit, phone=phone)
+            owner = RegistryOwner.objects.create(unit=unit, name="业主甲")
+            RegistryPhone.objects.create(unit=unit, owner=owner, phone=phone)
         return unit
 
     def test_register_login_and_profile(self):

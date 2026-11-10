@@ -12,7 +12,7 @@ from apps.accounts.services import AccountService
 from apps.approval.models import ApprovalFlow, FlowApprover
 from apps.committee.models import Seat
 from apps.integrations.fakes import FakeSmsGateway
-from apps.registry.models import RegistryPhone, RegistryUnit
+from apps.registry.models import RegistryOwner, RegistryPhone, RegistryUnit
 from apps.residency.models import Membership
 
 _counter = {"n": 0}
@@ -120,13 +120,14 @@ class ApiTestBase(APITestCase):
         return AccountService.issue_token(user)
 
     # ---------- 资源 ----------
-    def make_unit(self, phones=None, prefix: str = "1-1") -> RegistryUnit:
+    def make_unit(self, phones=None, name: str = "业主甲") -> RegistryUnit:
         unit = RegistryUnit.objects.create(
-            building="1", unit_no=str(_counter["n"] + 1), floor="1", room="101",
-            specific_part=next_specific_part(prefix),
+            building="1", unit_no=f"u{next_account_no()}", floor="1", room="101",
         )
-        for phone in phones or []:
-            RegistryPhone.objects.create(unit=unit, phone=phone)
+        if phones:
+            owner = RegistryOwner.objects.create(unit=unit, name=name)
+            for phone in phones:
+                RegistryPhone.objects.create(unit=unit, owner=owner, phone=phone)
         return unit
 
     def make_owner(self, phone: str | None = None, unit: RegistryUnit | None = None,

@@ -11,7 +11,7 @@ ROLE_RANK = {"HEAD": 3, "OWNER": 2, "RESIDENT": 1}
 
 class MembershipService:
     @staticmethod
-    def certify_owner(user_id: int, unit_id: int, source: str) -> str:
+    def certify_owner(user_id: int, unit_id: int, source: str, origin: str | None = None) -> str:
         with transaction.atomic():
             from apps.registry.models import RegistryUnit
 
@@ -30,10 +30,13 @@ class MembershipService:
             role = "OWNER" if head_exists else "HEAD"
             Membership.objects.create(user_id=user_id, unit_id=unit_id, role=role, source=source,
                                       active_slot=1, head_slot=1 if role == "HEAD" else None)
+            detail = {"role": role, "source": source}
+            if origin == "REGISTRY_AUTO":
+                detail.update({"origin": origin, "origin_label": "清册自动绑定"})
             AuditService.record(
                 actor=AuditActor("MEMBER", user_id, f"用户{user_id}"), action="CERTIFY_BY_REGISTRY",
                 object_type="membership", object_id=f"{user_id}:{unit_id}", result="SUCCESS",
-                detail={"role": role, "source": source},
+                detail=detail,
             )
             if role == "HEAD":
                 AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="HEAD_ASSIGNED",

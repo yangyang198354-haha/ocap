@@ -15,6 +15,7 @@ from apps.core.permissions import IsAdmin, IsMember
 from apps.core.ratelimit import RateLimiter, client_ip
 from apps.core.serializers import page_response
 from apps.integrations.wechat import WeChatError, get_wechat_client
+from apps.residency.auto_bind import AutoBindService
 
 from .models import AdminAccount, User
 from .services import (
@@ -93,7 +94,9 @@ class RegisterView(APIView):
             raise ApiError("CODE_INVALID", "验证码错误")
         user = AccountService.register_by_phone(phone=phone, code=code, email=data.get("email"))
         token = AccountService.issue_token(user)
-        return Response(auth_result(user, token, is_new=True), status=status.HTTP_201_CREATED)
+        result = auth_result(user, token, is_new=True)
+        result["auto_bound"] = [item.as_dict() for item in AutoBindService.bind_by_phone(user)]
+        return Response(result, status=status.HTTP_201_CREATED)
 
 
 class LoginByCodeView(APIView):

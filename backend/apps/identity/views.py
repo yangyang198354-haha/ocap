@@ -8,6 +8,7 @@ from apps.core.errors import ApiError
 from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.permissions import IsAdmin, IsMember
 from apps.core.serializers import page_response
+from apps.residency.auto_bind import AutoBindService
 from apps.residency.models import Membership
 
 from .services import IdentityService
@@ -40,7 +41,12 @@ class PhoneBindView(APIView):
         kind = AccountService.session_kind_of(request.auth)  # 合并后旧令牌会被删除，先取类型
         result = IdentityService.bind_phone(request.user, str(data.get("phone", "")),
                                             str(data.get("code", "")))
-        return Response(_merge_response(kind, result))
+        response = _merge_response(kind, result)
+        # 合并成功后旧会话失效、不再自动绑定（Q4=A）；首次绑定才触发（IFC-161）。
+        response["auto_bound"] = (
+            [] if response["merged"] else [item.as_dict() for item in AutoBindService.bind_by_phone(request.user)]
+        )
+        return Response(response)
 
 
 class PhoneChangeView(APIView):

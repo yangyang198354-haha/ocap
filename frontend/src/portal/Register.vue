@@ -51,7 +51,13 @@ async function submit() {
     const result = await authApi.register(form.phone, form.code)
     auth.setAuth(result.token, result.user)
     await useThemeStore().reconcileAfterLogin()
-    ElMessage.success('注册成功')
+    const bound = result.auto_bound || []
+    if (bound.length) {
+      const parts = bound.map((item) => item.specific_part).join('、')
+      ElMessage.success(`注册成功，已根据你的手机号自动认证为 ${parts} 的产权业主`)
+    } else {
+      ElMessage.success('注册成功')
+    }
     router.replace('/')
   } catch (e) {
     ElMessage.error(errorText(e))

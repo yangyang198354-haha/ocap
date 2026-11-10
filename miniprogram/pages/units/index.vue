@@ -6,15 +6,16 @@
       <picker mode="selector" :range="buildings" @change="pickBuilding">
         <view class="muted">楼栋：{{ picked.building || '请选择' }}</view>
       </picker>
-      <picker mode="selector" :range="units" @change="pickUnit">
+      <picker v-if="show.unit" mode="selector" :range="unitLabels" @change="pickUnit">
         <view class="muted">单元：{{ picked.unitNo || '请选择' }}</view>
       </picker>
-      <picker mode="selector" :range="floors" @change="pickFloor">
+      <picker v-if="show.floor" mode="selector" :range="floorLabels" @change="pickFloor">
         <view class="muted">楼层：{{ picked.floor || '请选择' }}</view>
       </picker>
       <picker mode="selector" :range="roomLabels" @change="pickRoom">
         <view class="muted">房号：{{ picked.roomLabel || '请选择' }}</view>
       </picker>
+      <view v-if="skipHint" class="muted">{{ skipHint }}</view>
       <button class="btn" style="margin-top: 20rpx" @click="certify">认证</button>
       <view class="muted">微信登录且未绑定手机号时，请先到“我的 → 绑定/更换手机号”完成绑定。</view>
     </view>
@@ -35,13 +36,17 @@ import { onLoad } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 
 const buildings = ref([])
-const units = ref([])
-const floors = ref([])
+const unitChoices = ref([])
+const floorChoices = ref([])
 const rooms = ref([])
+const show = reactive({ unit: false, floor: false })
+const skipHint = ref('')
 const picked = reactive({ building: '', unitNo: '', floor: '', roomLabel: '', unitId: null })
 const proofId = ref('')
-// 房号选项：[{ value: 房号, unit_id }]
-const roomLabels = computed(() => rooms.value.map((r) => r.value))
+// 选项：[{ value, label }]；has_empty 时插入“未划分”项（IFC-152）
+const unitLabels = computed(() => unitChoices.value.map((c) => c.label))
+const floorLabels = computed(() => floorChoices.value.map((c) => c.label))
+const roomLabels = computed(() => rooms.value.map((r) => r.label || r.value))
 
 function toast(title) {
   uni.showToast({ title, icon: 'none' })
@@ -65,24 +70,79 @@ async function init() {
 
 async function pickBuilding(e) {
   picked.building = buildings.value[Number(e.detail.value)]
-  units.value = values(await load({ building: picked.building }))
+  resetBelow('building')
+  await apply(await load({ building: picked.building }), 'unit')
 }
 
 async function pickUnit(e) {
-  picked.unitNo = units.value[Number(e.detail.value)]
-  floors.value = values(await load({ building: picked.building, unit_no: picked.unitNo }))
+  picked.unitNo = unitChoices.value[Number(e.detail.value)].value
+  resetBelow('unit')
+  await apply(await load({ building: picked.building, unit_no: picked.unitNo }), 'floor')
 }
 
 async function pickFloor(e) {
-  picked.floor = floors.value[Number(e.detail.value)]
+  picked.floor = floorChoices.value[Number(e.detail.value)].value
+  picked.roomLabel = ''
+  picked.unitId = null
+  rooms.value = []
   const data = await load({ building: picked.building, unit_no: picked.unitNo, floor: picked.floor })
-  rooms.value = data.options || []
+  if (data.level === 'room') rooms.value = data.options || []
+}
+
+function resetBelow(level) {
+  if (level === 'building') {
+    picked.unitNo = ''
+    picked.floor = ''
+    unitChoices.value = []
+    floorChoices.value = []
+    show.unit = false
+    show.floor = false
+    skipHint.value = ''
+  }
+  if (level === 'unit') {
+    picked.floor = ''
+    floorChoices.value = []
+    show.floor = false
+  }
+  picked.roomLabel = ''
+  picked.unitId = null
+  rooms.value = []
+}
+
+// 服务端返回 level/skipped：空串表示该层为空（IFC-152）
+async function apply(data, stage) {
+  if (data.level === 'room') {
+    rooms.value = data.options || []
+    return
+  }
+  if (stage === 'unit') {
+    if (data.level === 'unit_no') {
+      show.unit = true
+      unitChoices.value = data.has_empty
+        ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
+        : (data.options || [])
+      return
+    }
+    picked.unitNo = ''
+    skipHint.value = '该楼栋没有分单元，已自动跳过'
+    return apply(await load({ building: picked.building, unit_no: '' }), 'floor')
+  }
+  if (data.level === 'floor') {
+    show.floor = true
+    floorChoices.value = data.has_empty
+      ? [{ value: '', label: '未划分楼层' }, ...(data.options || [])]
+      : (data.options || [])
+    return
+  }
+  picked.floor = ''
+  skipHint.value = `${skipHint.value}该单元没有分楼层，已自动跳过`
+  rooms.value = (await load({ building: picked.building, unit_no: picked.unitNo, floor: '' })).options || []
 }
 
 function pickRoom(e) {
   const room = rooms.value[Number(e.detail.value)]
   picked.unitId = room?.unit_id
-  picked.roomLabel = room?.value
+  picked.roomLabel = room?.label || room?.value
 }
 
 async function certify() {
@@ -91,6 +151,9 @@ async function certify() {
     const result = await api.certify(picked.unitId)
     toast(`认证成功：${result.role}`)
   } catch (e) {
+    if (e?.code === 'PHONE_NOT_IN_REGISTRY') {
+      return toast('手机号与清册不一致，可提交产权申诉')
+    }
     toast(e.message)
   }
 }

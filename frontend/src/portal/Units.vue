@@ -4,20 +4,22 @@
       <h3 class="title">业主清册认证</h3>
       <p class="muted">选择你的专有部分。清册登记手机号与当前手机号一致时可立即认证为产权业主；首位认证者为户主。</p>
       <div class="row">
-        <el-select v-model="picked.building" placeholder="楼栋" @change="loadUnits">
-          <el-option v-for="b in options.buildings" :key="b" :label="b" :value="b" />
+        <el-select v-model="picked.building" placeholder="楼栋" @change="onBuildingChange">
+          <el-option v-for="b in buildingOptions" :key="b.value" :label="b.value" :value="b.value" />
         </el-select>
-        <el-select v-model="picked.unitNo" placeholder="单元" @change="loadFloors">
-          <el-option v-for="u in options.units" :key="u" :label="u" :value="u" />
+        <el-select v-if="visibility.unit" v-model="picked.unit_no" placeholder="单元" @change="onUnitChange">
+          <el-option v-for="u in unitOptions" :key="u.value" :label="u.label || u.value" :value="u.value" />
         </el-select>
-        <el-select v-model="picked.floor" placeholder="楼层" @change="loadRooms">
-          <el-option v-for="f in options.floors" :key="f" :label="f" :value="f" />
+        <el-select v-if="visibility.floor" v-model="picked.floor" placeholder="楼层" @change="onFloorChange">
+          <el-option v-for="f in floorOptions" :key="f.value" :label="f.label || f.value" :value="f.value" />
         </el-select>
-        <el-select v-model="picked.unitId" placeholder="房号">
-          <el-option v-for="r in options.rooms" :key="r.unit_id" :label="r.value" :value="r.unit_id" />
+        <el-select v-if="visibility.room" v-model="picked.unitId" placeholder="户号">
+          <el-option v-for="r in roomOptions" :key="r.unit_id" :label="r.label || r.value" :value="r.unit_id" />
         </el-select>
         <el-button type="primary" :disabled="!picked.unitId" @click="certify">认证</el-button>
       </div>
+      <p v-for="tip in skippedTips" :key="tip" class="muted">{{ tip }}</p>
+      <p v-if="picked.unitId" class="muted">{{ selectedUnitText }}</p>
     </div>
 
     <div class="card">
@@ -51,16 +53,29 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { attachmentApi, unitApi } from '@/shared/api'
 import { errorText } from '@/shared/format'
 
-const options = reactive({ buildings: [], units: [], floors: [], rooms: [] })
-const picked = reactive({ building: '', unitNo: '', floor: '', unitId: null })
+const buildingOptions = ref([])
+const unitOptions = ref([])
+const floorOptions = ref([])
+const roomOptions = ref([])
+const skippedTips = ref([])
+const visibility = reactive({ unit: false, floor: false, room: false })
+const picked = reactive({ building: null, unit_no: null, floor: null, unitId: null })
 const appeal = reactive({ attachmentId: null })
 const resident = reactive({ unitId: '', note: '' })
 const toReview = ref([])
+
+const selectedUnit = computed(() => roomOptions.value.find((item) => item.unit_id === picked.unitId) || null)
+const selectedUnitText = computed(() => {
+  if (!selectedUnit.value) return ''
+  const parts = [selectedUnit.value.unit_type_label || '类型未登记']
+  parts.push(selectedUnit.value.area ? `${selectedUnit.value.area} ㎡` : '面积未登记')
+  return `${parts.join(' · ')}；若该户未登记你的手机号，请改用下方产权申诉。`
+})
 
 async function loadOptions(params) {
   try {
@@ -74,22 +89,84 @@ async function loadOptions(params) {
 
 async function loadBuildings() {
   const data = await loadOptions({})
-  options.buildings = (data.options || []).map((o) => o.value)
+  buildingOptions.value = data.options || []
 }
 
-async function loadUnits() {
-  const data = await loadOptions({ building: picked.building })
-  options.units = (data.options || []).map((o) => o.value)
+function resetBelow(level) {
+  if (level === 'building') {
+    picked.unit_no = null
+    picked.floor = null
+    visibility.unit = false
+    visibility.floor = false
+    unitOptions.value = []
+    floorOptions.value = []
+    skippedTips.value = []
+  }
+  if (level === 'unit') {
+    picked.floor = null
+    visibility.floor = false
+    floorOptions.value = []
+  }
+  picked.unitId = null
+  visibility.room = false
+  roomOptions.value = []
 }
 
-async function loadFloors() {
-  const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo })
-  options.floors = (data.options || []).map((o) => o.value)
+async function onBuildingChange() {
+  resetBelow('building')
+  if (picked.building === null) return
+  await applyLevel(await loadOptions({ building: picked.building }), 'unit')
 }
 
-async function loadRooms() {
-  const data = await loadOptions({ building: picked.building, unit_no: picked.unitNo, floor: picked.floor })
-  options.rooms = data.options || []
+async function onUnitChange() {
+  resetBelow('unit')
+  if (picked.unit_no === null) return
+  await applyLevel(await loadOptions({ building: picked.building, unit_no: picked.unit_no }), 'floor')
+}
+
+async function onFloorChange() {
+  resetBelow('floor')
+  if (picked.floor === null) return
+  showRooms(await loadOptions({ building: picked.building, unit_no: picked.unit_no, floor: picked.floor }))
+}
+
+async function applyLevel(data, stage) {
+  if (data.level === 'room') {
+    showRooms(data)
+    return
+  }
+  if (stage === 'unit') {
+    if (data.level === 'unit_no') {
+      visibility.unit = true
+      unitOptions.value = data.has_empty
+        ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
+        : (data.options || [])
+      return
+    }
+    picked.unit_no = ''
+    skippedTips.value = ['该楼栋没有分单元，已自动跳过']
+    await loadFloorsAfterSkip()
+    return
+  }
+  if (data.level === 'floor') {
+    visibility.floor = true
+    floorOptions.value = data.has_empty
+      ? [{ value: '', label: '未划分楼层' }, ...(data.options || [])]
+      : (data.options || [])
+    return
+  }
+  picked.floor = ''
+  skippedTips.value = [...skippedTips.value, '该单元没有分楼层，已自动跳过']
+  showRooms(await loadOptions({ building: picked.building, unit_no: picked.unit_no, floor: '' }))
+}
+
+async function loadFloorsAfterSkip() {
+  applyLevel(await loadOptions({ building: picked.building, unit_no: '' }), 'floor')
+}
+
+function showRooms(data) {
+  visibility.room = true
+  roomOptions.value = data.options || []
 }
 
 async function certify() {
@@ -97,6 +174,10 @@ async function certify() {
     const result = await unitApi.certify(picked.unitId)
     ElMessage.success(`认证成功，身份：${result.role}`)
   } catch (e) {
+    if (e?.response?.data?.code === 'PHONE_NOT_IN_REGISTRY') {
+      ElMessage.warning('手机号与清册不一致，可提交产权申诉')
+      return
+    }
     ElMessage.error(errorText(e))
   }
 }

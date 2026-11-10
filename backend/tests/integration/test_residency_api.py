@@ -23,11 +23,14 @@ class RegistryAndCertificationTests(ApiTestBase):
 
     def test_admin_registry_import_dry_run_and_commit(self):
         _, admin_token = self.make_admin()
-        content = "楼栋,单元,楼层,户号,手机号\n2,1,3,301,13800000001\n2,1,3,302,13800000002\n"
+        content = ("楼栋,单元,楼层,户号,专有部分类型,专有部分面积（平方米）,业主姓名,手机号\n"
+                   "2,1,3,301,住宅,89.50,张三,13800000001\n"
+                   "2,1,3,302,住宅,90.00,李四,13800000002\n")
         file = SimpleUploadedFile("registry.csv", content.encode("utf-8-sig"), content_type="text/csv")
         resp = self.upload("/admin/registry/import?dry_run=1", {"file": file}, token=admin_token)
         self.assert_ok(resp)
-        self.assertEqual(resp.data["imported"], 0)
+        self.assertTrue(resp.data["dry_run"])
+        self.assertEqual(resp.data["imported"], 2)
         file = SimpleUploadedFile("registry.csv", content.encode("utf-8-sig"), content_type="text/csv")
         resp = self.upload("/admin/registry/import", {"file": file}, token=admin_token)
         self.assert_ok(resp)
@@ -37,8 +40,8 @@ class RegistryAndCertificationTests(ApiTestBase):
         user, token = self.make_user()
         unit = self.make_unit()
         _, admin_token = self.make_admin()
-        resp = self.api("put", f"/admin/registry/units/{unit.id}/phones",
-                        {"phones": [user.phone]}, token=admin_token)
+        resp = self.api("put", f"/admin/registry/units/{unit.id}/owners",
+                        {"owners": [{"name": "张三", "phones": [user.phone]}]}, token=admin_token)
         self.assert_ok(resp)
         resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
         self.assert_ok(resp, 201)

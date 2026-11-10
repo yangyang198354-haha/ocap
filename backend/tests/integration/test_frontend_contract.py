@@ -8,6 +8,7 @@
 """
 import re
 from datetime import date, timedelta
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
@@ -374,3 +375,89 @@ class FieldContractTests(ApiTestBase):
         created = self.api("post", "/auth/register", {"phone": phone2, "code": code2})
         self.assert_ok(created, 201)
         self.assertIs(created.data["is_new"], True)
+
+
+class RegistryImportContractTests(ApiTestBase):
+    """US-092~104：清册导入增强的前后端契约（IFC-152~164）。"""
+
+    def setUp(self):
+        super().setUp()
+        self.admin, self.admin_token = self.make_admin()
+
+    def _src(self, rel: str) -> str:
+        return (REPO / rel).read_text(encoding="utf-8")
+
+    def test_tc_contract_3_registry_api_calls_resolve(self):
+        """TC-INT-164 / AC-092-01、AC-093-01、AC-094-04：两端 api.js 的新调用路径与方法可用。"""
+        web = self._src("frontend/src/shared/api.js")
+        mini = self._src("miniprogram/utils/api.js")
+        expected_web = [
+            ("adminHttp.put(`/admin/registry/units/${id}/owners`", "owners"),
+            ("adminHttp.post('/admin/registry/import'", "dry_run"),
+            ("adminHttp.get('/admin/registry/import/template'", "file_type"),
+            ("adminHttp.get('/admin/registry/import/spec'", None),
+        ]
+        for needle, field in expected_web:
+            self.assertIn(needle, web)
+            if field:
+                self.assertIn(field, web)
+        self.assertIn("http.get('/units/options'", mini)
+        self.assertIn("label", mini)
+        for method, path in (("GET", "/admin/registry/import/spec"),
+                             ("GET", "/admin/registry/import/template"),
+                             ("POST", "/admin/registry/import"),
+                             ("GET", "/units/options"),
+                             ("PUT", "/admin/registry/units/1/owners")):
+            match = resolve("/api/v1" + path)
+            view_cls = getattr(match.func, "cls", None)
+            self.assertIsNotNone(view_cls, path)
+            self.assertTrue(hasattr(view_cls, method.lower()), f"{path} 不支持 {method}")
+
+    def test_tc_contract_4_import_and_options_field_names(self):
+        """TC-INT-165 / AC-100-05、AC-098-02、AC-104-01：前端读取的字段名与后端响应一致。"""
+        import csv
+        import io
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.registry.models import RegistryOwner, RegistryPhone, RegistryUnit
+
+        spec = self.api("get", "/admin/registry/import/spec", token=self.admin_token)
+        self.assert_ok(spec)
+        self.assertTrue({"file_types", "max_file_mb", "max_rows", "excel_sheet_note", "columns", "notes"}
+                        <= set(spec.data))
+        unit = RegistryUnit.objects.create(building="车库", unit_no="", floor="", room="A-088",
+                                           unit_type="PARKING", area=Decimal("12.50"))
+        owner = RegistryOwner.objects.create(unit=unit, name="赵云")
+        RegistryPhone.objects.create(unit=unit, owner=owner, phone="13800000050")
+        member, token = self.make_user()
+        options = self.api("get", "/units/options?building=车库", token=token)
+        self.assert_ok(options)
+        self.assertTrue({"level", "skipped", "has_empty", "options"} <= set(options.data))
+        self.assertTrue({"value", "label"} <= set(options.data["options"][0]))
+        dialog = self._src("frontend/src/admin/RegistryImportDialog.vue")
+        helper = self._src("frontend/src/admin/registryImport.js")
+        web_units = self._src("frontend/src/portal/Units.vue")
+        mini_units = self._src("miniprogram/pages/units/index.vue")
+        for name in ("rows_total", "imported", "updated", "owners_created", "failed"):
+            self.assertIn(name, helper)
+        for name in ("errors", "changes", "row", "reason"):
+            self.assertIn(name, dialog)
+        self.assertIn("dry_run", self._src("frontend/src/shared/api.js"))
+        for name in ("level", "skipped", "has_empty", "label"):
+            self.assertIn(name, web_units)
+        for name in ("level", "skipped", "has_empty", "label"):
+            self.assertIn(name, mini_units)
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["楼栋", "单元", "楼层", "户号", "专有部分类型", "专有部分面积（平方米）", "业主姓名", "手机号"])
+        writer.writerow(["1", "1", "1", "301", "住宅", "89.50", "张三", ""])
+        upload = SimpleUploadedFile("c.csv", buffer.getvalue().encode("utf-8"), content_type="text/csv")
+        result = self.upload("/admin/registry/import", {"file": upload}, data={"dry_run": "1"},
+                             token=self.admin_token)
+        self.assert_ok(result)
+        for name in ("rows_total", "rows_ok", "rows_failed", "imported", "updated", "owners_created",
+                     "phones_created", "failed", "errors", "changes", "changes_truncated", "dry_run"):
+            self.assertIn(name, result.data)
+        self.assertTrue(result.data["dry_run"])
+

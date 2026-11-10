@@ -65,7 +65,8 @@ async function done(result) {
     auth.setAuth(result.token, null)
     toast('账号已合并')
   } else {
-    toast('已完成')
+    const bound = result.auto_bound || []
+    toast(bound.length ? `已绑定并按清册自动认证 ${bound.length} 个专有部分` : '已完成')
   }
   await auth.fetchMe()
 }

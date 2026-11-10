@@ -242,11 +242,13 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         self.assert_ok(self.api("post", "/me/cancel", {"phone": user.phone, "code": code}, token=token), 204)
 
     def test_reregister_creates_fresh_guest_account(self):
-        """AC-013-01：注销后同号注册 → 新 user id，身份“游客”，原户主身份/昵称不恢复，新旧账号无关联。"""
+        """AC-013-01：注销后同号注册 → 新 user id，身份“游客”，原户主身份/昵称不恢复，新旧账号无关联。
+
+        该号码不登记在清册中，因此不触发 US-102 的清册自动绑定。
+        """
         unit = self.make_unit()
         user, token, _ = self.make_owner(unit=unit)
         phone = user.phone
-        unit.phones.create(phone=phone)
         self.api("patch", "/me/profile", {"nickname": "旧昵称"}, token=token)
         self._cancel(user, token)
         _clear_limits()
@@ -265,8 +267,11 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         self.assertNotEqual(old.phone, phone)
         self.assert_error(self.api("get", "/me", token=token), 401)
 
-    def test_reregister_owner_must_certify_again(self):
-        """AC-013-02：原产权业主注销后同号注册 → 需重新清册认证（认证前无户主；认证 201 后才获得身份）。"""
+    def test_reregister_owner_auto_bound_by_registry(self):
+        """US-102：清册中登记的手机号再注册时由清册自动绑定（取代 AC-013-02 的"需重新认证"）。
+
+        自动绑定来源为清册；再次手动认证返回 409 ALREADY_CERTIFIED。
+        """
         phone = next_phone()
         unit = self.make_unit(phones=[phone])
         user, token = self.make_user(phone=phone)
@@ -276,11 +281,13 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         code = self.request_code(phone, "REGISTER")
         reg = self.api("post", "/auth/register", {"phone": phone, "code": code})
         self.assert_ok(reg, 201)
-        self.assertFalse(Membership.objects.filter(user_id=reg.data["user"]["id"],
-                                                   ended_at__isnull=True).exists())
+        self.assertEqual([row["specific_part"] for row in reg.data["auto_bound"]],
+                         [unit.specific_part])
+        membership = Membership.objects.get(user_id=reg.data["user"]["id"], unit=unit,
+                                            ended_at__isnull=True)
+        self.assertEqual(membership.source, "REGISTRY")
         again = self.api("post", "/certifications", {"unit_id": unit.id}, token=reg.data["token"])
-        self.assert_ok(again, 201)
-        self.assertEqual(again.data["role"], "HEAD")
+        self.assert_error(again, 409, "ALREADY_CERTIFIED")
 
     def test_register_with_active_phone_rejected(self):
         """AC-013-03：手机号账号未注销 → 注册被拒（409 PHONE_ALREADY_REGISTERED）。"""
@@ -398,8 +405,8 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
     def test_modify_registry_phone_keeps_owner(self):
         """AC-035-01：管理员把清册手机号改成其他号码 → 用户仍是该专有部分的有效产权业主。"""
         user, token, unit, admin_token = self._certified()
-        resp = self.api("put", f"/admin/registry/units/{unit.id}/phones",
-                        {"phones": [next_phone()]}, token=admin_token)
+        resp = self.api("put", f"/admin/registry/units/{unit.id}/owners",
+                        {"owners": [{"name": "新业主", "phones": [next_phone()]}]}, token=admin_token)
         self.assert_ok(resp)
         self.assertTrue(Membership.objects.filter(user=user, unit=unit, ended_at__isnull=True).exists())
         me = self.api("get", "/me", token=token)
@@ -408,7 +415,7 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
     def test_delete_registry_phone_keeps_head(self):
         """AC-035-02：管理员把清册手机号全部删除 → 户主身份仍在。"""
         user, token, unit, admin_token = self._certified()
-        resp = self.api("put", f"/admin/registry/units/{unit.id}/phones", {"phones": []}, token=admin_token)
+        resp = self.api("put", f"/admin/registry/units/{unit.id}/owners", {"owners": []}, token=admin_token)
         self.assert_ok(resp)
         self.assertEqual(unit.phones.count(), 0)
         membership = Membership.objects.get(user=user, unit=unit, ended_at__isnull=True)
@@ -419,8 +426,8 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
         user, token, unit, admin_token = self._certified()
         old_phone = user.phone
         new_phone = next_phone()
-        self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/phones",
-                                {"phones": [new_phone]}, token=admin_token))
+        self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/owners",
+                                {"owners": [{"name": "新业主", "phones": [new_phone]}]}, token=admin_token))
         # 让原用户换成别的号码，由另一个账号持有原清册号码 P
         User.objects.filter(id=user.id).update(phone=next_phone())
         other, other_token = self.make_user(phone=old_phone)
@@ -436,8 +443,8 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
         member, member_token, _ = self.make_owner()
         self.make_seat(member, "CHAIR")
         for tok, expected in ((token, (403,)), (member_token, (403,)), (None, (401,))):
-            resp = self.api("put", f"/admin/registry/units/{unit.id}/phones",
-                            {"phones": [next_phone()]}, token=tok)
+            resp = self.api("put", f"/admin/registry/units/{unit.id}/owners",
+                            {"owners": [{"name": "新业主", "phones": [next_phone()]}]}, token=tok)
             self.assertIn(resp.status_code, expected, resp.content)
         self.assertEqual(unit.phones.count(), 1)
 

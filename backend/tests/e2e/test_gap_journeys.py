@@ -18,7 +18,7 @@ from tests.support import ApiTestBase, next_phone
 
 class AccountIdentityLifecycleJourneyTests(ApiTestBase):
     def test_register_certify_change_phone_cancel_reregister_and_recertify(self):
-        """TC-E2E-014：注册 → 游客 → 清册认证户主 → 换号 → 旧号不可登录/新号同账号 → 注销 → 同号再注册为全新游客
+        """TC-E2E-014：注册（清册号码自动绑定户主）→ 换号 → 旧号不可登录/新号同账号 → 注销 → 同号再注册为全新游客
         → 清册号码已被管理员改为新号后重新认证。"""
         old_phone, new_phone = next_phone(), next_phone()
         unit = self.make_unit(phones=[old_phone])
@@ -28,8 +28,8 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         reg = self.api("post", "/auth/register", {"phone": old_phone, "code": code})
         self.assert_ok(reg, 201)
         user_id, token = reg.data["user"]["id"], reg.data["token"]
-        self.assertTrue(self.api("get", "/me", token=token).data["identities"]["is_guest"])
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        # US-102：清册已登记该号码，注册即自动认证户主（原“注册后为游客”不再适用）
+        self.assertEqual([row["unit_id"] for row in reg.data["auto_bound"]], [unit.id])
         self.assertIn("户主", self.api("get", "/me", token=token).data["identities"]["labels"])
 
         # 换号：身份保留，旧号不能再登录，新号进入同一账号
@@ -64,8 +64,8 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         # 清册里仍是旧号：认证按清册比对被拒；管理员把清册改为新号后认证成功（AC-035-03）
         refused = self.api("post", "/certifications", {"unit_id": unit.id}, token=again.data["token"])
         self.assert_error(refused, 422, "PHONE_NOT_IN_REGISTRY")
-        self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/phones",
-                                {"phones": [new_phone]}, token=admin_token))
+        self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/owners",
+                                {"owners": [{"name": "新业主", "phones": [new_phone]}]}, token=admin_token))
         ok = self.api("post", "/certifications", {"unit_id": unit.id}, token=again.data["token"])
         self.assert_ok(ok, 201)
         self.assertEqual(ok.data["role"], "HEAD")

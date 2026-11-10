@@ -1,4 +1,5 @@
 import { adminHttp, http } from './http'
+import { IMPORT_REQUEST_TIMEOUT_MS } from '../admin/registryImport'
 
 const get = (url, params) => http.get(url, { params })
 const post = (url, data) => http.post(url, data)
@@ -132,12 +133,19 @@ const admin = {
   createRegistryUnit: (data) => adminHttp.post('/admin/registry/units', data),
   updateRegistryUnit: (id, data) => adminHttp.patch(`/admin/registry/units/${id}`, data),
   deleteRegistryUnit: (id) => adminHttp.delete(`/admin/registry/units/${id}`),
-  registryUnitPhones: (id, phones) => adminHttp.put(`/admin/registry/units/${id}/phones`, { phones }),
-  importRegistry: (file) => {
+  // owners: [{ id?, name, phones: [手机号] }]，全量替换（IFC-156）
+  registryOwners: (id, owners) => adminHttp.put(`/admin/registry/units/${id}/owners`, { owners }),
+  importRegistry: (file, dryRun) => {
     const body = new FormData()
     body.append('file', file)
-    return adminHttp.post('/admin/registry/import', body)
+    return adminHttp.post('/admin/registry/import', body, {
+      params: dryRun ? { dry_run: 1 } : undefined,
+      timeout: IMPORT_REQUEST_TIMEOUT_MS
+    })
   },
+  importTemplate: (fileType) =>
+    adminHttp.get('/admin/registry/import/template', { params: { file_type: fileType }, responseType: 'blob' }),
+  importSpec: () => adminHttp.get('/admin/registry/import/spec'),
   appeals: (params) => adminHttp.get('/admin/appeals', { params }),
   decideAppeal: (id, decision, rejectReason) =>
     adminHttp.post(`/admin/appeals/${id}/decision`, { decision, reject_reason: rejectReason }),

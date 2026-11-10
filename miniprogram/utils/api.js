@@ -18,6 +18,7 @@ export const api = {
   bindPhone: (phone, code) => http.post('/me/phone/bind', { phone, code }),
   changePhone: (oldPhone, newPhone, oldCode, newCode) =>
     http.post('/me/phone/change', { old_phone: oldPhone, new_phone: newPhone, old_code: oldCode, new_code: newCode }),
+  // 返回 { level, skipped, has_empty, options }；level=room 时每项含 label/unit_type_label/area（IFC-152）
   options: (params) => http.get('/units/options', params),
   certify: (unitId) => http.post('/certifications', { unit_id: unitId }),
   // data: { unit_id, proof_ids: [附件 id] }，后端要求至少一份产权证明

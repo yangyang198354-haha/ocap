@@ -167,7 +167,13 @@ async function afterPhoneChange(result) {
     auth.setAuth(result.token, null)
     ElMessage.success('账号已合并，已切换到主账号')
   } else {
-    ElMessage.success('手机号已更新')
+    const bound = result.auto_bound || []
+    if (bound.length) {
+      const parts = bound.map((item) => item.specific_part).join('、')
+      ElMessage.success(`手机号已绑定，已根据你的手机号自动认证为 ${parts} 的产权业主`)
+    } else {
+      ElMessage.success('手机号已更新')
+    }
   }
   await auth.fetchMe().catch(() => null)
   await loadProfile()

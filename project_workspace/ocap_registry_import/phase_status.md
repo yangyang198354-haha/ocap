@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-10T23:16:12+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-10T23:20:57+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -25,7 +25,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="BLOCKED" gate_decision="PENDING" retries="0" environment="测试环境（树莓派 192.168.31.51 / ai-freeark.xin）"/>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_registry_import/requirements/requirements_spec.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
@@ -180,5 +180,7 @@ E1 未连接目标环境（按技能规则）]]></verification>
     <event time="2026-11-10T23:09:46+08:00" type="GATE" actor="pm-orchestrator">GR-D-001 PASS_WITH_CONDITIONS，GROUP_D APPROVED（PHASE_07/08/09 APPROVED）。PM 复跑全量 Ran 327 / OK；critical path 口径=替代（API 旅程），Must Have 故事 11/11 覆盖、通过率 100%；缺陷 0。条件转 GROUP_E1：部署/CI 安装 requirements.txt 后补跑 xlsx 用例、发布前实测三项性能 AC。</event>
     <event time="2026-11-10T23:14:10+08:00" type="INVOCATION" actor="pm-orchestrator">用户当轮指令"做部署计划，部署到测试环境"；调用 devops-engineer ocap_registry_import-GROUP_E1-1（PHASE_10/11a），带入 GR-B-001（R1/R2 只读核实、迁移前 mysqldump registry 三表）与 GR-D-001（安装 requirements 后补跑 xlsx、性能实测）条件。</event>
     <event time="2026-11-10T23:16:12+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS，GROUP_E1 APPROVED（PHASE_10/11a）。cicd_pipeline 与 deployment_plan 均 1.0.0；DEPLOY 8/ROLLBACK 8、预检 12 项、不可逆 3 处、策略 recreate；CI 无需修改。MAJOR：PRE-001 未满足（实现未提交且 GitHub 不可达），E2 前需用户决策。E2 保持 NOT_AUTHORIZED，等待用户下一轮确认。</event>
+    <event time="2026-11-10T23:20:57+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">授权来源（用户当轮原文）：上一轮"做部署计划，部署到测试环境" + 本轮"A"（选择 A：先提交并推送，再部署）。环境=测试环境（192.168.31.51，外网 ai-freeark.xin/ocap/），计划=deployment_plan.md v1.0.0（APPROVED）。用户已授权本会话执行 git add/commit/push。</event>
+    <event time="2026-11-10T23:20:57+08:00" type="BLOCKER" actor="pm-orchestrator">PRE-001 阻塞：已提交 9c66dce（47 files, +12922/-275）且工作树干净；`git push origin main` 失败——git 配置 socks5h://127.0.0.1:10808 无监听，直连 github.com:443 超时（120s），SSH 22 可达但 id_ed25519/deploy_key/ib_deploy_key 均 Permission denied。E2 未执行任何目标机命令，目标环境无变更。等待用户启动代理后重试 push，或批准 B 降级。</event>
   </audit_log>
 </phase_status>

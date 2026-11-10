@@ -213,5 +213,6 @@ V-09: VALID 1.30s；WITH_10PCT_ERRORS 1.01s（errors=2000）]]></verification>
     <event time="2026-11-10T23:29:12+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS_WITH_CONDITIONS，GROUP_E2 APPROVED（PHASE_11b）。PM 复核 active/200/401/迁移全应用；无回滚；遗留：真实 HTTP 20000 行端到端计时待用户页面实测、0003 空库回填未验证数据量场景。</event>
     <event time="2026-11-10T23:33:31+08:00" type="INVOCATION" actor="pm-orchestrator">GROUP_Z-1 结束（kb-curator，SUCCESS）：未处理 17 条 → 16 条；晋升 14、保留 2、淘汰 0、通用候选 0；记忆写入 RA/SA/SD/TE/DE/PM 六个 MEMORY.md；无 pending_patch。</event>
     <event time="2026-11-10T23:33:31+08:00" type="DELIVERY" actor="pm-orchestrator">PHASE_01~12 全部 APPROVED；delivery_report.md 1.0.0；最终状态 DELIVERED_WITH_ISSUES（遗留：真实 HTTP 20000 行端到端计时、xlsx 上传解析、2 个既有前端失败）。测试环境已部署（锚点 20261110232450）。</event>
+    <event time="2026-11-10T23:48:36+08:00" type="POST_DELIVERY_REVIEW" actor="pm-orchestrator">用户要求复核需求/用户故事完成度与测试覆盖。PM 只读核验：21 条 REQ 全部映射到故事（无未映射）；87 条 AC 全部在 implementation_plan（84 DONE、3 PARTIAL=性能）；test_plan 映射 87/87、81 个用例 ID 全部存在于测试代码且全量 327 OK；Must Have 故事 11/11 有执行用例、13/13 故事至少 1 个用例。缺口：AC-093-03、AC-094-07、AC-100-08 无自动化用例；AC-093-01/093-04 的 xlsx 分支与 AC-100-07 的 60 秒计时仅部分覆盖；前端对话框/小程序页面无组件级运行时用例（仅 helper 单测 + 静态契约）。结论：功能完成，测试覆盖非 100%；不改变交付状态 DELIVERED_WITH_ISSUES。</event>
   </audit_log>
 </phase_status>

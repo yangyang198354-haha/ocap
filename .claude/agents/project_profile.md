@@ -12,9 +12,9 @@
 
 <file_header>
   <author_agent>pm-orchestrator</author_agent>
-  <timestamp>2026-11-08T13:28:25+08:00</timestamp>
+  <timestamp>2026-11-10T23:35:57+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
   <status>APPROVED</status>
 </file_header>
 
@@ -135,6 +135,13 @@
 | 微信开放平台网站扫码登录 | 微信官方文档（不在仓库中） | `backend/apps/integrations/wechat.py` | `FakeWeChatClient` | 环境变量 | 超时 5 秒；不得真实调用 |
 | 短信验证码（阿里云短信） | 阿里云官方 SDK `alibabacloud_dysmsapi20170525`；调用方式 [UNSOURCED] | `backend/apps/integrations/aliyun_sms.py`、`sms.py` | `FakeSmsGateway` | 环境变量 | 计费；平台流控 1 次/分钟、5 次/小时、10 次/天 |
 | 邮件服务（事务邮件 SMTP） | Django EmailBackend | `backend/apps/integrations/email.py` | `FakeEmailGateway` / locmem backend | 环境变量 | 厂商未定 |
+| 微信公众号草稿箱（ocap_content_publish） | 无官方文档入库；参考实现视为资料 [USER 2026-11-10 P1=A] | 无；参考 `/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/publisher/publishers.py:69-95`（draft/add），GenPlatform 线上调用成功过 [USER P4=是] | 新增于 `apps/integrations/fakes.py`（待设计） | 后台录入、加密存库，加密密钥经环境变量 [USER P3=A] | 不得真实调用 |
+| 小红书草稿 | 无文档（GenPlatform `publishers.py:54` 端点为 placeholder） | 无 | 同上 | 同上 | 本批走导出/复制人工粘贴，接口层预留 [USER P2=A] |
+| 今日头条草稿 | 无文档（GenPlatform `publishers.py:121` 为正式发布接口，非草稿） | 无 | 同上 | 同上 | 本批走导出/复制人工粘贴，接口层预留 [USER P2=A] |
+| DeepSeek 对话模型 | 参考实现视为资料 [USER P1=A] | 参考 `/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/llm_gateway/providers.py`（:10 base URL） | 同上 | 同上 | 不得真实调用 |
+| 火山方舟对话模型 | 参考实现视为资料 | 参考 `/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/llm_gateway/providers.py`（:11）、`/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/settings_vault/ark_validator.py` | 同上 | 同上 | 不得真实调用 |
+| 即梦视频生成 | 参考实现视为资料 | 参考 `/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/video_generator/jimeng_client.py` | 同上 | 同上 | 异步任务；不得真实调用 |
+| 火山方舟图像生成 | 参考实现视为资料 | 参考 `/root/myproject/GenPlatform/project_workspace/content_gen_platform/src/backend/apps/image_generator/doubao_image_client.py` | 同上 | 同上 | 不得真实调用 |
 
 ## 修订清单（1.2.0 → 1.3.0，PM 2026-11-08）
 1. P3：`code_mode` 由 greenfield 改为 in-repo；测试位置改为实际的 `backend/tests/{unit,integration,e2e,smoke}`；注明 `deploy/systemd/` 和 `frontend/tests/` 都不存在；不可修改目录由 `.claude/**` 改为 `.trae/**`。
@@ -144,3 +151,6 @@
 5. P7：补充外网 SSH 通道 57279 和主机指纹；注明 9999 不可用；补充目标机目录、systemd 单元、`.env` 键名和部署 skill 路径。
 6. P9：写明 E2 例外与 PM 只读核验（用户 2026-11-08 确认）。
 7. P10：devops-engineer 必读部署 skill；P11-3 补上现有调用代码的位置。
+
+## 修订清单（1.3.0 → 1.4.0，PM 2026-11-10T23:35:57+08:00）
+1. P11-3：新增 ocap_content_publish 涉及的 7 个外部服务。用户确认（2026-11-10）：P1=A 以 GenPlatform 参考实现为资料、无实现者按"无文档"；P2=A 小红书/头条本批走导出复制、接口层预留；P3=A 测试只用 fakes.py 新增替身，凭据后台录入加密存库、密钥经环境变量；P4=是 GenPlatform 实现线上调用成功过。参考实现在另一仓库，引用时写 `[P11: 文件:行]`。

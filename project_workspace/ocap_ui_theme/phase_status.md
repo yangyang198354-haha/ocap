@@ -1,4 +1,4 @@
-<phase_status project="ocap_ui_theme" mode="INCREMENTAL" created="2026-11-09T13:43:01+08:00" updated="2026-11-09T22:56:37+08:00">
+<phase_status project="ocap_ui_theme" mode="INCREMENTAL" created="2026-11-09T13:43:01+08:00" updated="2026-11-09T23:08:20+08:00">
   <request time="2026-11-09T13:43:01+08:00"><![CDATA[ocap 的三套ui 我全都要。用户登录默认用B，但是可以在用户中心设置自己设置风格。系统保持开口以后可以扩展更多的风格。增加一个需求把这个UI的需求作为SDLC 实现到整个ocap 项目。]]></request>
   <request_context><![CDATA[三套 UI 指 project_workspace/ocap/design/prototype.html 与 design_spec.md 0.1.0（DRAFT，PM 设计探索产物，commit 8597cef）中的 A 霓虹玻璃 / B 极光 Bento / C 赛博终端。]]></request_context>
   <profile version="1.3.0"/>
@@ -225,5 +225,7 @@ index.html sha256 前缀：目标机 973b397c567a3247 = 本地 frontend/dist 973
     <event time="2026-11-09T22:39:42+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer ocap_ui_theme-GROUP_E2-1（PHASE_11b）。</event>
     <event time="2026-11-09T22:53:56+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS：测试环境 DEPLOYED_SUCCESSFULLY（600fb34，TS=20261109224336），PM 只读复核一致。写 delivery_report.md 1.0.0，最终状态 DELIVERED_WITH_ISSUES。</event>
     <event time="2026-11-09T22:56:37+08:00" type="RUN" actor="pm-orchestrator">kb-curator ocap_ui_theme-GROUP_Z-1 SUCCESS：晋升 14、合并 1、保留 2、淘汰 2，通用候选 0；报告 project_workspace/_kb_distillation/distill_20261109T2300.md。</event>
+    <event time="2026-11-09T23:08:20+08:00" type="RUN" actor="pm-orchestrator">用户本轮原话"提交并推送 ocap"：提交 dfd188e；首次推送被 GitHub 拒绝（OAuth 令牌缺 workflow scope，ci.yml 改动）；用户执行 gh auth refresh -s workflow 后推送成功 8597cef..dfd188e。CI run 42641393985 三个 job 全部 success（Node 20.20.2，themes-check 通过，frontend 122、miniprogram 69 passed），GR-E1-001-F02 关闭；远端与测试环境部署版本一致。</event>
+    <event time="2026-11-10T12:45:16+08:00" type="RUN" actor="pm-orchestrator">用户本轮原话"授权重置测试环境管理员密码"：在测试环境（树莓派）执行 create_admin --username admin（口令经 stdin/环境变量传入，未写入任何文件或记录），rc=0，输出 "admin admin password reset"。只读核验：POST /ocap/api/v1/admin/auth/login 200；GET /ocap/api/v1/admin/appeals 200（count/page/page_size/results），GR-E2-001-F01 关闭，MV-11 后端部分通过。</event>
   </audit_log>
 </phase_status>

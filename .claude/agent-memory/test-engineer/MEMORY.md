@@ -12,3 +12,5 @@
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-002] 补"修复无专门测试"类缺陷用例时，把新测试复制进 `git archive HEAD` 导出的修复前树运行，确认 10/15 失败，才证明用例能抓住缺陷，而不是修复后恰好绿 — 自记 2026-11-11 · 证据 ocap_registry_import GROUP_D-2（DEF-007~011，修复前树 10 失败）
+- [P-TE-003] 对递归结构（引用/列表嵌套）做序列化后处理（如去 URL 前缀）的接口，用例要含引用内、列表内的节点，只测顶层会漏 — 自记 2026-11-11 · 证据 DEF-014、backend/tests/integration/test_content_wechat_and_gaps.py::TC-INT-388（顶层通过、引用内失败）
+- [P-TE-004] Tiptap/ProseMirror 可在 vitest+jsdom 真实挂载并跑命令；需在测试内垫 ClipboardEvent（pasteHTML）与 Range.getClientRects，撤销重做用 vi.useFakeTimers({toFake:["Date"]}) 跨过历史分组间隔 — 自记 2026-11-11 · 证据 frontend/tests/content_editor.spec.js TC-UNIT-383~409（22/23 通过）

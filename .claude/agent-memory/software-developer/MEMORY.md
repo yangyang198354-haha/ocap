@@ -13,3 +13,6 @@
 - [M-SD-011] 辅助函数（如分页序列化）改成传 `context=` 后，grep 全部调用方并检查每个手写序列化类 `__init__` 签名，否则运行时 500 — conf 0.8 · 证据 DEF-001、backend/apps/residency/views.py:116、GR-C-003 · 首见 2026-11-09 · 命中 2
 ## 用户偏好与禁止项
 ## 待验证
+- [P-SD-001] frontend 的 theme.spec.js 扫描全部 .vue（含注释）里的 `#hex`/`rgb(`/`hsl(` 字面量；调色板等颜色常量放 .js 文件 — 自记 2026-11-11 · 证据 frontend/tests/theme.spec.js:44-49、colors.js COLOR_PALETTE
+- [P-SD-002] Tiptap 解析 HTML 时 `element.style.color` 被规范成 rgb()，且 textStyle 标记会带 `fontSize:""`/`color:null`；服务端宽容校验须把 null/空串当"未设置"，否则每次保存都产生警告 — 自记 2026-11-11 · 证据 richtext/schema.py `_absent`、RichEditor.vue SafeColor
+- [P-SD-003] 类体内定义名为 list 的 staticmethod 会让同类体里的 `list[...]` 注解在 Python 3.12/3.13 报 TypeError，3.14 延迟注解不暴露；改名而非加 `from __future__ import annotations` — 自记 2026-11-11 · 证据 GR-C-002-F01

@@ -1,5 +1,8 @@
 """MOD-053：第三方平台账户（IFC-185）。"""
+import re
 from typing import Mapping
+
+from django.db import transaction
 
 from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError, NotFound
@@ -7,6 +10,10 @@ from apps.integrations.draft import PLATFORMS, get_draft_adapter
 
 from .models import PlatformAccount
 from .vault import CredentialVault, CredentialVaultError
+from .wechat_token import WechatTokenService
+
+APPID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+APPSECRET_RE = re.compile(r"^[\x21-\x7e]{1,128}$")   # 可见 ASCII，无空白
 
 
 def _actor(admin):
@@ -62,6 +69,12 @@ class PlatformAccountService:
             text = str(value).strip()
             if text and not 1 <= len(text) <= 4096:
                 raise ApiError("INVALID_VALUE", "认证信息长度不合法", 400, {"key": key})
+            if text and platform == "wechat_mp":
+                # 1.1.0：仅字符集/长度约束，不断言微信 AppID 格式 [ASSUMPTION]；消息不回显值
+                if key == "appid" and not APPID_RE.match(text):
+                    raise ApiError("INVALID_VALUE", "AppID 格式不合法", 400, {"key": key})
+                if key == "appsecret" and not APPSECRET_RE.match(text):
+                    raise ApiError("INVALID_VALUE", "AppSecret 格式不合法", 400, {"key": key})
             if text:
                 clean[key] = text
         return clean
@@ -103,8 +116,11 @@ class PlatformAccountService:
         if display_name is None and credentials is None:
             raise ApiError("INVALID_VALUE", "至少需要修改一项", 400)
         action = "rename"
+        update_fields = ["updated_at"]
+        credentials_replaced = False
         if display_name is not None:
             row.display_name = PlatformAccountService._validate_name(display_name)
+            update_fields.append("display_name")
         if credentials is not None:
             clean_creds = PlatformAccountService._validate_credentials(row.platform, credentials)
             if clean_creds and not CredentialVault.is_configured():
@@ -124,10 +140,17 @@ class PlatformAccountService:
                 required = {field.key for field in adapter.credential_fields if field.required}
                 row.auth_status = "NORMAL" if required <= set(merged) else "UNSET"
                 action = "credentials_updated"
-        row.save()
-        AuditService.record(actor=_actor(admin), action="CONTENT_PLATFORM_ACCOUNT_CHANGED",
-                            object_type="platform_account", object_id=str(row.id),
-                            result="SUCCESS", detail={"platform": row.platform, "action": action})
+                credentials_replaced = True
+                update_fields += ["secret_blob", "secret_keys", "auth_status"]
+        with transaction.atomic():
+            # 只写本次改动的列：令牌缓存列由 worker 并发更新，不能被整行 save 覆盖
+            row.save(update_fields=update_fields)
+            if credentials_replaced:
+                # ADR-060：凭据有任何覆盖即清空令牌缓存（含单飞锁），与凭据写入同一事务
+                WechatTokenService.invalidate(row.id)
+            AuditService.record(actor=_actor(admin), action="CONTENT_PLATFORM_ACCOUNT_CHANGED",
+                                object_type="platform_account", object_id=str(row.id),
+                                result="SUCCESS", detail={"platform": row.platform, "action": action})
         return _out(row)
 
     @staticmethod
@@ -155,5 +178,20 @@ class PlatformAccountService:
             return {}
 
     @staticmethod
-    def mark_expired(account_id: int) -> None:
-        PlatformAccount.objects.filter(id=account_id).update(auth_status="EXPIRED")
+    def mark_expired(account_id: int, *, actor: AuditActor, reason: str) -> bool:
+        """仅当 auth_status 为 NORMAL 时置 EXPIRED 并写审计 CONTENT_PLATFORM_AUTH_EXPIRED（ADR-063 第 3 条）。
+
+        返回是否发生了变更；已是 EXPIRED/UNSET 不重复写。
+        """
+        row = PlatformAccount.objects.filter(id=account_id).first()
+        if row is None:
+            return False
+        with transaction.atomic():
+            changed = PlatformAccount.objects.filter(id=account_id, auth_status="NORMAL").update(
+                auth_status="EXPIRED")
+            if changed:
+                AuditService.record(actor=actor, action="CONTENT_PLATFORM_AUTH_EXPIRED",
+                                    object_type="platform_account", object_id=str(account_id),
+                                    result="SUCCESS",
+                                    detail={"platform": row.platform, "reason": reason})
+        return bool(changed)

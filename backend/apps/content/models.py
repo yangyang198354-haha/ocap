@@ -106,6 +106,11 @@ class PlatformAccount(models.Model):
     created_by_admin_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # 1.1.0（ADR-060，0002）：公众号访问令牌缓存，仅 wechat_mp 使用；任何序列化器不得输出
+    token_blob = models.BinaryField(null=True, blank=True)
+    token_expires_at = models.DateTimeField(null=True, blank=True)
+    token_refreshed_at = models.DateTimeField(null=True, blank=True)
+    token_lock_until = models.DateTimeField(null=True, blank=True)
 
 
 class ContentJob(models.Model):

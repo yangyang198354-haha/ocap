@@ -101,17 +101,46 @@ class StyleTests(TestCase):
 
 
 class SceneTests(unittest.TestCase):
+    """AC-124-01：分镜入参为段落列表（IFC-184 1.1.0，GR-C-003-F01）。"""
+
     def test_tc_unit_332_build_scenes_merges_to_limit(self):
         scenes = AiGenerationService.build_scenes(
-            "一\n\n二\n\n三\n\n四\n\n五\n\n六", max_scenes=3, scene_seconds=5, transition="cut")
+            ["一", "二", "三", "四", "五", "六"], max_scenes=3, scene_seconds=5, transition="cut")
         self.assertEqual(len(scenes), 3)
         self.assertTrue(all(scene.duration_sec == 5 for scene in scenes))
+        # 每次合并相邻字数和最小的一对（并列取靠前者）；顺序与内容不丢失
+        self.assertEqual([scene.narration for scene in scenes], ["一\n二", "三\n四", "五\n六"])
+        self.assertEqual([scene.scene_index for scene in scenes], [0, 1, 2])
 
     def test_tc_unit_333_single_paragraph(self):
-        scenes = AiGenerationService.build_scenes("只有一段", max_scenes=5,
+        scenes = AiGenerationService.build_scenes(["只有一段"], max_scenes=5,
                                                   scene_seconds=5, transition="cut")
         self.assertEqual(len(scenes), 1)
         self.assertEqual(scenes[0].narration, "只有一段")
+        self.assertEqual(scenes[0].scene_prompt, "只有一段")
+
+    def test_tc_unit_346_empty_paragraph_list_rejected(self):
+        for paragraphs in ([], ["", "  "]):
+            with self.assertRaises(ApiError) as ctx:
+                AiGenerationService.build_scenes(paragraphs, max_scenes=5, scene_seconds=5,
+                                                 transition="cut")
+            self.assertEqual(ctx.exception.code, "POST_INCOMPLETE")
+
+    def test_tc_unit_347_document_paragraphs_become_scenes(self):
+        """F07 回归：三个段落的文档得到 3 个分镜（旧实现恒为 1 个）。"""
+        from apps.content.richtext import extract_paragraphs
+        node = {"type": "doc", "content": [
+            {"type": "paragraph", "content": [{"type": "text", "text": "第一段"}]},
+            {"type": "heading", "attrs": {"level": 2},
+             "content": [{"type": "text", "text": "小标题"}]},
+            {"type": "blockquote", "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "引用段"}]}]},
+        ]}
+        paragraphs = extract_paragraphs(node)
+        self.assertEqual(paragraphs, ["第一段", "小标题", "引用段"])
+        scenes = AiGenerationService.build_scenes(paragraphs, max_scenes=5, scene_seconds=4,
+                                                  transition="cut")
+        self.assertEqual([scene.narration for scene in scenes], ["第一段", "小标题", "引用段"])
 
     def test_tc_unit_334_compose_messages_tone_and_length(self):
         messages = AiGenerationService.compose_messages("写公告", {"tone": "FRIENDLY", "length": "SHORT"})

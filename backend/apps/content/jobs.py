@@ -39,8 +39,9 @@ class JobContext:
 
     def heartbeat(self) -> None:
         seconds = int(ContentSettings.get("content.job.lease_seconds"))
+        # 1.1.0（ADR-063 第 6 条）：以当前时间续租，不再用任务开始时间 self.now
         ContentJob.objects.filter(id=self.job.id).update(
-            lease_until=self.now + timezone.timedelta(seconds=seconds))
+            lease_until=timezone.now() + timezone.timedelta(seconds=seconds))
 
 
 class JobHandler(Protocol):

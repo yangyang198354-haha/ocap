@@ -11,23 +11,22 @@ from apps.content.jobs import JobService
 from apps.content.media import MediaService
 from apps.core.models import JobRun
 
+HEARTBEAT_INTERVAL_SECONDS = 60
+
 
 class Command(BaseCommand):
     help = "运行内容中心任务 worker"
 
     def add_arguments(self, parser):
+        # 1.1.0（ADR-063 第 5 条）：已移除 --concurrency，worker 固定单线程串行
         parser.add_argument("--poll-interval", type=float, default=2)
-        parser.add_argument("--concurrency", type=int, default=1)
         parser.add_argument("--once", action="store_true")
         parser.add_argument("--max-jobs", type=int, default=0)
 
     def handle(self, *args, **options):
         interval = options["poll_interval"]
-        concurrency = options["concurrency"]
         if not 1 <= interval <= 30:
             raise CommandError("--poll-interval 必须在 1~30 秒")
-        if concurrency not in {1, 2}:
-            raise CommandError("--concurrency 只能为 1 或 2")
         register_all_handlers()
         stopping = {"flag": False}
 
@@ -37,13 +36,21 @@ class Command(BaseCommand):
         signal.signal(signal.SIGTERM, stop)
         signal.signal(signal.SIGINT, stop)
 
-        processed = 0
-        last_housekeeping = 0.0
-        while not stopping["flag"]:
-            now = timezone.now()
+        def heartbeat(status: str) -> None:
             JobRun.objects.update_or_create(
                 job_name="content_worker",
-                defaults={"last_run_at": now, "last_status": "RUNNING", "last_error": ""})
+                defaults={"last_run_at": timezone.now(), "last_status": status, "last_error": ""})
+
+        processed = 0
+        last_housekeeping = 0.0
+        heartbeat("RUNNING")   # 启动时写一次
+        last_heartbeat = time.monotonic()
+        while not stopping["flag"]:
+            now = timezone.now()
+            # 心跳至多每 60 秒写一次，用单调时钟判断，不得每个轮询周期写（ADR-063 第 6 条）
+            if time.monotonic() - last_heartbeat >= HEARTBEAT_INTERVAL_SECONDS:
+                heartbeat("RUNNING")
+                last_heartbeat = time.monotonic()
             if time.time() - last_housekeeping > 600:
                 JobService.requeue_expired(now)
                 MediaService.housekeeping(now)
@@ -60,6 +67,4 @@ class Command(BaseCommand):
             processed += 1
             if options["max_jobs"] and processed >= options["max_jobs"]:
                 break
-        JobRun.objects.update_or_create(
-            job_name="content_worker",
-            defaults={"last_run_at": timezone.now(), "last_status": "STOPPED", "last_error": ""})
+        heartbeat("STOPPED")   # 停止时写一次

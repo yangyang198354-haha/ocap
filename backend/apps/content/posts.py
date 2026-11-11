@@ -12,9 +12,12 @@ from .conf import ContentSettings
 from .media import sign_media_url
 from .models import ContentPost, ContentPostMedia, MediaItem
 from .richtext import (
-    DocValidationError, extract_media_ids, render_html, render_pages, render_text, validate_doc,
+    DocValidationError, extract_media_ids, render_html, render_pages, render_text, validate_doc_ex,
 )
 from .styles import StyleService
+
+# "新建内容"的默认占位标题；发布时视为标题缺失（AC-105-03，ADR-063 第 9 条）。前端从同一值创建
+UNTITLED_PLACEHOLDER = "未命名内容"
 
 
 def _actor(admin) -> AuditActor:
@@ -35,12 +38,14 @@ def _validate_style_key(style_key: str) -> str:
     raise ApiError("STYLE_INVALID", "样式模板不存在", 400, {"field": "style_key"})
 
 
-def _validate_doc(doc) -> dict:
+def _validate_doc(doc):
+    """宽容模式（ADR-062）：返回 ValidationResult；结构/限额错误仍 400，并带 block_index/block_type。"""
     try:
-        return validate_doc(doc, max_bytes=int(ContentSettings.get("content.post.max_doc_bytes")))
+        return validate_doc_ex(doc, max_bytes=int(ContentSettings.get("content.post.max_doc_bytes")))
     except DocValidationError as exc:
-        raise ApiError("CONTENT_INVALID_DOC", "正文格式不合法", 400,
-                       {"path": exc.path, "reason": exc.reason}) from exc
+        details = {"path": exc.path, "reason": exc.reason,
+                   "block_index": exc.block_index, "block_type": exc.block_type}
+        raise ApiError("CONTENT_INVALID_DOC", "正文格式不合法", 400, details) from exc
 
 
 def _resolver(ttl: int | None = None):
@@ -55,8 +60,10 @@ def _resolver(ttl: int | None = None):
 
 class PostService:
     @staticmethod
-    def create(*, title: str, doc: Mapping, style_key: str, admin) -> ContentPost:
-        clean_doc = _validate_doc(doc)
+    def create(*, title: str, doc: Mapping, style_key: str, admin):
+        """返回 (post, warnings, warning_total)（IFC-175 1.1.0）。"""
+        result = _validate_doc(doc)
+        clean_doc = result.doc
         key = _validate_style_key(style_key or "builtin:classic")
         clean_title = str(title or "").strip()
         if len(clean_title) > 200:
@@ -68,12 +75,15 @@ class PostService:
             updated_by_admin_id=getattr(admin, "id", 0),
         )
         PostService._sync_media(post)
-        return post
+        return post, list(result.warnings), result.warning_total
 
     @staticmethod
-    def update(post_id: int, *, title=None, doc=None, style_key=None, admin) -> ContentPost:
+    def update(post_id: int, *, title=None, doc=None, style_key=None, admin):
+        """返回 (post, warnings, warning_total)（IFC-175 1.1.0）。"""
         post = PostService.get(post_id)
         changed = False
+        warnings: list = []
+        warning_total = 0
         if title is not None:
             clean_title = str(title).strip()
             if len(clean_title) > 200:
@@ -81,7 +91,9 @@ class PostService:
             post.title = clean_title
             changed = True
         if doc is not None:
-            post.doc = _validate_doc(doc)
+            result = _validate_doc(doc)
+            post.doc = result.doc
+            warnings, warning_total = list(result.warnings), result.warning_total
             changed = True
         if style_key is not None:
             post.style_key = _validate_style_key(style_key)
@@ -95,7 +107,7 @@ class PostService:
             AuditService.record(actor=_actor(admin), action="CONTENT_POST_UPDATED",
                                 object_type="content_post", object_id=str(post.id),
                                 result="SUCCESS", detail={"title": post.title})
-        return post
+        return post, warnings, warning_total
 
     @staticmethod
     def _sync_media(post: ContentPost) -> None:
@@ -110,7 +122,7 @@ class PostService:
     def publish(post_id: int, admin) -> ContentPost:
         post = PostService.get(post_id)
         missing = []
-        if not post.title.strip():
+        if not post.title.strip() or post.title.strip() == UNTITLED_PLACEHOLDER:
             missing.append("title")
         text = render_text(post.doc).strip()
         has_media = bool(extract_media_ids(post.doc))
@@ -202,11 +214,20 @@ class PostService:
         if fmt == "blocks":
             from django.conf import settings
             prefix = (settings.CONTENT_MEDIA_PATH_PREFIX or "").rstrip("/")
-            for page in pages:
-                for block in page.get("blocks", []):
+            def _strip(blocks):
+                # 任意深度：顶层、引用 children、列表 items（块列表的列表）
+                for block in blocks or []:
+                    if not isinstance(block, dict):
+                        continue
                     src = block.get("src") or ""
                     if prefix and src.startswith(prefix):
                         block["src"] = src[len(prefix):]
+                    _strip(block.get("children"))
+                    for item in block.get("items") or []:
+                        _strip(item)
+
+            for page in pages:
+                _strip(page.get("blocks", []))
         result = {"id": post.id, "title": post.title,
                   "published_at": post.published_at, "page_count": len(pages), "pages": pages}
         if fmt == "blocks":
@@ -215,7 +236,8 @@ class PostService:
 
     @staticmethod
     def render_preview(*, doc: Mapping, style_key: str, fmt: str = "html") -> dict:
-        clean = _validate_doc(doc)
+        result = _validate_doc(doc)
+        clean = result.doc
         tokens = StyleService.resolve_tokens(_validate_style_key(style_key or "builtin:classic"))
         pages = render_pages(clean, tokens, fmt=fmt, resolve=_resolver(),
                              page_chars=int(tokens.get("page_chars") or 1500))
@@ -223,7 +245,8 @@ class PostService:
         for media_id in extract_media_ids(clean):
             media[str(media_id)] = sign_media_url(media_id, absolute=True)
         return {"page_count": len(pages), "pages": pages, "media_urls": media,
-                "theme": tokens if fmt == "blocks" else None}
+                "theme": tokens if fmt == "blocks" else None,
+                "warnings": list(result.warnings), "warning_total": result.warning_total}
 
     @staticmethod
     def media_url_map(doc: Mapping, *, ttl_seconds: int | None = None) -> dict[str, str]:

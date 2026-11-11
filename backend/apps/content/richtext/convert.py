@@ -59,6 +59,33 @@ def extract_media_ids(doc: dict) -> list[uuid.UUID]:
     return found
 
 
+def extract_paragraphs(doc: dict) -> list[str]:
+    """按文档顺序返回每个 paragraph/heading（含引用、列表项内）的纯文本，供视频分镜切分（IFC-171）。
+
+    不替代 render_text（text_confirmed_hash 依赖其输出）。
+    """
+    result: list[str] = []
+
+    def collect(node: dict) -> str:
+        if node.get("type") == "text":
+            return node.get("text") or ""
+        if node.get("type") == "hardBreak":
+            return "\n"
+        return "".join(collect(child) for child in node.get("content") or [])
+
+    def walk(node: dict) -> None:
+        if node.get("type") in {"paragraph", "heading"}:
+            text = collect(node).strip()
+            if text:
+                result.append(text)
+            return
+        for child in node.get("content") or []:
+            walk(child)
+
+    walk(doc)
+    return result
+
+
 def _features(node: dict, found: set[str]) -> None:
     ntype = node.get("type")
     attrs = node.get("attrs") or {}

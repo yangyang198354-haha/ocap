@@ -9,12 +9,19 @@
         </el-tag>
         <el-tag v-else type="info">未配置</el-tag>
       </div>
+      <el-alert v-if="item.platform === 'wechat_mp'" type="info" :closable="false" show-icon
+                style="margin-top: 8px"
+                title="保存 AppID 和 AppSecret 后由服务器自动获取令牌；需在公众号后台把本服务器的出口 IP 加入 IP 白名单，否则无法获取令牌。" />
+      <el-alert v-if="item.account && item.account.auth_status === 'EXPIRED'" type="error" :closable="false"
+                show-icon style="margin-top: 8px" title="认证已失效，请重新录入认证信息" />
       <div v-if="item.account" class="row" style="margin-top: 8px">
         <span>账户：{{ item.account.display_name }}</span>
         <el-input v-model="edit[item.platform].display_name" placeholder="新名称" style="width: 180px" />
         <el-input v-for="field in item.credential_fields" :key="field.key"
                   v-model="edit[item.platform].credentials[field.key]"
-                  :placeholder="`新的 ${field.label}`" style="width: 220px" show-password />
+                  :placeholder="item.account.secret_saved?.[field.key]
+                    ? `${field.label}（已保存，输入新值可覆盖）` : `新的 ${field.label}`"
+                  style="width: 260px" show-password />
         <el-button size="small" @click="update(item)">保存</el-button>
         <el-button size="small" type="danger" @click="remove(item)">删除</el-button>
       </div>

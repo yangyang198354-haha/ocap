@@ -171,17 +171,65 @@ class FakeDraftAdapter:
         self.credentials_fields = ()
         self.outcomes = list(outcomes or [])
         self.received: list = []
+        self.received_account_ids: list = []
 
     def reset(self) -> None:
         self.outcomes = []
         self.received = []
+        self.received_account_ids = []
 
-    def save_draft(self, payload, credentials):
+    def save_draft(self, payload, credentials, *, account_id=None):
         from .draft import DraftOutcome
         self.received.append(payload)
+        self.received_account_ids.append(account_id)
         if self.outcomes:
             return self.outcomes.pop(0)
         return DraftOutcome("SAVED", remote_ref="fake-ref")
+
+
+class FakeWechatMpApi:
+    """实现 WechatMpApi（IFC-239/181）：逐次取预置结果，用尽后重复最后一个；不记录 secret 与令牌值。"""
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        from .wechat_mp import TokenResponse
+        self.token_results: list = [TokenResponse("fake-mp-token", 7200)]
+        self.draft_results: list = ["fake-media-id"]
+        # 占位：Q-B1 定稿前仅供开关开启的用例使用
+        self.upload_cover_results: list = ["fake-thumb-media-id"]
+        self.upload_image_results: list = ["https://fake.invalid/mp-image.jpg"]
+        self.calls: list[dict] = []
+        self._cursor = {"token": 0, "draft": 0, "cover": 0, "image": 0}
+
+    def _next(self, name: str, results: list):
+        index = min(self._cursor[name], len(results) - 1)
+        self._cursor[name] += 1
+        item = results[index]
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+    def fetch_token(self, *, appid, secret, timeout_seconds):
+        self.calls.append({"op": "fetch_token", "appid_present": bool(appid),
+                           "token_present": False})
+        return self._next("token", self.token_results)
+
+    def add_draft(self, *, access_token, article, timeout_seconds):
+        self.calls.append({"op": "add_draft", "appid_present": False,
+                           "token_present": bool(access_token)})
+        return self._next("draft", self.draft_results)
+
+    def upload_cover(self, *, access_token, file_path, content_type, timeout_seconds):
+        self.calls.append({"op": "upload_cover", "appid_present": False,
+                           "token_present": bool(access_token)})
+        return self._next("cover", self.upload_cover_results)
+
+    def upload_content_image(self, *, access_token, file_path, content_type, timeout_seconds):
+        self.calls.append({"op": "upload_content_image", "appid_present": False,
+                           "token_present": bool(access_token)})
+        return self._next("image", self.upload_image_results)
 
 
 class FakeRemoteFetcher:

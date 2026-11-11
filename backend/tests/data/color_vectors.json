@@ -1,0 +1,22 @@
+{
+  "_comment": "IFC-169/IFC-241 共享颜色测试向量（module_design 1.1.0）。后端 test_content_richtext_lenient.py 与前端 rich_colors.spec.js 读取同一文件；null 表示不可归一化。",
+  "vectors": [
+    ["rgb(255, 0, 0)", "#ff0000"],
+    ["rgb(0,128,255)", "#0080ff"],
+    ["rgba(0, 0, 0, 0.5)", "#00000080"],
+    ["rgba(1, 2, 3, 1)", "#010203"],
+    ["#F00", "#F00"],
+    ["#12345678", "#12345678"],
+    ["rgb(256, 0, 0)", null],
+    ["rgba(0,0,0,1.5)", null],
+    ["red", null],
+    ["hsl(0,100%,50%)", null],
+    ["rgb(10%, 0, 0)", null],
+    ["rgb(1 2 3)", null],
+    ["var(--x)", null],
+    ["url(javascript:alert(1))", null],
+    ["#ggg", null],
+    ["", null],
+    [null, null]
+  ]
+}

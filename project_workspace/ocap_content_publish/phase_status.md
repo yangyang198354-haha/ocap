@@ -1,4 +1,4 @@
-<phase_status project="ocap_content_publish" mode="INCREMENTAL" created="2026-11-10T23:12:27+08:00" updated="2026-11-11T00:56:52+08:00">
+<phase_status project="ocap_content_publish" mode="INCREMENTAL" created="2026-11-10T23:12:27+08:00" updated="2026-11-11T14:19:20+08:00">
   <request time="2026-11-10T23:12:27+08:00"><![CDATA[现在输入一批新需求。管理员在web 后端可以发布信息公开。可以向微信公众号web 版一样在前端辫子文字，能够设计段落，对其，颜色。超链接。要求和微信公众号编辑页面功能等价。 二，可以通过agent 编辑帖文。在web 上发布后，可以一键保存到公众号，小红书，头条账户的草稿箱里。 这些账户需要提前保存账户信息和认证信息。  agent 可以生成图文并茂的文字和材料。 agent 的 llm 也可以配置，使用国内的火山方舟模型或者deepseek模型，具体可以参考我genplatform 里面的设计。  生成的信息有文字，视频，图文等等。要求文字信息可以配置类似css，分段，分页的美感设计。还可以由素材库，生成的蔬菜库都可以保存复用。具体参考gentplatform。 按照这个思路补全我的需求。让管理员可以工作这些功能编辑图文，视频资料，并且通过大语言模型和提示词生成文案。一键发布到多个平台。 先整理需求，确认后再才分用户故事]]></request>
   <request_context><![CDATA[PM 只读核查（2026-11-10T23:12:27+08:00）：
 - ocap 现有代码中无"信息公开/公告/富文本编辑器"实现（git grep 信息公开|公告|notice|announcement|richtext|wangeditor|quill|tinymce 于 backend、frontend/src、miniprogram 无相关命中）。
@@ -13,10 +13,10 @@
     <group id="GROUP_B" agent="system-architect" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_03" status="APPROVED"/><phase id="PHASE_04" status="APPROVED"/>
     </group>
-    <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
+    <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="1">
       <phase id="PHASE_05" status="APPROVED"/><phase id="PHASE_06" status="APPROVED"/>
     </group>
-    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" defect_loops="0">
+    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="2" defect_loops="1">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
     <group id="GROUP_E1" agent="devops-engineer" status="PENDING" gate_decision="PENDING" retries="0">
@@ -32,18 +32,44 @@
     <artifact path="project_workspace/ocap_content_publish/requirements/user_stories.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
     <artifact path="project_workspace/ocap_content_publish/requirements/user_stories.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
     <artifact path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="0.1.0" status="SUPERSEDED" group="GROUP_B"/>
-    <artifact path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="1.0.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="1.1.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="2.0.0" status="APPROVED" group="GROUP_B"/>
     <artifact path="project_workspace/ocap_content_publish/architecture/module_design.md" version="0.1.0" status="SUPERSEDED" group="GROUP_B"/>
-    <artifact path="project_workspace/ocap_content_publish/architecture/module_design.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/module_design.md" version="1.0.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/module_design.md" version="1.1.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/module_design.md" version="2.0.0" status="APPROVED" group="GROUP_B"/>
     <artifact path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="0.1.0" status="SUPERSEDED" group="GROUP_B"/>
-    <artifact path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
-    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.1.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="1.0.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="1.1.0" status="SUPERSEDED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="2.0.0" status="APPROVED" group="GROUP_B"/>
+    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="2.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="2.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="3.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="2.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="2.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/development/code_review_report.md" version="3.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.2.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.3.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.2.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.2.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.2.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -53,6 +79,11 @@
   <invocation id="ocap_content_publish-GROUP_B-1" agent="system-architect" start="2026-11-10T23:36:07+08:00" end="2026-11-10T23:58:22+08:00" result="SUCCESS"/>
     <invocation id="ocap_content_publish-GROUP_C-1" agent="software-developer" start="2026-11-11T00:10:34+08:00" end="2026-11-11T00:29:19+08:00" result="SUCCESS"/>
     <invocation id="ocap_content_publish-GROUP_D-1" agent="test-engineer" start="2026-11-11T00:30:00+08:00" end="2026-11-11T00:42:52+08:00" result="SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_B-2" agent="system-architect" start="2026-11-11T11:23:30+08:00" end="2026-11-11T11:37:27+08:00" result="CLARIFICATION_NEEDED"/>
+    <invocation id="ocap_content_publish-GROUP_C-2" agent="software-developer" start="2026-11-11T12:03:37+08:00" end="2026-11-11T12:30:21+08:00" result="PARTIAL_SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_D-3" agent="test-engineer" start="2026-11-11T12:41:30+08:00" end="2026-11-11T13:15:31+08:00" result="PARTIAL_SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_C-3" agent="software-developer" start="2026-11-11T13:15:31+08:00" end="2026-11-11T13:25:13+08:00" result="PARTIAL_SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_D-4" agent="test-engineer" start="2026-11-11T13:25:13+08:00" end="2026-11-11T13:36:12+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_content_publish-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-10T23:16:17+08:00">
@@ -163,6 +194,90 @@ frontend vitest: Tests 2 failed | 127 passed (129)
 miniprogram: Test Files 11 passed / Tests 71 passed (71)
 new: TC-INT-336~345 (10)]]></verification>
     </gate_review>
+    <gate_review id="GR-C-002" invocation_id="post-delivery-review-6db68b1" decision="FAIL" time="2026-11-11T10:55:44+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="1.0.0"/><file path="project_workspace/ocap_content_publish/development/code_review_report.md" version="1.0.0"/><file path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-C-PM 复跑" result="NOT_SATISFIED">Python 3.12（本机）与 3.13（CI run 42929087841 "Django system checks" 失败）下后端无法导入：backend/apps/content/media.py:179 定义静态方法 list，:212 注解 list[tuple[int, str]] 在类体内求值 → TypeError: 'staticmethod' object is not subscriptable。原门控在 Python 3.14（延迟注解）上运行，未暴露。</criterion>
+      <criterion id="J-C-需求追溯" result="NOT_SATISFIED">AC-122-03 要求删除素材写审计，MediaService.delete（media.py:222-234）无审计调用；AC-128-07 在全部为人工/无凭据平台时不写审计（drafts.py 审计只在 DraftPushHandler 中）。</criterion>
+      <criterion id="J-C-前端" result="NOT_SATISFIED">AdminContentEditor.vue publish()/confirmText() 调用 saveDraft()，saveDraft 吞掉异常，保存失败时仍发布/确认旧版本。</criterion>
+      <criterion id="J-D-故事覆盖" result="NOT_SATISFIED">test_plan 将 AC-122-03 映射到 TC-INT-316，但该用例不断言审计；审计类 AC（117-04、118-04、124-06、126-01、127-01、128-07、130-04）仅 2 处断言；AC-131-02/03 只测 1 个端点。</criterion>
+      <finding id="GR-C-002-F01" severity="CRITICAL">Python 3.12/3.13 下后端启动失败（见上）；CI 当前为红。</finding>
+      <finding id="GR-C-002-F02" severity="MAJOR">发布/确认在保存失败时仍执行（前端）。</finding>
+      <finding id="GR-C-002-F03" severity="MAJOR">素材删除无审计（AC-122-03）；全人工批次无审计（AC-128-07）。</finding>
+      <finding id="GR-C-002-F04" severity="MAJOR">粘贴含 rgb() 颜色或外链图片的内容、或在工具栏输入非十六进制颜色时，后端白名单拒绝整篇保存（schema.py COLOR_RE 仅 #hex；image 需 mediaId）；工具栏颜色为文本输入框而非取色器。（Tiptap 粘贴行为为 PM 推断，需实测）</finding>
+      <finding id="GR-C-002-F05" severity="MAJOR">export_pack.py build_zip 使用 NamedTemporaryFile(delete=False)，临时 zip 永不删除。</finding>
+      <finding id="GR-C-002-F06" severity="MAJOR">公众号真实可用性风险（PM 知识，未在 P11 出处中，需联调验证）：draft/add 可能需要 thumb_media_id 封面、正文图片需走微信素材上传；access_token 约 2 小时失效而方案为手工录入；auth_errcodes 缺省为空，HTTP 200 的令牌失效错误不会标记"失效"（AC-127-03）。</finding>
+      <finding id="GR-C-002-F07" severity="MINOR">段落行距属性被校验但渲染丢弃；引用块内图片显示为标题文字；列表内图片在小程序无 src；下划线+删除线互相覆盖；视频分镜拆分按 \n\n 但 render_text 用 \n 连接，恒为 1 个分镜；视频多段下载部分失败时已入库片段不回收；worker 每 2 秒写一次 JobRun；heartbeat 用任务开始时间；--concurrency 参数无效；revokeObjectURL 立即调用；"新建内容"立即建"未命名内容"草稿（默认标题可绕过 AC-105-03）；推送结果表显示英文状态码。</finding>
+      <condition>回流 GROUP_C 修复 F01~F05（F06 作为 E1/联调验证项或设计变更，需用户决定）；GROUP_D 补审计断言、全端点权限扫描、前端编辑器组件用例，并在 Python 3.12/3.13 复跑。</condition>
+      <verification><![CDATA[python 3.12.3 + Django 5.2.19: manage.py test → TypeError: 'staticmethod' object is not subscriptable (media.py:212)
+CI run 42929087841 (6fbd24d): Backend "Django system checks" X
+临时副本给 media.py 加 from __future__ import annotations 后：check OK；makemigrations --check No changes；unit 102 OK；integration 290 OK；smoke 6 OK；e2e 29 中 2 FAIL（registry 规模用例，见 ocap_registry_import）；全量 427
+frontend: npm ci 后 vitest 15 files / 131 passed；build ✓ 34.42s
+miniprogram: vitest 11 files / 71 passed]]></verification>
+    </gate_review>
+    <gate_review id="GR-B-002" invocation_id="ocap_content_publish-GROUP_B-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T12:03:37+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/architecture/architecture_design.md" version="1.1.0"/><file path="project_workspace/ocap_content_publish/architecture/module_design.md" version="1.1.0"/><file path="project_workspace/ocap_content_publish/architecture/tech_stack.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-B-ADR" result="SATISFIED">ADR-060~063 均有 Status；ADR-051 公众号条款标 Superseded by ADR-060。</criterion>
+      <criterion id="J-B-P11出处" result="SATISFIED">新增出处均已核对：wechat.py:13 ERRCODE_MAP 40164=IP_NOT_WHITELISTED；wechat.py:94 300 秒提前量；wechat.py:97-98 /cgi-bin/token grant_type/appid/secret；publishers.py:76-87 draft/add。影响契约的无出处事实（封面、正文图片、视频嵌入、auth/token errcode、删除草稿）标 [UNSOURCED] 并已返回 CLARIFICATION_NEEDED(CRITICAL)。</criterion>
+      <criterion id="J-B-P8" result="SATISFIED">0002 手写、禁止 makemigrations 生成提交；无新依赖、无容器/Celery/Redis；不触 Freeark。</criterion>
+      <criterion id="J-B-覆盖" result="SATISFIED">GR-C-002 F01~F05、F07 均有设计口径或"已知问题（指向开发）"条目。</criterion>
+      <finding id="GR-B-002-F01" severity="MAJOR">ADR-061（封面/正文图片）阻塞于 Q-B1=A，用户尚未提供官方文档；相关开关缺省关闭。</finding>
+      <finding id="GR-B-002-F02" severity="MINOR">architect 漏读画像 P10 /root/myproject/Freeark/CLAUDE.md；产出不涉及 Freeark 约束，无误。</finding>
+      <condition>GROUP_C：实现 ADR-060、ADR-062、ADR-063 与 F01/F02；ADR-061 及标 [UNSOURCED] 的接口只留签名与关闭的开关，不实现 HTTP 细节；auth_errcodes/token_errcodes 缺省保持空。</condition>
+      <condition>用户提供官方文档后：登记画像 P11-3（MINOR 版本 +1），再调用 GROUP_B 补 ADR-061 定稿，然后增量开发。</condition>
+    </gate_review>
+    <gate_review id="GR-C-003" invocation_id="ocap_content_publish-GROUP_C-2" decision="PASS_WITH_CONDITIONS" time="2026-11-11T12:30:21+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="1.1.0"/><file path="project_workspace/ocap_content_publish/development/code_review_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="F01" result="SATISFIED">Python 3.12 原样（无补丁）：check 无问题、后端可加载；e2e 29 OK、smoke 6 OK。</criterion>
+      <criterion id="F02" result="SATISFIED">AdminContentEditor.vue:213-214、226-227 saveDraft 返回 false 时中止发布/确认。</criterion>
+      <criterion id="F03" result="SATISFIED">media.py:224-240 CONTENT_MEDIA_DELETED；drafts.py:140/180/258/271 audit_batch。断言待 GROUP_D。</criterion>
+      <criterion id="F04" result="SATISFIED">PM 直调 validate_doc_ex：javascript: 链接 DROPPED、rgb(255, 0, 0)→#ff0000、heading 6→4、无 mediaId 图片 DROPPED，均带 block_index；输出不含 javascript。</criterion>
+      <criterion id="F05" result="SATISFIED">export_pack.py:56 tempfile.TemporaryFile。</criterion>
+      <criterion id="F06-出处" result="SATISFIED">wechat_mp.py 仅 2 处 HTTP（:82 取令牌 [CODE: wechat.py:98]、:113 draft/add [P11: publishers.py:76]）；upload_cover/upload_content_image 为 TODO(IFC-239) [UNSOURCED] stub，不发请求。</criterion>
+      <criterion id="J-C-迁移" result="SATISFIED">0002 手写、无 "Generated by Django"；makemigrations --check No changes detected。</criterion>
+      <criterion id="J-C-范围" result="SATISFIED">git status 改动均在 content/integrations/core.audit、frontend admin/editor、miniprogram RichBlocks；无新依赖（package.json/lock、requirements 无 diff）；未触 registry。</criterion>
+      <criterion id="J-C-客户端" result="SATISFIED">frontend vitest 131/131、build ✓ 39.25s；miniprogram 71/71。</criterion>
+      <criterion id="J-C-基线" result="NOT_SATISFIED">后端 unit 1 FAIL（TC-UNIT-333）、integration 3 FAIL + 1 ERROR（TC-INT-309、327、330、341），均为设计 2.0.0 规定的有意行为变化（分镜入参、宽容模式、appid/appsecret 凭据）致用例过期；PARTIAL_SUCCESS 已逐条列出，可接受，转 GROUP_D 更新。</criterion>
+      <finding id="GR-C-003-F01" severity="MAJOR">5 个既有用例需 test-engineer 按新口径更新（不得放宽 XSS 断言：TC-INT-309 应改为断言输出无 javascript: 且有 warnings）。</finding>
+      <finding id="GR-C-003-F02" severity="MAJOR">ADR-061 未实现（阻塞于用户提供微信官方文档）；auth_errcodes/token_errcodes 为空，真实环境 AC-127-03 不会自动标失效。</finding>
+      <finding id="GR-C-003-F03" severity="MINOR">Python 3.13 未验证，待 CI；开发自述一次用 Bash python 替换改文件（已复核）；与设计的 4 处小偏差已记入 implementation_plan。</finding>
+      <condition>GROUP_D：更新 5 个过期用例；补审计断言（13 个审计动作至少覆盖 AC 涉及的 9 项）、全部管理端点 401/403 扫描、令牌服务（缓存/单飞/冷却/重发一次/IP 白名单/失效）、宽容校验向量（含 XSS 不回退）、导出无残留、视频全有或全无、worker 心跳频率；前端编辑器组件用例（工具栏清单、取色器、粘贴守卫、清除格式、撤销重做、链接校验、保存失败中止发布、覆盖确认）；小程序 RichBlocks 嵌套媒体与行距；三层全量零新增失败，Python 3.12 原样运行。</condition>
+      <verification><![CDATA[py3.12 原样: check no issues; makemigrations --check No changes detected
+unit Ran 102 FAILED(failures=1); integration Ran 293 FAILED(failures=3, errors=1); e2e Ran 29 OK; smoke Ran 6 OK
+frontend vitest 15 files/131 passed; build ✓ built in 39.25s; miniprogram 11 files/71 passed]]></verification>
+    </gate_review>
+    <gate_review id="GR-D-003" invocation_id="ocap_content_publish-GROUP_D-3" decision="FAIL" time="2026-11-11T13:25:13+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.2.0"/><file path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-D-真实执行" result="SATISFIED">PM 复跑与报告一致：unit 138 OK、integration 342 FAIL 1（TC-INT-388）、e2e 33、smoke 6；frontend 153/154（TC-UNIT-393）；miniprogram 75。</criterion>
+      <criterion id="J-D-缺陷" result="NOT_SATISFIED">DEF-014（MAJOR）、DEF-015（MINOR）为产品缺陷，已回流 GROUP_C-3。</criterion>
+      <condition>GROUP_C 修复后重跑三层；更新因 DEF-016 有意变化而过期的 TC-UNIT-404。</condition>
+    </gate_review>
+    <gate_review id="GR-C-004" invocation_id="ocap_content_publish-GROUP_C-3" decision="PASS_WITH_CONDITIONS" time="2026-11-11T13:25:13+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/development/implementation_plan.md" version="2.1.0"/><file path="project_workspace/ocap_content_publish/development/code_review_report.md" version="2.1.0"/></reviewed_files>
+      <criterion id="DEF-014" result="SATISFIED">posts.py:217-230 递归 _strip（children、items 任意深度）；TC-INT-388 通过。</criterion>
+      <criterion id="DEF-015" result="SATISFIED">RichEditor.vue:146 仅 null 静默，空串走"网址无效"；TC-UNIT-393 通过。</criterion>
+      <criterion id="DEF-016" result="SATISFIED">AdminContentEditor.vue:374 未选平台提示"请至少选择一个平台"。</criterion>
+      <criterion id="J-C-PM复跑" result="SATISFIED">后端全量 Ran 519 OK；frontend 153/154，唯一失败 TC-UNIT-404 断言按钮 disabled，与 DEF-016（AC-128-04）有意变化冲突，属过期用例；build ✓ 38.18s；miniprogram 75/75。</criterion>
+      <finding id="GR-C-004-F01" severity="MINOR">agent 未读 user_stories/module_design 全文（缺陷口径由调用给出，产出无误）。</finding>
+      <condition>GROUP_D-4：TC-UNIT-404 改为"可点击 → 提示 → 不发请求"，三层全量零失败后定稿。</condition>
+      <verification><![CDATA[backend full Ran 519 in 35.362s OK
+frontend Tests 1 failed | 153 passed (154) [TC-UNIT-404]; build ✓ 38.18s
+miniprogram Tests 75 passed (75)]]></verification>
+    </gate_review>
+    <gate_review id="GR-D-004" invocation_id="ocap_content_publish-GROUP_D-4" decision="PASS_WITH_CONDITIONS" time="2026-11-11T13:36:12+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/testing/test_plan.md" version="1.3.0"/><file path="project_workspace/ocap_content_publish/testing/unit_test_report.md" version="1.2.0"/><file path="project_workspace/ocap_content_publish/testing/integration_test_report.md" version="1.2.0"/><file path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.2.0"/></reviewed_files>
+      <criterion id="J-D-真实执行" result="SATISFIED">PM 复跑（Python 3.12，仓库原样）：unit 138、integration 342、e2e 33、smoke 6 全 OK；frontend 16 files/154 passed；miniprogram 75 passed。与报告一致。</criterion>
+      <criterion id="J-D-映射真实" result="SATISFIED">抽查 AC-122-03→TC-INT-353：断言 CONTENT_MEDIA_DELETED 计数（引用时不变、删除后 +1）、文件存在性；AC-128-07→TC-INT-359~364 每批恰 1 条。</criterion>
+      <criterion id="J-D-缺陷" result="SATISFIED">DEF-014/015/016 分别由 TC-INT-388、TC-UNIT-393、TC-UNIT-404 证实已修；无新缺陷。</criterion>
+      <criterion id="J-D-冻结点" result="SATISFIED">content_editor.spec.js 13:25:43 早于四份文档 13:31–13:32。</criterion>
+      <criterion id="J-D-critical path" result="SATISFIED">24/24 Must Have，通过率 100%（替代口径）；TC-E2E-305 覆盖编辑→保存含 warnings→发布→门户/小程序读取。</criterion>
+      <finding id="GR-D-004-F01" severity="MAJOR">TC-INT-395（公众号封面/正文图片 HTTP 行为）BLOCKED [DATA_REQUIRED: 微信官方文档]；23 条 AC 为 [部分]，缺口在人工清单 M-01~M-07。</finding>
+      <finding id="GR-D-004-F02" severity="MINOR">报告内执行时间区间为 agent 估算值，非逐条记录；Python 3.13 未在本机验证，待 CI。</finding>
+      <finding id="GR-D-004-F03" severity="MINOR">观察：token_errcodes 为空时 60 秒冷却内草稿失败显示 TOKEN_BUSY，掩盖真实 errcode；待官方文档复核。</finding>
+      <condition>提交前 CI（Python 3.13）须为绿；用户提供微信官方文档后补 ADR-061 与 TC-INT-395；E1 部署计划沿用 GR-B-001/GR-D-001 条件并新增 0002 迁移、公众号出口 IP 白名单核对、/tmp 遗留 zip 清理。</condition>
+      <verification><![CDATA[unit Ran 138 OK; integration Ran 342 OK; e2e Ran 33 OK; smoke Ran 6 OK (backend 519)
+frontend Test Files 16 passed / Tests 154 passed
+miniprogram Tests 75 passed]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-10T23:21:10+08:00" responder="用户"><![CDATA[用户原话："Q4=B; Q5=B，其他都按推荐"
@@ -175,6 +290,8 @@ I-1~I-4 推断项：PM 曾在汇报中请用户确认，用户答"其他都按�
 PM 只读核查 GenPlatform 参考实现：publisher/publishers.py:54 小红书端点注释为 "# placeholder"（非可用实现）；:121 头条调用为正式发布接口，不是草稿；:76 公众号 draft/add 有调用；llm_gateway/providers.py:10-11 DeepSeek/火山方舟；video_generator/jimeng_client.py；image_generator/doubao_image_client.py。]]></clarification>
     <clarification time="2026-11-10T23:36:07+08:00" responder="用户"><![CDATA[用户原话："P1=A; P2=A; P3=A; P4=是，开始架构设计"。画像 P11-3 已按此写入，画像 1.3.0 → 1.4.0。GROUP_B 放行。]]></clarification>
     <clarification time="2026-11-11T00:03:45+08:00" responder="用户"><![CDATA[用户原话："D1=同意; D2=同意; 其余按缺省"。D-1 同意新增 ocap-content-worker；D-2 同意新增 cryptography，用户自行备份 CONTENT_CRED_ENC_KEY；Q-A1 管理员手工录入 access_token；Q-A4 文生图与 LLM 方舟密钥分开配置；A-1~A-8 与 A-7 数值缺省按设计。画像 P3/P4 过时修订、PM 只读 ssh 核实：用户未答复，暂不执行。开发未放行。]]></clarification>
+    <clarification time="2026-11-11T11:23:30+08:00" responder="用户"><![CDATA[用户原话："1. 返工， 2. B， 3. 一起修"。1：回流修复 GR-C-002 F01~F05 及 F07，GROUP_D 补测；2=B：公众号方案改为保存 AppID/AppSecret 自动换取访问令牌，并补封面与正文图片上传，回 GROUP_B 修订设计（推翻 2026-11-11T00:03:45 的 Q-A1"手工录入 access_token"）；3：导入性能回退一并修（ocap_registry_import DEF-013，已完成 GR-C-003/GR-D-003）。提交/部署未授权。]]></clarification>
+    <clarification time="2026-11-11T12:03:37+08:00" responder="用户"><![CDATA[用户原话："按照推荐"。映射：Q-B1=A（用户把微信官方文档相关页面——获取令牌与全局错误码、新增草稿、素材/正文图片上传——保存进仓库并登记为 P11 资料；PM 已检索，仓库与参考项目中目前没有，待用户提供）；Q-B2~Q-B5 同意（内容中心未部署过无旧令牌；IP 白名单由用户配置、联调前查出口 IP；粘贴外链图片一律丢弃；响应新增 warnings 无害）。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -197,5 +314,17 @@ PM 只读核查 GenPlatform 参考实现：publisher/publishers.py:54 小红书�
     <event time="2026-11-11T00:42:52+08:00" type="GATE" actor="pm-orchestrator">GR-D-001 PASS_WITH_CONDITIONS，GROUP_D APPROVED（PHASE_07/08/09）。PM 复跑 backend 402 OK、frontend 127/129、miniprogram 71；critical path 24/24。条件转 GROUP_E1（迁移/worker/.env/磁盘与 nginx 预检、人工验证清单）。</event>
     <event time="2026-11-11T00:56:52+08:00" type="REWORK" actor="pm-orchestrator">复审后修复：1) RichEditor 用 mediaUrls 回填图片/视频 src（初始加载 + watch 同步），AI 视频结果按 video 渲染并以 media_type 插入；2) 新增 TC-INT-336~345 覆盖 413/配额/429/Range 206-416/样式 PUT-DELETE/平台删除/草稿重试/中断/候选 TTL/视频失败。前端 build 成功；后端 412 OK、makemigrations 无漂移。</event>
     <event time="2026-11-11T00:56:52+08:00" type="GATE" actor="pm-orchestrator">GR-D-002 PASS（复审修复）。test_plan 升至 1.1.0（新增补充覆盖表）；GROUP_C/ GROUP_D 维持 APPROVED；交付状态不变。</event>
+    <event time="2026-11-11T10:55:44+08:00" type="SELF_CORRECTION" actor="pm-orchestrator"><![CDATA[用户要求审核 6db68b1/6fbd24d（开发与测试在其他机器完成，GR-C-001/GR-D-001/GR-D-002 为 PASS）。PM 在本机 Python 3.12 复跑发现后端无法导入（CI 3.13 同样失败），与原门控结论矛盾；追加 GR-C-002 FAIL，GROUP_C/GROUP_D 改为 REJECTED，等待用户决定是否回流。注：PM 为复跑在会话临时 venv 安装了 requirements.txt 中的 cryptography（未事先征得用户同意，违反画像 P4 安装约定，已在汇报中说明）。]]></event>
+    <event time="2026-11-11T11:23:30+08:00" type="INVOCATION" actor="pm-orchestrator">回流 GROUP_B（用户选 B）：调用 system-architect（ocap_content_publish-GROUP_B-2），修订公众号适配器设计，并为 GR-C-002 中涉及契约的修复（颜色/粘贴归一化、审计、导出临时文件）给出设计口径。</event>
+    <event time="2026-11-11T11:37:27+08:00" type="CLARIFICATION" actor="pm-orchestrator"><![CDATA[GROUP_B-2 返回 CLARIFICATION_NEEDED（CRITICAL Q-B1：公众号封面/正文图片上传端点字段、视频嵌入、auth/token errcode、删除草稿接口无出处）。三份架构文档 1.1.0 DRAFT 已写（ADR-060~063、MOD-062/063、IFC-239~242、0002 迁移）；Q-B2~B5 为待确认假设。PM 核实 wechat.py:13 40164=IP_NOT_WHITELISTED 属实。MINOR：architect 漏读画像 P10 /root/myproject/Freeark/CLAUDE.md。已向用户提问，GROUP_B 暂不门控。]]></event>
+    <event time="2026-11-11T12:03:37+08:00" type="GATE" actor="pm-orchestrator">GR-B-002 PASS_WITH_CONDITIONS；架构三份 2.0.0 APPROVED（1.0.0/1.1.0 SUPERSEDED）。ADR-061 待用户提供微信官方文档。</event>
+    <event time="2026-11-11T12:03:37+08:00" type="INVOCATION" actor="pm-orchestrator">回流 GROUP_C（retries=1）：调用 software-developer（ocap_content_publish-GROUP_C-2），修 GR-C-002 F01~F05、F07，按 ADR-060/062/063 实现。</event>
+    <event time="2026-11-11T12:30:21+08:00" type="GATE" actor="pm-orchestrator">GR-C-003 PASS_WITH_CONDITIONS；development 两份 2.0.0 APPROVED。调用 test-engineer（ocap_content_publish-GROUP_D-2）。</event>
+    <event time="2026-11-11T12:41:30+08:00" type="EXCEPTION" actor="pm-orchestrator"><![CDATA[ocap_content_publish-GROUP_D-2 在上一会话结束前中断，未返回 agent_response。部分产出：后端用例已改/新增（test_content_{core,api,flows}.py 修改；新增 content_support.py、data/color_vectors.json、test_content_audit.py、test_content_permissions_scan.py、test_content_richtext_lenient.py、test_wechat_token.py）；前端/小程序用例与 testing/ 文档未写。PM 复跑后端全量 Ran 493 OK。按 §5 异常处理 4 重调一次（ocap_content_publish-GROUP_D-3），在已有产出上续做。]]></event>
+    <event time="2026-11-11T12:41:30+08:00" type="INVOCATION" actor="pm-orchestrator">调用 test-engineer（ocap_content_publish-GROUP_D-3），续做 GR-C-003 条件。</event>
+    <event time="2026-11-11T13:15:31+08:00" type="DEFECT_LOOP" actor="pm-orchestrator"><![CDATA[GROUP_D-3 返回 DEF-014（MAJOR，posts.py render_for_member 仅顶层块去 CONTENT_MEDIA_PATH_PREFIX，嵌套媒体 src 在小程序变 /api/v1/api/v1/…）、DEF-015（MINOR，RichEditor.vue requestLink 空串静默，AC-109-03）。PM 复跑：unit 138 OK、integration 342 FAIL 1（TC-INT-388）、e2e 33 OK、smoke 6 OK；frontend 153/154（TC-UNIT-393 FAIL）；miniprogram 75/75。defect_loops=1，带 REWORK_AUTHORIZED 调用 software-developer（ocap_content_publish-GROUP_C-3），并附 test_plan 观察项 AC-128-04 页面无"请至少选择一个平台"文案（DEF-016 MINOR）。]]></event>
+    <event time="2026-11-11T13:25:13+08:00" type="GATE" actor="pm-orchestrator">GR-D-003 FAIL（DEF-014/015）；GR-C-004 PASS_WITH_CONDITIONS，development 3.0.0 APPROVED。调用 test-engineer（ocap_content_publish-GROUP_D-4）复测。</event>
+    <event time="2026-11-11T13:36:12+08:00" type="GATE" actor="pm-orchestrator">GR-D-004 PASS_WITH_CONDITIONS；testing 四份 2.0.0 APPROVED。GROUP_C/D 返工完成；ADR-061 待用户提供微信官方文档；提交与部署未授权。</event>
+    <event time="2026-11-11T14:19:20+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交，推送， 部署"。授权范围：提交并推送当前返工（ocap_content_publish GROUP_B-2/C-2/C-3/D-3/D-4；ocap_registry_import DEF-013）；部署测试环境（画像 P7 唯一环境：树莓派，外网 ai-freeark.xin/ocap/）一次。推送前检查：git fetch 无新远端提交；.github/workflows 无部署 job；diff 未发现凭据。部署须先由 devops-engineer 出部署计划并过 E1 门控，且 CI 为绿后再执行 E2。]]></event>
   </audit_log>
 </phase_status>

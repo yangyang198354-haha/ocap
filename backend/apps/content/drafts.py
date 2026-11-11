@@ -1,20 +1,22 @@
 """MOD-053：草稿推送批次与处理器（IFC-186）。"""
 import uuid
-from datetime import datetime
 from typing import Sequence
 
+from django.db import transaction
 from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError, NotFound
-from apps.integrations.draft import MediaFile, get_draft_adapter
+from apps.core.models import AuditLog
+from apps.integrations.draft import DraftPayload, MediaFile, get_draft_adapter
 
 from .conf import ContentSettings
-from .jobs import Done, Fail, JobContext, JobService
+from .jobs import Done, JobContext, JobService
 from .models import ContentJob, DraftPush, MediaItem, PlatformAccount
 from .posts import PostService
-from .richtext import render_html, render_text, unsupported_features
+from .richtext import extract_media_ids, render_html, render_text, unsupported_features
 from .styles import StyleService
+from .vault import SecretRedactor
 
 
 def _actor(admin):
@@ -35,30 +37,45 @@ def _out(row: DraftPush) -> dict:
     }
 
 
+def _media_file(row: MediaItem) -> MediaFile:
+    return MediaFile(media_id=str(row.id), path=row.storage_path,
+                     content_type=row.content_type, media_type=row.media_type,
+                     name=row.title or row.original_name)
+
+
 class DraftPushService:
     @staticmethod
-    def build_payload(post, adapter) -> dict:
+    def build_payload(post, adapter) -> DraftPayload:
+        from .media import sign_media_url
         ttl = int(ContentSettings.get("content.media.push_url_ttl_seconds"))
-
-        def resolve(media_id):
-            row = MediaItem.objects.filter(id=media_id).first()
-            if row is None:
-                return None
-            from .media import sign_media_url
-            return {"url": sign_media_url(row.id, ttl_seconds=ttl, absolute=True),
-                    "media_type": row.media_type, "title": row.title}
-
         tokens = StyleService.resolve_tokens(post.style_key)
-        html = render_html(post.doc, tokens, mode="inline", resolve=resolve)
-        media = []
-        for link in post.media_links.select_related("media"):
-            row = link.media
-            media.append(MediaFile(media_id=str(row.id), path=row.storage_path,
-                                   content_type=row.content_type,
-                                   media_type=row.media_type, name=row.title or row.original_name))
-        from apps.integrations.draft import DraftPayload
-        return DraftPayload(title=post.title, html=html,
-                            text=render_text(post.doc), media=tuple(media))
+
+        def make_resolver(overrides=None):
+            def resolve(media_id):
+                row = MediaItem.objects.filter(id=media_id).first()
+                if row is None:
+                    return None
+                url = (overrides or {}).get(str(row.id)) \
+                    or sign_media_url(row.id, ttl_seconds=ttl, absolute=True)
+                return {"url": url, "media_type": row.media_type, "title": row.title}
+            return resolve
+
+        html = render_html(post.doc, tokens, mode="inline", resolve=make_resolver())
+        media = [_media_file(link.media) for link in post.media_links.select_related("media")]
+        # 封面候选 = 文档中按出现顺序的第一张图片（设计口径，ADR-061）
+        cover = None
+        by_id = {item.media_id: item for item in media}
+        for media_id in extract_media_ids(post.doc):
+            candidate = by_id.get(str(media_id))
+            if candidate is not None and candidate.media_type == "IMAGE":
+                cover = candidate
+                break
+
+        def html_for(overrides):
+            return render_html(post.doc, tokens, mode="inline", resolve=make_resolver(overrides))
+
+        return DraftPayload(title=post.title, html=html, text=render_text(post.doc),
+                            media=tuple(media), html_for=html_for, cover=cover)
 
     @staticmethod
     def start_batch(post_id: int, account_ids: Sequence[int], admin):
@@ -83,41 +100,44 @@ class DraftPushService:
 
         batch_id = uuid.uuid4()
         pushes = []
-        has_pending = False
         now = timezone.now()
-        for account in accounts:
-            adapter = get_draft_adapter(account.platform)
-            unsupported = unsupported_features(
-                post.doc, platform_unsupported=adapter.unsupported_features)
-            if adapter.capability == "MANUAL_EXPORT":
-                unsupported = unsupported + ["style_not_carried"]
-                status, mode, finished = "MANUAL_REQUIRED", "MANUAL", now
-            elif not account.secret_keys:
-                status, mode, finished = "FAILED", "AUTO", now
-            else:
-                status, mode, finished = "PENDING", "AUTO", None
-                has_pending = True
-            row = DraftPush.objects.create(
-                post=post, account=account, platform=account.platform, batch_id=batch_id,
-                mode=mode, status=status, unsupported=unsupported,
-                error_code="NO_CREDENTIALS" if status == "FAILED" else "",
-                error_message="未配置认证信息" if status == "FAILED" else "",
-                finished_at=finished,
-                created_by_admin_id=getattr(admin, "id", 0),
-                created_by_label=getattr(admin, "username", "")[:64],
-            )
-            pushes.append(row)
-
         job = None
-        if has_pending:
-            job = JobService.enqueue(
-                kind="DRAFT_PUSH",
-                payload={"push_ids": [row.id for row in pushes if row.status == "PENDING"]},
-                admin_id=getattr(admin, "id", 0),
-                admin_label=getattr(admin, "username", "") or "",
-                subject_type="content_post", subject_id=str(post.id), max_attempts=1,
-            )
-            DraftPush.objects.filter(id__in=[row.id for row in pushes if row.status == "PENDING"]).update(job=job)
+        # ADR-063 第 2 条：整个批次在同一事务内；没有需入队的自动行时直接写批次审计
+        with transaction.atomic():
+            for account in accounts:
+                adapter = get_draft_adapter(account.platform)
+                unsupported = unsupported_features(
+                    post.doc, platform_unsupported=adapter.unsupported_features)
+                if adapter.capability == "MANUAL_EXPORT":
+                    unsupported = unsupported + ["style_not_carried"]
+                    status, mode, finished = "MANUAL_REQUIRED", "MANUAL", now
+                elif not account.secret_keys:
+                    status, mode, finished = "FAILED", "AUTO", now
+                else:
+                    status, mode, finished = "PENDING", "AUTO", None
+                row = DraftPush.objects.create(
+                    post=post, account=account, platform=account.platform, batch_id=batch_id,
+                    mode=mode, status=status, unsupported=unsupported,
+                    error_code="NO_CREDENTIALS" if status == "FAILED" else "",
+                    error_message="未配置认证信息" if status == "FAILED" else "",
+                    finished_at=finished,
+                    created_by_admin_id=getattr(admin, "id", 0),
+                    created_by_label=getattr(admin, "username", "")[:64],
+                )
+                pushes.append(row)
+
+            pending_ids = [row.id for row in pushes if row.status == "PENDING"]
+            if pending_ids:
+                job = JobService.enqueue(
+                    kind="DRAFT_PUSH",
+                    payload={"batch_id": str(batch_id), "push_ids": pending_ids},
+                    admin_id=getattr(admin, "id", 0),
+                    admin_label=getattr(admin, "username", "") or "",
+                    subject_type="content_post", subject_id=str(post.id), max_attempts=1,
+                )
+                DraftPush.objects.filter(id__in=pending_ids).update(job=job)
+            else:
+                DraftPushService.audit_batch(str(batch_id), actor=_actor(admin))
         return str(batch_id), (job.id if job else None), [_out(row) for row in pushes]
 
     @staticmethod
@@ -127,20 +147,23 @@ class DraftPushService:
             raise NotFound("推送记录不存在")
         if row.mode != "AUTO" or row.status not in {"FAILED", "UNKNOWN"}:
             raise ApiError("DRAFT_PUSH_STATE_INVALID", "该记录不可重试", 409)
-        new_row = DraftPush.objects.create(
-            post=row.post, account=row.account, platform=row.platform,
-            batch_id=uuid.uuid4(), mode="AUTO", status="PENDING",
-            unsupported=list(row.unsupported or []), retry_of=row,
-            created_by_admin_id=getattr(admin, "id", 0),
-            created_by_label=getattr(admin, "username", "")[:64],
-        )
-        job = JobService.enqueue(
-            kind="DRAFT_PUSH", payload={"push_ids": [new_row.id]},
-            admin_id=getattr(admin, "id", 0),
-            admin_label=getattr(admin, "username", "") or "",
-            subject_type="content_post", subject_id=str(row.post_id), max_attempts=1,
-        )
-        DraftPush.objects.filter(id=new_row.id).update(job=job)
+        batch_id = uuid.uuid4()   # 重试自成新批次，结束时同样写 1 条批次审计
+        with transaction.atomic():
+            new_row = DraftPush.objects.create(
+                post=row.post, account=row.account, platform=row.platform,
+                batch_id=batch_id, mode="AUTO", status="PENDING",
+                unsupported=list(row.unsupported or []), retry_of=row,
+                created_by_admin_id=getattr(admin, "id", 0),
+                created_by_label=getattr(admin, "username", "")[:64],
+            )
+            job = JobService.enqueue(
+                kind="DRAFT_PUSH", payload={"batch_id": str(batch_id), "push_ids": [new_row.id]},
+                admin_id=getattr(admin, "id", 0),
+                admin_label=getattr(admin, "username", "") or "",
+                subject_type="content_post", subject_id=str(row.post_id), max_attempts=1,
+            )
+            DraftPush.objects.filter(id=new_row.id).update(job=job)
+        new_row.refresh_from_db()
         return job.id, _out(new_row)
 
     @staticmethod
@@ -153,31 +176,61 @@ class DraftPushService:
                 raise ApiError("INVALID_QUERY", "batch_id 不合法", 400)
         return qs.order_by("-created_at", "-id")
 
+    @staticmethod
+    def audit_batch(batch_id: str, *, actor: AuditActor) -> None:
+        """汇总该 batch_id 下全部 DraftPush 行（含人工/无凭据）写 1 条 CONTENT_DRAFT_PUSHED（ADR-063 第 2 条）。
+
+        同一 batch_id 只写一次：以 AuditLog(action, object_id) 是否已存在做幂等判断。
+        detail 不含 error_message，防止泄露。
+        """
+        if AuditLog.objects.filter(action="CONTENT_DRAFT_PUSHED", object_id=str(batch_id)[:64]).exists():
+            return
+        rows = list(DraftPush.objects.filter(batch_id=batch_id).order_by("created_at", "id"))
+        if not rows:
+            return
+        results = [{"platform": row.platform, "mode": row.mode, "status": row.status,
+                    "error_code": row.error_code} for row in rows]
+        failed = any(row.status in {"FAILED", "UNKNOWN"} for row in rows)
+        AuditService.record(
+            actor=actor, action="CONTENT_DRAFT_PUSHED", object_type="content_draft_batch",
+            object_id=str(batch_id), result="FAILURE" if failed else "SUCCESS",
+            detail={"post_id": rows[0].post_id, "results": results})
+
+
+def _job_batch_id(job: ContentJob) -> str | None:
+    batch_id = (job.payload or {}).get("batch_id")
+    if batch_id:
+        return str(batch_id)
+    first = DraftPush.objects.filter(job_id=job.id).order_by("id").first()
+    return str(first.batch_id) if first else None
+
 
 class DraftPushHandler:
     kind = "DRAFT_PUSH"
     idempotent = False
 
     def run(self, ctx: JobContext):
+        from .platforms import PlatformAccountService
+        actor = AuditActor("ADMIN", ctx.job.created_by_admin_id, ctx.job.created_by_label)
         results = []
         for push_id in ctx.job.payload.get("push_ids", []):
             row = DraftPush.objects.filter(id=push_id).first()
             if row is None or row.status != "PENDING":
                 continue
+            ctx.heartbeat()   # 每处理一行前延长租约（ADR-063 第 6 条）
             DraftPush.objects.filter(id=row.id).update(status="SENDING")
             account = row.account
+            credentials: dict = {}
+            outcome = None
+            error = ""
             try:
                 adapter = get_draft_adapter(row.platform)
-                from .platforms import PlatformAccountService
                 credentials = PlatformAccountService.credentials_of(account.id) if account else {}
                 payload = DraftPushService.build_payload(row.post, adapter)
-                from apps.integrations.draft import DraftPayload
-                outcome = adapter.save_draft(
-                    DraftPayload(payload.title, payload.html, payload.text, payload.media),
-                    credentials)
+                outcome = adapter.save_draft(payload, credentials,
+                                             account_id=account.id if account else None)
             except Exception as exc:  # noqa: BLE001
-                outcome = None
-                error = str(exc)[:500]
+                error = SecretRedactor(credentials.values()).redact(str(exc))
             if outcome is None:
                 DraftPush.objects.filter(id=row.id).update(
                     status="FAILED", error_code="INTERNAL", error_message=error,
@@ -190,7 +243,7 @@ class DraftPushHandler:
                     finished_at=timezone.now())
             elif outcome.status == "AUTH_EXPIRED":
                 if account:
-                    PlatformAccount.objects.filter(id=account.id).update(auth_status="EXPIRED")
+                    PlatformAccountService.mark_expired(account.id, actor=actor, reason="AUTH_REJECTED")
                 DraftPush.objects.filter(id=row.id).update(
                     status="FAILED", error_code="AUTH_EXPIRED",
                     error_message="认证已失效，请重新认证", finished_at=timezone.now())
@@ -200,11 +253,10 @@ class DraftPushHandler:
                     error_message=(outcome.message or "")[:500], finished_at=timezone.now())
             results.append({"platform": row.platform, "status": outcome.status,
                             "error_code": outcome.error_code})
-        AuditService.record(
-            actor=AuditActor("ADMIN", ctx.job.created_by_admin_id, ctx.job.created_by_label),
-            action="CONTENT_DRAFT_PUSHED", object_type="content_draft_batch",
-            object_id=str(ctx.job.id), result="SUCCESS", detail={"results": results})
-        return Done({"results": results})
+        batch_id = _job_batch_id(ctx.job)
+        if batch_id:
+            DraftPushService.audit_batch(batch_id, actor=actor)
+        return Done({"results": results, "batch_id": batch_id})
 
     def on_interrupted(self, job: ContentJob) -> None:
         now = timezone.now()
@@ -214,3 +266,7 @@ class DraftPushHandler:
         DraftPush.objects.filter(job_id=job.id, status="PENDING").update(
             status="FAILED", error_code="INTERRUPTED", error_message="任务中断",
             finished_at=now)
+        batch_id = _job_batch_id(job)
+        if batch_id:
+            DraftPushService.audit_batch(
+                batch_id, actor=AuditActor("ADMIN", job.created_by_admin_id, job.created_by_label))

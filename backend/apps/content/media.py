@@ -11,9 +11,11 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core import signing
+from django.db import transaction
 from django.http import FileResponse, HttpResponse
 from django.utils import timezone
 
+from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError, NotFound
 
 from .conf import ContentSettings
@@ -176,7 +178,8 @@ class MediaService:
         return get_remote_fetcher().fetch(url, max_bytes=max_bytes, timeout_seconds=timeout_seconds)
 
     @staticmethod
-    def list(*, media_type=None, source=None, q=None):
+    def list_items(*, media_type=None, source=None, q=None):
+        # 类体内不得定义名为 list 的成员：会遮蔽下方注解中的内建 list（GR-C-002-F01）
         qs = MediaItem.objects.filter(state="SAVED")
         if media_type:
             qs = qs.filter(media_type=media_type)
@@ -217,7 +220,8 @@ class MediaService:
         )
 
     @staticmethod
-    def delete(media_id, *, admin_id: int) -> None:
+    def delete(media_id, *, admin) -> None:
+        # ADR-063 第 1 条：删除成功时同事务写 CONTENT_MEDIA_DELETED；文件在提交后删除
         row = MediaItem.objects.filter(id=media_id).first()
         if row is None:
             raise NotFound("素材不存在")
@@ -226,10 +230,30 @@ class MediaService:
             raise ApiError("MEDIA_IN_USE", "素材正在被已发布内容使用", 409,
                            {"posts": [{"id": pid, "title": title} for pid, title in posts]})
         path = os.path.join(settings.MEDIA_ROOT, row.storage_path)
-        ContentPostMedia.objects.filter(media_id=media_id).delete()
-        row.delete()
-        if os.path.exists(path):
-            os.remove(path)
+        detail = {"title": row.title, "media_type": row.media_type,
+                  "source": row.source, "size": row.size}
+        with transaction.atomic():
+            ContentPostMedia.objects.filter(media_id=media_id).delete()
+            row.delete()
+            AuditService.record(
+                actor=AuditActor("ADMIN", getattr(admin, "id", None), getattr(admin, "username", "")),
+                action="CONTENT_MEDIA_DELETED", object_type="content_media",
+                object_id=str(media_id), result="SUCCESS", detail=detail)
+
+            def _remove_file() -> None:
+                if os.path.exists(path):
+                    os.remove(path)
+
+            transaction.on_commit(_remove_file)
+
+    @staticmethod
+    def discard(rows) -> None:
+        """回收尚未被引用的素材行及其文件（如视频多片段入库中途失败，ADR-063 第 8 条）。"""
+        for row in rows:
+            path = os.path.join(settings.MEDIA_ROOT, row.storage_path)
+            MediaItem.objects.filter(id=row.id).delete()
+            if os.path.exists(path):
+                os.remove(path)
 
     @staticmethod
     def housekeeping(now: datetime) -> int:

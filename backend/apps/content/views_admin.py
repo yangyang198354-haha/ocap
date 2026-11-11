@@ -58,10 +58,12 @@ class PostListView(AdminOnly):
 
     def post(self, request):
         data = request.data or {}
-        post = PostService.create(title=data.get("title", ""), doc=data.get("doc", {}),
-                                  style_key=data.get("style_key", "builtin:classic"),
-                                  admin=request.user)
-        return Response(post_out(post, include_doc=True), status=201)
+        post, warnings, warning_total = PostService.create(
+            title=data.get("title", ""), doc=data.get("doc", {}),
+            style_key=data.get("style_key", "builtin:classic"), admin=request.user)
+        body = post_out(post, include_doc=True)
+        body.update({"warnings": warnings, "warning_total": warning_total})
+        return Response(body, status=201)
 
 
 class PostDetailView(AdminOnly):
@@ -72,9 +74,12 @@ class PostDetailView(AdminOnly):
         data = request.data or {}
         if not any(key in data for key in ("title", "doc", "style_key")):
             raise ApiError("INVALID_VALUE", "至少需要修改一项", 400)
-        post = PostService.update(post_id, title=data.get("title"), doc=data.get("doc"),
-                                  style_key=data.get("style_key"), admin=request.user)
-        return Response(post_out(post, include_doc=True))
+        post, warnings, warning_total = PostService.update(
+            post_id, title=data.get("title"), doc=data.get("doc"),
+            style_key=data.get("style_key"), admin=request.user)
+        body = post_out(post, include_doc=True)
+        body.update({"warnings": warnings, "warning_total": warning_total})
+        return Response(body)
 
     def delete(self, request, post_id):
         PostService.delete(post_id, request.user)
@@ -136,7 +141,7 @@ class MediaListView(AdminOnly):
             raise ApiError("INVALID_QUERY", "media_type 不合法", 400)
         if source and source not in MEDIA_SOURCES:
             raise ApiError("INVALID_QUERY", "source 不合法", 400)
-        qs = MediaService.list(media_type=media_type, source=source,
+        qs = MediaService.list_items(media_type=media_type, source=source,
                                q=request.query_params.get("q", "")[:100])
         return _page(qs, request, media_out)
 
@@ -154,7 +159,7 @@ class MediaDetailView(AdminOnly):
         return Response(media_out(MediaService.rename(media_id, (request.data or {}).get("title", ""))))
 
     def delete(self, request, media_id):
-        MediaService.delete(media_id, admin_id=request.user.id)
+        MediaService.delete(media_id, admin=request.user)
         return Response(status=204)
 
 

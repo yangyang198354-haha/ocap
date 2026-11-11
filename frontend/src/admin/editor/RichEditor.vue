@@ -17,13 +17,43 @@ import { ElMessage } from 'element-plus'
 import Toolbar from './Toolbar.vue'
 import { Video } from './extensions/Video.js'
 import { PageBreak } from './extensions/PageBreak.js'
+import { toHexColor } from './colors.js'
+import { guardPastedHtml } from './pasteGuard.js'
 
 const props = defineProps({
   modelValue: { type: Object, default: () => ({ type: 'doc', content: [] }) },
   mediaUrls: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false }
 })
-const emit = defineEmits(['update:modelValue', 'pick-media'])
+const emit = defineEmits(['update:modelValue', 'pick-media', 'paste-dropped'])
+
+// 解析 HTML 时把函数式颜色归一化为十六进制，无法归一化则不设置该属性（ADR-062）
+function colorAttribute(name, cssProp, cssName) {
+  return {
+    default: null,
+    parseHTML: (element) => toHexColor(String(element.style[cssProp] || '').replace(/['"]+/g, '')),
+    renderHTML: (attributes) => (attributes[name] ? { style: `${cssName}: ${attributes[name]}` } : {})
+  }
+}
+const SafeColor = Color.extend({
+  addGlobalAttributes() {
+    return [{ types: this.options.types, attributes: { color: colorAttribute('color', 'color', 'color') } }]
+  }
+})
+const SafeBackgroundColor = BackgroundColor.extend({
+  addGlobalAttributes() {
+    return [{
+      types: this.options.types,
+      attributes: { backgroundColor: colorAttribute('backgroundColor', 'backgroundColor', 'background-color') }
+    }]
+  }
+})
+
+function transformPastedHTML(html) {
+  const result = guardPastedHtml(html)
+  if (result.droppedImages) emit('paste-dropped', { images: result.droppedImages })
+  return result.html
+}
 
 const MediaImage = Image.extend({
   addAttributes() {
@@ -42,17 +72,18 @@ const editor = useEditor({
   content: withMedia(props.modelValue),
   editable: !props.disabled,
   extensions: [
-    StarterKit.configure({ code: false, codeBlock: false }),
+    StarterKit.configure({ code: false, codeBlock: false, heading: { levels: [1, 2, 3, 4] } }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
-    Color,
-    BackgroundColor,
+    SafeColor,
+    SafeBackgroundColor,
     FontSize,
     LineHeight,
     MediaImage.configure({ inline: false, allowBase64: false }),
     Video,
     PageBreak
   ],
+  editorProps: { transformPastedHTML },
   onUpdate: ({ editor: instance }) => emit('update:modelValue', instance.getJSON())
 })
 
@@ -112,7 +143,7 @@ function clearFormat() {
 }
 function requestLink() {
   const url = window.prompt('输入链接地址（http/https/mailto/tel）')
-  if (!url) return
+  if (url === null) return
   if (!/^(https?:\/\/|mailto:|tel:)/i.test(url)) {
     ElMessage.error('网址无效')
     return

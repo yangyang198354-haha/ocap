@@ -33,8 +33,23 @@ SPEC: dict[str, tuple] = {
     "content.video.max_wait_seconds": (1800, "int", 120, 7200, False, ""),
     "content.video.max_text_chars": (2000, "int", 50, 10000, False, ""),
     "content.wechat_mp.timeout_seconds": (30, "int", 5, 120, True, "P11"),
-    "content.wechat_mp.auth_errcodes": ([], "list", None, None, False, "Q-A3"),
+    # 取令牌命中即视为"凭据被拒"→ 账户标失效（ADR-060）；取值无出处 [UNSOURCED]（Q-B1），缺省空
+    "content.wechat_mp.auth_errcodes": ([], "list", None, None, False, "Q-B1 [UNSOURCED]"),
+    # 缺省值出处 [CODE: backend/apps/integrations/wechat.py:13]（40164 = IP 不在白名单）
+    "content.wechat_mp.ip_errcodes": ([40164], "list", None, None, True, "CODE wechat.py:13"),
+    # 草稿接口"令牌无效/过期"的 errcode；无出处 [UNSOURCED]（Q-B1），缺省空
+    "content.wechat_mp.token_errcodes": ([], "list", None, None, False, "Q-B1 [UNSOURCED]"),
+    # 缺省值出处 [CODE: backend/apps/integrations/wechat.py:94]（提前 300 秒视为过期）
+    "content.wechat_mp.token_margin_seconds": (300, "int", 60, 1800, True, "CODE wechat.py:94"),
+    "content.wechat_mp.refresh_cooldown_seconds": (60, "int", 10, 600, False, "ADR-060"),
+    # ADR-061：封面/正文图片上传阻塞于 Q-B1（接口 [UNSOURCED]），缺省关闭
+    "content.wechat_mp.upload_cover": (False, "bool", None, None, False, "ADR-061 [UNSOURCED]"),
+    "content.wechat_mp.upload_content_images": (False, "bool", None, None, False, "ADR-061 [UNSOURCED]"),
+    "content.wechat_mp.require_cover": (False, "bool", None, None, False, "ADR-061 [UNSOURCED]"),
 }
+
+ERRCODE_KEYS = {"content.wechat_mp.auth_errcodes", "content.wechat_mp.ip_errcodes",
+                "content.wechat_mp.token_errcodes"}
 
 
 def _valid(key: str, value: Any) -> bool:
@@ -68,8 +83,10 @@ def _valid(key: str, value: Any) -> bool:
             return set(map(str, value)) <= {"jpg", "jpeg", "png"}
         if key == "content.media.video_exts":
             return set(map(str, value)) <= {"mp4", "mov"}
-        if key == "content.wechat_mp.auth_errcodes":
-            return all(isinstance(v, int) and not isinstance(v, bool) for v in value)
+        if key in ERRCODE_KEYS:
+            return len(value) <= 50 and all(
+                isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 999999
+                for v in value)
         return True
     return isinstance(value, bool)
 

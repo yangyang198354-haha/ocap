@@ -1,11 +1,12 @@
 <file_header>
   <author_agent>system-architect</author_agent>
-  <timestamp>2026-11-10T23:55:06+08:00</timestamp>
+  <timestamp>2026-11-11T11:27:44+08:00</timestamp>
   <project_name>ocap_content_publish</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
-    <file>architecture/architecture_design.md (0.1.0 DRAFT)</file>
-    <file>architecture/module_design.md (0.1.0 DRAFT)</file>
+    <file>architecture/architecture_design.md (1.1.0 DRAFT)</file>
+    <file>architecture/module_design.md (1.1.0 DRAFT)</file>
+    <file>architecture/tech_stack.md (1.0.0 APPROVED，被本版本返工)</file>
     <file>requirements/requirements_spec.md (1.0.0 APPROVED)</file>
   </input_files>
   <phase>PHASE_04</phase>
@@ -15,6 +16,7 @@
 # 技术选型：信息公开发布与多平台内容中心（INCREMENTAL）
 
 > 增量原则：沿用画像 P1 技术栈。**新增依赖共 1 个 Python 包、7 个 npm 包（含 1 个自动安装的对等依赖），0 个中间件，1 个 systemd 单元**。未安装任何依赖（本阶段只设计）。画像 P8 禁用项（Docker、pscp、makemigrations 产物、改 Freeark）均未出现在选中方案中；被排除的 Celery/Redis 不在 P8 禁用清单内，是因资源与必要性被排除（ADR-049）。
+> **1.1.0 修订（REWORK_AUTHORIZED，用户 2026-11-11）**：**技术选型无变化——不新增任何 Python 或 npm 依赖、不新增中间件与运行单元**。公众号取令牌复用已有的 `requests`（`requirements.txt:3`）与 `cryptography`（ADR-050）；取色器用已有的 Element Plus（`el-color-picker`，`frontend/package.json` 已含 `element-plus ^2.8.7`）；令牌缓存落 MySQL（`content` 0002 增 4 个可空列，见 module_design"数据迁移"）。仅 R10 因 ADR-060 改写，其余风险条目沿用 1.0.0。
 > 版本出处：`[REPO 文件:行]` 为仓库依赖清单；`[WEB: URL，2026-11-10]` 为 npm/PyPI 官方仓库 JSON；查不到写"未知"。本机（Claude 主会话云主机）没有 ocap 的 venv，已安装版本无法 `pip show` 取证，实际版本以目标机为准（未知）。
 
 ## 技术选型表
@@ -87,12 +89,12 @@
 |---|---|---|
 | R1 | `cryptography` 为原生依赖：目标机 Python 版本/pip 版本未知，无轮子时会触发源码编译；**密钥丢失=已保存凭据全部不可恢复** | 预检 `pip install --dry-run -r requirements.txt`（SKILL §4 第 8 项）；`CONTENT_CRED_ENC_KEY` 由用户保管并备份，E1 部署文档写明；密钥缺失时只让凭据保存接口返回 503，不影响业主端；支持 `CONTENT_CRED_ENC_KEY_PREV` 轮换 |
 | R3 | 自研 `richtext` 校验器/渲染器是安全关键代码，绕过即 XSS | 单元测试专项：脚本标签/事件属性/`javascript:` 链接/`data:` 链接/超深嵌套/超大文档/未知节点/非法颜色与字号；渲染一律 `html.escape`；展示端不使用未校验 HTML（Web 只 `v-html` 服务端渲染结果）；GROUP_D 加入"含脚本片段正文"的端到端用例（AC-107-04/108-04） |
-| R4 | 外部接口按参考实现编写但**测试只能用替身**（P4）：公众号草稿、即梦签名/状态映射、方舟文生图的真实行为无法在测试中验证；参考实现中部分细节 `[UNSOURCED]`（Q-A1~A3、A-5、A-6） | 客户端实现尽量薄；签名函数用固定输入输出做单元测试（用参考实现同样输入对比）；真实联调由用户在 E2 后手工验证并反馈；`content.wechat_mp.auth_errcodes` 等做成可配置，避免改代码 |
+| R4 | 外部接口按参考实现编写但**测试只能用替身**（P4）：公众号草稿、即梦签名/状态映射、方舟文生图的真实行为无法在测试中验证；参考实现中部分细节 `[UNSOURCED]`（1.1.0：Q-B1、A-5、A-6；原 Q-A1~A3 已关闭/并入 Q-B1） | 客户端实现尽量薄；签名函数用固定输入输出做单元测试（用参考实现同样输入对比）；真实联调由用户在 E2 后手工验证并反馈；`content.wechat_mp.auth_errcodes` 等做成可配置，避免改代码 |
 | R6 | 迁移风险：MySQL DDL 不可事务回滚；`BinaryField`/`JSONField` 的 MySQL 行为；唯一索引长度 | 手写迁移、仅新建表；`makemigrations --check` 无漂移；回滚前 `mysqldump` content_* 表并备份媒体目录（`[MANUAL_ROLLBACK_REQUIRED]`，见 module_design"数据迁移"） |
 | R7 | Tiptap 3 的 `text-style` 子路径 API 与行距存储位置以实现期安装版本为准；9 个包版本须精确一致（`@tiptap/*` peer 为精确版本）；`npm ci` 要求锁文件同步 | 全部固定同一版本 3.33.1（`^` 不用于 `@tiptap/*`）；服务端校验器对 `lineHeight` 两处位置均接受（IFC-169）；提交更新后的 `frontend/package-lock.json`；CI 的 `npm ci` 与 `npm run build` 为门槛 |
 | R8 | 小程序内超链接降级为"复制"（A-3）；`<video>` 对签名 URL 的 Range 行为在 iOS/安卓上差异；小程序媒体域名白名单（微信侧配置）可能影响 `<image>/<video>` 加载 | 视图实现单段 Range 并测试；用户确认 A-3；开发者在真机验证并反馈；域名配置属微信侧，本批不改 |
 | R9 | CI 前端 `npm ci` 要求锁文件同步；小程序 `package-lock.json` 不提交（画像 P4） | 开发阶段更新并提交前端锁文件；小程序无新增依赖，无此问题 |
-| R10 | 公众号 `access_token` 为手工录入且有时效（Q-A1）：真实使用中会频繁出现"认证已失效"；`requests` 异常消息含带 token 的 URL，若未脱敏会写入错误信息 | ADR-050 的 `SecretRedactor` 强制用于所有错误文本；单元测试用含 token 的 URL 构造异常断言输出不含 token；Q-A1 待用户说明线上做法 |
+| R10（**1.1.0 改写**） | 公众号令牌改为服务端用 AppID/AppSecret 自动换取（ADR-060）：①取令牌的 `secret` 与草稿接口的 `access_token` 都在 URL 查询串里，`requests` 异常消息会带完整 URL；②`auth_errcodes`/`token_errcodes` 真实取值、封面与正文图片上传的端点与字段**无出处**（Q-B1，`CLARIFICATION_NEEDED`）；③出口 IP 白名单在微信侧，树莓派出口 IP 未知且可能变化；④令牌缓存是新增的加密敏感列 | ①`SecretRedactor([appsecret, token])` 强制用于所有错误文本，单元测试用含 secret/token 的 URL 构造异常断言输出不含二者；②相关接口只有 `[UNSOURCED]` 签名占位、开关缺省关闭，待用户按 Q-B1 选项提供资料；③`IP_NOT_WHITELISTED` 单独分类并提示管理员，E2 前用户确认白名单；④令牌密文 AAD 与凭据密文不同，缓存列可随时清空重取（不同于凭据不可恢复） |
 
 ### Low
 

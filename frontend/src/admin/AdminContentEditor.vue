@@ -26,7 +26,7 @@
     <div class="editor-layout">
       <div>
         <RichEditor ref="rich" v-model="doc" :media-urls="mediaUrls"
-                    @pick-media="openPicker" />
+                    @pick-media="openPicker" @paste-dropped="onPasteDropped" />
       </div>
       <aside class="side-panel">
         <h3>AI 生成</h3>
@@ -84,12 +84,18 @@
         </el-checkbox>
       </el-checkbox-group>
       <div class="row" style="margin-top: 12px">
-        <el-button type="primary" :disabled="!selectedAccounts.length" @click="pushDrafts">开始保存</el-button>
+        <el-button type="primary" @click="pushDrafts">开始保存</el-button>
       </div>
       <el-table :data="pushResults" border style="margin-top: 12px">
-        <el-table-column prop="platform" label="平台" width="120" />
-        <el-table-column prop="status" label="结果" width="130" />
-        <el-table-column prop="error_message" label="原因" />
+        <el-table-column label="平台" width="120">
+          <template #default="{ row }">{{ platformText(row.platform) }}</template>
+        </el-table-column>
+        <el-table-column label="结果" width="130">
+          <template #default="{ row }">{{ pushStatusText(row.status) }}</template>
+        </el-table-column>
+        <el-table-column label="原因">
+          <template #default="{ row }">{{ pushErrorText(row) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="180">
           <template #default="{ row }">
             <el-button v-if="row.status === 'FAILED' || row.status === 'UNKNOWN'" size="small" @click="retry(row)">重试</el-button>
@@ -100,15 +106,19 @@
       </el-table>
       <div v-for="row in pushResults" :key="`u-${row.id}`">
         <el-tag v-if="row.unsupported?.length" type="warning" style="margin-top: 6px">
-          {{ row.platform }} 不能保留：{{ row.unsupported.join('、') }}
+          {{ platformText(row.platform) }} 不能保留：{{ row.unsupported.map(featureText).join('、') }}
         </el-tag>
       </div>
     </el-dialog>
 
     <el-dialog v-model="historyVisible" title="保存历史" width="720px">
       <el-table :data="historyRows" border>
-        <el-table-column prop="platform" label="平台" width="120" />
-        <el-table-column prop="status" label="结果" width="120" />
+        <el-table-column label="平台" width="120">
+          <template #default="{ row }">{{ platformText(row.platform) }}</template>
+        </el-table-column>
+        <el-table-column label="结果" width="120">
+          <template #default="{ row }">{{ pushStatusText(row.status) }}</template>
+        </el-table-column>
         <el-table-column prop="operator" label="操作人" width="120" />
         <el-table-column prop="created_at" label="时间" />
       </el-table>
@@ -123,6 +133,10 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
 import RichEditor from './editor/RichEditor.vue'
 import MediaPicker from './editor/MediaPicker.vue'
+import {
+  featureText, invalidDocMessage, platformText, pushErrorText, pushStatusText, warningsMessage
+} from './editor/contentText.js'
+import { downloadBlob } from './registryImport.js'
 
 const route = useRoute()
 const postId = Number(route.params.id)
@@ -169,40 +183,69 @@ async function load() {
   prompts.value = await admin.promptTemplates()
   if (!llm.value && llms.value.length) llm.value = llms.value[0].service_type
 }
+function reportError(err, fallback) {
+  if (err?.code === 'CONTENT_INVALID_DOC') ElMessage.error(invalidDocMessage(err.details, doc.value))
+  else ElMessage.error(err?.message || fallback)
+}
+// 返回是否保存成功；失败时 publish()/confirmText() 必须中止（GR-C-002-F02）
 async function saveDraft() {
   saving.value = true
   try {
-    await admin.updateContentPost(postId, { title: title.value, doc: doc.value, style_key: styleKey.value })
-    ElMessage.success('已保存')
+    const data = await admin.updateContentPost(postId, {
+      title: title.value, doc: doc.value, style_key: styleKey.value
+    })
+    const note = warningsMessage(data?.warnings, data?.warning_total, doc.value)
+    if (note) {
+      // 服务端已丢弃/归一化部分格式：让编辑器显示将被保存的结果
+      if (data.doc) doc.value = data.doc
+      ElMessage.warning(note)
+    } else {
+      ElMessage.success('已保存')
+    }
+    return true
   } catch (err) {
-    ElMessage.error(err.message || '保存失败')
+    reportError(err, '保存失败')
+    return false
   } finally {
     saving.value = false
   }
 }
 async function publish() {
+  if (!(await saveDraft())) return
   try {
-    await saveDraft()
     await admin.publishContentPost(postId)
     ElMessage.success('已发布')
   } catch (err) {
-    ElMessage.error(err.message || '发布失败')
+    if (err?.code === 'POST_INCOMPLETE' && err.details?.missing?.includes('title')) {
+      ElMessage.error('请填写标题（默认的“未命名内容”不能直接发布）')
+    } else {
+      ElMessage.error(err?.message || '发布失败')
+    }
   }
 }
 async function confirmText() {
+  if (!(await saveDraft())) return
   try {
-    await saveDraft()
     await admin.confirmContentText(postId)
     confirmed.value = true
     ElMessage.success('文案已确认')
   } catch (err) {
-    ElMessage.error(err.message || '确认失败')
+    ElMessage.error(err?.message || '确认失败')
   }
 }
 async function preview() {
-  const data = await admin.previewContent({ doc: doc.value, style_key: styleKey.value })
-  previewPages.value = data.pages || []
-  previewVisible.value = true
+  try {
+    const data = await admin.previewContent({ doc: doc.value, style_key: styleKey.value })
+    previewPages.value = data.pages || []
+    previewVisible.value = true
+    const note = warningsMessage(data.warnings, data.warning_total, doc.value)
+    if (note) ElMessage.warning(note)
+  } catch (err) {
+    reportError(err, '预览失败')
+  }
+}
+function onPasteDropped({ images }) {
+  ElMessage.warning(`已忽略 ${images} 张外链图片，请通过素材库或上传插入图片`)
 }
 function openPicker(kind) {
   picker.value?.open(kind === 'video' ? 'VIDEO' : 'IMAGE')
@@ -327,6 +370,10 @@ async function openDrafts() {
   draftVisible.value = true
 }
 async function pushDrafts() {
+  if (!selectedAccounts.value.length) {
+    ElMessage.warning('请至少选择一个平台')
+    return
+  }
   try {
     const data = await admin.pushDrafts(postId, selectedAccounts.value)
     pushResults.value = data.pushes || []
@@ -354,12 +401,8 @@ async function openHistory() {
 }
 async function exportPack(platform) {
   const blob = await admin.exportPack(postId, platform)
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `content_${postId}_${platform}.zip`
-  link.click()
-  URL.revokeObjectURL(url)
+  // 延后 revokeObjectURL，避免下载尚未开始就释放（做法同 registryImport.js）
+  downloadBlob(blob, `content_${postId}_${platform}.zip`)
 }
 async function copyPack(platform) {
   const data = await admin.copyPack(postId, platform)

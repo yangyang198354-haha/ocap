@@ -6,8 +6,8 @@ export const Video = Node.create({
   atom: true,
   addAttributes() {
     return {
-      mediaId: { default: null },
-      src: { default: null }
+      mediaId: { default: null, parseHTML: (element) => element.getAttribute('data-media-id') },
+      src: { default: null, parseHTML: (element) => element.getAttribute('src') }
     }
   },
   parseHTML() {

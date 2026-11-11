@@ -34,6 +34,7 @@ defineProps({
 function blockStyle(block) {
   const style = {}
   if (block.align) style.textAlign = block.align
+  if (block.lh) style.lineHeight = block.lh
   if (block.type === 'heading') style.fontWeight = '700'
   else style.marginBottom = '12rpx'
   return style
@@ -42,8 +43,11 @@ function inlineStyle(inline, block) {
   const style = {}
   if (inline.bold) style.fontWeight = '700'
   if (inline.italic) style.fontStyle = 'italic'
-  if (inline.underline || inline.href) style.textDecoration = 'underline'
-  if (inline.strike) style.textDecoration = 'line-through'
+  // 下划线与删除线合并为单个 text-decoration，避免互相覆盖
+  const lines = []
+  if (inline.underline || inline.href) lines.push('underline')
+  if (inline.strike) lines.push('line-through')
+  if (lines.length) style.textDecoration = lines.join(' ')
   if (inline.color) style.color = inline.color
   if (inline.bg) style.backgroundColor = inline.bg
   if (inline.size) style.fontSize = `${inline.size}px`

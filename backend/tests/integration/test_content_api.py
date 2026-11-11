@@ -133,12 +133,54 @@ class PostApiTests(ContentTestBase):
                           404, "NOT_FOUND")
 
     def test_tc_int_309_invalid_doc_rejected(self):
+        """宽容模式（ADR-062，GR-C-003-F01）：危险链接被丢弃并返回 warnings，安全断言不放宽；
+        结构类错误仍 400 并带 block_index / block_type。"""
+        evil = doc(para("x", marks=[
+            {"type": "link", "attrs": {"href": "javascript:alert(1)"}}]))
         resp = self.api("post", "/admin/content/posts",
-                        {"title": "x", "doc": doc(para("x", marks=[
-                            {"type": "link", "attrs": {"href": "javascript:alert(1)"}}]))},
+                        {"title": "x", "doc": evil}, token=self.admin_token)
+        self.assert_ok(resp, 201)
+        self.assertEqual(resp.data["warning_total"], 1)
+        self.assertEqual(resp.data["warnings"][0]["reason"], "LINK")
+        self.assertEqual(resp.data["warnings"][0]["action"], "DROPPED")
+        self.assertEqual(resp.data["warnings"][0]["block_index"], 0)
+        # 输出 doc 中没有任何链接标记，也不含 javascript:
+        saved = resp.data["doc"]
+        self.assertNotIn("link", str(saved))
+        self.assertNotIn("javascript", str(saved).lower())
+        # 渲染 HTML 与 blocks 同样不含 javascript:
+        post_id = resp.data["id"]
+        self.assert_ok(self.publish(post_id))
+        html = self.api("get", f"/info/posts/{post_id}", token=self.member_token)
+        self.assertNotIn("javascript", str(html.data["pages"]).lower())
+        self.assertIn("<p>x</p>", html.data["pages"][0]["html"])
+        blocks = self.api("get", f"/info/posts/{post_id}?fmt=blocks", token=self.member_token)
+        self.assertNotIn("javascript", str(blocks.data["pages"]).lower())
+        self.assertNotIn("href", str(blocks.data["pages"]))
+        # 结构类错误仍 400，带定位
+        bad = self.api("post", "/admin/content/posts",
+                       {"title": "x", "doc": doc(para("ok"),
+                                                 {"type": "paragraph", "content": "oops"})},
+                       token=self.admin_token)
+        self.assert_error(bad, 400, "CONTENT_INVALID_DOC")
+        self.assertEqual(bad.data["details"]["reason"], "ATTR")
+        self.assertEqual(bad.data["details"]["block_index"], 1)
+        self.assertEqual(bad.data["details"]["block_type"], "paragraph")
+        # 未知节点类型属样式类问题：丢弃并告警（不是 400）；根节点类型错误才是结构错误
+        unknown = self.api("post", "/admin/content/posts",
+                           {"title": "x", "doc": doc(para("ok"), {"type": "script"})},
+                           token=self.admin_token)
+        self.assert_ok(unknown, 201)
+        self.assertEqual((unknown.data["warnings"][0]["reason"],
+                          unknown.data["warnings"][0]["action"],
+                          unknown.data["warnings"][0]["block_index"]), ("TYPE", "DROPPED", 1))
+        self.assertNotIn("script", str(unknown.data["doc"]))
+        root = self.api("post", "/admin/content/posts",
+                        {"title": "x", "doc": {"type": "paragraph", "content": []}},
                         token=self.admin_token)
-        self.assert_error(resp, 400, "CONTENT_INVALID_DOC")
-        self.assertEqual(resp.data["details"]["reason"], "LINK")
+        self.assert_error(root, 400, "CONTENT_INVALID_DOC")
+        self.assertEqual(root.data["details"]["reason"], "TYPE")
+        self.assertIsNone(root.data["details"]["block_index"])
 
     def test_tc_int_310_preview_does_not_persist(self):
         before = MediaItem.objects.count()
@@ -187,8 +229,14 @@ class PostApiTests(ContentTestBase):
         renamed = self.api("patch", f"/admin/content/media/{media_id}", {"title": "新名称"},
                            token=self.admin_token)
         self.assertEqual(renamed.data["title"], "新名称")
-        self.assert_ok(self.api("delete", f"/admin/content/media/{media_id}",
-                                token=self.admin_token), 204)
+        import os
+        from django.conf import settings
+        path = os.path.join(settings.MEDIA_ROOT, MediaItem.objects.get(id=media_id).storage_path)
+        self.assertTrue(os.path.exists(path))
+        with self.captureOnCommitCallbacks(execute=True):
+            self.assert_ok(self.api("delete", f"/admin/content/media/{media_id}",
+                                    token=self.admin_token), 204)
+        self.assertFalse(os.path.exists(path))
 
     def test_tc_int_317_published_media_cannot_delete(self):
         media_id = self.upload_media(PNG).data["id"]
@@ -292,11 +340,19 @@ class AiAndDraftTests(ContentTestBase):
     def test_tc_int_327_platform_account_crud_and_mask(self):
         created = self.api("post", "/admin/content/platform-accounts",
                            {"platform": "wechat_mp", "display_name": "小区公众号",
-                            "credentials": {"access_token": "tok-123456"}},
+                            "credentials": {"appid": "wx1234567890abcdef",
+                                            "appsecret": "sec-123456"}},
                            token=self.admin_token)
         self.assert_ok(created, 201)
         self.assertEqual(created.data["auth_status"], "NORMAL")
-        self.assertNotIn("tok-123456", str(created.data))
+        self.assertEqual(created.data["secret_saved"], {"appid": True, "appsecret": True})
+        self.assertNotIn("sec-123456", str(created.data))
+        self.assertNotIn("wx1234567890abcdef", str(created.data))
+        # 旧的 access_token 键已不再受支持（ADR-060）
+        legacy = self.api("patch", f"/admin/content/platform-accounts/{created.data['id']}",
+                          {"credentials": {"access_token": "tok-old"}}, token=self.admin_token)
+        self.assert_error(legacy, 400, "INVALID_VALUE")
+        self.assertEqual(legacy.data["details"]["key"], "access_token")
         self.assert_error(self.api("post", "/admin/content/platform-accounts",
                                    {"platform": "wechat_mp", "display_name": "第二个"},
                                    token=self.admin_token), 409, "PLATFORM_ACCOUNT_EXISTS")
@@ -372,7 +428,7 @@ class AiAndDraftTests(ContentTestBase):
                           400, "NO_PLATFORM_SELECTED")
         account = self.api("post", "/admin/content/platform-accounts",
                            {"platform": "wechat_mp", "display_name": "公众号",
-                            "credentials": {"access_token": "tok"}},
+                            "credentials": {"appid": "wxappid001", "appsecret": "secret001"}},
                            token=self.admin_token).data
         resp = self.api("post", f"/admin/content/posts/{post_id}/drafts",
                         {"account_ids": [account["id"]]}, token=self.admin_token)
@@ -502,7 +558,7 @@ class BranchCoverageTests(ContentTestBase):
     def test_tc_int_341_platform_account_delete(self):
         created = self.api("post", "/admin/content/platform-accounts",
                            {"platform": "wechat_mp", "display_name": "公众号",
-                            "credentials": {"access_token": "tok"}},
+                            "credentials": {"appid": "wxappid001", "appsecret": "secret001"}},
                            token=self.admin_token)
         self.assert_ok(created, 201)
         self.assert_ok(self.api("delete", f"/admin/content/platform-accounts/{created.data['id']}",

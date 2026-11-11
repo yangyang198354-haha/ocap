@@ -105,11 +105,15 @@ def _node_to_blocks(node: dict) -> list[dict]:
         block = {"type": "paragraph", "inlines": _inline_of(node)}
         if attrs.get("textAlign"):
             block["align"] = attrs["textAlign"]
+        if attrs.get("lineHeight"):
+            block["lh"] = attrs["lineHeight"]   # 1.1.0：块级行距（ADR-063 第 7 条）
         return [block]
     if ntype == "heading":
         block = {"type": "heading", "level": attrs.get("level", 1), "inlines": _inline_of(node)}
         if attrs.get("textAlign"):
             block["align"] = attrs["textAlign"]
+        if attrs.get("lineHeight"):
+            block["lh"] = attrs["lineHeight"]
         return [block]
     if ntype == "bulletList":
         return [{"type": "bullet_list", "items": _list_items(node)}]
@@ -131,24 +135,29 @@ def _node_to_blocks(node: dict) -> list[dict]:
     return []
 
 
-def render_blocks(doc: dict, resolve: MediaResolver) -> list[dict]:
-    blocks = []
-    for node in _children(doc):
-        blocks.extend(_node_to_blocks(node))
+def _resolve_media(blocks: list[dict], resolve: MediaResolver) -> None:
+    """任意深度（顶层、引用、列表项）解析图片/视频的 src；素材不存在则原位替换为提示段落。"""
     for block in blocks:
-        if block.get("type") in {"image", "video"}:
+        kind = block.get("type")
+        if kind in {"image", "video"}:
             ref = resolve(UUID(block["media_id"])) if block.get("media_id") else None
             if ref is None:
                 block.clear()
                 block.update({"type": "paragraph", "inlines": [{"text": "[素材已删除]"}]})
             else:
                 block["src"] = ref["url"]
-        if block.get("type") == "quote":
-            for child in block.get("children", []):
-                if child.get("type") in {"image", "video"}:
-                    ref = resolve(UUID(child["media_id"])) if child.get("media_id") else None
-                    child.clear()
-                    child.update({"type": "paragraph", "inlines": [{"text": "[素材已删除]" if ref is None else ref["title"]}]})
+        elif kind == "quote":
+            _resolve_media(block.get("children", []), resolve)
+        elif kind in {"bullet_list", "ordered_list"}:
+            for item in block.get("items", []):
+                _resolve_media(item, resolve)
+
+
+def render_blocks(doc: dict, resolve: MediaResolver) -> list[dict]:
+    blocks = []
+    for node in _children(doc):
+        blocks.extend(_node_to_blocks(node))
+    _resolve_media(blocks, resolve)
     return blocks
 
 
@@ -159,9 +168,12 @@ def _inline_html(inline: dict, tokens: StyleTokens) -> str:
         styles.append("font-weight:700")
     if inline.get("italic"):
         styles.append("font-style:italic")
-    if inline.get("underline"):
+    if inline.get("underline") and inline.get("strike"):
+        # 合并为单个声明，避免两个 text-decoration 互相覆盖（ADR-063 第 7 条）
+        styles.append("text-decoration:underline line-through")
+    elif inline.get("underline"):
         styles.append("text-decoration:underline")
-    if inline.get("strike"):
+    elif inline.get("strike"):
         styles.append("text-decoration:line-through")
     if inline.get("color"):
         styles.append(f"color:{inline['color']}")
@@ -180,7 +192,12 @@ def _inline_html(inline: dict, tokens: StyleTokens) -> str:
 
 
 def _block_html(block: dict, tokens: StyleTokens, resolve: MediaResolver) -> str:
-    align = f' style="text-align:{block["align"]}"' if block.get("align") else ""
+    block_styles = []
+    if block.get("align"):
+        block_styles.append(f'text-align:{_esc(block["align"])}')
+    if block.get("lh"):
+        block_styles.append(f'line-height:{_esc(block["lh"])}')
+    align = f' style="{";".join(block_styles)}"' if block_styles else ""
     kind = block.get("type")
     if kind == "paragraph":
         content = "".join(_inline_html(i, tokens) for i in block.get("inlines", []))
@@ -205,16 +222,15 @@ def _block_html(block: dict, tokens: StyleTokens, resolve: MediaResolver) -> str
     if kind == "hr":
         return '<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>'
     if kind == "image":
-        ref = resolve(UUID(block["media_id"])) if block.get("media_id") else None
-        if ref is None:
+        # src 已由 render_blocks 在任意深度解析；缺失即素材不存在
+        if not block.get("src"):
             return "<p>[素材已删除]</p>"
-        return (f'<figure><img src="{_esc(ref["url"])}" alt="{_esc(block.get("alt", ""))}" '
+        return (f'<figure><img src="{_esc(block["src"])}" alt="{_esc(block.get("alt", ""))}" '
                 f'style="max-width:100%;height:auto"/></figure>')
     if kind == "video":
-        ref = resolve(UUID(block["media_id"])) if block.get("media_id") else None
-        if ref is None:
+        if not block.get("src"):
             return "<p>[素材已删除]</p>"
-        return f'<video controls src="{_esc(ref["url"])}" style="max-width:100%"></video>'
+        return f'<video controls src="{_esc(block["src"])}" style="max-width:100%"></video>'
     if kind == "page_break":
         return '<hr class="rt-page-break" style="border:none;border-top:1px dashed #cbd5e1;margin:24px 0"/>'
     return ""

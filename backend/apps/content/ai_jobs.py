@@ -1,7 +1,8 @@
 """MOD-052：AI 生成任务（IFC-184）。"""
 import hashlib
-from typing import Mapping
+from typing import Mapping, Sequence
 
+from django.db import transaction
 from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
@@ -14,9 +15,9 @@ from apps.integrations.videogen import VideoGenError, VideoScene, get_videogen_c
 from .conf import ContentSettings
 from .jobs import Done, Fail, JobContext, JobService, Wait
 from .media import MediaFetchError, MediaService
-from .models import ContentJob
+from .models import ContentJob, MediaItem
 from .posts import PostService
-from .richtext import render_text, text_to_doc
+from .richtext import extract_paragraphs, render_text, text_to_doc
 from .services_config import ServiceConfigService
 
 MAX_TOKENS = {"SHORT": 1024, "MEDIUM": 2048, "LONG": 4096}
@@ -127,8 +128,9 @@ class AiGenerationService:
             raise ApiError("TEXT_NOT_CONFIRMED", "请先确认文案", 409)
         if len(text) > int(ContentSettings.get("content.video.max_text_chars")):
             raise ApiError("INVALID_VALUE", "文案过长", 400)
+        # 分镜按文档段落切分（ADR-063 第 8 条）；上面的文案校验与 text_sha256 仍用 render_text 口径
         scenes = AiGenerationService.build_scenes(
-            text,
+            extract_paragraphs(post.doc),
             max_scenes=int(ContentSettings.get("content.video.max_scenes")),
             scene_seconds=int(ContentSettings.get("content.video.scene_seconds")),
             transition=ContentSettings.get("content.video.transition"),
@@ -148,11 +150,12 @@ class AiGenerationService:
         return job
 
     @staticmethod
-    def build_scenes(text: str, *, max_scenes: int, scene_seconds: int,
+    def build_scenes(paragraphs: Sequence[str], *, max_scenes: int, scene_seconds: int,
                      transition: str) -> list[VideoScene]:
-        paragraphs = [part.strip() for part in str(text).split("\n\n") if part.strip()]
+        paragraphs = [str(part).strip() for part in paragraphs if str(part).strip()]
         if not paragraphs:
-            paragraphs = [str(text).strip()]
+            raise ApiError("POST_INCOMPLETE", "没有可用于生成视频的文案段落", 400,
+                           {"missing": ["body"]})
         while len(paragraphs) > max_scenes:
             shortest = min(range(len(paragraphs) - 1),
                            key=lambda i: len(paragraphs[i]) + len(paragraphs[i + 1]))
@@ -294,23 +297,33 @@ class VideoJobHandler:
             return Wait(timezone.now() + timezone.timedelta(
                 seconds=int(ContentSettings.get("content.video.poll_interval_seconds"))),
                 {"phase": "POLLING", "percent": status.progress})
+        # 下载口径（ADR-063 第 8 条）：先以 CANDIDATE 逐个入库，全部成功后统一转 SAVED；
+        # 任一片段失败则回收本任务已入库的片段。clip_urls 与 task_id 保留在 state 中。
+        clip_urls = list(status.clip_urls)
+        state = {**state, "clip_urls": clip_urls}
+        ctx.save_state(state)
         rows = []
-        for index, url in enumerate(status.clip_urls):
-            try:
+        try:
+            for index, url in enumerate(clip_urls):
+                ctx.heartbeat()
                 stream = MediaService.fetch_remote(
                     url, max_bytes=int(ContentSettings.get("content.media.ai_video_max_bytes")),
                     timeout_seconds=60)
-                row = MediaService.store_stream(
+                rows.append(MediaService.store_stream(
                     chunks=stream, media_type="VIDEO", source="AI_GENERATED",
-                    state="SAVED", title=f"AI 视频 {ctx.job.id}-{index + 1}",
+                    state="CANDIDATE", title=f"AI 视频 {ctx.job.id}-{index + 1}",
                     original_name=f"ai_{ctx.job.id}_{index}.mp4",
                     max_bytes=int(ContentSettings.get("content.media.ai_video_max_bytes")),
-                    ai_job_id=ctx.job.id, admin_id=ctx.job.created_by_admin_id)
-            except (MediaFetchError, ApiError) as exc:
-                if getattr(exc, "code", "") == "FILE_TYPE_NOT_ALLOWED":
-                    return Fail("BAD_FORMAT", "生成结果格式不支持")
-                return Fail("UPSTREAM", "生成结果下载失败")
-            rows.append(row)
+                    ai_job_id=ctx.job.id, admin_id=ctx.job.created_by_admin_id))
+        except Exception as exc:  # noqa: BLE001 - 任何失败都要回收已入库片段
+            MediaService.discard(rows)
+            if getattr(exc, "code", "") == "FILE_TYPE_NOT_ALLOWED":
+                return Fail("DOWNLOAD_FAILED", "生成结果格式不支持")
+            return Fail("DOWNLOAD_FAILED", "生成结果下载失败")
+        with transaction.atomic():
+            MediaItem.objects.filter(id__in=[row.id for row in rows]).update(state="SAVED")
+        for row in rows:
+            row.state = "SAVED"
         AuditService.record(
             actor=AuditActor("ADMIN", ctx.job.created_by_admin_id, ctx.job.created_by_label),
             action="CONTENT_VIDEO_COMPLETED", object_type="content_job",

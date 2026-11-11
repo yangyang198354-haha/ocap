@@ -21,8 +21,18 @@
       <el-button size="small" @click="run('toggleBlockquote')">引用</el-button>
       <el-button size="small" @click="run('setHorizontalRule')">分割线</el-button>
     </el-button-group>
-    <el-input v-model="color" size="small" style="width: 90px" placeholder="文字色" @change="setColor" />
-    <el-input v-model="background" size="small" style="width: 90px" placeholder="背景色" @change="setBackground" />
+    <span class="color-field" title="文字色">
+      <span>文字色</span>
+      <el-color-picker v-model="color" size="small" color-format="hex" :show-alpha="false"
+                       :predefine="palette" @change="setColor" />
+      <el-button size="small" link @click="clearColor">清除</el-button>
+    </span>
+    <span class="color-field" title="背景色">
+      <span>背景色</span>
+      <el-color-picker v-model="background" size="small" color-format="hex" :show-alpha="false"
+                       :predefine="palette" @change="setBackground" />
+      <el-button size="small" link @click="clearBackground">清除</el-button>
+    </span>
     <el-input v-model.number="fontSize" size="small" style="width: 80px" placeholder="字号" @change="setFontSize" />
     <el-input v-model.number="lineHeight" size="small" style="width: 80px" placeholder="行距" @change="setLineHeight" />
     <el-button-group>
@@ -41,6 +51,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { COLOR_PALETTE as palette, toHexColor } from './colors.js'
 
 const props = defineProps({ editor: { type: Object, default: null } })
 defineEmits(['pick-media', 'page-break', 'request-link'])
@@ -59,8 +70,8 @@ const heading = computed(() => {
 
 watch(() => props.editor, (editor) => {
   if (!editor) return
-  color.value = editor.getAttributes('textStyle').color || ''
-  background.value = editor.getAttributes('textStyle').backgroundColor || ''
+  color.value = toHexColor(editor.getAttributes('textStyle').color) || ''
+  background.value = toHexColor(editor.getAttributes('textStyle').backgroundColor) || ''
   fontSize.value = (editor.getAttributes('textStyle').fontSize || '').replace('px', '')
   lineHeight.value = editor.getAttributes('textStyle').lineHeight || ''
 })
@@ -82,13 +93,32 @@ function setHeading(level) {
   if (!level) chain.setParagraph().run()
   else chain.toggleHeading({ level }).run()
 }
+// 取色器输出 #rrggbb；经 toHexColor 再次确认，不合规则不设置（ADR-062）
 function setColor(value) {
-  if (!props.editor || !value) return
-  props.editor.chain().focus().setColor(value).run()
+  if (!props.editor) return
+  const hex = toHexColor(value)
+  if (!hex) {
+    clearColor()
+    return
+  }
+  props.editor.chain().focus().setColor(hex).run()
 }
 function setBackground(value) {
-  if (!props.editor || !value) return
-  props.editor.chain().focus().setBackgroundColor(value).run()
+  if (!props.editor) return
+  const hex = toHexColor(value)
+  if (!hex) {
+    clearBackground()
+    return
+  }
+  props.editor.chain().focus().setBackgroundColor(hex).run()
+}
+function clearColor() {
+  color.value = ''
+  props.editor?.chain().focus().unsetColor().run()
+}
+function clearBackground() {
+  background.value = ''
+  props.editor?.chain().focus().unsetBackgroundColor().run()
 }
 function setFontSize(value) {
   if (!props.editor || !value) return
@@ -99,3 +129,7 @@ function setLineHeight(value) {
   props.editor.chain().focus().setLineHeight(value).run()
 }
 </script>
+
+<style scoped>
+.color-field { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+</style>

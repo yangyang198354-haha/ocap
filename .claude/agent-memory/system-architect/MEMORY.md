@@ -12,3 +12,5 @@
 - [P-SA-005] 新增前端 API 调用前先看 backend/tests/integration/test_frontend_contract.py:30-61：正则只认 `http.`/`adminHttp.` + 字面量路径，路径不能带 `?`，管理端接口只能 IsAdmin、用户端只能 IsMember，设计 IFC 时就按此约束写 — 自记 2026-11-10 · 证据 test_frontend_contract.py:30-33,63-97
 - [P-SA-006] uni-app `rich-text` 会屏蔽节点事件（链接/图片不可点击），小程序要"可点击链接/视频"的富文本应由服务端出结构化块、自定义组件渲染 — 自记 2026-11-10 · 证据 uniapp.dcloud.net.cn/component/rich-text.html（WebFetch 摘要）
 - [P-SA-007] 查包信息：npm 用 `registry.npmjs.org/<pkg>/latest`（小）；PyPI 的 `/pypi/<pkg>/json` 超长被截断，改用 `/pypi/<pkg>/<version>/json` 才能看到 upload_time 与轮子文件名 — 自记 2026-11-10 · 证据 WebFetch 结果
+- [P-SA-008] IFC 里的类静态方法不要取 list/dict/set 等内建类型名：类体内同名成员会遮蔽注解里的 `list[...]`，Python 3.12/3.13 导入即 TypeError（3.14 延迟注解不报），本地版本新于 CI 时测不出 — 自记 2026-11-11 · 证据 GR-C-002-F01（media.py:179,212）
+- [P-SA-009] 凡有"写审计"类 AC，module_design 要给"审计落点表"（AC→动作→唯一写入处，含批次/全失败/无任务的分支），否则开发只在主路径写审计、漏掉删除与全人工分支 — 自记 2026-11-11 · 证据 GR-C-002-F03

@@ -50,24 +50,31 @@ class ExportPackService:
     @staticmethod
     def build_zip(post, platform: str, admin):
         html, _ = ExportPackService._prepare(post, platform)
-        temp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
-        temp.close()
         name = f"content_{post.id}_{platform}.zip"
-        with zipfile.ZipFile(temp.name, "w", zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("content.txt", render_text(post.doc))
-            archive.writestr("content.html", html)
-            for index, link in enumerate(post.media_links.select_related("media"), start=1):
-                row = link.media
-                path = os.path.join(settings.MEDIA_ROOT, row.storage_path)
-                if not os.path.exists(path):
-                    continue
-                safe = (row.title or row.original_name or f"media_{index}").replace("/", "_")
-                archive.write(path, f"media/{index:02d}_{safe}", compress_type=zipfile.ZIP_STORED)
-            archive.writestr("README.txt", "内容包由 ocap 生成：正文见 content.txt / content.html，素材在 media/。")
-        AuditService.record(actor=_actor(admin), action="CONTENT_PACK_EXPORTED",
-                            object_type="content_pack", object_id=str(post.id),
-                            result="SUCCESS", detail={"platform": platform})
-        return open(temp.name, "rb"), name
+        # ADR-063 第 4 条：匿名临时文件（POSIX 上创建即无目录项，关闭或进程退出即回收），
+        # 禁止 NamedTemporaryFile(delete=False)；构建失败在此处关闭后再抛，成功时由 FileResponse 关闭
+        stream = tempfile.TemporaryFile("w+b")
+        try:
+            with zipfile.ZipFile(stream, "w", zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("content.txt", render_text(post.doc))
+                archive.writestr("content.html", html)
+                for index, link in enumerate(post.media_links.select_related("media"), start=1):
+                    row = link.media
+                    path = os.path.join(settings.MEDIA_ROOT, row.storage_path)
+                    if not os.path.exists(path):
+                        continue
+                    safe = (row.title or row.original_name or f"media_{index}").replace("/", "_")
+                    archive.write(path, f"media/{index:02d}_{safe}", compress_type=zipfile.ZIP_STORED)
+                archive.writestr("README.txt", "内容包由 ocap 生成：正文见 content.txt / content.html，素材在 media/。")
+            # 审计在 zip 构建成功之后、返回之前写入（构建失败不写）
+            AuditService.record(actor=_actor(admin), action="CONTENT_PACK_EXPORTED",
+                                object_type="content_pack", object_id=str(post.id),
+                                result="SUCCESS", detail={"platform": platform})
+            stream.seek(0)
+        except BaseException:
+            stream.close()
+            raise
+        return stream, name
 
     @staticmethod
     def copy_payload(post, platform: str) -> dict:

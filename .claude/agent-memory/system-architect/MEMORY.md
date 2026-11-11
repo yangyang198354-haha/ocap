@@ -18,3 +18,7 @@
 - [P-SA-006] uni-app `rich-text` 会屏蔽节点事件（链接/图片不可点击），小程序要"可点击链接/视频"的富文本应由服务端出结构化块、自定义组件渲染 — 自记 2026-11-10 · 证据 uniapp.dcloud.net.cn/component/rich-text.html（WebFetch 摘要）
 - [P-SA-007] 查包信息：npm 用 `registry.npmjs.org/<pkg>/latest`（小）；PyPI 的 `/pypi/<pkg>/json` 超长被截断，改用 `/pypi/<pkg>/<version>/json` 才能看到 upload_time 与轮子文件名 — 自记 2026-11-10 · 证据 WebFetch 结果
 - [P-SA-010] 迁移拆分旧版无归属数据时，要提前定义"同人多号吸收并入"规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）
+- [P-SA-011] 批量改写带唯一约束的派生列时，新值可能等于另一行的旧值（如 `车库A-088`），单遍更新会中途违反约束；设计为"先全量检测冲突 → 占位值两阶段更新 → 单事务"，MySQL 无事务性 DDL 须在 RunPython 内显式 `transaction.atomic` — 自记 2026-11-11 · 证据 ocap_admin_polish ADR-067（设计推演，待实现与测试验证）
+- [P-SA-012] 主题/风格的"仅某一端"覆盖规则要挂在 `<html data-surface>` 之类全局属性上，不能挂布局根类，因 Element Plus 弹层 Teleport 到 body 够不着 — 自记 2026-11-11 · 证据 ocap_admin_polish ADR-075（基线 ADR-026 已述 Teleport）
+- [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
+- [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）

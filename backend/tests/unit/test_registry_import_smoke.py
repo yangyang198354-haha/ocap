@@ -27,7 +27,7 @@ class RegistryImportSmokeTests(ApiTestBase):
         self.assert_ok(real)
         self.assertEqual(real.data["owners_created"], 2)
         unit = RegistryUnit.objects.get()
-        self.assertEqual(unit.specific_part, "1-1-3-301")
+        self.assertEqual(unit.specific_part, "1栋1单元3层301号")
         self.assertEqual(unit.unit_type, "RESIDENCE")
         self.assertEqual(str(unit.area), "89.50")
         self.assertEqual(unit.owners.count(), 2)

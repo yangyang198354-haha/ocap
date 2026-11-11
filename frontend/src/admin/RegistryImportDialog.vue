@@ -29,8 +29,15 @@
       </el-table>
 
       <el-alert type="info" :closable="false" style="margin-bottom: 12px">
-        <div v-for="note in spec.notes || []" :key="note">· {{ note }}</div>
-        <div>· 示例：1栋 / 1单元 / 3 / 301 分 3 行填写张三、李四、王芳（王芳不填手机号）；车位填 车库 / 空单元 / 空楼层 / A-088 / 车位 / 12.50。</div>
+        <div v-for="note in plainNotes" :key="note">· {{ note }}</div>
+        <div v-if="suffixRules.length" style="margin-top: 8px">
+          <b>后缀规则</b>
+          <div v-for="rule in suffixRules" :key="rule">· {{ rule }}</div>
+        </div>
+        <div v-if="examples.length" style="margin-top: 8px">
+          <b>示例：字段 → 生成的专有部分</b>
+          <div v-for="item in examples" :key="item.specific_part">· {{ item.fields }} → {{ item.specific_part }}</div>
+        </div>
       </el-alert>
     </template>
 
@@ -87,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import {
@@ -106,6 +113,13 @@ const file = ref(null)
 const preview = ref(null)
 const result = ref(null)
 const busy = ref(false)
+
+const suffixRules = computed(() => spec.value?.suffix_rules || [])
+const examples = computed(() => spec.value?.examples || [])
+// 后端 notes 同时含 suffix_rules 文案；说明区单独渲染后缀规则，避免重复
+const plainNotes = computed(() =>
+  (spec.value?.notes || []).filter((note) => !suffixRules.value.includes(note))
+)
 
 watch(
   () => props.modelValue,

@@ -1,8 +1,8 @@
 from django.urls import path
 
 from .views import (
-    AdminAccountListCreateView, AdminLoginView, AdminPasswordResetView, AdminUserListView,
-    AvatarUploadView, CodeRequestView, EmailVerifyView, LoginByCodeView, LoginByEmailView,
+    AdminAccountListCreateView, AdminLoginView, AdminPasswordResetView, AdminThemePreferenceView,
+    AdminUserListView, AvatarUploadView, CodeRequestView, EmailVerifyView, LoginByCodeView, LoginByEmailView,
     LoginByPasswordView, LogoutView, MeCodeRequestView, MiniappLoginView, PasswordUpdateView,
     ProfileView, RegisterView, ThemePreferenceView, WebWechatCallbackView, WebWechatExchangeView, WebWechatParamsView,
 )
@@ -25,6 +25,7 @@ urlpatterns = [
     path("me/avatar", AvatarUploadView.as_view()),
     path("me/email/verify", EmailVerifyView.as_view()),
     path("admin/auth/login", AdminLoginView.as_view()),
+    path("admin/me/theme", AdminThemePreferenceView.as_view()),
     path("admin/admins", AdminAccountListCreateView.as_view()),
     path("admin/admins/<int:admin_id>/reset-password", AdminPasswordResetView.as_view()),
     path("admin/users", AdminUserListView.as_view()),

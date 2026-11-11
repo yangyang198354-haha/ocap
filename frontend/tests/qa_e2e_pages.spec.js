@@ -96,8 +96,8 @@ describe('TC-E2E-104 用户端 14 页 × 三套风格逐页走查（AC-081-01/02
   })
 })
 
-describe('TC-E2E-105 管理端 9 页固定风格 B（AC-082-01/03）', () => {
-  it('普通用户记忆 terminal 时，9 个管理端页面均为 bento，且无任何风格入口', async () => {
+describe('TC-E2E-105 管理端页面风格入口与取色（AC-139-01、AC-142-01）', () => {
+  it('普通用户记忆 terminal 时，9 个管理端页面使用管理端独立偏好，且有顶栏风格入口', async () => {
     localStorage.setItem('ocap_theme', 'terminal')
     localStorage.setItem('ocap_admin_token', 'adm')
     expect(ADMIN).toHaveLength(9)
@@ -106,7 +106,13 @@ describe('TC-E2E-105 管理端 9 页固定风格 B（AC-082-01/03）', () => {
     for (const p of ADMIN) {
       await visit(wrapper, p)
       if (html().getAttribute('data-theme') !== 'bento') bad.push(`${p}: ${html().getAttribute('data-theme')}`)
-      if (document.querySelector('[role=radio], .theme-picker, .theme-option')) bad.push(`${p}: 出现风格入口`)
+      if (document.querySelector('[role=radio], .theme-picker, .theme-option')) bad.push(`${p}: 出现用户端风格选择器`)
+      const trigger = document.querySelector('.admin-theme-trigger')
+      if (p === '/admin/login') {
+        if (trigger) bad.push(`${p}: 登录页不应有风格入口`)
+      } else if (!trigger) {
+        bad.push(`${p}: 缺少管理端风格入口`)
+      }
       const colors = inlineColors()
       if (colors.length) bad.push(`${p}: 内联颜色 ${colors.join('|')}`)
     }

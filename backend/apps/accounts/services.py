@@ -339,6 +339,15 @@ class AccountService:
         return user
 
     @staticmethod
+    def set_admin_theme(admin, theme):
+        """MOD-068 / IFC-250：管理员偏好，校验规则与用户端一致。"""
+        if not isinstance(theme, str) or not THEME_KEY_RE.match(theme):
+            raise ApiError("INVALID_VALUE", "风格标识不合法")
+        admin.theme_key = theme
+        admin.save(update_fields=["theme_key"])
+        return admin
+
+    @staticmethod
     def update_profile(user: User, data: dict) -> User:
         editable = {"nickname", "gender", "birthday", "email", "avatar_attachment_id"}
         forbidden = set(data) - editable

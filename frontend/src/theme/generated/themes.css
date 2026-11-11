@@ -446,6 +446,55 @@ html[data-theme="bento"] .drop-zone .el-upload-dragger { border: 2px dashed #CBD
 html[data-theme="bento"] .claim-step.is-done .claim-step-node { background: #11121A; border-color: #11121A; }
 html[data-theme="bento"] .claim-step.is-current .claim-step-node { background: #4F46E5; border-color: #4F46E5; color: #fff; box-shadow: 0 0 0 5px rgba(79,70,229,.18); }
 
+/* 管理端作用域（ADR-075，仅作用于 data-surface="admin"；用户端规则不得修改） */
+html[data-theme="bento"][data-surface="admin"] .el-button--primary {
+  --el-button-bg-color: var(--accent);
+  --el-button-hover-bg-color: var(--accent);
+  --el-button-active-bg-color: var(--accent);
+  --el-button-border-color: var(--accent);
+  --el-button-hover-border-color: var(--accent);
+  --el-button-active-border-color: var(--accent);
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar {
+  background: var(--hero);
+  color: var(--on-hero);
+  border-bottom: 0;
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .brand { color: var(--on-hero); }
+html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav {
+  background: rgba(17,18,26,.22);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  padding: 4px;
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a { color: var(--on-hero); }
+html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a:hover { background: rgba(17,18,26,.22); }
+html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a.is-active {
+  background: var(--surface);
+  color: var(--accent-text);
+  font-weight: 650;
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger {
+  color: var(--on-hero);
+  border-color: var(--on-hero);
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger:hover {
+  background: rgba(17,18,26,.22);
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button {
+  --el-button-bg-color: transparent;
+  --el-button-hover-bg-color: transparent;
+  --el-button-active-bg-color: transparent;
+  --el-button-text-color: var(--on-hero);
+  --el-button-hover-text-color: var(--on-hero);
+  --el-button-active-text-color: var(--on-hero);
+  --el-button-border-color: var(--on-hero);
+  --el-button-hover-border-color: var(--on-hero);
+  --el-button-active-border-color: var(--on-hero);
+}
+html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button:hover { background: rgba(17,18,26,.22); }
+html[data-theme="bento"][data-surface="admin"] .admin-bar :focus-visible { outline-color: var(--on-hero); }
+
 html[data-theme="terminal"] {
   color-scheme: dark;
   --bg: #0A0A0B;

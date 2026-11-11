@@ -108,7 +108,7 @@ beforeEach(async () => {
   await router.replace('/login').catch(() => {})
 })
 
-describe('TC-E2E-101 用户旅程：默认 B → 选 A → 全站沿用 → 退出后登录页沿用 → 重新登录 → 他人登录不串号 → 管理端固定 B', () => {
+describe('TC-E2E-101 用户旅程：默认 B → 选 A → 全站沿用 → 退出后登录页沿用 → 重新登录 → 他人登录不串号 → 管理端独立偏好', () => {
   it('完整旅程', async () => {
     const wrapper = await mountApp()
     // 1 首次访问（无设备记忆）登录页为 B，且无风格入口（AC-079-01/03）
@@ -144,7 +144,7 @@ describe('TC-E2E-101 用户旅程：默认 B → 选 A → 全站沿用 → 退�
     await loginAs(wrapper, 'bob')
     expect(html().getAttribute('data-theme')).toBe('bento')
     expect(accounts.alice.theme).toBe('neon')
-    // 8 管理端固定 B，用户端记忆不被改写（AC-082-02）
+    // 8 管理端使用独立偏好，用户端记忆不被改写（AC-143-01/02）
     await go('/me')
     http.put.mockResolvedValueOnce({ theme: 'terminal' })
     await wrapper.find('[data-theme-key=terminal]').trigger('click')

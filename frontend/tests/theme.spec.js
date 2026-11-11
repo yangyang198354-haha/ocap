@@ -1,5 +1,6 @@
 // MOD-027：风格体系守护测试（US-074/076/078/079/080/082/086/088；ADR-027/029/030）
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -121,15 +122,13 @@ describe('ThemeStore 优先级（ADR-027 六条）', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('neon')
   })
 
-  it('1 管理端固定 bento，不读写设备记忆（AC-082-02）', () => {
+  it('1 管理端不再由用户端 store 强制 bento（AC-144-01）', () => {
     const store = useThemeStore()
+    expect(store.forAdminRoute).toBeUndefined()
     localStorage.setItem('ocap_theme', 'terminal')
     store.initFromDevice()
-    store.forAdminRoute()
-    expect(document.documentElement.getAttribute('data-theme')).toBe('bento')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('terminal')
     expect(localStorage.getItem('ocap_theme')).toBe('terminal')
-    store.initFromDevice()
-    expect(store.current).toBe('terminal')
   })
 })
 
@@ -158,7 +157,7 @@ describe('ThemePicker（AC-074-01、AC-076-01/03）', () => {
 
 describe('新增风格不改业务页面（AC-080-01/03）', () => {
   it('合规的测试风格 D 出现在生成的注册表；缺字段的不出现且给出可定位错误', () => {
-    const tmp = fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR || '/tmp'), 'themes-'))
+    const tmp = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'themes-'))
     const copy = (name) => fs.copyFileSync(path.join(ROOT, 'themes', name), path.join(tmp, name))
     ;['neon', 'bento', 'terminal'].forEach((k) => copy(`${k}.theme.json`))
     const base = JSON.parse(fs.readFileSync(path.join(ROOT, 'themes/neon.theme.json'), 'utf8'))

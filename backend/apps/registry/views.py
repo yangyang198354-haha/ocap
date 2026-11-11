@@ -112,7 +112,8 @@ class AdminUnitListView(APIView):
         if unit_type == "PARKING" and area is None:
             raise ApiError("INVALID_VALUE", "车位须填写专有部分面积")
 
-        if RegistryUnit.objects.filter(**fields).exists():
+        specific_part = build_specific_part(**fields)
+        if RegistryUnit.objects.filter(specific_part=specific_part).exists():
             raise ApiError("UNIT_EXISTS", "专有部分已存在", 409)
         try:
             unit = RegistryUnit.objects.create(**fields, unit_type=unit_type, area=area)

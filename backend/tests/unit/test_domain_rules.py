@@ -194,8 +194,7 @@ class CommitteeRuleTests(TestCase):
 
 class HeadPromotionRuleTests(TestCase):
     def test_promote_owner_when_head_vacant(self):
-        unit = RegistryUnit.objects.create(building="1", unit_no="1", floor="1", room="101",
-                                           specific_part=f"1-1-101-{next_account_no()}")
+        unit = RegistryUnit.objects.create(building="1", unit_no="1", floor="1", room="101")
         owner = make_user()
         Membership.objects.create(user=owner, unit=unit, role="OWNER", source="CERTIFIED", active_slot=1)
         promoted = MembershipService.promote_head_if_vacant(unit.id)
@@ -203,6 +202,5 @@ class HeadPromotionRuleTests(TestCase):
         self.assertTrue(Membership.objects.filter(user=owner, role="HEAD", head_slot=1).exists())
 
     def test_no_owner_no_promotion(self):
-        unit = RegistryUnit.objects.create(building="1", unit_no="2", floor="1", room="102",
-                                           specific_part=f"1-1-102-{next_account_no()}")
+        unit = RegistryUnit.objects.create(building="1", unit_no="2", floor="1", room="102")
         self.assertIsNone(MembershipService.promote_head_if_vacant(unit.id))

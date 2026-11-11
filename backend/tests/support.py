@@ -28,9 +28,9 @@ def next_account_no() -> str:
     return f"8{_counter['n']:09d}"
 
 
-def next_specific_part(prefix: str = "1-1") -> str:
+def next_specific_part(prefix: str = "1栋1单元") -> str:
     _counter["n"] += 1
-    return f"{prefix}-{_counter['n']:04d}-{uuid4().hex[:4]}"
+    return f"{prefix}{_counter['n']:04d}号{uuid4().hex[:4]}"
 
 
 class ApiTestBase(APITestCase):

@@ -130,29 +130,39 @@ describe('TC-UNIT-103 构建器拒绝不合规风格（AC-080-03、AC-088-04）'
   })
 })
 
-describe('TC-UNIT-104 首屏内联脚本（AC-079-01/02/04、AC-082-02、AC-090-02）', () => {
+describe('TC-UNIT-104 首屏内联脚本（AC-079-01/02/04、AC-141-02/05、AC-143-02）', () => {
   const html = read('frontend/index.html')
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
-  function runInline({ saved, pathname }) {
+  function runInline({ saved, adminSaved, pathname }) {
     const attrs = {}
     const sandbox = {
       location: { pathname },
-      localStorage: { getItem: () => saved ?? null },
+      localStorage: {
+        getItem: (key) => (key === 'ocap_admin_theme' ? adminSaved ?? null : saved ?? null)
+      },
       document: { documentElement: { setAttribute: (k, v) => { attrs[k] = v } } }
     }
     vm.runInNewContext(script, sandbox)
-    return attrs['data-theme']
+    return attrs
   }
-  it('无记忆 → bento', () => expect(runInline({ pathname: '/ocap/login' })).toBe('bento'))
+  it('无记忆 → bento，用户端 surface', () => {
+    const attrs = runInline({ pathname: '/ocap/login' })
+    expect(attrs['data-theme']).toBe('bento')
+    expect(attrs['data-surface']).toBe('portal')
+  })
   it('有合法记忆 → 同步设置记忆值（样式解析前，无先 B 后 C 的跳变）', () => {
-    expect(runInline({ saved: 'terminal', pathname: '/ocap/' })).toBe('terminal')
+    expect(runInline({ saved: 'terminal', pathname: '/ocap/' })['data-theme']).toBe('terminal')
   })
   it('格式非法（大写、空白、1 字符）→ bento', () => {
-    for (const bad of ['Terminal', 'a b', 'x', '1ab', '']) expect(runInline({ saved: bad, pathname: '/' }), bad).toBe('bento')
+    for (const bad of ['Terminal', 'a b', 'x', '1ab', '']) expect(runInline({ saved: bad, pathname: '/' })['data-theme'], bad).toBe('bento')
   })
-  it('管理端路径恒为 bento，不受设备记忆影响', () => {
-    expect(runInline({ saved: 'terminal', pathname: '/ocap/admin/registry' })).toBe('bento')
-    expect(runInline({ saved: 'neon', pathname: '/admin/login' })).toBe('bento')
+  it('管理端读取独立设备键 ocap_admin_theme，并标记 admin surface', () => {
+    const attrs = runInline({ saved: 'neon', adminSaved: 'terminal', pathname: '/ocap/admin/registry' })
+    expect(attrs['data-theme']).toBe('terminal')
+    expect(attrs['data-surface']).toBe('admin')
+  })
+  it('管理端无独立记忆时 → bento，不读用户端记忆', () => {
+    expect(runInline({ saved: 'neon', pathname: '/admin/login' })['data-theme']).toBe('bento')
   })
   it('存储不可用（抛错）→ bento，不抛出', () => {
     const attrs = {}
@@ -246,14 +256,16 @@ describe('TC-UNIT-107 状态标签 圆点 + 文字 + 语义色（AC-087-01）', 
 
 describe('TC-UNIT-108 风格入口范围（AC-075-02、AC-079-03、AC-080-04、AC-082-03）', () => {
   const vue = (dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.vue')).map((f) => `${dir}/${f}`)
-  it('只有个人中心 Me.vue 引用 ThemePicker；管理端、登录/注册/回调页没有任何风格入口', () => {
-    const users = [...vue('frontend/src/portal'), ...vue('frontend/src/admin')]
-      .filter((f) => /ThemePicker|界面风格|useThemeStore\(\)\.select|\.select\(/.test(read(f)) && /ThemePicker|界面风格/.test(read(f)))
+  it('只有个人中心 Me.vue 引用 ThemePicker；管理端使用顶栏切换器（AC-139-01）', () => {
+    const users = [...vue('frontend/src/portal')]
+      .filter((f) => /ThemePicker|界面风格/.test(read(f)))
     expect(users).toEqual(['frontend/src/portal/Me.vue'])
+    expect(read('frontend/src/admin/AdminLayout.vue')).toContain('AdminThemeSwitcher')
+    expect(read('frontend/src/theme/AdminThemeSwitcher.vue')).toContain('admin-theme-trigger')
   })
   it('管理端无“全站默认风格”“新增风格”等设置入口（文案与接口均无）', () => {
-    for (const f of vue('frontend/src/admin')) expect(read(f), f).not.toMatch(/默认风格|新增风格|风格设置|\/theme/)
-    expect(read('frontend/src/shared/api.js')).not.toMatch(/admin[A-Za-z]*\.[a-z]+\([^)]*theme/i)
+    for (const f of vue('frontend/src/admin')) expect(read(f), f).not.toMatch(/默认风格|新增风格|风格设置/)
+    expect(read('frontend/src/shared/api.js')).toContain("adminHttp.get('/admin/me/theme')")
   })
   it('路由：用户端 16 个页面组件、管理端 15 个页面组件均存在', () => {
     const router = read('frontend/src/router/index.js')

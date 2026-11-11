@@ -48,6 +48,8 @@ class AdminAccount(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by_admin_id = models.IntegerField(null=True, blank=True)
+    # MOD-068：管理端界面风格偏好；NULL = 未选择（客户端按默认风格 bento 解释）
+    theme_key = models.CharField(max_length=32, null=True, blank=True)
 
     is_admin_principal = True
     is_authenticated = True

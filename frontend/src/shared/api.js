@@ -125,6 +125,9 @@ export const attachmentApi = {
 
 const admin = {
   login: (username, password) => adminHttp.post('/admin/auth/login', { username, password }),
+  // 管理端风格偏好（IFC-251）：仅管理员令牌可读写
+  theme: () => adminHttp.get('/admin/me/theme'),
+  setTheme: (theme) => adminHttp.put('/admin/me/theme', { theme }),
   admins: () => adminHttp.get('/admin/admins'),
   createAdmin: (data) => adminHttp.post('/admin/admins', data),
   resetPassword: (id, password) => adminHttp.post(`/admin/admins/${id}/reset-password`, { password }),

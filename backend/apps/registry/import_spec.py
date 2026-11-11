@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 
-from .models import UNIT_TYPE_CHOICES
+from .models import UNIT_TYPE_CHOICES, build_specific_part
 
 MAX_FILE_BYTES: int = 5 * 1024 * 1024
 MAX_DATA_ROWS: int = 20000
@@ -38,6 +38,22 @@ IMPORT_COLUMNS: list[str] = [
 UNIT_TYPE_LABELS: dict[str, str] = {label: code for code, label in UNIT_TYPE_CHOICES}
 UNIT_TYPE_TEXT = "、".join(label for _, label in UNIT_TYPE_CHOICES)
 
+# 示例行与规则文案（IFC-247）：模板与前端说明共用，由 build_specific_part 实算标识
+EXAMPLE_ROWS: list[list[str]] = [
+    ["1栋", "1单元", "3", "301", "住宅", "89.50", "张三", "13800000001"],
+    ["1栋", "1单元", "3", "301", "住宅", "89.50", "李四", "13800000002"],
+    ["1栋", "1单元", "3", "301", "住宅", "89.50", "王芳", ""],
+    ["车库", "", "", "A-088", "车位", "12.50", "赵云", ""],
+    ["1栋", "", "负1", "924", "车位", "12.50", "钱七", ""],
+    ["10栋", "", "1", "1", "商铺", "60.00", "孙八", ""],
+]
+
+SUFFIX_RULES: list[str] = [
+    "楼栋补“栋”、单元补“单元”、楼层补“层”、户号补“号”：可带或不带后缀，系统自动补全。",
+    "纯数字及“负1”这类楼层会补后缀；含其他文字的值（如“整栋”“A-088”“3.0”）保持原样。",
+    "户号以“楼层值+层”开头（如“1层”）时，楼层段不再重复输出。",
+]
+
 _AREA_RE = re.compile(r"^\d+(\.\d+)?$")
 
 
@@ -57,16 +73,35 @@ class ColumnSpec:
 
 
 def column_specs() -> list[ColumnSpec]:
+    suffix_note = "可带或不带后缀（栋/单元/层/号），系统自动补全（纯数字及“负1”补后缀，含其他文字的值保持原样）"
     return [
-        ColumnSpec(COLUMN_BUILDING, "必填", "最多 32 字符，不含“-”", "1栋"),
-        ColumnSpec(COLUMN_UNIT, "选填", "最多 32 字符，不含“-”；没有单元留空", "1单元"),
-        ColumnSpec(COLUMN_FLOOR, "选填", "最多 32 字符，不含“-”；没有楼层留空", "3"),
-        ColumnSpec(COLUMN_ROOM, "必填", "最多 32 字符，可含“-”", "301"),
+        ColumnSpec(COLUMN_BUILDING, "必填", f"最多 32 字符，不含“-”；{suffix_note}", "1栋"),
+        ColumnSpec(COLUMN_UNIT, "选填", f"最多 32 字符，不含“-”；没有单元留空；{suffix_note}", "1单元"),
+        ColumnSpec(COLUMN_FLOOR, "选填", f"最多 32 字符，不含“-”；没有楼层留空；{suffix_note}", "3"),
+        ColumnSpec(COLUMN_ROOM, "必填", f"最多 32 字符，可含“-”；{suffix_note}；户号以“楼层值+层”开头时楼层段不再重复输出", "301"),
         ColumnSpec(COLUMN_TYPE, "新专有部分必填", f"取值：{UNIT_TYPE_TEXT}", "住宅"),
         ColumnSpec(COLUMN_AREA, "仅车位必填", "大于 0，最多 2 位小数", "89.50"),
         ColumnSpec(COLUMN_OWNER, "必填", "1~64 字符；同一专有部分多位业主各占一行", "张三"),
         ColumnSpec(COLUMN_PHONE, "选填", "11 位手机号；多个用英文分号 ; 分隔", "13800000001"),
     ]
+
+
+def example_identifiers() -> list[dict[str, str]]:
+    """示例行 → 实算标识；同一专有部分去重（IFC-247）。"""
+    columns = IMPORT_COLUMNS
+    seen: set[str] = set()
+    result: list[dict[str, str]] = []
+    for row in EXAMPLE_ROWS:
+        values = dict(zip(columns, row))
+        specific_part = build_specific_part(
+            values[COLUMN_BUILDING], values[COLUMN_UNIT], values[COLUMN_FLOOR], values[COLUMN_ROOM]
+        )
+        if specific_part in seen:
+            continue
+        seen.add(specific_part)
+        fields = " / ".join(values[name] for name in (COLUMN_BUILDING, COLUMN_UNIT, COLUMN_FLOOR, COLUMN_ROOM))
+        result.append({"fields": fields, "specific_part": specific_part})
+    return result
 
 
 def spec_payload() -> dict:
@@ -90,7 +125,10 @@ def spec_payload() -> dict:
             "CSV 请使用 UTF-8 编码；Excel 请使用 .xlsx（仅读取第一个工作表）。",
             "请勿用 Excel 直接另存 csv 改写编号（前导零会丢失），推荐使用 xlsx 模板。",
             "单个文件不超过 5 MB、数据行不超过 20000 行。",
+            *SUFFIX_RULES,
         ],
+        "suffix_rules": SUFFIX_RULES,
+        "examples": example_identifiers(),
     }
 
 

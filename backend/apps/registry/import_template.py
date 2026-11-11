@@ -2,15 +2,7 @@
 import csv
 import io
 
-from .import_spec import IMPORT_COLUMNS, UNIT_TYPE_TEXT, column_specs
-
-# 示例覆盖：同一专有部分 3 行（多位业主）、一位无手机号业主、一个车位（单元/楼层为空）
-EXAMPLE_ROWS = [
-    ["1栋", "1单元", "3", "301", "住宅", "89.50", "张三", "13800000001"],
-    ["1栋", "1单元", "3", "301", "住宅", "89.50", "李四", "13800000002"],
-    ["1栋", "1单元", "3", "301", "住宅", "89.50", "王芳", ""],
-    ["车库", "", "", "A-088", "车位", "12.50", "赵云", ""],
-]
+from .import_spec import EXAMPLE_ROWS, IMPORT_COLUMNS, SUFFIX_RULES, UNIT_TYPE_TEXT, column_specs
 
 _NOTES = [
     "同一专有部分有多位业主时，每位业主单独一行，并重复填写类型与面积。",
@@ -18,6 +10,7 @@ _NOTES = [
     "没有登记手机号的业主只能在导入后通过产权申诉认证。",
     f"专有部分类型取值：{UNIT_TYPE_TEXT}。",
     "请勿用 Excel 直接另存 csv 改写编号（前导零会丢失），推荐使用 xlsx 模板；楼栋、单元、楼层、户号、手机号列为文本格式。",
+    *SUFFIX_RULES,
 ]
 
 # 数据表中需保持文本的列（A 楼栋、B 单元、C 楼层、D 户号、H 手机号）

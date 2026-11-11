@@ -270,6 +270,19 @@ class ThemePreferenceView(APIView):
         return Response({"theme": user.theme_key})
 
 
+class AdminThemePreferenceView(APIView):
+    """MOD-068 / IFC-248、IFC-249：管理员账号风格偏好，仅 IsAdmin 可读写。"""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        return Response({"theme": request.user.theme_key})
+
+    def put(self, request):
+        body = request.data if hasattr(request.data, "get") else {}
+        admin = AccountService.set_admin_theme(request.user, body.get("theme"))
+        return Response({"theme": admin.theme_key})
+
+
 class AvatarUploadView(APIView):
     permission_classes = [IsMember]
     parser_classes = [MultiPartParser, FormParser]

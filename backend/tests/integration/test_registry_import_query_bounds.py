@@ -13,13 +13,17 @@ from decimal import Decimal
 from django.db import connection
 
 from apps.registry.importing import ImportPlan, PlannedOwner, _create_owners, Deadline
-from apps.registry.models import RegistryOwner, RegistryPhone, RegistryUnit
+from apps.registry.models import RegistryOwner, RegistryPhone, RegistryUnit, build_specific_part
 from django.core.files.uploadedfile import SimpleUploadedFile
 from tests.integration.test_registry_import_enhancement import csv_bytes, row
 from tests.support import ApiTestBase
 
 BATCH = 500
 SQLITE_LEGACY_LIMIT = 999
+
+
+def unit_key(index: int) -> str:
+    return build_specific_part("B", "1", "1", str(index)).casefold()
 
 
 class QueryRecorder:
@@ -44,7 +48,8 @@ class CreateOwnersBoundTests(ApiTestBase):
     def _make_units(self, count):
         units = RegistryUnit.objects.bulk_create([
             RegistryUnit(building="B", unit_no="1", floor="1", room=str(i),
-                         specific_part=f"B-1-1-{i}", unit_type="RESIDENCE", area=Decimal("89.50"))
+                         specific_part=build_specific_part("B", "1", "1", str(i)),
+                         unit_type="RESIDENCE", area=Decimal("89.50"))
             for i in range(count)
         ], batch_size=BATCH)
         return {u.specific_part.casefold(): u.id for u in RegistryUnit.objects.all()}, units
@@ -53,12 +58,12 @@ class CreateOwnersBoundTests(ApiTestBase):
         """TC-INT-312 / AC-094-07、AC-100-07、AC-100-08：_create_owners 回查单条参数数 <= 500，结果映射正确。"""
         unit_ids, _ = self._make_units(self.UNITS)
         # 预置一位同单元的既有业主，姓名不在计划内，不得被映射进结果
-        pre_unit = unit_ids["b-1-1-0"]
+        pre_unit = unit_ids[unit_key(0)]
         RegistryOwner.objects.create(unit_id=pre_unit, name="既有业主")
 
         plan = ImportPlan(rows_total=self.UNITS)
         for i in range(self.UNITS):
-            plan.owners_to_create.append(PlannedOwner(unit_key=f"b-1-1-{i}", name=f"业主{i}", unit_id=unit_ids[f"b-1-1-{i}"]))
+            plan.owners_to_create.append(PlannedOwner(unit_key=unit_key(i), name=f"业主{i}", unit_id=unit_ids[unit_key(i)]))
 
         recorder = QueryRecorder()
         with connection.execute_wrapper(recorder):
@@ -73,10 +78,10 @@ class CreateOwnersBoundTests(ApiTestBase):
 
         # 映射正确：每个计划业主都有 id，且 id 对应库中该单元该姓名的行；既有业主不入结果
         self.assertEqual(len(result), self.UNITS)
-        self.assertNotIn(("b-1-1-0", "既有业主"), result)
+        self.assertNotIn((unit_key(0), "既有业主"), result)
         for i in (0, 499, 500, 1199):
-            owner = RegistryOwner.objects.get(id=result[(f"b-1-1-{i}", f"业主{i}")])
-            self.assertEqual((owner.unit_id, owner.name), (unit_ids[f"b-1-1-{i}"], f"业主{i}"))
+            owner = RegistryOwner.objects.get(id=result[(unit_key(i), f"业主{i}")])
+            self.assertEqual((owner.unit_id, owner.name), (unit_ids[unit_key(i)], f"业主{i}"))
 
     def test_tc_int_312b_same_unit_multiple_owners_mapped(self):
         """TC-INT-312 / AC-094-01：同一单元多位业主（含跨批单元），(unit,name) 精确映射。"""
@@ -85,11 +90,11 @@ class CreateOwnersBoundTests(ApiTestBase):
         for i in range(600):
             for name in ("甲", "乙"):
                 plan.owners_to_create.append(
-                    PlannedOwner(unit_key=f"b-1-1-{i}", name=f"{name}{i}", unit_id=unit_ids[f"b-1-1-{i}"]))
+                    PlannedOwner(unit_key=unit_key(i), name=f"{name}{i}", unit_id=unit_ids[unit_key(i)]))
         result = _create_owners(plan, {}, Deadline(60))
         self.assertEqual(len(result), 1200)
-        self.assertEqual(RegistryOwner.objects.get(id=result[("b-1-1-599", "乙599")]).unit_id, unit_ids["b-1-1-599"])
-        self.assertEqual(RegistryOwner.objects.get(id=result[("b-1-1-0", "甲0")]).name, "甲0")
+        self.assertEqual(RegistryOwner.objects.get(id=result[(unit_key(599), "乙599")]).unit_id, unit_ids[unit_key(599)])
+        self.assertEqual(RegistryOwner.objects.get(id=result[(unit_key(0), "甲0")]).name, "甲0")
 
 
 class ImportQueryBoundsApiTests(ApiTestBase):

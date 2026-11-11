@@ -1,5 +1,5 @@
 <template>
-  <div class="page" style="max-width: 420px; padding-top: 80px">
+  <div class="page admin-login">
     <div class="card">
       <h2 class="title">管理后台登录</h2>
       <el-input v-model="username" placeholder="管理员账号" />
@@ -17,6 +17,7 @@ import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import { setToken } from '@/shared/http'
 import { errorText } from '@/shared/format'
+import { useAdminThemeStore } from '@/theme/adminStore'
 
 const router = useRouter()
 const username = ref('')
@@ -28,6 +29,7 @@ async function login() {
   try {
     const result = await admin.login(username.value, password.value)
     setToken(result.token, true)
+    await useAdminThemeStore().reconcile()
     ElMessage.success('登录成功')
     router.replace('/admin')
   } catch (e) {

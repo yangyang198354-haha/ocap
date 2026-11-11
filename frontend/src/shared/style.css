@@ -39,8 +39,8 @@ a { color: var(--accent-text); text-decoration: none; }
 .el-button, .el-input__wrapper, .el-select__wrapper, .el-radio-button__inner { min-height: var(--hit-min); box-sizing: border-box; }
 .el-input__wrapper, .el-select__wrapper { align-items: center; }
 
-/* 顶部导航与当前页高亮（REQ-FUNC-080） */
-.topbar { position: sticky; top: 0; z-index: 10; background: var(--overlay); border-bottom: 1px solid var(--line); }
+/* 顶部导航与当前页高亮（REQ-FUNC-080、REQ-FUNC-133） */
+.topbar, .admin-bar { position: sticky; top: 0; z-index: 10; background: var(--overlay); border-bottom: 1px solid var(--line); }
 .topbar-inner { padding: 12px 16px; justify-content: space-between; flex-wrap: nowrap; }
 .brand { font-weight: 700; color: var(--text); white-space: nowrap; }
 .topnav { gap: 4px; }
@@ -53,7 +53,15 @@ a { color: var(--accent-text); text-decoration: none; }
 
 /* 窄屏：隐藏顶部导航，显示底部 5 标签（断点 768px，REQ-FUNC-079） */
 .tabbar { display: none; }
-.admin-bar { background: var(--overlay); color: var(--text); border-bottom: 1px solid var(--line); }
+.admin-bar { color: var(--text); }
+.admin-bar .topnav { flex-wrap: wrap; }
+.admin-login { max-width: 420px; padding-top: 80px; }
+.admin-theme-trigger {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit-min); padding: 0 12px;
+  background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-btn);
+  cursor: pointer; font: inherit;
+}
+.theme-swatch { width: 34px; height: 14px; flex: none; }
 .form-actions-sticky { margin-top: 12px; }
 .shortcut-grid { display: none; }
 @media (max-width: 767.98px) {

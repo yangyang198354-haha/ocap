@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>业主委员会</title>
     <script>
-      // 首屏风格（ADR-027）：样式解析前同步设置 data-theme；管理端恒为 bento；格式不符或缺失则 bento
+      // 首屏风格（ADR-027/073）：样式解析前同步设置 data-theme 与 data-surface；管理端读独立设备键
       (function () {
+        var admin = location.pathname.indexOf('/admin') !== -1
         var key = 'bento'
         try {
-          var admin = location.pathname.indexOf('/admin') !== -1
-          var saved = localStorage.getItem('ocap_theme')
-          if (!admin && saved && /^[a-z][a-z0-9_-]{1,31}$/.test(saved)) key = saved
+          var saved = localStorage.getItem(admin ? 'ocap_admin_theme' : 'ocap_theme')
+          if (saved && /^[a-z][a-z0-9_-]{1,31}$/.test(saved)) key = saved
         } catch (e) {}
         document.documentElement.setAttribute('data-theme', key)
+        document.documentElement.setAttribute('data-surface', admin ? 'admin' : 'portal')
       })()
     </script>
   </head>

@@ -124,7 +124,7 @@ class XlsxTemplateJourneyTests(ScaleJourneyBase):
         real = upload(False)
         self.assertEqual((real.status_code, real.data["failed"], real.data["owners_created"]), (200, 0, 2))
         unit = RegistryUnit.objects.get()
-        self.assertEqual((unit.building, unit.unit_no, unit.room, unit.specific_part), ("1栋", "08", "0801", "1栋-08-8-0801"))
+        self.assertEqual((unit.building, unit.unit_no, unit.room, unit.specific_part), ("1栋", "08", "0801", "1栋08单元8层0801号"))
 
         _, token, _ = self.register(phone)
         member = Membership.objects.get(user=self.user_of(token), unit=unit)

@@ -47,8 +47,10 @@
     { "fg": "muted", "bg": "#FFFFFF", "min": 5.9, "label": "次要文字 / 白卡" },
     { "fg": "accentText", "bg": "#FFFFFF", "min": 6.2, "label": "强调色 / 白卡" },
     { "fg": "onAccent", "bg": "#11121A", "min": 15, "label": "主按钮文字 / 主按钮底" },
+    { "fg": "onAccent", "bg": "#4F46E5", "min": 6.2, "label": "管理端主按钮文字 / 强调色" },
     { "fg": "onHero", "bg": "#DB2777", "min": 4.59, "label": "Hero 白字 / 渐变亮端" },
     { "fg": "onHero", "bg": "#4F46E5", "min": 4.5, "label": "Hero 白字 / 渐变起点" },
+    { "fg": "onHero", "bg": "#7C3AED", "min": 5.6, "label": "管理端顶栏白字 / 渐变中段" },
     { "fg": "success", "bg": "#E7F6EF", "min": 4.9, "label": "成功标签" },
     { "fg": "warning", "bg": "#FEF3E2", "min": 4.5, "label": "警示标签" },
     { "fg": "danger", "bg": "#FDE8EC", "min": 5.3, "label": "危险标签" }

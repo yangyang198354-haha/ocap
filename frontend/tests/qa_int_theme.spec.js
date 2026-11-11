@@ -22,7 +22,7 @@ import PortalLayout from '@/portal/PortalLayout.vue'
 import { useThemeStore } from '@/theme/store'
 import { useAuthStore } from '@/stores/auth'
 
-const { http } = mocked
+const { http, adminHttp } = mocked
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src')
 const html = () => document.documentElement
 const ME = {
@@ -40,25 +40,35 @@ beforeEach(async () => {
   setActivePinia(createPinia())
   http.get.mockReset()
   http.put.mockReset()
+  adminHttp.get.mockReset()
+  adminHttp.put.mockReset()
   http.post.mockReset()
 })
 
-describe('TC-INT-101 路由 ↔ 风格 store：管理端固定 bento（AC-082-01/02/04）', () => {
-  it('普通用户记忆 terminal 时进入管理端登录页仍为 bento，且设备记忆不被改写、不请求 /me/theme', async () => {
+describe('TC-INT-101 路由 ↔ 风格 store：管理端独立记忆（AC-144-01/02、AC-141-04）', () => {
+  it('管理端登录页读取 ocap_admin_theme，不读用户端记忆，不请求 /me/theme', async () => {
     localStorage.setItem('ocap_theme', 'terminal')
+    localStorage.setItem('ocap_admin_theme', 'neon')
     await router.push('/admin/login')
     await flushPromises()
-    expect(html().getAttribute('data-theme')).toBe('bento')
-    expect(html().classList.contains('dark')).toBe(false)
+    expect(html().getAttribute('data-theme')).toBe('neon')
+    expect(html().getAttribute('data-surface')).toBe('admin')
     expect(localStorage.getItem('ocap_theme')).toBe('terminal')
     expect(http.get).not.toHaveBeenCalledWith('/me/theme', expect.anything())
   })
-  it('管理端登录态：进入后台页 bento；离开后台回到用户端按设备记忆 terminal', async () => {
+  it('管理端登录态：账号偏好覆盖设备记忆；离开后台回到用户端按用户端记忆', async () => {
     localStorage.setItem('ocap_theme', 'terminal')
+    localStorage.setItem('ocap_admin_theme', 'neon')
     localStorage.setItem('ocap_admin_token', 'adm')
+    adminHttp.get.mockImplementation(async (url) => {
+      if (url === '/admin/me/theme') return { theme: 'bento' }
+      throw new Error('unexpected')
+    })
     await router.push('/admin/registry')
     await flushPromises()
     expect(html().getAttribute('data-theme')).toBe('bento')
+    expect(localStorage.getItem('ocap_admin_theme')).toBe('bento')
+    expect(localStorage.getItem('ocap_theme')).toBe('terminal')
     expect(router.currentRoute.value.path).toBe('/admin/registry')
     await router.push('/login')
     await flushPromises()

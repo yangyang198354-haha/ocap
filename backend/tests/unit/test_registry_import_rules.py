@@ -89,10 +89,10 @@ class UnitFieldRuleTests(SimpleTestCase):
         self.assertEqual(cell_text(datetime(2026, 11, 10, 8, 30)), "2026-11-10T08:30:00")
 
     def test_tc_unit_106_specific_part_skips_empty_levels(self):
-        """TC-UNIT-106 / AC-098-01、AC-098-05：空层级不产生多余分隔符，四级齐全时与旧规则相同。"""
-        self.assertEqual(build_specific_part("1", "2", "3", "301"), "1-2-3-301")
-        self.assertEqual(build_specific_part("车库", "", "", "A-088"), "车库-A-088")
-        self.assertEqual(build_specific_part("1", "", "3", "301"), "1-3-301")
+        """TC-UNIT-106 / AC-132-01~03：直接连接并补后缀，空层级跳过。"""
+        self.assertEqual(build_specific_part("1", "2", "3", "301"), "1栋2单元3层301号")
+        self.assertEqual(build_specific_part("车库", "", "", "A-088"), "车库A-088")
+        self.assertEqual(build_specific_part("1", "", "3", "301"), "1栋3层301号")
 
 
 class ImportSpecContractTests(SimpleTestCase):
@@ -133,19 +133,19 @@ class ImportSpecContractTests(SimpleTestCase):
 
 class CsvTemplateTests(SimpleTestCase):
     def test_tc_unit_110_csv_template_headers_examples_and_bom(self):
-        """TC-UNIT-110 / AC-093-01、AC-093-02：UTF-8 BOM、8 列表头、4 个示例覆盖多业主/空手机号/车位。"""
+        """TC-UNIT-110 / AC-138-02/03：UTF-8 BOM、8 列表头、6 个示例覆盖多业主/空手机号/车位/负楼层/商铺。"""
         raw = build_csv()
         self.assertTrue(raw.startswith(b"\xef\xbb\xbf"))
         text = raw.decode("utf-8-sig")
         rows = list(csv.reader(io.StringIO(text)))
         self.assertEqual(rows[0], IMPORT_COLUMNS)
-        self.assertEqual(len(rows), 5)
+        self.assertEqual(len(rows), 7)
         examples = rows[1:]
         same_unit = {}
         for row in examples:
             same_unit.setdefault(row[3], []).append(row)
         self.assertEqual(len(same_unit["301"]), 3)
-        self.assertEqual(sum(1 for row in examples if not row[7]), 2)
+        self.assertEqual(sum(1 for row in examples if not row[7]), 4)
         parking = next(row for row in examples if row[4] == "车位")
         self.assertEqual(parking[1:3], ["", ""])
         self.assertEqual(parking[5], "12.50")

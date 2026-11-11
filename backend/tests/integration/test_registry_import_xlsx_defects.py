@@ -62,7 +62,7 @@ class XlsxImportTests(XlsxImportBase):
         self.assertEqual((resp.data["imported"], resp.data["failed"]), (1, 0))
         unit = RegistryUnit.objects.get()
         self.assertEqual((unit.unit_no, unit.floor, unit.room), ("08", "8", "0801"))
-        self.assertEqual(unit.specific_part, "1-08-8-0801")
+        self.assertEqual(unit.specific_part, "1栋08单元8层0801号")
         self.assertEqual(RegistryPhone.objects.get().phone, "13800000000")
 
     def test_tc_int_305_merged_building_cells_span_owners(self):

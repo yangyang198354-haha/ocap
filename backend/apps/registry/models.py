@@ -1,7 +1,10 @@
 """业主清册（MOD-004 / MOD-030）。
 
 MOD-030 增补：专有部分类型与面积、业主实体（RegistryOwner）、手机号归属业主。
+MOD-064：专有部分标识改为“楼栋单元楼层户号”直接连接并按段补后缀（ADR-064）。
 """
+import re
+
 from django.db import models
 
 UNIT_TYPE_CHOICES = [
@@ -12,10 +15,46 @@ UNIT_TYPE_CHOICES = [
     ("OTHER", "其他"),
 ]
 
+# 各段后缀：楼栋、单元、楼层、户号（IFC-243）
+_SUFFIXES: tuple[str, str, str, str] = ("栋", "单元", "层", "号")
+_PURE_NUMBER = re.compile(r"(?:负)?[0-9]+")
+
+
+def _segment(value: str, suffix: str) -> str:
+    """按 ADR-064 规则处理单段：空段跳过、已带后缀原样、纯数字补后缀、其他原样。"""
+    text = (value or "").strip()
+    if not text:
+        return ""
+    if text.endswith(suffix):
+        return text
+    if _PURE_NUMBER.fullmatch(text):
+        return text + suffix
+    return text
+
+
+def _floor_is_implied_by_room(floor: str, room: str) -> bool:
+    """规则（5）：户号以“楼层值+层”开头时，楼层段不再单独输出。"""
+    floor_text = (floor or "").strip()
+    room_text = (room or "").strip()
+    if not floor_text or not room_text:
+        return False
+    stem = floor_text[:-1] if floor_text.endswith("层") else floor_text
+    if not stem:
+        return False
+    return room_text.startswith(stem + "层")
+
 
 def build_specific_part(building: str, unit_no: str, floor: str, room: str) -> str:
-    """只拼非空段，以 "-" 连接；四级都非空时与旧规则结果相同（AC-098-05）。"""
-    return "-".join(part for part in (building, unit_no, floor, room) if part)
+    """按楼栋、单元、楼层、户号的顺序直接连接并补后缀（REQ-FUNC-123/124）。"""
+    floor_text = (floor or "").strip()
+    room_text = (room or "").strip()
+    parts = [
+        _segment(building, _SUFFIXES[0]),
+        _segment(unit_no, _SUFFIXES[1]),
+        "" if _floor_is_implied_by_room(floor_text, room_text) else _segment(floor_text, _SUFFIXES[2]),
+        _segment(room_text, _SUFFIXES[3]),
+    ]
+    return "".join(part for part in parts if part)
 
 
 class RegistryUnit(models.Model):

@@ -89,7 +89,7 @@ class RegistryImportJourneyTests(ApiTestBase):
         parking_user = self.user_of(parking_token)
         self.assertEqual(Membership.objects.get(user=parking_user, unit=parking).role, "HEAD")
         me_parking = self.api("get", "/me", token=parking_token)
-        self.assertIn("车库-A-101", [item["specific_part"] for item in me_parking.data["identities"]["units"]])
+        self.assertIn("车库A-101", [item["specific_part"] for item in me_parking.data["identities"]["units"]])
 
     def test_tc_e2e_102_reimport_edit_and_certification_survives(self):
         """TC-E2E-102：首次导入→业主认证→重复导入补录并改类型→管理端编辑业主→既有认证保留。"""

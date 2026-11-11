@@ -1,21 +1,14 @@
 // MOD-025 / IFC-146：Web 风格 store，优先级规则见 ADR-027。
 import { defineStore } from 'pinia'
 import { meApi } from '@/shared/api'
-import { DEFAULT_THEME, THEMES } from './generated/registry'
+import { DEFAULT_THEME } from './generated/registry'
 import { applyTheme, DEVICE_KEY } from './apply'
+import { findTheme, readDevice, resolveKey, sortedThemes, writeDevice as writeDeviceKey } from './core'
 
-const KEY_RE = /^[a-z][a-z0-9_-]{1,31}$/
-const sorted = [...THEMES].sort((a, b) => a.order - b.order)
-const find = (key) => sorted.find((t) => t.key === key)
-// 不在注册表（含已下线）→ 回退默认风格（REQ-FUNC-081）
-const resolveKey = (key) => (typeof key === 'string' && KEY_RE.test(key) && find(key) ? key : DEFAULT_THEME)
-
-function readDevice() {
-  try { return localStorage.getItem(DEVICE_KEY) } catch (e) { return null }
-}
-function writeDevice(key) {
-  try { localStorage.setItem(DEVICE_KEY, key) } catch (e) { /* 存储不可用时忽略 */ }
-}
+const sorted = sortedThemes
+const find = findTheme
+const readDeviceKey = () => readDevice(DEVICE_KEY)
+const writeDevice = (key) => writeDeviceKey(DEVICE_KEY, key)
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({ current: DEFAULT_THEME, reconciled: false, ready: false }),
@@ -25,10 +18,10 @@ export const useThemeStore = defineStore('theme', {
   actions: {
     _apply(key) {
       this.current = key
-      applyTheme(key, find(key).scheme)
+      applyTheme(key, find(key).scheme, 'portal')
     },
     initFromDevice() {
-      this._apply(resolveKey(readDevice()))
+      this._apply(resolveKey(readDeviceKey()))
       this.ready = true
     },
     async reconcileAfterLogin() {
@@ -54,10 +47,6 @@ export const useThemeStore = defineStore('theme', {
         writeDevice(prev)
         throw e
       }
-    },
-    forAdminRoute() {
-      // 管理端固定 B，不读写设备记忆与账号偏好（REQ-FUNC-076）
-      this._apply(DEFAULT_THEME)
     },
     resetSession() {
       this.reconciled = false

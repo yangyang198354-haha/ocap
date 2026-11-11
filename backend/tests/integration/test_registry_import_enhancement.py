@@ -112,7 +112,7 @@ class SpecAndTemplateTests(RegistryImportTestBase):
         self.assertEqual(RegistryUnit.objects.count(), 0)
 
     def test_tc_int_105_csv_template(self):
-        """TC-INT-105 / AC-093-01（csv 部分）、AC-093-02：BOM、表头与三类示例齐全。"""
+        """TC-INT-105 / AC-138-02/03：BOM、表头与新规则示例（多业主/空手机号/车位/负楼层/商铺）齐全。"""
         resp = self.api("get", "/admin/registry/import/template?file_type=csv", token=self.admin_token)
         self.assert_ok(resp)
         self.assertIn("text/csv", resp["Content-Type"])
@@ -121,9 +121,9 @@ class SpecAndTemplateTests(RegistryImportTestBase):
         rows = list(csv.reader(io.StringIO(resp.content.decode("utf-8-sig"))))
         self.assertEqual(rows[0], IMPORT_COLUMNS)
         examples = rows[1:]
-        self.assertEqual(len(examples), 4)
+        self.assertEqual(len(examples), 6)
         self.assertEqual(sum(1 for item in examples if item[3] == "301"), 3)
-        self.assertEqual(sum(1 for item in examples if not item[7]), 2)
+        self.assertEqual(sum(1 for item in examples if not item[7]), 4)
         self.assertTrue(any(item[4] == "车位" and not item[1] and not item[2] for item in examples))
 
     def test_tc_int_106_old_template_rejected(self):
@@ -297,7 +297,7 @@ class TypeAndAreaImportTests(RegistryImportTestBase):
         self.assertEqual(by_room["302"].area, Decimal("60.00"))
         self.assertIsNone(by_room["303"].area)
         self.assertEqual(by_room["A-088"].unit_type, "PARKING")
-        self.assertEqual(by_room["A-088"].specific_part, "车库-A-088")
+        self.assertEqual(by_room["A-088"].specific_part, "车库A-088")
 
     def test_tc_int_120_type_validation(self):
         """TC-INT-120 / AC-096-02、AC-096-03：新单元类型为空或越界均失败。"""
@@ -424,12 +424,12 @@ class SingleUnitAdminTests(RegistryImportTestBase):
 
 class OptionTests(RegistryImportTestBase):
     def test_tc_int_131_parking_specific_part(self):
-        """TC-INT-131 / AC-098-01：无单元/楼层的车位标识为“车库-A-088”。"""
+        """TC-INT-131 / AC-098-01：无单元/楼层的车位标识为“车库A-088”。"""
         resp = self.api("post", "/admin/registry/units",
                         {"building": "车库", "unit_no": "", "floor": "", "room": "A-088",
                          "unit_type": "PARKING", "area": "12.50"}, token=self.admin_token)
         self.assert_ok(resp, 201)
-        self.assertEqual(resp.data["specific_part"], "车库-A-088")
+        self.assertEqual(resp.data["specific_part"], "车库A-088")
 
     def test_tc_int_132_options_skip_empty_levels(self):
         """TC-INT-132 / AC-098-02：车库下单元与楼层为空，直接返回户号。"""
@@ -470,13 +470,13 @@ class OptionTests(RegistryImportTestBase):
         self.assertEqual(reasons[2], "缺少楼栋")
         self.assertEqual(reasons[3], "缺少户号")
         self.assertEqual(resp.data["imported"], 1)
-        self.assertTrue(RegistryUnit.objects.filter(specific_part="车库-A-090").exists())
+        self.assertTrue(RegistryUnit.objects.filter(specific_part="车库A-090").exists())
 
     def test_tc_int_135_legacy_four_levels(self):
-        """TC-INT-135 / AC-098-05：四级齐全的标识与逐级选择不变。"""
+        """TC-INT-135 / AC-132-04：四级齐全时按新规则生成标识，逐级选择不变。"""
         unit = self.make_registry_unit(building="1", unit_no="2", floor="3", room="301",
                                        unit_type="RESIDENCE", area=Decimal("89.50"))
-        self.assertEqual(unit.specific_part, "1-2-3-301")
+        self.assertEqual(unit.specific_part, "1栋2单元3层301号")
         _, token, _ = self.make_owner()
         resp = self.api("get", "/units/options?building=1&unit_no=2&floor=3", token=token)
         self.assert_ok(resp)
@@ -490,7 +490,7 @@ class OptionTests(RegistryImportTestBase):
         self.assert_ok(resp)
         self.assertEqual(resp.data["failed"], 0)
         unit = RegistryUnit.objects.get()
-        self.assertEqual(unit.specific_part, "车库-A-088")
+        self.assertEqual(unit.specific_part, "车库A-088")
         self.assertEqual([o.name for o in self.owners_of(unit)], ["赵云"])
 
     def test_tc_int_314_floor_options_numeric_order(self):

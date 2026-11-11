@@ -96,6 +96,13 @@ describe('api.js 路径与参数（critical path）', () => {
     expect(adminHttp.patch).toHaveBeenCalledWith('/admin/committee/seats/5', { position: 'CHAIR' })
   })
 
+  it('TC-WEB-013b 管理端风格偏好 GET/PUT /admin/me/theme，走管理员客户端（IFC-251）', async () => {
+    await api.admin.theme()
+    expect(adminHttp.get).toHaveBeenCalledWith('/admin/me/theme')
+    await api.admin.setTheme('neon')
+    expect(adminHttp.put).toHaveBeenCalledWith('/admin/me/theme', { theme: 'neon' })
+  })
+
   it('TC-WEB-014 附件上传 POST /attachments，multipart 含 file 与 purpose', async () => {
     const file = new File(['x'], 'inv.pdf', { type: 'application/pdf' })
     await api.attachmentApi.upload(file, 'INVOICE')

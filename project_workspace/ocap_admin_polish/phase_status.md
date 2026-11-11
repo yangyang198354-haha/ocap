@@ -1,4 +1,4 @@
-<phase_status project="ocap_admin_polish" mode="INCREMENTAL" created="2026-11-11T21:48:23+08:00" updated="2026-11-11T23:45:43+08:00">
+<phase_status project="ocap_admin_polish" mode="INCREMENTAL" created="2026-11-11T21:48:23+08:00" updated="2026-11-12T00:24:01+08:00">
   <request time="2026-11-11T21:48:23+08:00"><![CDATA[管理员导入业主清册时后，专有部分的拼接不美观， 能显示1栋-1单元-1-101 但是我希望显示1栋1单元1层101号 你可以使用测试环境内已经导入的数据查看。 另外管理员的页面是黑白，没有CSS 样式？ 对于用户不是有3个UI 主体可以选择吗，要求对管理员也可以。 请处理这个变更。]]></request>
   <request_context><![CDATA[基线：ocap_registry_import（build_specific_part 以 "-" 连接，backend/apps/registry/models.py:16-18）与 ocap_ui_theme（管理端固定 bento，REQ-FUNC-076，frontend/src/theme/store.js:58-61、frontend/src/router/index.js:64-70）。
 PM 只读核验（2026-11-11T21:48:23+08:00 前）：测试环境 RegistryUnit 共 5742 条；类型 RESIDENCE 3387 / APARTMENT 857 / PARKING 1391 / SHOP 107；unit_no 为空 1498 条，floor 为空 3 条；building 以"栋"结尾 5716 条，unit_no 以"单元"结尾 4244 条，floor 以"层"结尾 0 条，room 以"号"结尾 0 条。样例：'10栋-3单元-10-1001'、'1栋-负1-924'（车位）、'10栋-1-1'（商铺，无单元）、'建设南路146号-整栋'（无楼层）、'圣灯路155号-1-1层'（户号字段本身含"层"）。
@@ -20,7 +20,9 @@ PM 只读核验（2026-11-11T21:48:23+08:00 前）：测试环境 RegistryUnit �
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="测试（树莓派 192.168.31.51 / https://ai-freeark.xin/ocap/）">
+      <phase id="PHASE_11b" status="APPROVED"/>
+    </group>
     <group id="GROUP_Z" agent="kb-curator" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_12" status="APPROVED"/>
     </group>
@@ -44,6 +46,7 @@ PM 只读核验（2026-11-11T21:48:23+08:00 前）：测试环境 RegistryUnit �
     <artifact path="testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
     <artifact path="project_workspace/_kb_distillation/distill_20261111T2344.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
   </artifacts>
   <legacy_baseline/>
@@ -56,6 +59,7 @@ PM 只读核验（2026-11-11T21:48:23+08:00 前）：测试环境 RegistryUnit �
     <invocation id="ocap_admin_polish-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-11T23:23:43+08:00" end="2026-11-11T23:33:49+08:00" result="SUCCESS"/>
     <invocation id="ocap_admin_polish-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-11T23:36:06+08:00" end="2026-11-11T23:39:15+08:00" result="SUCCESS"/>
     <invocation id="ocap_admin_polish-GROUP_Z-001" agent="kb-curator" group="GROUP_Z" start="2026-11-11T23:42:18+08:00" end="2026-11-11T23:45:43+08:00" result="SUCCESS"/>
+    <invocation id="ocap_admin_polish-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-12T00:21:20+08:00" end="2026-11-12T00:23:44+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_admin_polish-GROUP_A-001" decision="PASS_WITH_CONDITIONS" time="2026-11-11T22:04:49+08:00">
@@ -144,6 +148,18 @@ PM 只读核验（2026-11-11T21:48:23+08:00 前）：测试环境 RegistryUnit �
       <condition>E2 执行前：用户提交并推送；预检 PRE-001~PRE-009 全部通过；DEPLOY-004 conflicts=0；V-10 人工视觉走查在部署后由用户完成。</condition>
       <verification><![CDATA[PM 核对：deployment_plan 中 DEPLOY-001~008 每条均有“回滚: ROLLBACK-NNN”；ROLLBACK 按 008→001 排列；未出现 Docker/pscp/生产库；`.env` 只以路径引用；迁移前包含 mysqldump 与 dumpdata，迁移前有 preview 门控，回滚含 registry 0004 / accounts 0002。]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_admin_polish-GROUP_E2-001" decision="PASS" time="2026-11-12T00:24:01+08:00">
+      <reviewed_files><file path="deployment/deployment_report.md" version="1.0.0"/></reviewed_files>
+      <criterion id="J-E2 最终状态" result="SATISFIED">deployment_report 最终状态 DEPLOYED_SUCCESSFULLY；DEPLOY-001~008 全部执行，失败 0；回滚锚点 TS=20261112002120 与四级备份已记录。</criterion>
+      <criterion id="J-E2 授权" result="SATISFIED">用户本轮原话「提交推送 部署」；环境名与计划/画像一致（测试环境）；计划版本 1.0.0 APPROVED；部署提交 3825aac 已在 origin/main。</criterion>
+      <criterion id="J-E2 迁移" result="SATISFIED">迁移前 preview：total=5742 conflicts=0；migrate 输出 accounts.0003 OK、registry.0005 OK；迁移后 showmigrations 两项 [X]。</criterion>
+      <criterion id="J-E2 幂等" result="SATISFIED">迁移后 preview：would_change=0、conflicts=0。</criterion>
+      <criterion id="J-E2 服务与入口" result="SATISFIED">ocap-backend active、日志 Traceback 0；外网 /ocap/ 200、/ocap/admin/login 200、新 bundle index-CMaF0O1p.js 200；/api/v1/admin/me/theme 未登录 401、admin 登录接口 400（非 5xx）。</criterion>
+      <criterion id="J-E2 同机共存" result="SATISFIED">Freeark 200；8000/8080 属 Freeark，8090/9000 属 ocap；无 failed units；nginx active；timer enabled/active。</criterion>
+      <finding id="GR-E2-001-F01" severity="MINOR">前端目录属主原为 root，本次改用 sudo 替换并 chown 回 yangyang；后续部署前应保持 yangyang 可写。</finding>
+      <finding id="GR-E2-001-F02" severity="MINOR">SSH 外网通道一次长命令被关闭，已分步重试完成；V-07/V-08 与视觉走查仍需管理员登录后人工确认。</finding>
+      <verification><![CDATA[迁移前：total=5742 would_change=5742 conflicts=0 floor_omitted=24 review=27。迁移：accounts.0003 OK、registry.0005 OK。迁移后：would_change=0 conflicts=0。外网：EXT=200、ADMIN=200、ASSET=200、THEME_UNAUTH=401、API_LOGIN=400、FREARK=200。服务：active；Traceback=0；无 failed units；timer enabled/active。]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-11T21:50:44+08:00" answered_by="用户"><![CDATA[Q1=A：改专有部分本身的拼接规则，现有数据按新规则重新生成（手写迁移），各端显示一致。
@@ -177,5 +193,7 @@ Q4=A：先出需求与用户故事给用户确认，放行后再进入设计/开
     <event time="2026-11-11T23:39:15+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS（2 MINOR：迁移耗时 [INFERRED]、重复部署 dist.old 清理）；两份部署文档升 1.0.0 / APPROVED。CI 无需修改；E2 保持 NOT_AUTHORIZED，等待用户提交推送与后续部署授权。</event>
     <event time="2026-11-11T23:42:18+08:00" type="RUN" actor="pm-orchestrator">交付报告写完（DELIVERED_WITH_ISSUES）；GROUP_Z 置 IN_PROGRESS，调用 kb-curator（PHASE_12）做知识蒸馏。</event>
     <event time="2026-11-11T23:45:43+08:00" type="GATE" actor="pm-orchestrator">PHASE_12 完成：候选 7 → 晋升 6（M-SD-023/024/025、M-TE-018、M-DE-016/017）/ 淘汰 1（与通用知识重复）；蒸馏报告与日志升 1.0.0 / APPROVED；无 pending_patch。项目交付完成，等待 PM 提交与推送。</event>
+    <event time="2026-11-12T00:20:00+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮原话「提交推送 部署」：授权测试环境部署（画像 P7 唯一环境，无生产）；计划 deployment_plan.md 1.0.0 APPROVED；提交 3825aac 已在 origin/main。</event>
+    <event time="2026-11-12T00:24:01+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS：DEPLOYED_SUCCESSFULLY。迁移前 conflicts=0、5742 条重生成；迁移后 would_change=0；外网 200、新 bundle 200、admin/me/theme 401、登录接口 400；服务与 Freeark 正常；锚点 TS=20261112002120。V-07/V-08 与视觉走查待管理员登录后人工确认。</event>
   </audit_log>
 </phase_status>

@@ -19,8 +19,8 @@
 ## 项目概览
 
 - 需求一句话：把专有部分标识从 `1栋-1单元-1-101` 改为 `1栋1单元1层101号` 并对存量数据重生成；管理端顶栏可切换三套风格，偏好记在管理员账号，管理端各页面应用主题样式。
-- 模式：INCREMENTAL；画像版本：1.4.0；起止：2026-11-11 21:48 ~ 23:42（Asia/Shanghai）。
-- 最终状态：**DELIVERED_WITH_ISSUES**（自动化全部通过；15 页 × 3 风格视觉走查与 OQ-11 高亮形态待用户人工确认；部署未执行）。
+- 模式：INCREMENTAL；画像版本：1.4.0；起止：2026-11-11 21:48 ~ 2026-11-12 00:24（Asia/Shanghai）。
+- 最终状态：**DELIVERED_WITH_ISSUES**（自动化全部通过并已部署到测试环境；15 页 × 3 风格视觉走查与 OQ-11 高亮形态待用户人工确认）。
 
 ## 阶段执行摘要
 
@@ -31,7 +31,7 @@
 | GROUP_C | PHASE_05, PHASE_06 | software-developer | APPROVED | PASS_WITH_CONDITIONS | 0 | 0 | 23:22 |
 | GROUP_D | PHASE_07 ~ 09 | test-engineer | APPROVED | PASS_WITH_CONDITIONS | 0 | 0 | 23:33 |
 | GROUP_E1 | PHASE_10, PHASE_11a | devops-engineer | APPROVED | PASS_WITH_CONDITIONS | 0 | 0 | 23:39 |
-| GROUP_E2 | PHASE_11b | devops-engineer | NOT_AUTHORIZED | — | — | — | — |
+| GROUP_E2 | PHASE_11b | devops-engineer | APPROVED | PASS | 0 | 0 | 00:24（次日） |
 
 ## 质量指标（INCREMENTAL / baseline）
 
@@ -102,7 +102,8 @@ critical path 中待人工验证：1 项（AC-142 视觉部分）。
 ## 部署
 
 - 计划：`deployment/deployment_plan.md`（8 DEPLOY / 8 ROLLBACK，recreate，含 registry 0005 与 accounts 0003 两个手写迁移、迁移前备份与 conflicts=0 门控）。
-- E2：**未执行**（GROUP_E2 NOT_AUTHORIZED）。执行前需用户确认提交并推送到 `origin/main`，并在后续轮次明确授权测试环境部署。
+- E2：**已执行并成功**（2026-11-12 00:21~00:24，测试环境）。锚点 `TS=20261112002120`；迁移前 conflicts=0，迁移后 would_change=0；外网 `/ocap/` 200、新 bundle 200、服务与 Freeark 正常。详见 `deployment/deployment_report.md`。
+- 回滚：快照位于 `/home/yangyang/ocap/snapshots/`（backend/web tar、整库 SQL、registry JSON），回滚步骤见部署计划 ROLLBACK-001~008。
 
 ## 安全事件摘要
 

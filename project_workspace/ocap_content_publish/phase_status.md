@@ -1,4 +1,4 @@
-<phase_status project="ocap_content_publish" mode="INCREMENTAL" created="2026-11-10T23:12:27+08:00" updated="2026-11-11T14:19:20+08:00">
+<phase_status project="ocap_content_publish" mode="INCREMENTAL" created="2026-11-10T23:12:27+08:00" updated="2026-11-11T16:40:20+08:00">
   <request time="2026-11-10T23:12:27+08:00"><![CDATA[现在输入一批新需求。管理员在web 后端可以发布信息公开。可以向微信公众号web 版一样在前端辫子文字，能够设计段落，对其，颜色。超链接。要求和微信公众号编辑页面功能等价。 二，可以通过agent 编辑帖文。在web 上发布后，可以一键保存到公众号，小红书，头条账户的草稿箱里。 这些账户需要提前保存账户信息和认证信息。  agent 可以生成图文并茂的文字和材料。 agent 的 llm 也可以配置，使用国内的火山方舟模型或者deepseek模型，具体可以参考我genplatform 里面的设计。  生成的信息有文字，视频，图文等等。要求文字信息可以配置类似css，分段，分页的美感设计。还可以由素材库，生成的蔬菜库都可以保存复用。具体参考gentplatform。 按照这个思路补全我的需求。让管理员可以工作这些功能编辑图文，视频资料，并且通过大语言模型和提示词生成文案。一键发布到多个平台。 先整理需求，确认后再才分用户故事]]></request>
   <request_context><![CDATA[PM 只读核查（2026-11-10T23:12:27+08:00）：
 - ocap 现有代码中无"信息公开/公告/富文本编辑器"实现（git grep 信息公开|公告|notice|announcement|richtext|wangeditor|quill|tinymce 于 backend、frontend/src、miniprogram 无相关命中）。
@@ -19,10 +19,11 @@
     <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="2" defect_loops="1">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
-    <group id="GROUP_E1" agent="devops-engineer" status="PENDING" gate_decision="PENDING" retries="0">
-      <phase id="PHASE_10" status="PENDING"/><phase id="PHASE_11a" status="PENDING"/>
+    <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
+      <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_Z" agent="kb-curator" status="APPROVED" gate_decision="PASS" retries="0"><phase id="PHASE_12" status="APPROVED"/></group>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" environment="测试环境（树莓派 / ai-freeark.xin/ocap/）"><phase id="PHASE_11b" status="APPROVED"/></group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_content_publish/requirements/requirements_spec.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
@@ -70,6 +71,13 @@
     <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="1.2.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_content_publish/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/cicd_pipeline.md" version="0.1.0" status="SUPERSEDED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/deployment_plan.md" version="0.1.0" status="SUPERSEDED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/deployment_report.md" version="0.1.0" status="SUPERSEDED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_content_publish/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_content_publish/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -84,6 +92,9 @@
     <invocation id="ocap_content_publish-GROUP_D-3" agent="test-engineer" start="2026-11-11T12:41:30+08:00" end="2026-11-11T13:15:31+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_content_publish-GROUP_C-3" agent="software-developer" start="2026-11-11T13:15:31+08:00" end="2026-11-11T13:25:13+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_content_publish-GROUP_D-4" agent="test-engineer" start="2026-11-11T13:25:13+08:00" end="2026-11-11T13:36:12+08:00" result="SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_E1-1" agent="devops-engineer" start="2026-11-11T14:30:25+08:00" end="2026-11-11T14:40:36+08:00" result="SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_E2-1" agent="devops-engineer" start="2026-11-11T14:40:36+08:00" end="2026-11-11T16:34:30+08:00" result="SUCCESS"/>
+    <invocation id="ocap_content_publish-GROUP_Z-1" agent="kb-curator" start="2026-11-11T16:34:30+08:00" end="2026-11-11T16:40:20+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_content_publish-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-10T23:16:17+08:00">
@@ -278,6 +289,26 @@ miniprogram Tests 75 passed (75)]]></verification>
 frontend Test Files 16 passed / Tests 154 passed
 miniprogram Tests 75 passed]]></verification>
     </gate_review>
+    <gate_review id="GR-E1-001" invocation_id="ocap_content_publish-GROUP_E1-1" decision="PASS_WITH_CONDITIONS" time="2026-11-11T14:40:36+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/deployment/cicd_pipeline.md" version="0.1.0"/><file path="project_workspace/ocap_content_publish/deployment/deployment_plan.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E1-回滚" result="SATISFIED">DEPLOY-001~010 与 ROLLBACK-001~010 一一对应；ROLLBACK-005/006 标 MANUAL_ROLLBACK_REQUIRED（删除密钥、撤销迁移）。</criterion>
+      <criterion id="J-E1-环境策略" result="SATISFIED">只用 P7 测试环境、外网 57279 + ED25519 指纹核对；策略 recreate；无容器、无 pscp、目标机不 makemigrations（P8）。</criterion>
+      <criterion id="J-E1-本地状态" result="SATISFIED">快照排除 backend/var、venv、.env；回滚为叠加解包 + 删除本次新增文件，禁止 rm -rf backend；.env 只追加，已存在键不覆盖。</criterion>
+      <criterion id="J-E1-凭据" result="SATISFIED">DEPLOY-005 密钥在目标机生成直接追加，校验只输出计数；mysqldump 密码走 MYSQL_PWD；文档无凭据值。</criterion>
+      <criterion id="J-E1-远端变量" result="SATISFIED">远端脚本用 bash -s -- "$TS" &lt;&lt;'EOF' 位置参数传值；ControlMaster 复用连接、仅建连重试。</criterion>
+      <criterion id="J-E1-Freeark" result="SATISFIED">DEPLOY-007 为条件步骤：仅当上传上限不足 12m 时改 ocap 站点及 Freeark 站点 `^~ /ocap/` 块内一行，先备份、nginx -t、reload 不 restart；P7"修改 Freeark 的 nginx 配置前必须先备份"允许，不动 Freeark 服务/端口/目录/库。</criterion>
+      <finding id="GR-E1-001-F01" severity="MINOR">目标机 Python 版本、cryptography aarch64 wheel、磁盘阈值、停机时长为 [INFERRED]，由 PRE-104/105/102 预检确认；cryptography 安装失败须停止并交用户。</finding>
+      <condition>E2：按计划执行；任一预检不通过即停止且目标机不变更；DEPLOY-007 如触发，在报告中列出改动的文件与备份路径；部署后 PM 外网只读核验。</condition>
+    </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_content_publish-GROUP_E2-1" decision="PASS_WITH_CONDITIONS" time="2026-11-11T16:34:30+08:00">
+      <reviewed_files><file path="project_workspace/ocap_content_publish/deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2-每步输出" result="SATISFIED">DEPLOY-001~010 均有命令与输出尾部；DEPLOY-007 SKIPPED_NOT_NEEDED（ocap 站点 client_max_body_size 20m、Freeark 60m）；锚点 20261111144450；未回滚。</criterion>
+      <criterion id="J-E2-PM外网核验" result="SATISFIED">curl：/ocap/ 200、/ocap/admin/login 200、/ocap/api/v1/admin/content/posts 401、/ocap/api/v1/info/posts 401、/ocap/api/v1/admin/registry/import/spec 401、Freeark / 200；bundle index-BT1LHY8J.js。</criterion>
+      <criterion id="J-E2-PM只读SSH" result="SATISFIED">指纹 SHA256:TfpCSrSLuK1UspD2mpikebK0bE0IFnPH8bSigERWnmk 一致；ocap-backend active、ocap-content-worker active（NRestarts=0）；近 60 分钟两单元 journal 中 Traceback/WORKER TIMEOUT/Killed 计数 0；.env 中 CONTENT_ 键计数 4（未读取值）。</criterion>
+      <finding id="GR-E2-001-F01" severity="MINOR">ocap-content-worker MemoryCurrent=[not set]，目标机未启用 memory cgroup 统计，MemoryMax=400M 可能不生效。</finding>
+      <finding id="GR-E2-001-F02" severity="MINOR">freeark-mqtt-consumer 为既有崩溃重启循环（NRestarts=5369），与本次部署无关，未触碰；建议用户另行排查。</finding>
+      <condition>用户待办 U-01~U-05、人工验证 M-01~M-07；ADR-061 待官方文档。</condition>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-10T23:21:10+08:00" responder="用户"><![CDATA[用户原话："Q4=B; Q5=B，其他都按推荐"
@@ -326,5 +357,12 @@ PM 只读核查 GenPlatform 参考实现：publisher/publishers.py:54 小红书�
     <event time="2026-11-11T13:25:13+08:00" type="GATE" actor="pm-orchestrator">GR-D-003 FAIL（DEF-014/015）；GR-C-004 PASS_WITH_CONDITIONS，development 3.0.0 APPROVED。调用 test-engineer（ocap_content_publish-GROUP_D-4）复测。</event>
     <event time="2026-11-11T13:36:12+08:00" type="GATE" actor="pm-orchestrator">GR-D-004 PASS_WITH_CONDITIONS；testing 四份 2.0.0 APPROVED。GROUP_C/D 返工完成；ADR-061 待用户提供微信官方文档；提交与部署未授权。</event>
     <event time="2026-11-11T14:19:20+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交，推送， 部署"。授权范围：提交并推送当前返工（ocap_content_publish GROUP_B-2/C-2/C-3/D-3/D-4；ocap_registry_import DEF-013）；部署测试环境（画像 P7 唯一环境：树莓派，外网 ai-freeark.xin/ocap/）一次。推送前检查：git fetch 无新远端提交；.github/workflows 无部署 job；diff 未发现凭据。部署须先由 devops-engineer 出部署计划并过 E1 门控，且 CI 为绿后再执行 E2。]]></event>
+    <event time="2026-11-11T14:30:25+08:00" type="INVOCATION" actor="pm-orchestrator">提交 3980890（registry DEF-013）、955c63a（content 返工）已推送 6fbd24d..955c63a；CI run 42972838320 进行中。调用 devops-engineer（ocap_content_publish-GROUP_E1-1，PHASE_10/11a），计划同时覆盖 registry DEF-013 代码。</event>
+    <event time="2026-11-11T14:31:25+08:00" type="VERIFY" actor="pm-orchestrator">CI run 42972838320（955c63a，Python 3.13）success：Backend / Web frontend / Mini program 三个 job 全绿。GR-D-003（registry）与 GR-D-004（content）的"CI 须为绿"条件满足。</event>
+    <event time="2026-11-11T14:40:36+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS；cicd_pipeline 与 deployment_plan 1.0.0 APPROVED。依据本轮用户授权（DEPLOY_AUTH，同一轮"提交，推送， 部署"）且 CI 42972838320 success，调用 devops-engineer E2（ocap_content_publish-GROUP_E2-1），环境=测试。</event>
+    <event time="2026-11-11T16:34:30+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS_WITH_CONDITIONS；deployment_report 1.0.0 APPROVED。测试环境部署 955c63a 成功（含 ocap_registry_import DEF-013）。</event>
+    <event time="2026-11-11T16:34:30+08:00" type="DELIVERY" actor="pm-orchestrator">delivery_report.md 1.0.0；最终状态 DELIVERED_WITH_ISSUES（ADR-061 未实现、TC-INT-395 BLOCKED、M-01~M-07 待人工、小程序未发布）。</event>
+    <event time="2026-11-11T16:40:20+08:00" type="INVOCATION" actor="pm-orchestrator"><![CDATA[GROUP_Z-1 结束（kb-curator，SUCCESS）：收件箱 39 行与各待验证条目蒸馏；约 38 条晋升/合并、7 条保留、2 条淘汰；M-PM-001 扩展为全部子代理（conf 1.0）；补写上次误写入 .trae 的 14 条到 .claude/agent-memory（.trae/.codex 未改动）；通用候选 2 条（M-SD-014、M-PM-005 系列）待用户确认；无 pending_patch。]]></event>
+    <event time="2026-11-11T16:40:20+08:00" type="RUN" actor="pm-orchestrator">依据本轮用户授权"提交，推送"，提交部署/交付/蒸馏文档并推送（推送只触发 CI，无部署 job）。</event>
   </audit_log>
 </phase_status>

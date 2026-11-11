@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T14:19:20+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T16:34:30+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -348,5 +348,7 @@ F9 MINOR 交付报告单元测试计数 66 与实跑 62 不符（总数 327 一�
   <event time="2026-11-11T11:13:59+08:00" type="GATE" actor="pm-orchestrator">GR-C-003 PASS_WITH_CONDITIONS；development 两份 3.0.0 APPROVED（2.0.0/2.1.0 SUPERSEDED）。defect_loops=2（上限），调用 test-engineer（ocap_registry_import-GROUP_D-3）。</event>
   <event time="2026-11-11T11:23:16+08:00" type="GATE" actor="pm-orchestrator">GR-D-003 PASS_WITH_CONDITIONS；testing 四份 3.0.0 APPROVED。DEF-013 已修复并有回归用例；未提交、未部署。</event>
     <event time="2026-11-11T14:19:20+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交，推送， 部署"。授权范围：提交并推送当前返工（ocap_content_publish GROUP_B-2/C-2/C-3/D-3/D-4；ocap_registry_import DEF-013）；部署测试环境（画像 P7 唯一环境：树莓派，外网 ai-freeark.xin/ocap/）一次。推送前检查：git fetch 无新远端提交；.github/workflows 无部署 job；diff 未发现凭据。部署须先由 devops-engineer 出部署计划并过 E1 门控，且 CI 为绿后再执行 E2。]]></event>
+    <event time="2026-11-11T14:31:25+08:00" type="VERIFY" actor="pm-orchestrator">CI run 42972838320（955c63a，Python 3.13）success：Backend / Web frontend / Mini program 三个 job 全绿。GR-D-003（registry）与 GR-D-004（content）的"CI 须为绿"条件满足。</event>
+  <event time="2026-11-11T16:34:30+08:00" type="DEPLOY" actor="pm-orchestrator">DEF-013 随 ocap_content_publish 部署（955c63a，锚点 20261111144450）上线测试环境；目标机 importing.py sha256 前缀 2a2197633a41。PM 外网核验 /ocap/api/v1/admin/registry/import/spec 401。M-04~M-06（20000 行真实导入实测）仍待用户。</event>
   </audit_log>
 </phase_status>

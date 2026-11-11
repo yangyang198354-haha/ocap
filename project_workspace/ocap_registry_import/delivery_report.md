@@ -104,3 +104,10 @@
 - 部署：测试环境 R2 增量重部署 DEPLOYED_SUCCESSFULLY，锚点 20261111005708；PM 外网复核 /ocap/ 200、import/spec 与 template 401、Freeark 200。
 - 仍开放：M-04~M-06（页面 20000 行 xlsx 实测耗时与内存峰值）；miniprogram/package-lock.json 去留与小程序发布（RU-4）待用户决定；并发导入加锁未处理。
 - 最终状态：DELIVERED_WITH_ISSUES。
+
+## 交付后返工 R3（2026-11-11T16:34:30+08:00）
+- 起因：远端提交 6fbd24d 为规避 SQLite 变量上限而分批查询，`_create_owners` 每批仍带全部姓名，20000 行正式导入耗时 218.6 s，超过 60 s 上限并返回 504（PM 本机实测）。
+- 修复：DEF-013（3980890）。`_create_owners` 只按 unit_id 分批查询，(unit_id, name) 在应用端过滤。新增 TC-INT-312/312b/313，断言单条查询参数数有界；在修复前的代码上 2 个失败。
+- 门控：GR-C-003、GR-D-003 PASS_WITH_CONDITIONS。PM 复跑后端 430 OK，规模用例 16 s；CI run 42972838320 success。
+- 部署：随 ocap_content_publish 发布 955c63a 上线测试环境（锚点 20261111144450）。
+- 状态仍为 DELIVERED_WITH_ISSUES：待用户在测试站做 20000 行真实导入实测（M-04~M-06）。

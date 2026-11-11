@@ -1,5 +1,21 @@
 """清册服务（MOD-033 / IFC-043、IFC-152、IFC-162）。"""
+import re
+
 from .models import RegistryPhone, RegistryUnit
+
+_FLOOR_NUMBER_RE = re.compile(r"^(?P<sign>负|-)?(?P<number>\d+)$")
+
+
+def _floor_sort_key(value: str) -> tuple:
+    """楼层按数值升序（负层在前）；非纯数字楼层排在数字之后，按文本排序。"""
+    text = (value or "").strip()
+    match = _FLOOR_NUMBER_RE.match(text)
+    if not match:
+        return (1, 0, text)
+    number = int(match.group("number"))
+    if match.group("sign"):
+        number = -number
+    return (0, number, text)
 
 
 class RegistryService:
@@ -39,7 +55,8 @@ class RegistryService:
         for level, column in (("unit_no", "unit_no"), ("floor", "floor")):
             if (unit_no if level == "unit_no" else floor) is not None:
                 continue
-            values = sorted(set(qs.values_list(column, flat=True)))
+            values = sorted(set(qs.values_list(column, flat=True)),
+                            key=_floor_sort_key if level == "floor" else None)
             non_empty = [v for v in values if v]
             if not non_empty:
                 skipped.append(level)

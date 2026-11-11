@@ -19,13 +19,27 @@
 
     <div class="card">
       <h3 class="title">注册用户</h3>
-      <el-input v-model="keyword" placeholder="昵称 / 手机号 / 账号" style="max-width: 260px" @change="loadUsers" />
+      <el-input v-model="keyword" placeholder="昵称 / 手机号 / 账号 / 实名" style="max-width: 260px" @change="loadUsers" />
       <el-table :data="users" size="small" style="margin-top: 10px">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="account_no" label="账号" width="150" />
         <el-table-column prop="phone" label="手机号" width="140" />
         <el-table-column prop="nickname" label="昵称" min-width="120" />
         <el-table-column prop="status" label="状态" width="110" />
+        <el-table-column prop="identity_label" label="身份" width="110" />
+        <el-table-column label="认证" width="130">
+          <template #default="{ row }">
+            {{ row.certified_units > 0 ? `已认证（${row.certified_units} 套）` : '未认证' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="实名" width="140">
+          <template #default="{ row }">
+            {{ row.real_names?.length ? row.real_names.join('、') : '—' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="上次登录" width="160">
+          <template #default="{ row }">{{ formatDateTime(row.last_login_at) || '从未登录' }}</template>
+        </el-table-column>
       </el-table>
     </div>
 
@@ -44,7 +58,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
-import { errorText } from '@/shared/format'
+import { errorText, formatDateTime } from '@/shared/format'
 
 const admins = ref([])
 const users = ref([])

@@ -143,3 +143,9 @@
 | 2026-11-11T16:50:00+08:00 | ocap_registry_import-GROUP_E2-1-1 | 补写→M-DE-008 | committed |
 | 2026-11-11T16:50:00+08:00 | ocap_ui_theme-PM-1 | 淘汰：与 M-PM-004 重复（.trae 的 P-PM-005 同） | committed |
 | 2026-11-11T16:50:00+08:00 | (待验证区直接晋升) | P-SA-008/009、P-SD-001~003、P-TE-002~004、P-DE-001~003、P-PM-005 已随上方对应条目晋升并从待验证区移除；M-PM-001 扩展为全体子代理（命中 9） | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_A-1-1 | 晋升→M-RA-009 | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_A-2-1 | 晋升→M-RA-010 | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_B-1-1 | 晋升→M-SA-010 | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_C-1-1 | 晋升→M-SD-022 | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_D-1-1 | 晋升→M-TE-017 | committed |
+| 2026-11-11T22:50:43+08:00 | ocap_user_directory-GROUP_E1-1-1 | 晋升→M-DE-015 | committed |

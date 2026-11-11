@@ -7,6 +7,7 @@
 - [M-SA-004] DRF 查询参数不要用 `format`（会被渲染器后缀拦截），文件类型参数用 `file_type` — conf 0.6 · 证据 GR-B-001 / module_design IFC-158 / TC-INT-105 · 首见 2026-11-10 · 命中 1
 - [M-SA-005] Django `bulk_create` 在 MySQL 不回填主键，需按业务键回查；`bulk_update` 不刷新 auto_now — conf 0.6 · 证据 GR-B-001 / apps/registry/importing.py 计划与应用实现 · 首见 2026-11-10 · 命中 1
 - [M-SA-006] `Membership.source` 仅 12 字符，新来源值须 ≤12，否则把来源放进审计 detail — conf 0.6 · 证据 GR-B-001 / apps/residency/models.py:16 · 首见 2026-11-10 · 命中 1
+- [M-SA-010] DRF 列表增加跨表派生字段优先固定 prefetch + 应用层计算，并用“每页查询数不随行数增长”测试守 N+1；跨表搜索用 Exists 避免 distinct 放大 — conf 0.6 · 证据 GR-B-001-F02 / TC-INT-397 · 首见 2026-11-11 · 命中 1
 
 ## 用户偏好与禁止项
 

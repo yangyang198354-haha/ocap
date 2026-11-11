@@ -493,6 +493,18 @@ class OptionTests(RegistryImportTestBase):
         self.assertEqual(unit.specific_part, "车库-A-088")
         self.assertEqual([o.name for o in self.owners_of(unit)], ["赵云"])
 
+    def test_tc_int_314_floor_options_numeric_order(self):
+        """TC-INT-314 / AC-098-02：楼层选项按数值升序（负层在前），不按字符串排序。"""
+        for floor in ("33", "4", "10", "2", "负1", "负2"):
+            self.make_registry_unit(building="1", unit_no="1", floor=floor, room=f"{floor}-01",
+                                    unit_type="RESIDENCE", area=Decimal("89.50"))
+        _, token, _ = self.make_owner()
+        resp = self.api("get", "/units/options?building=1&unit_no=1", token=token)
+        self.assert_ok(resp)
+        self.assertEqual(resp.data["level"], "floor")
+        self.assertEqual([item["value"] for item in resp.data["options"]],
+                         ["负2", "负1", "2", "4", "10", "33"])
+
 
 class ReimportTests(RegistryImportTestBase):
     def test_tc_int_137_reimport_adds_owner(self):

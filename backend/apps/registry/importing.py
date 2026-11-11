@@ -33,6 +33,8 @@ from .import_spec import (
 from .models import RegistryOwner, RegistryPhone, RegistryUnit, build_specific_part
 
 CHANGES_LIMIT = 1000
+# 单条写入语句的参数上限：100 行 × 最多 9 列 < SQLite 旧版 999 参数限制（AC-100-08）
+WRITE_BATCH = 100
 
 
 class ImportFileError(ApiError):
@@ -600,7 +602,7 @@ def _create_units(plan: ImportPlan, deadline: Deadline) -> dict[str, int]:
             )
             for u in plan.units_to_create
         ],
-        batch_size=500,
+        batch_size=WRITE_BATCH,
     )
     deadline.check("apply")
     result: dict[str, int] = {}
@@ -621,7 +623,7 @@ def _update_units(plan: ImportPlan, deadline: Deadline) -> None:
         update.unit.area = update.area
         update.unit.updated_at = now
         units.append(update.unit)
-    RegistryUnit.objects.bulk_update(units, ["unit_type", "area", "updated_at"], batch_size=500)
+    RegistryUnit.objects.bulk_update(units, ["unit_type", "area", "updated_at"], batch_size=WRITE_BATCH)
     deadline.check("apply")
 
 
@@ -640,7 +642,7 @@ def _fill_names(plan: ImportPlan, deadline: Deadline) -> None:
             owner.name = fill.name
             owner.updated_at = now
     if owners:
-        RegistryOwner.objects.bulk_update(list(owners.values()), ["name", "updated_at"], batch_size=500)
+        RegistryOwner.objects.bulk_update(list(owners.values()), ["name", "updated_at"], batch_size=WRITE_BATCH)
     deadline.check("apply")
 
 
@@ -683,7 +685,7 @@ def _create_owners(plan: ImportPlan, new_unit_ids: dict[str, int], deadline: Dea
             continue
         owners.append(RegistryOwner(unit_id=unit_id, name=planned.name))
     if owners:
-        RegistryOwner.objects.bulk_create(owners, batch_size=500)
+        RegistryOwner.objects.bulk_create(owners, batch_size=WRITE_BATCH)
     deadline.check("apply")
 
     result: dict[tuple[str, str], int] = {}
@@ -731,5 +733,5 @@ def _create_phones(plan: ImportPlan, owner_ids: dict[tuple[str, str], int], dead
         seen.add(key)
         phones.append(RegistryPhone(owner_id=owner_id, unit_id=unit_by_owner[owner_id], phone=phone))
     if phones:
-        RegistryPhone.objects.bulk_create(phones, batch_size=500)
+        RegistryPhone.objects.bulk_create(phones, batch_size=WRITE_BATCH)
     deadline.check("apply")

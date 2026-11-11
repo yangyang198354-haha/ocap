@@ -1,11 +1,14 @@
 """账号视图（MOD-003）。"""
 from django.conf import settings
+from django.db.models import Prefetch, Q
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.committee.models import Seat
 from apps.core.attachments import AttachmentService
 from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError, RateLimited
@@ -16,7 +19,9 @@ from apps.core.ratelimit import RateLimiter, client_ip
 from apps.core.serializers import page_response
 from apps.integrations.wechat import WeChatError, get_wechat_client
 from apps.residency.auto_bind import AutoBindService
+from apps.residency.models import Membership
 
+from .directory import real_name_q
 from .models import AdminAccount, User
 from .services import (
     AccountService, consume_wechat_state, create_login_ticket, create_wechat_state,
@@ -387,15 +392,24 @@ class AdminUserListView(APIView):
 
     def get(self, request):
         q = request.query_params.get("q", "")[:32]
-        qs = User.objects.all()
+        qs = User.objects.prefetch_related(
+            Prefetch(
+                "memberships",
+                queryset=Membership.objects.filter(ended_at__isnull=True)
+                .select_related("unit").prefetch_related("unit__owners__phones"),
+            ),
+            Prefetch(
+                "seats",
+                queryset=Seat.objects.filter(status="ACTIVE", term_end__gte=timezone.localdate()),
+            ),
+        )
         if q:
-            from django.db.models import Q
-
             condition = Q(account_no__icontains=q) | Q(nickname__icontains=q)
             if PHONE_RE.match(q):
                 condition |= Q(phone=q)
             elif q.isdigit() and len(q) == 4:
                 condition |= Q(phone__endswith=q)
+            condition |= real_name_q(q)
             qs = qs.filter(condition)
         return page_response(qs.order_by("id"), request, AdminUserSerializer)
 

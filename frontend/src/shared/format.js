@@ -8,6 +8,11 @@ export function datetime(value) {
   return String(value).replace('T', ' ').slice(0, 19)
 }
 
+export function formatDateTime(value) {
+  if (!value) return ''
+  return String(value).replace('T', ' ').slice(0, 16)
+}
+
 export function identityLabel(item) {
   return item?.identity || item?.identity_label || ''
 }

@@ -1,4 +1,4 @@
-<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T01:04:38+08:00">
+<phase_status project="ocap_registry_import" mode="INCREMENTAL" created="2026-11-10T15:52:12+08:00" updated="2026-11-11T14:19:20+08:00">
   <request time="2026-11-10T15:52:12+08:00"><![CDATA[管理员业主清册导入，批量导入支持哪些文件，是否有格式要求。能否在页面有一个模板下载？ 这个模板要灵活，因为一个专有部分可能登记多个产权业主，可能一个，两个，三个，特别的可能五六个甚至更多。数量上不应该受限。单个导入，或者批量导入，都应该记录专有部分类型，比如住宅，公寓，商铺，车位，专有部分面积等等。增加这个需求，先整理需求和用户故事。确认后再开始开发]]></request>
   <request_context><![CDATA[PM 只读核查的现状（2026-11-10）：
 - backend/apps/registry/views.py:20 IMPORT_COLUMNS = 楼栋、单元、楼层、户号、手机号；多个手机号用英文分号分隔（views.py:172）。
@@ -19,7 +19,7 @@
     <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_05" status="APPROVED"/><phase id="PHASE_06" status="APPROVED"/>
     </group>
-    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" defect_loops="1">
+    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" defect_loops="2">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
@@ -47,22 +47,34 @@
     <artifact path="project_workspace/ocap_registry_import/architecture/tech_stack.md" version="1.0.0" status="APPROVED" group="GROUP_B"/>
     <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="2.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="2.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="2.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="3.0.0" status="APPROVED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
-    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="2.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="2.0.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="2.1.0" status="SUPERSEDED" group="GROUP_C"/>
+    <artifact path="project_workspace/ocap_registry_import/development/code_review_report.md" version="3.0.0" status="APPROVED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="2.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="2.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/test_plan.md" version="3.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="2.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="2.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="3.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="2.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="2.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="3.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="3.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_registry_import/deployment/deployment_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_E1"/>
@@ -89,6 +101,8 @@
   <invocation id="ocap_registry_import-GROUP_D-2" agent="test-engineer" start="2026-11-11T00:24:19+08:00" end="2026-11-11T00:39:49+08:00" result="SUCCESS"/>
   <invocation id="ocap_registry_import-GROUP_E1-2" agent="devops-engineer" start="2026-11-11T00:51:34+08:00" end="2026-11-11T00:54:39+08:00" result="SUCCESS"/>
   <invocation id="ocap_registry_import-GROUP_E2-2" agent="devops-engineer" start="2026-11-11T00:54:39+08:00" end="2026-11-11T01:04:38+08:00" result="SUCCESS"/>
+    <invocation id="ocap_registry_import-GROUP_C-3" agent="software-developer" start="2026-11-11T11:08:53+08:00" end="2026-11-11T11:13:59+08:00" result="SUCCESS"/>
+    <invocation id="ocap_registry_import-GROUP_D-3" agent="test-engineer" start="2026-11-11T11:13:59+08:00" end="2026-11-11T11:23:16+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_registry_import-GROUP_A-3" decision="PASS_WITH_CONDITIONS" time="2026-11-10T21:30:18+08:00">
@@ -250,6 +264,26 @@ PM xlsx 实测：cols style=1 on A,B,C,D,H；merged A2:A3 -> [('1栋','0801'),('
       <finding id="GR-E2-002-F02" severity="MINOR">外网 SSH 通道对连续新建连接间歇性 Connection closed（4 次，均在步骤生效前、重试成功）。</finding>
       <condition>用户在页面完成 M-04~M-06 后，PM 按 deployment_report R2 节的只读命令采样并回填。</condition>
     </gate_review>
+    <gate_review id="GR-C-003" invocation_id="ocap_registry_import-GROUP_C-3" decision="PASS_WITH_CONDITIONS" time="2026-11-11T11:13:59+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/development/implementation_plan.md" version="2.1.0"/><file path="project_workspace/ocap_registry_import/development/code_review_report.md" version="2.1.0"/></reviewed_files>
+      <criterion id="J-C-范围" result="SATISFIED">git diff：产品代码仅 backend/apps/registry/importing.py _create_owners（按 unit_id 分批、Python 端 (unit_id,name) 过滤），与 DEF-013 一致；无迁移、无测试改动。</criterion>
+      <criterion id="J-C-PM复跑" result="SATISFIED">临时副本（仅副本 media.py 加 future 注解以绕开 content 项目的 3.12 导入错误）：scale journeys Ran 3 in 16.0s OK（修复前 218.6s/2 FAIL）；全量 Ran 427 OK。</criterion>
+      <finding id="GR-C-003-F01" severity="MINOR">agent 自述未完整读 user_stories.md、module_design.md 与规模用例文件；产出无误。下次调用点名要求先读。</finding>
+      <finding id="GR-C-003-F02" severity="MINOR">CR-019：_load_states prefetch owners 的参数数随户均业主数增长，当前远低于上限，观察项。</finding>
+      <condition>GROUP_D：复跑三层全量与规模用例，确认 AC-094-07/AC-100-07/100-08 计时；产品代码仍须等 ocap_content_publish 修复 media.py 后才能在 Python 3.12/3.13 原样运行。</condition>
+      <verification><![CDATA[tests.e2e.test_registry_import_scale_journeys: Ran 3 tests in 16.048s / OK
+full: Ran 427 tests in 31.579s / OK]]></verification>
+    </gate_review>
+    <gate_review id="GR-D-003" invocation_id="ocap_registry_import-GROUP_D-3" decision="PASS_WITH_CONDITIONS" time="2026-11-11T11:23:16+08:00">
+      <reviewed_files><file path="project_workspace/ocap_registry_import/testing/test_plan.md" version="2.1.0"/><file path="project_workspace/ocap_registry_import/testing/unit_test_report.md" version="2.1.0"/><file path="project_workspace/ocap_registry_import/testing/integration_test_report.md" version="2.1.0"/><file path="project_workspace/ocap_registry_import/testing/e2e_test_report.md" version="2.1.0"/></reviewed_files>
+      <criterion id="J-D-真实执行" result="SATISFIED">PM 复跑（临时副本，仅副本 media.py 加 future 注解）：unit 102、integration 293、e2e 29、smoke 6、全量 430 OK，与报告一致。</criterion>
+      <criterion id="J-D-回归有效" result="SATISFIED">PM 把副本 importing.py 换成 6fbd24d 版：test_registry_import_query_bounds Ran 3 / FAILED (failures=2)（TC-INT-312、313），与报告一致。</criterion>
+      <criterion id="J-D-冻结点" result="SATISFIED">测试文件 11:15:32 早于报告 11:21:10。</criterion>
+      <finding id="GR-D-003-F01" severity="MINOR">后端在仓库 HEAD 原样无法在 Python 3.12/3.13 运行（ocap_content_publish media.py），本次结果依赖临时补丁；content 修复后须在 CI 复核。</finding>
+      <condition>提交前：ocap_content_publish 修复 media.py 后 CI 必须为绿；部署前再请用户授权；目标机 20000 行实测（M-04~M-06）仍待做。</condition>
+      <verification><![CDATA[unit Ran 102 OK; integration Ran 293 OK; e2e Ran 29 OK; smoke Ran 6 OK; full Ran 430 in 33.586s OK
+6fbd24d importing.py + new tests: Ran 3, FAILED (failures=2)]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-10T21:13:55+08:00" responder="用户"><![CDATA[用户原话："Q-RI-02 手机号选填，如果用户用这个手机号注册并且认证成功，可以自动绑定这个专有部分。Q-RI-04 车位面积必须填。Q-RI-06 同一专有部分导入，只要产权业主名字不同，就认为是同意部分的多个产权人。Q-RI-10 文件上线5 MB 20000行。 Q-RI-11： 要显示面积。 Q-RI-12：A， 其他按照推荐"
@@ -258,6 +292,7 @@ PM xlsx 实测：cols style=1 on A,B,C,D,H；merged A2:A3 -> [('1栋','0801'),('
     <clarification time="2026-11-10T22:00:57+08:00" responder="用户"><![CDATA[GROUP_B-1 问题。用户原话："Q1：初次使用，管理员同一上传业主清册， Q2：A， Q3：按照推荐， Q4：A Q6：B"
 映射：Q1=系统为初次使用，清册由管理员用新模板统一上传全量数据，不需要为既有数据设计补名流程。PM 落地口径（待用户确认）：迁移不删除任何既有数据；既有手机号按技术上最简方式保留为无名业主，管理员统一上传时按手机号匹配补上姓名（即 A 的机制，但不作为业务流程设计）。Q2=A；Q3=A；Q4=A；Q6=B（60 秒验收限定内网入口）。]]></clarification>
     <clarification time="2026-11-11T00:16:32+08:00" responder="用户"><![CDATA[用户原话："A，先修复上一批的问题"。即回流修复交付后评审问题：GROUP_C 修 DEF-007~012，GROUP_D 补 xlsx/合并单元格/组件用例并重跑；部署前再问用户。miniprogram/package-lock.json 去留、小程序发布：用户未答复，不处理。]]></clarification>
+    <clarification time="2026-11-11T11:08:53+08:00" responder="用户"><![CDATA[用户原话："1. 返工， 2. B， 3. 一起修"。第 3 项：修复 6fbd24d 带来的 20000 行导入性能回退（DEF-013），修后由 GROUP_D 复跑；部署前再问用户。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -308,5 +343,10 @@ F9 MINOR 交付报告单元测试计数 66 与实跑 62 不符（总数 327 一�
   <event time="2026-11-11T00:51:34+08:00" type="INVOCATION" actor="pm-orchestrator">提交 a0a0b3a 已推送（b0a0159..a0a0b3a）。缺陷修复为纯代码改动（无迁移、无新依赖），原 deployment_plan 1.0.0 含迁移/依赖/nginx 步骤且走内网 SSH，不直接复用；调用 devops-engineer（GROUP_E1-2）出增量重部署计划 1.1.0，门控后再执行 E2。</event>
   <event time="2026-11-11T00:54:39+08:00" type="GATE" actor="pm-orchestrator">GR-E1-002 PASS_WITH_CONDITIONS；deployment_plan 2.0.0 APPROVED。依据用户本轮授权（DEPLOY_AUTH 同轮）调用 devops-engineer E2（GROUP_E2-2），环境=测试。</event>
   <event time="2026-11-11T01:04:38+08:00" type="GATE" actor="pm-orchestrator">GR-E2-002 PASS_WITH_CONDITIONS；deployment_report 2.0.0 APPROVED。交付后返工（DEF-007~012）已部署测试环境，状态仍为 DELIVERED_WITH_ISSUES（待 M-04~M-06）。</event>
+  <event time="2026-11-11T10:55:44+08:00" type="POST_DELIVERY_REVIEW" actor="pm-orchestrator"><![CDATA[审核远端提交 6fbd24d（导入 __in 查询分批）：性能回退。本机 tests.e2e.test_registry_import_scale_journeys：a0a0b3a 版 3 tests 14.6s OK；6fbd24d 版 218.6s，TC-E2E-302/303 返回 504 IMPORT_TIMEOUT（stage=apply, limit 60s）。cProfile：_create_owners 单函数 119.9s——按 unit_id 分 40 批，每批仍带全部 20000 个 name__in 参数。CI run 42929087841 红（原因为 content 的 media.py，与本问题无关）。测试环境仍为 a0a0b3a，未受影响；6fbd24d 不应部署，需修复后再部署。]]></event>
+  <event time="2026-11-11T11:08:53+08:00" type="INVOCATION" actor="pm-orchestrator">交付后缺陷回流第 2 次（用户授权）：调用 software-developer（ocap_registry_import-GROUP_C-3），DEF-013 _create_owners 分批查询性能回退。</event>
+  <event time="2026-11-11T11:13:59+08:00" type="GATE" actor="pm-orchestrator">GR-C-003 PASS_WITH_CONDITIONS；development 两份 3.0.0 APPROVED（2.0.0/2.1.0 SUPERSEDED）。defect_loops=2（上限），调用 test-engineer（ocap_registry_import-GROUP_D-3）。</event>
+  <event time="2026-11-11T11:23:16+08:00" type="GATE" actor="pm-orchestrator">GR-D-003 PASS_WITH_CONDITIONS；testing 四份 3.0.0 APPROVED。DEF-013 已修复并有回归用例；未提交、未部署。</event>
+    <event time="2026-11-11T14:19:20+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator"><![CDATA[用户本轮原话："提交，推送， 部署"。授权范围：提交并推送当前返工（ocap_content_publish GROUP_B-2/C-2/C-3/D-3/D-4；ocap_registry_import DEF-013）；部署测试环境（画像 P7 唯一环境：树莓派，外网 ai-freeark.xin/ocap/）一次。推送前检查：git fetch 无新远端提交；.github/workflows 无部署 job；diff 未发现凭据。部署须先由 devops-engineer 出部署计划并过 E1 门控，且 CI 为绿后再执行 E2。]]></event>
   </audit_log>
 </phase_status>

@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
+  <timestamp>2026-11-11T11:21:10+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
-  <input_files><file>testing/unit_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file></input_files>
+  <version>3.0.0</version>
+  <input_files><file>testing/unit_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>testing/test_plan.md（2.1.0）</file></input_files>
   <phase>PHASE_07</phase>
   <status>APPROVED</status>
 </file_header>
@@ -11,6 +11,28 @@
 # 单元测试报告（PHASE_07）
 
 ## 摘要
+
+**2.1.0（缺陷回流第 2 次，DEF-013）复测**：执行时间 2026-11-11T11:21:10+08:00（Asia/Shanghai）。本次无新增/修改单元用例；复跑后端 `tests.unit` 全层与前端 registry_import 两个 spec。
+
+- **环境说明（缺陷回流第 2 次，DEF-013）**：仓库 HEAD 下后端在 Python 3.12 无法导入——另一项目 ocap_content_publish 的 `backend/apps/content/media.py:212`（`list[...]` 注解与类内静态方法 `list` 冲突，TypeError），不属本项目、未改动仓库中的 `apps/content`。后端测试在 scratch 副本运行：`git archive HEAD` 导出 + 覆盖工作区的 `backend/apps/registry/importing.py` 与新增测试文件 `backend/tests/integration/test_registry_import_query_bounds.py`；副本含 `frontend/`、`miniprogram/` 源码（契约测试读取），仅在副本 `media.py` 第 1 行后加 `from __future__ import annotations`。Python 3.12.3、Django 5.2.19、openpyxl（PM venv，未安装任何依赖）。前端/小程序 vitest 直接在仓库内运行。
+
+**metrics（2.1.0）**：total = pass + fail + skip + blocked + not_testable = 108 = 108 + 0 + 0 + 0 + 0（后端 unit 102 + 前端 registry_import 6）
+
+通过率 = pass / (pass + fail + blocked) = 108 / 108 = **100%**；**本层门控：PASSED**（baseline：相对基线零新增失败；基线后端 unit 102 OK，PM 全量基线 427 = 102 / 290 / 29 / 6）
+
+```
+$ (cd <scratch>/backend && <venv python> manage.py test tests.unit --settings=config.test_settings)
+Ran 102 tests in 0.540s
+OK
+Found 102 test(s).
+$ (cd frontend && npx vitest run tests/registry_import.spec.js tests/registry_import_dialog.spec.js)
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+```
+
+> 以下为 2.0.0 的摘要与分项（保留，单元用例清单未变；其中 66 为当时范围，现 `tests.unit` 全层含 content_publish 等其他项目用例共 102）。
+
+### 2.0.0 摘要
 
 - 执行时间：1.0.0 为 2026-11-10 23:07–23:08；**1.1.0 缺陷回流复测 2026-11-11 00:28–00:34（Asia/Shanghai）**
 - 环境：PM venv（Python 3.12.3、Django 5.2.19、openpyxl 3.1.5）；`config.test_settings`（SQLite 内存库、迁移置空、外部服务 fake）；Node + vitest

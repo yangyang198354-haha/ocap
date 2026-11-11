@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
+  <timestamp>2026-11-11T11:21:10+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
-  <input_files><file>testing/test_plan.md（1.0.0）</file><file>requirements/user_stories.md</file><file>requirements/requirements_spec.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>architecture/module_design.md</file></input_files>
+  <version>3.0.0</version>
+  <input_files><file>testing/test_plan.md（1.0.0）</file><file>requirements/user_stories.md</file><file>requirements/requirements_spec.md</file><file>development/implementation_plan.md</file><file>development/code_review_report.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md（DEF-013 修复）</file></input_files>
   <phase>PHASE_07,PHASE_08,PHASE_09</phase>
   <status>APPROVED</status>
 </file_header>
@@ -37,6 +37,11 @@
 5. 基线（PM 2026-11-11 修复前实跑）：后端 unit 62 / integration 237 / e2e 22 / smoke 6 = 327 OK；前端 126/126；小程序 69/69。编号续接：TC-UNIT-307 起、TC-INT-304 起、TC-E2E-302 起（核对前后端最大号：TC-UNIT-114、TC-INT-166、TC-E2E-104，TC-xxx-3NN 此前无使用）；前端组件用例沿前端序列取 TC-UNIT-115/116。
 6. 新增测试文件：`backend/tests/unit/test_registry_import_defects.py`（U-DEF）、`backend/tests/integration/test_registry_import_xlsx_defects.py`（I-XLS）、`backend/tests/e2e/test_registry_import_scale_journeys.py`（E-SCL）、`frontend/tests/registry_import_dialog.spec.js`（F-DLG）。xlsx 用例用 `skipUnless(openpyxl)` 守卫，PM venv 含 openpyxl 故全部实际执行。
 
+**2.1.0 修订（缺陷回流第 2 次，DEF-013）**：
+1. 评估后补 DEF-013 回归：`backend/tests/integration/test_registry_import_query_bounds.py`（集成层，TC-INT-312 / 312b / 313），用 `connection.execute_wrapper` 记录绑定参数个数，不依赖机器速度；修复前代码（`git show 6fbd24d:…/importing.py`）在 scratch 副本上运行失败（1700 > 500、2000 > 999），当前实现通过。编号续接 TC-INT-312（此前最大 311）。
+2. 环境：HEAD 下后端在 Python 3.12 无法导入（ocap_content_publish 的 `backend/apps/content/media.py:212` 注解冲突，非本项目、未改）；后端测试在 scratch 副本（HEAD + 工作区 importing.py + 新测试文件）运行，副本 `media.py` 第 1 行后加 `from __future__ import annotations`；前端/小程序在仓库内运行。基线：PM 全量 427 OK（unit 102 / integration 290 / e2e 29 / smoke 6，其中 integration 为推算）。
+3. 规模用例（TC-E2E-302/303）实测耗时记录见 e2e 报告（正式导入 5.2~7.1 s，< 60 s）。
+
 **基线来源**：画像 P4（greenfield 无既有失败）+ GROUP_C 门控实测（后端 247 OK；前端 120 passed/2 failed；小程序 69 passed）。
 
 **分层机制**：目录分层 `backend/tests/{unit,integration,e2e,smoke}`（Django runner 按模块路径选择性执行）；前端/小程序为 vitest，本变更新增用例集中在 `frontend/tests/registry_import.spec.js`。
@@ -69,6 +74,7 @@
 | AC-094-05 | TC-INT-110 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_110_duplicate_rows_merge | 管理员令牌 | 两行同姓名同手机号 | 1 业主 1 手机号，无重复 | 同姓名两行 |
 | AC-094-06 | TC-INT-112 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_112_import_audit_has_no_pii | 管理员令牌 | 导入后查审计 | REGISTRY_IMPORTED 含计数，无姓名/手机号明文 | 1 单元 1 业主 |
 | AC-094-07 | TC-E2E-302（1.1.0 新增；测试环境口径，目标机见人工清单 M-04） | E | 新写 | E-SCL::ScaleJourneyTests::test_tc_e2e_302_twenty_thousand_valid_rows | 管理员令牌；现场生成 20000 行合法 csv（<5 MB） | 预检 → 正式导入 | 预检不写库；正式：rows_total=rows_ok=20000、failed=0、imported/owners/phones 均 20000；库中 20000 条；耗时 <60 s（HTTP 往返与 elapsed_ms 均断言） | 程序生成，唯一手机号 137+8 位序号 |
+| AC-094-07 / AC-100-07 / AC-100-08（DEF-013 回归，2.1.0 新增） | TC-INT-312、TC-INT-312b、TC-INT-313 | I | 新写 | `backend/tests/integration/test_registry_import_query_bounds.py::CreateOwnersBoundTests::test_tc_int_312_…、test_tc_int_312b_…；ImportQueryBoundsApiTests::test_tc_int_313_…` | 1200/600/1500 条合法清册数据；管理员令牌（313） | 直调 `_create_owners` / HTTP 正式导入，`execute_wrapper` 记录每条 SQL 参数个数 | 回查 SELECT 单条参数数 ≤ 500；registry 表查询 ≤ 999；回查条数有界；(unit,name)→id 映射正确；计数正确 | 程序生成 |
 | AC-094-08 | TC-INT-111 | I | 新写 | I-ENH::MultiOwnerImportTests::test_tc_int_111_empty_phone_ok_and_empty_name_failed | 管理员令牌 | 王芳手机号为空 | 导入成功，手机号为空，不报错 | 空手机号行 |
 | AC-094-09 | TC-INT-111 | I | 新写 | 同上 | 管理员令牌 | 姓名为空 + 合法手机号 | 该行失败"业主姓名不能为空"，其他行成功 | 空姓名行 |
 | AC-095-01 | TC-INT-113 | I | 新写 | I-ENH::SingleEntryTests::test_tc_int_113_put_twelve_owners | 管理员+单元 | PUT 12 位业主 | 200，12 位业主，无 10 个上限提示 | 12 人名单 |
@@ -186,5 +192,7 @@
 | US-102 | TC-INT-151 ~ TC-INT-158、TC-INT-166、TC-E2E-101、TC-E2E-103；1.1.0：TC-UNIT-308、TC-INT-308（DEF-009）、TC-E2E-304 | U/I/E |
 | US-103 | TC-INT-159、TC-INT-160、TC-E2E-101 | I/E |
 | US-104 | TC-INT-161 ~ TC-INT-163、TC-E2E-103 | I/E |
+
+2.1.0：US-094 增补 TC-INT-312/312b/313（AC-094-07 的机器无关回归）。
 
 Should Have（不参与 critical path 统计）：US-100 → TC-INT-144~146、TC-UNIT-111~116、TC-INT-165、TC-INT-309（DEF-010）、TC-E2E-302（AC-100-07）、TC-E2E-303（AC-100-07/08）；US-101 → TC-INT-147~150、TC-E2E-102；US-099 DEF-011 → TC-INT-310。

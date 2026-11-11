@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-11T00:21:15+08:00</timestamp>
+  <timestamp>2026-11-11T11:12:11+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md (1.0.0 APPROVED)</file>
     <file>requirements/user_stories.md (1.0.0 APPROVED)</file>
@@ -292,3 +292,24 @@
 
 ### 1.1.0 补充
 `frontend/tests/registry_import.spec.js` TC-UNIT-114：未改（约束禁止），失败原因与建议修法见 implementation_plan 1.1.0"缺陷修复"节。
+
+## DEF-013 评审（2.1.0）
+
+| DEF | 位置 | 根因 | 修改说明 |
+|---|---|---|---|
+| DEF-013 | `registry/importing.py:_create_owners` | 6fbd24d 的分批查询每批都带全部姓名 `name__in=names`，20000 行时约 20000 参数 × 40 批，导入 stage=apply 超 60 s | 每批仅按 `unit_id__in=batch`（≤500 参数）查询，Python 端按 `(unit_id, name)` 过滤 |
+
+改动：`backend/apps/registry/importing.py` 1 个函数、约 +5/-7 行。其他 `_chunked` 使用点（`_load_states`、`_create_units`、`_fill_names`、`_move_phones`、`_delete_owners`、`_create_phones`）逐一核对，每批只带本批键，无同类问题。
+
+五维评分（DEF-013 改动）：Correctness 9 / Security 9（仍为 ORM 参数化）/ Performance 9 / Maintainability 9 / Testability 8。
+
+| CR | 级别 | 位置 | 描述 | 状态 |
+|---|---|---|---|---|
+| CR-018 | MAJOR | `importing.py:_create_owners`（6fbd24d 引入） | 分批查询每批带全集姓名，导致性能回退与超时 | FIXED |
+| CR-019 | MINOR | `importing.py:_load_states` | `prefetch_related("owners__phones")` 的 owner id IN 参数数与每户业主数成正比，极端户（单户 >数千业主）才可能逼近 SQLite 上限；当前不构成问题 | OPEN（观察项，不改） |
+
+自验证（环境：Python 3.12.3 + 临时 venv Django 5.2.19；当前 HEAD 在 Python 3.12 无法导入 `apps/content/media.py:212`（`list[...]` 注解与类内静态方法 `list` 冲突，另一项目 ocap_content_publish 的问题，不在本次范围，未改）。故在 scratchpad 复制 backend，仅在副本 media.py 首行加 `from __future__ import annotations`，另用符号链接指向真实 frontend/miniprogram 供契约测试读取；产品代码不含该补丁）：
+- `python manage.py test tests.e2e.test_registry_import_scale_journeys --settings=config.test_settings` → `Ran 3 tests in 16.809s OK`（总耗时 19.0 s；TC-E2E-302 正式 7.5 s、TC-E2E-303 正式 6.2 s；对比 6fbd24d 的 218.6 s 与 504）。
+- `python manage.py test --settings=config.test_settings` → `Ran 427 tests in 28.405s OK`（零失败，零新增失败）。
+- `python3 -m compileall -q backend/apps/registry` 通过。
+CRITICAL 0 / MAJOR 1（FIXED）/ MINOR 1（OPEN 观察项）。

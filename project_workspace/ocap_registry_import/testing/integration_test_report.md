@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
+  <timestamp>2026-11-11T11:21:10+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
-  <input_files><file>testing/integration_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file></input_files>
+  <version>3.0.0</version>
+  <input_files><file>testing/integration_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>architecture/module_design.md</file><file>development/implementation_plan.md</file><file>testing/test_plan.md（2.1.0）</file><file>development/implementation_plan.md（DEF-013 修复）</file></input_files>
   <phase>PHASE_08</phase>
   <status>APPROVED</status>
 </file_header>
@@ -11,6 +11,40 @@
 # 集成测试报告（PHASE_08）
 
 ## 摘要
+
+**2.1.0（缺陷回流第 2 次，DEF-013）复测**：执行时间 2026-11-11T11:21:10+08:00（Asia/Shanghai）。新写 3 个 DEF-013 回归用例（文件 `backend/tests/integration/test_registry_import_query_bounds.py`，TC-INT-312、TC-INT-312b、TC-INT-313）。
+
+- **环境说明（缺陷回流第 2 次，DEF-013）**：仓库 HEAD 下后端在 Python 3.12 无法导入——另一项目 ocap_content_publish 的 `backend/apps/content/media.py:212`（`list[...]` 注解与类内静态方法 `list` 冲突，TypeError），不属本项目、未改动仓库中的 `apps/content`。后端测试在 scratch 副本运行：`git archive HEAD` 导出 + 覆盖工作区的 `backend/apps/registry/importing.py` 与新增测试文件 `backend/tests/integration/test_registry_import_query_bounds.py`；副本含 `frontend/`、`miniprogram/` 源码（契约测试读取），仅在副本 `media.py` 第 1 行后加 `from __future__ import annotations`。Python 3.12.3、Django 5.2.19、openpyxl（PM venv，未安装任何依赖）。前端/小程序 vitest 直接在仓库内运行。
+
+**metrics（2.1.0）**：`tests.integration` total = pass + fail + skip + blocked + not_testable = 293 = 293 + 0 + 0 + 0 + 0（基线 290 + 新写 3）
+
+通过率 = pass / (pass + fail + blocked) = 293 / 293 = **100%**；契约用例 `tests.integration.test_frontend_contract` 14/14 OK（含 TC-INT-164/165）；新写 3/3 通过 → **本层门控：PASSED**
+
+```
+$ (cd <scratch>/backend && <venv python> manage.py test tests.integration --settings=config.test_settings)
+Ran 293 tests in 10.726s
+OK
+Found 293 test(s).
+$ (cd <scratch>/backend && <venv python> manage.py test tests.integration.test_frontend_contract --settings=config.test_settings)
+Ran 14 tests in 0.689s
+OK
+```
+
+### 2.1.0 新增用例（DEF-013 回归）
+
+回归思路（不依赖机器速度）：用 `connection.execute_wrapper` 记录每条 SQL 的实际绑定参数个数。每批带全集的实现会让回查 SELECT 的参数数 = 批大小 + 全部姓名数，违反上限；当前实现只带本批 unit_id。
+
+| TC | AC | 描述 | 结果 | 根因分类 |
+|---|---|---|---|---|
+| TC-INT-312 | AC-094-07、AC-100-07、AC-100-08 | 直接调用 `_create_owners`：1200 单元各 1 位新业主（3 批），预置 1 位计划外同单元业主；断言所有 registry_registryowner 回查 SELECT 单条参数数 ≤ 500（< SQLite 旧上限 999）、回查条数 ≤ ceil(1200/500)=3；结果映射 1200 项、(unit,name)→id 与库一致，计划外业主不入结果 | PASS | — |
+| TC-INT-312b | AC-094-01 | 600 单元 × 2 位业主（共 1200）跨批：(unit_key,name) 精确映射 | PASS | —（正确性守卫，修复前后均通过） |
+| TC-INT-313 | AC-094-07、AC-100-08 | 经 HTTP 正式导入 1500 行：计数正确（1500/1500/1500，库 1500 业主 1500 手机号）；所有 registry 表查询单条参数数 ≤ 999；owner 回查 SELECT 条数 ≤ 6×ceil(1500/500)，单条参数 ≤ 500 | PASS | — |
+
+**有效性验证（修复前代码上运行）**：scratch 副本 `work_old`，把 `backend/apps/registry/importing.py` 换成 `git show 6fbd24d:backend/apps/registry/importing.py`（每批带全集）后运行同一文件：TC-INT-312 失败（`1700 not less than or equal to 500：回查单条参数数 1700 超过批大小 500`）；TC-INT-313 失败（`2000 not less than or equal to 999：存在参数数 2000 的查询`）；TC-INT-312b 通过（正确性用例，不针对性能）。当前实现 3/3 通过。仓库中的产品代码未被改动。
+
+> 以下为 2.0.0 内容（用例清单未变）。
+
+### 2.0.0 摘要
 
 - 执行时间：1.0.0 为 2026-11-10 23:07–23:08；**1.1.0 缺陷回流复测 2026-11-11 00:28（Asia/Shanghai）**
 - 环境：PM venv（Python 3.12.3、Django 5.2.19、openpyxl 3.1.5）；`config.test_settings`（SQLite 内存库、真实 DRF 路由器与 ORM、微信/短信 fake）
@@ -186,6 +220,10 @@ $ (cd frontend && npx vitest run --passWithNoTests)
 | TC-INT-165 | AC-100-05、AC-098-02、AC-104-01 | 后端响应键（spec/options/import）与前端读取的字段（rows_total/errors/changes/level/skipped/has_empty/label）一致 | PASS |
 
 ## 与基线对比（baseline 模式）
+
+**2.1.0**：后端 integration 基线 290（PM 全量 427 − unit 102 − e2e 29 − smoke 6，推算）→ 本次 293，新增失败 0（+3 新写）；前端全量 131/131、小程序 71/71，无失败，新增失败 0（前端/小程序基线为 PM 复跑口径，本次无失败，不可能有新增）。
+
+2.0.0：
 
 | 项 | 基线（GROUP_C 收尾） | 本次 | 结论 |
 |---|---|---|---|

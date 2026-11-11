@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>software-developer</author_agent>
-  <timestamp>2026-11-11T00:21:15+08:00</timestamp>
+  <timestamp>2026-11-11T11:12:11+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
+  <version>3.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md (1.0.0 APPROVED)</file>
     <file>requirements/user_stories.md (1.0.0 APPROVED)</file>
@@ -190,3 +190,13 @@ read_only 模式内存低但不暴露 merged_cells；改普通模式后 5 MB / 2
 - 缺少针对 DEF-007~011 的专门用例（合并单元格 xlsx、文本格式模板、auto_bind 单元失败后继续、dry_run 表单 "false"、补填姓名 updated_at），建议 test-engineer 补。
 - `[ASSUMPTION]` 文本格式列仅覆盖楼栋/单元/楼层/户号/手机号；面积列保持 General。
 - `[ASSUMPTION]` revoke 延迟取 1000 ms。
+
+## DEF-013 修复（2.1.0，REWORK_AUTHORIZED：用户 2026-11-11 "3. 一起修"）
+
+| DEF | 级别 | 根因 | 改动（文件:函数） | 自验证 |
+|---|---|---|---|---|
+| DEF-013 | MAJOR | 提交 6fbd24d 把 `_create_owners` 回查改为按 unit_id 分批，但每批仍带全部业主姓名 `.filter(name__in=names)`（20000 行时每条查询约 20000 个参数 × 40 批），SQLite 解析/匹配开销 O(批数×姓名数)，TC-E2E-302/303 超 60 s 返回 504 IMPORT_TIMEOUT | `backend/apps/registry/importing.py:_create_owners`：每批只 `filter(unit_id__in=batch)`，`(unit_id, name)` 在 Python 端用 `wanted` 集合过滤；单条查询参数数 ≤ 500，保留避免 "too many SQL variables" 的目标 | 见 code_review_report DEF-013 小节 |
+
+其他 6fbd24d 分批点检查（`_load_states`、`_create_units`、`_fill_names`、`_move_phones`、`_delete_owners`、`_create_phones`）：每批只带本批自身的键（specific_part / owner_id / phone_id / unit 的 owner id），不存在"每批带全集"问题，未改动。仅 `_load_states` 的 `prefetch_related("owners__phones")` 会按 ≤500 个 unit 展开 owner id（每户业主数少，当前远低于 SQLite 32766 上限），记为观察项不改。
+
+无迁移、不改测试代码、不改 apps/content。

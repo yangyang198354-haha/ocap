@@ -1,9 +1,9 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-11T00:35:27+08:00</timestamp>
+  <timestamp>2026-11-11T11:21:10+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>2.0.0</version>
-  <input_files><file>testing/e2e_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>requirements/user_stories.md</file><file>development/implementation_plan.md</file></input_files>
+  <version>3.0.0</version>
+  <input_files><file>testing/e2e_test_report.md（1.0.0）</file><file>testing/test_plan.md</file><file>requirements/user_stories.md</file><file>development/implementation_plan.md</file><file>testing/test_plan.md（2.1.0）</file><file>development/implementation_plan.md（DEF-013 修复）</file></input_files>
   <phase>PHASE_09</phase>
   <status>APPROVED</status>
 </file_header>
@@ -11,6 +11,52 @@
 # E2E 测试报告（PHASE_09）
 
 ## 摘要
+
+critical path 口径：替代（最高层可执行的完整 API 旅程 `backend/tests/e2e`；项目无浏览器 E2E 框架）
+
+**2.1.0（缺陷回流第 2 次，DEF-013）复测**：执行时间 2026-11-11T11:21:10+08:00（Asia/Shanghai）。E2E 用例无新增/修改；TC-E2E-302/303 在 DEF-013 修复后复跑通过。
+
+- **环境说明（缺陷回流第 2 次，DEF-013）**：仓库 HEAD 下后端在 Python 3.12 无法导入——另一项目 ocap_content_publish 的 `backend/apps/content/media.py:212`（`list[...]` 注解与类内静态方法 `list` 冲突，TypeError），不属本项目、未改动仓库中的 `apps/content`。后端测试在 scratch 副本运行：`git archive HEAD` 导出 + 覆盖工作区的 `backend/apps/registry/importing.py` 与新增测试文件 `backend/tests/integration/test_registry_import_query_bounds.py`；副本含 `frontend/`、`miniprogram/` 源码（契约测试读取），仅在副本 `media.py` 第 1 行后加 `from __future__ import annotations`。Python 3.12.3、Django 5.2.19、openpyxl（PM venv，未安装任何依赖）。前端/小程序 vitest 直接在仓库内运行。
+
+**metrics（2.1.0）**：`tests.e2e` total = pass + fail + skip + blocked + not_testable = 29 = 29 + 0 + 0 + 0 + 0（含 content_publish 等其他项目用例；本项目 TC-E2E-101~104、302~304 共 7 条全部在内）
+
+通过率 = pass / (pass + fail + blocked) = 29 / 29 = **100%**；critical path 覆盖率 = 11 / 11 = **100%**；critical path 通过率 = **100%**；前后端契约 TC-INT-164/165（14/14 OK）与前端 TC-UNIT-115/116 通过 → **本层门控：PASSED**
+
+### 规模用例实测耗时（AC-094-07 / AC-100-07 / AC-100-08，60 s 口径，测试环境 SQLite 内存库、单进程、非目标机）
+
+| 运行 | TC-E2E-302 预检 / 正式 | TC-E2E-303 预检 / 正式 |
+|---|---|---|
+| e2e 层单跑（tests.e2e） | 1.4 s / 6.1 s | 1.1 s / 5.4 s |
+| 后端全量（430） | 1.4 s / 6.1 s | 1.1 s / 5.2 s |
+| 规模文件单独再跑 | 1.1 s / 5.6 s | 1.4 s / 7.1 s |
+
+各次正式导入 5.2~7.1 s，均 < 60 s（HTTP 往返与响应 `elapsed_ms` 均断言 < 60 s）。对照：DEF-013 前（提交 6fbd24d）PM 实测 218.6 s（504 IMPORT_TIMEOUT）；本次耗时在 PM 修复后实测 16.0 s（含预检与正式合计）的同量级。目标机（树莓派 + MySQL）耗时仍由人工清单 M-04~M-06 复核。
+
+```
+$ (cd <scratch>/backend && <venv python> manage.py test tests.e2e --settings=config.test_settings)
+Ran 29 tests in 16.914s
+OK
+Found 29 test(s).
+[TC-E2E-302] 20000 行合法：预检 1.4s，正式 6.1s（SQLite 内存库）
+[TC-E2E-303] 20000 行含 2000 非法：预检 1.1s，正式 5.4s（SQLite 内存库）
+```
+
+### 全量回归（2.1.0）
+
+| 命令 | 计数 | 相对基线新增失败 |
+|---|---|---|
+| `(cd <scratch>/backend && <venv python> manage.py test --settings=config.test_settings)` | `Ran 430 tests in 27.531s` / `OK` | **0**（PM 基线 427 → +3 新写） |
+| 分层 | unit 102 / integration 293 / e2e 29 / smoke 6，合计 430 = 102 + 293 + 29 + 6（smoke `Ran 6 tests` OK） | 0 |
+| `(cd frontend && npx vitest run --passWithNoTests)` | `Test Files 15 passed (15)` / `Tests 131 passed (131)` | **0** |
+| `(cd miniprogram && npx vitest run --passWithNoTests)` | `Test Files 11 passed (11)` / `Tests 71 passed (71)` | **0** |
+
+### 是否需要补回归用例（评估结论）
+
+需要，已补（见 integration 报告 TC-INT-312/312b/313）。理由：TC-E2E-302/303 只断言 60 s 墙钟，依赖机器速度，且在 DEF-013 前已作为失败发现但无法精确指向"每批带全集"的根因；新用例以绑定参数个数/查询条数为判据，机器无关。SQLite 变量上限回归：断言 registry 表查询单条参数数 ≤ 999（更严的 ≤ 500 用于回查）。修复前代码上两个针对性用例失败（1700 > 500、2000 > 999），当前实现通过。
+
+> 以下为 2.0.0 内容（旅程清单未变）。
+
+### 2.0.0 摘要
 
 critical path 口径：替代（最高层可执行的完整 API 旅程 `backend/tests/e2e`；项目无浏览器 E2E 框架）
 
@@ -160,7 +206,7 @@ Found 25 test(s).
 
 ## 缺陷
 
-无。1.1.0 复测未发现新的产品缺陷（DEF-013 起无）；DEF-007~012 的修复均由新用例证实有效。
+无新增。2.1.0 复测未发现新的产品缺陷（DEF-014 起无）；DEF-013 修复由 TC-E2E-302/303（耗时）与 TC-INT-312/313（参数数/查询数）双重证实。
 
 ## 人工验证清单
 

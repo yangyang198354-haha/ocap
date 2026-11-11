@@ -689,13 +689,13 @@ def _create_owners(plan: ImportPlan, new_unit_ids: dict[str, int], deadline: Dea
     result: dict[tuple[str, str], int] = {}
     if not owners:
         return result
-    names = {o.name for o in owners}
+    # DEF-013：每批只按 unit_id 查询（参数数 ≤ 批大小），(unit_id, name) 在 Python 端过滤，
+    # 不再把全部姓名带进每条查询（否则 20000 行时每批约 20000 个参数，耗时 O(批数×姓名数)）。
+    wanted = {(o.unit_id, o.name) for o in owners}
     for batch in _chunked({o.unit_id for o in owners}):
-        for row in (
-            RegistryOwner.objects.filter(unit_id__in=batch)
-            .filter(name__in=names)
-            .values("id", "unit_id", "name")
-        ):
+        for row in RegistryOwner.objects.filter(unit_id__in=batch).values("id", "unit_id", "name"):
+            if (row["unit_id"], row["name"]) not in wanted:
+                continue
             key = unit_key_by_id.get(row["unit_id"])
             if key is not None:
                 result[(key, row["name"])] = row["id"]

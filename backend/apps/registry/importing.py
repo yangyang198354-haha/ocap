@@ -71,6 +71,13 @@ class Deadline:
             raise ImportTimeout(int(self.seconds), stage)
 
 
+def _chunked(values, size: int = 500):
+    """分批查询，避免 SQLite 变量上限（20000 行导入时 __in 会超限）。"""
+    values = list(values)
+    for index in range(0, len(values), size):
+        yield values[index:index + size]
+
+
 @dataclass(frozen=True)
 class RawRow:
     row_no: int
@@ -308,11 +315,13 @@ def _load_states(keys: dict[str, str], deadline: Deadline) -> dict[str, _UnitSta
     if not specific_parts:
         return states
 
-    units = (
-        RegistryUnit.objects.filter(specific_part__in=specific_parts)
-        .prefetch_related("owners__phones")
-        .order_by("id")
-    )
+    units = []
+    for batch in _chunked(specific_parts):
+        units.extend(
+            RegistryUnit.objects.filter(specific_part__in=batch)
+            .prefetch_related("owners__phones")
+            .order_by("id")
+        )
     for unit in units:
         key = unit.specific_part.casefold()
         state = states.get(key)
@@ -594,10 +603,12 @@ def _create_units(plan: ImportPlan, deadline: Deadline) -> dict[str, int]:
         batch_size=500,
     )
     deadline.check("apply")
-    rows = RegistryUnit.objects.filter(
-        specific_part__in=[u.specific_part for u in plan.units_to_create]
-    ).values("id", "specific_part")
-    return {row["specific_part"].casefold(): row["id"] for row in rows}
+    result: dict[str, int] = {}
+    parts = [u.specific_part for u in plan.units_to_create]
+    for batch in _chunked(parts):
+        for row in RegistryUnit.objects.filter(specific_part__in=batch).values("id", "specific_part"):
+            result[row["specific_part"].casefold()] = row["id"]
+    return result
 
 
 def _update_units(plan: ImportPlan, deadline: Deadline) -> None:
@@ -617,10 +628,11 @@ def _update_units(plan: ImportPlan, deadline: Deadline) -> None:
 def _fill_names(plan: ImportPlan, deadline: Deadline) -> None:
     if not plan.owner_names_to_fill:
         return
-    owners = {
-        owner.id: owner
-        for owner in RegistryOwner.objects.filter(id__in=[f.owner_id for f in plan.owner_names_to_fill])
-    }
+    owners: dict[int, RegistryOwner] = {}
+    fill_ids = [f.owner_id for f in plan.owner_names_to_fill]
+    for batch in _chunked(fill_ids):
+        for owner in RegistryOwner.objects.filter(id__in=batch):
+            owners[owner.id] = owner
     now = timezone.now()
     for fill in plan.owner_names_to_fill:
         owner = owners.get(fill.owner_id)
@@ -643,14 +655,16 @@ def _move_phones(plan: ImportPlan, owner_ids: dict[tuple[str, str], int], deadli
             continue
         by_owner.setdefault(owner_id, []).append(move.phone_id)
     for owner_id, phone_ids in by_owner.items():
-        RegistryPhone.objects.filter(id__in=phone_ids).update(owner_id=owner_id)
+        for batch in _chunked(phone_ids):
+            RegistryPhone.objects.filter(id__in=batch).update(owner_id=owner_id)
         deadline.check("apply")
 
 
 def _delete_owners(plan: ImportPlan, deadline: Deadline) -> None:
     if not plan.owners_to_delete:
         return
-    RegistryOwner.objects.filter(id__in=plan.owners_to_delete).delete()
+    for batch in _chunked(plan.owners_to_delete):
+        RegistryOwner.objects.filter(id__in=batch).delete()
     deadline.check("apply")
 
 
@@ -675,12 +689,16 @@ def _create_owners(plan: ImportPlan, new_unit_ids: dict[str, int], deadline: Dea
     result: dict[tuple[str, str], int] = {}
     if not owners:
         return result
-    for row in RegistryOwner.objects.filter(
-        unit_id__in=[o.unit_id for o in owners], name__in=sorted({o.name for o in owners})
-    ).values("id", "unit_id", "name"):
-        key = unit_key_by_id.get(row["unit_id"])
-        if key is not None:
-            result[(key, row["name"])] = row["id"]
+    names = {o.name for o in owners}
+    for batch in _chunked({o.unit_id for o in owners}):
+        for row in (
+            RegistryOwner.objects.filter(unit_id__in=batch)
+            .filter(name__in=names)
+            .values("id", "unit_id", "name")
+        ):
+            key = unit_key_by_id.get(row["unit_id"])
+            if key is not None:
+                result[(key, row["name"])] = row["id"]
     return result
 
 
@@ -700,10 +718,10 @@ def _create_phones(plan: ImportPlan, owner_ids: dict[tuple[str, str], int], dead
     if not entries:
         return
 
-    unit_by_owner = {
-        row["id"]: row["unit_id"]
-        for row in RegistryOwner.objects.filter(id__in={owner_id for owner_id, _ in entries}).values("id", "unit_id")
-    }
+    unit_by_owner: dict[int, int] = {}
+    for batch in _chunked({owner_id for owner_id, _ in entries}):
+        for row in RegistryOwner.objects.filter(id__in=batch).values("id", "unit_id"):
+            unit_by_owner[row["id"]] = row["unit_id"]
     phones: list[RegistryPhone] = []
     seen: set[tuple[int, str]] = set()
     for owner_id, phone in entries:

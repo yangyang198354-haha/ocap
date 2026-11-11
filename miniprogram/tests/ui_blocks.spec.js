@@ -13,7 +13,7 @@ const ME = {
 }
 
 describe('首页语义区块', () => {
-  it('Hero / 待办 / 4 数据卡 / 6 入口 / 投票 / 最新 均渲染，数据来自现有接口', async () => {
+  it('Hero / 待办 / 4 数据卡 / 7 入口 / 投票 / 最新 均渲染，数据来自现有接口', async () => {
     respondWith({
       'GET /me': ME,
       'GET /approval/tasks': { results: [{ instance_id: 3, scope: 'EXPENSE', subject_title: '报销#1' }] },
@@ -25,7 +25,7 @@ describe('首页语义区块', () => {
       expect(wrapper.find(cls).exists(), cls).toBe(true)
     }
     expect(wrapper.findAll('.home-stat')).toHaveLength(4)
-    expect(wrapper.findAll('.home-q')).toHaveLength(6)
+    expect(wrapper.findAll('.home-q')).toHaveLength(7)
     expect(wrapper.find('.home-poll').text()).toContain('快递柜选址')
     expect(wrapper.find('.home-poll').text()).not.toContain('旧调查')
     expect(wrapper.findAll('.home-stat .stat-value').map((n) => n.text())).toEqual(['1', '1', '1', '1'])

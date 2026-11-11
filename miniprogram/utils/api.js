@@ -41,7 +41,9 @@ export const api = {
   withdrawClaim: (id) => http.post(`/claims/${id}/withdraw`, {}),
   tasks: () => http.get('/approval/tasks'),
   decide: (instanceId, action) => http.post(`/approval/instances/${instanceId}/decision`, { action }),
-  reports: () => http.get('/ledger/reports')
+  reports: () => http.get('/ledger/reports'),
+  infoPosts: (params) => http.get('/info/posts', params),
+  infoPost: (id) => http.get(`/info/posts/${id}`, { fmt: 'blocks' })
 }
 
 export { setToken, getToken }

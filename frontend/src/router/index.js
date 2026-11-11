@@ -20,7 +20,9 @@ const routes = [
       { path: 'income', component: () => import('@/portal/Income.vue') },
       { path: 'polls', component: () => import('@/portal/Polls.vue') },
       { path: 'polls/:id', component: () => import('@/portal/PollDetail.vue') },
-      { path: 'reports', component: () => import('@/portal/Reports.vue') }
+      { path: 'reports', component: () => import('@/portal/Reports.vue') },
+      { path: 'info', component: () => import('@/portal/InfoList.vue') },
+      { path: 'info/:id', component: () => import('@/portal/InfoDetail.vue') }
     ]
   },
   { path: '/admin/login', component: () => import('@/admin/AdminLogin.vue'), meta: { public: true, admin: true } },
@@ -37,7 +39,13 @@ const routes = [
       { path: 'flows', component: () => import('@/admin/AdminFlows.vue') },
       { path: 'finance', component: () => import('@/admin/AdminFinance.vue') },
       { path: 'users', component: () => import('@/admin/AdminUsers.vue') },
-      { path: 'audit', component: () => import('@/admin/AdminAudit.vue') }
+      { path: 'audit', component: () => import('@/admin/AdminAudit.vue') },
+      { path: 'content/posts', component: () => import('@/admin/AdminContentPosts.vue') },
+      { path: 'content/posts/:id', component: () => import('@/admin/AdminContentEditor.vue') },
+      { path: 'content/media', component: () => import('@/admin/AdminMedia.vue') },
+      { path: 'content/services', component: () => import('@/admin/AdminAiServices.vue') },
+      { path: 'content/platforms', component: () => import('@/admin/AdminPlatforms.vue') },
+      { path: 'content/settings', component: () => import('@/admin/AdminContentSettings.vue') }
     ]
   },
   { path: '/:pathMatch(.*)*', redirect: '/' }

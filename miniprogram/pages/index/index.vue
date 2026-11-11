@@ -89,6 +89,7 @@ const quick = [
   { label: '投票', open: () => tab('/pages/polls/index') },
   { label: '报销', open: () => go('/pages/claims/index') },
   { label: '手机号', open: () => go('/pages/phone/index') },
+  { label: '信息公开', open: () => go('/pages/info/index') },
   { label: '我的', open: () => tab('/pages/me/index') }
 ]
 

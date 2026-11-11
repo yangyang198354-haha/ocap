@@ -255,11 +255,11 @@ describe('TC-UNIT-108 风格入口范围（AC-075-02、AC-079-03、AC-080-04、A
     for (const f of vue('frontend/src/admin')) expect(read(f), f).not.toMatch(/默认风格|新增风格|风格设置|\/theme/)
     expect(read('frontend/src/shared/api.js')).not.toMatch(/admin[A-Za-z]*\.[a-z]+\([^)]*theme/i)
   })
-  it('路由：用户端 14 个页面组件、管理端 9 个页面组件均存在', () => {
+  it('路由：用户端 16 个页面组件、管理端 15 个页面组件均存在', () => {
     const router = read('frontend/src/router/index.js')
     const comps = [...router.matchAll(/import\('@\/(portal|admin)\/(\w+)\.vue'\)/g)].map((m) => `${m[1]}/${m[2]}`)
-    expect(comps.filter((c) => c.startsWith('portal/')).length).toBe(15) // 14 页 + PortalLayout
-    expect(comps.filter((c) => c.startsWith('admin/')).length).toBe(10) // 9 页 + AdminLayout
+    expect(comps.filter((c) => c.startsWith('portal/')).length).toBe(17) // 16 页 + PortalLayout
+    expect(comps.filter((c) => c.startsWith('admin/')).length).toBe(16) // 15 页 + AdminLayout
   })
 })
 

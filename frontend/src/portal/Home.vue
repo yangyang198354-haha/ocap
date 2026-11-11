@@ -117,6 +117,7 @@ const quick = computed(() => [
   { label: '参与投票', to: '/polls', icon: 'vote', hint: '投票与调查' },
   { label: '待办', to: '/tasks', icon: 'task', hint: '审批事项' },
   { label: '财务报表', to: '/reports', icon: 'chart', hint: '季报 / 年报' },
+  { label: '信息公开', to: '/info', icon: 'doc', hint: '公告与通知' },
   { label: '报销 / 备用金', to: '/claims', icon: 'wallet', hint: '发起申请' },
   ...(auth.isCommittee ? [{ label: '收入表', to: '/income', icon: 'income', hint: '收入登记与审批' }] : [])
 ])

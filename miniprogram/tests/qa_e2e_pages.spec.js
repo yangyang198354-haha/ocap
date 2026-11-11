@@ -22,10 +22,10 @@ beforeEach(() => {
   })
 })
 
-describe('TC-E2E-202 小程序 11 页 × 三套风格逐页走查（AC-083-01/04 自动化部分）', () => {
-  it('pages.json 的 11 个页面都套 ThemeRoot：theme-<key> 类、CSS 变量、文本与风格无关、无内联颜色', async () => {
+describe('TC-E2E-202 小程序 13 页 × 三套风格逐页走查（AC-083-01/04 自动化部分）', () => {
+  it('pages.json 的 13 个页面都套 ThemeRoot：theme-<key> 类、CSS 变量、文本与风格无关、无内联颜色', async () => {
     const pages = pagesJson.pages.map((p) => p.path)
-    expect(pages).toHaveLength(11)
+    expect(pages).toHaveLength(13)
     const bad = []
     const texts = {}
     for (const page of pages) {

@@ -1,6 +1,12 @@
 const BASE = import.meta.env.VITE_API_BASE || '/api/v1'
 export const TOKEN_KEY = 'ocap_token'
 
+export function mediaUrl(path) {
+  if (!path) return ''
+  if (/^https?:\/\//i.test(path)) return path
+  return `${BASE.replace(/\/$/, '')}${path}`
+}
+
 export function getToken() {
   return uni.getStorageSync(TOKEN_KEY) || ''
 }

@@ -14,4 +14,5 @@ urlpatterns = [
     path("api/v1/", include("apps.ledger.urls")),
     path("api/v1/", include("apps.jobs.urls")),
     path("api/v1/", include("apps.polls.urls")),
+    path("api/v1/", include("apps.content.urls")),
 ]

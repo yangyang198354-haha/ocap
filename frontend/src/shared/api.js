@@ -166,7 +166,62 @@ const admin = {
   updateSystemConfig: (key, value) => adminHttp.put(`/admin/system-config/${key}`, { value }),
   downloadAttachment: (id) => adminHttp.get(`/attachments/${id}/download`, { responseType: 'blob' }),
   // 管理员令牌可读的财务数据：报销/备用金列表（/admin/claims）。收入表录入/生成报表属业委会成员权限，不在管理端
-  claims: (params) => adminHttp.get('/admin/claims', { params })
+  claims: (params) => adminHttp.get('/admin/claims', { params }),
+
+  // ---- 内容中心（IFC-190~231）----
+  contentPosts: (params) => adminHttp.get('/admin/content/posts', { params }),
+  createContentPost: (data) => adminHttp.post('/admin/content/posts', data),
+  contentPost: (id) => adminHttp.get(`/admin/content/posts/${id}`),
+  updateContentPost: (id, data) => adminHttp.patch(`/admin/content/posts/${id}`, data),
+  publishContentPost: (id) => adminHttp.post(`/admin/content/posts/${id}/publish`, {}),
+  offlineContentPost: (id) => adminHttp.post(`/admin/content/posts/${id}/offline`, {}),
+  deleteContentPost: (id) => adminHttp.delete(`/admin/content/posts/${id}`),
+  confirmContentText: (id) => adminHttp.post(`/admin/content/posts/${id}/confirm-text`, {}),
+  previewContent: (data) => adminHttp.post('/admin/content/preview', data),
+  styleTemplates: () => adminHttp.get('/admin/content/style-templates'),
+  createStyleTemplate: (data) => adminHttp.post('/admin/content/style-templates', data),
+  updateStyleTemplate: (id, data) => adminHttp.put(`/admin/content/style-templates/${id}`, data),
+  deleteStyleTemplate: (id) => adminHttp.delete(`/admin/content/style-templates/${id}`),
+  mediaList: (params) => adminHttp.get('/admin/content/media', { params }),
+  uploadMedia: (file, title) => {
+    const body = new FormData()
+    body.append('file', file)
+    if (title) body.append('title', title)
+    return adminHttp.post('/admin/content/media', body)
+  },
+  renameMedia: (id, title) => adminHttp.patch(`/admin/content/media/${id}`, { title }),
+  deleteMedia: (id) => adminHttp.delete(`/admin/content/media/${id}`),
+  saveMedia: (id) => adminHttp.post(`/admin/content/media/${id}/save`, {}),
+  contentServices: () => adminHttp.get('/admin/content/services'),
+  saveContentService: (type, data) => adminHttp.put(`/admin/content/services/${type}`, data),
+  testContentService: (type) => adminHttp.post(`/admin/content/services/${type}/test`, {}),
+  llmOptions: () => adminHttp.get('/admin/content/llm/options'),
+  promptTemplates: () => adminHttp.get('/admin/content/prompt-templates'),
+  createPromptTemplate: (data) => adminHttp.post('/admin/content/prompt-templates', data),
+  updatePromptTemplate: (id, data) => adminHttp.put(`/admin/content/prompt-templates/${id}`, data),
+  deletePromptTemplate: (id) => adminHttp.delete(`/admin/content/prompt-templates/${id}`),
+  aiText: (data) => adminHttp.post('/admin/content/ai/text', data),
+  aiImage: (data) => adminHttp.post('/admin/content/ai/image', data),
+  aiVideo: (data) => adminHttp.post('/admin/content/ai/video', data),
+  contentJob: (id) => adminHttp.get(`/admin/content/jobs/${id}`),
+  contentJobs: (params) => adminHttp.get('/admin/content/jobs', { params }),
+  platformAccounts: () => adminHttp.get('/admin/content/platform-accounts'),
+  createPlatformAccount: (data) => adminHttp.post('/admin/content/platform-accounts', data),
+  updatePlatformAccount: (id, data) => adminHttp.patch(`/admin/content/platform-accounts/${id}`, data),
+  deletePlatformAccount: (id) => adminHttp.delete(`/admin/content/platform-accounts/${id}`),
+  pushDrafts: (postId, accountIds) => adminHttp.post(`/admin/content/posts/${postId}/drafts`, { account_ids: accountIds }),
+  retryDraft: (pushId) => adminHttp.post(`/admin/content/drafts/${pushId}/retry`, {}),
+  draftHistory: (postId, params) => adminHttp.get(`/admin/content/posts/${postId}/drafts/history`, { params }),
+  exportPack: (postId, platform) =>
+    adminHttp.get(`/admin/content/posts/${postId}/export-pack`, { params: { platform }, responseType: 'blob' }),
+  copyPack: (postId, platform) => adminHttp.get(`/admin/content/posts/${postId}/copy`, { params: { platform } }),
+  contentSettings: () => adminHttp.get('/admin/content/settings'),
+  updateContentSettings: (values) => adminHttp.put('/admin/content/settings', { values })
+}
+
+export const infoApi = {
+  list: (params) => http.get('/info/posts', { params }),
+  detail: (id, fmt = 'html') => http.get(`/info/posts/${id}`, { params: { fmt } })
 }
 
 export { admin }

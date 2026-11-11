@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.ledger",
     "apps.polls",
     "apps.jobs",
+    "apps.content",
 ]
 
 MIDDLEWARE = [
@@ -121,3 +122,14 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@ocap.local")
+
+# ---- 内容中心（MOD-039/040）----
+CONTENT_CRED_ENC_KEY = os.environ.get("CONTENT_CRED_ENC_KEY", "")
+CONTENT_CRED_ENC_KEY_PREV = os.environ.get("CONTENT_CRED_ENC_KEY_PREV", "")
+CONTENT_MEDIA_PATH_PREFIX = os.environ.get("CONTENT_MEDIA_PATH_PREFIX", "/api/v1")
+CONTENT_PUBLIC_BASE_URL = os.environ.get("CONTENT_PUBLIC_BASE_URL", "")
+if not CONTENT_CRED_ENC_KEY and (DEBUG or os.environ.get("DJANGO_ALLOW_EPHEMERAL_SECRET") == "1"):
+    import base64 as _b64
+    import secrets as _secrets2
+
+    CONTENT_CRED_ENC_KEY = _b64.b64encode(_secrets2.token_bytes(32)).decode("ascii")

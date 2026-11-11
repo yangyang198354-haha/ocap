@@ -10,6 +10,8 @@
     { "path": "pages/polls/detail", "style": { "navigationBarTitleText": "投票详情" } },
     { "path": "pages/claims/index", "style": { "navigationBarTitleText": "报销/备用金" } },
     { "path": "pages/me/index", "style": { "navigationBarTitleText": "我的" } },
+    { "path": "pages/info/index", "style": { "navigationBarTitleText": "信息公开" } },
+    { "path": "pages/info/detail", "style": { "navigationBarTitleText": "信息公开详情" } },
     { "path": "pages/phone/index", "style": { "navigationBarTitleText": "手机号" } }
   ],
   "globalStyle": {

@@ -1,0 +1,40 @@
+from django.urls import path
+
+from . import views_admin as admin
+from . import views_member as member
+
+urlpatterns = [
+    path("admin/content/posts", admin.PostListView.as_view()),
+    path("admin/content/posts/<int:post_id>", admin.PostDetailView.as_view()),
+    path("admin/content/posts/<int:post_id>/publish", admin.PostPublishView.as_view()),
+    path("admin/content/posts/<int:post_id>/offline", admin.PostOfflineView.as_view()),
+    path("admin/content/posts/<int:post_id>/confirm-text", admin.PostConfirmView.as_view()),
+    path("admin/content/posts/<int:post_id>/drafts", admin.DraftPushView.as_view()),
+    path("admin/content/posts/<int:post_id>/drafts/history", admin.DraftHistoryView.as_view()),
+    path("admin/content/posts/<int:post_id>/export-pack", admin.ExportPackView.as_view()),
+    path("admin/content/posts/<int:post_id>/copy", admin.CopyPackView.as_view()),
+    path("admin/content/preview", admin.PreviewView.as_view()),
+    path("admin/content/style-templates", admin.StyleListView.as_view()),
+    path("admin/content/style-templates/<int:template_id>", admin.StyleDetailView.as_view()),
+    path("admin/content/media", admin.MediaListView.as_view()),
+    path("admin/content/media/<uuid:media_id>", admin.MediaDetailView.as_view()),
+    path("admin/content/media/<uuid:media_id>/save", admin.MediaSaveView.as_view()),
+    path("admin/content/services", admin.ServiceListView.as_view()),
+    path("admin/content/services/<str:service_type>", admin.ServiceDetailView.as_view()),
+    path("admin/content/services/<str:service_type>/test", admin.ServiceTestView.as_view()),
+    path("admin/content/llm/options", admin.LlmOptionsView.as_view()),
+    path("admin/content/prompt-templates", admin.PromptListView.as_view()),
+    path("admin/content/prompt-templates/<int:template_id>", admin.PromptDetailView.as_view()),
+    path("admin/content/ai/text", admin.AiTextView.as_view()),
+    path("admin/content/ai/image", admin.AiImageView.as_view()),
+    path("admin/content/ai/video", admin.AiVideoView.as_view()),
+    path("admin/content/jobs", admin.JobListView.as_view()),
+    path("admin/content/jobs/<int:job_id>", admin.JobDetailView.as_view()),
+    path("admin/content/platform-accounts", admin.PlatformListView.as_view()),
+    path("admin/content/platform-accounts/<int:account_id>", admin.PlatformDetailView.as_view()),
+    path("admin/content/drafts/<int:push_id>/retry", admin.DraftRetryView.as_view()),
+    path("admin/content/settings", admin.SettingsView.as_view()),
+    path("info/posts", member.InfoListView.as_view()),
+    path("info/posts/<int:post_id>", member.InfoDetailView.as_view()),
+    path("content/media/<uuid:media_id>/file", member.MediaFileView.as_view()),
+]

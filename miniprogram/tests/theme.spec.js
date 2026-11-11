@@ -30,9 +30,9 @@ describe('页面不含颜色字面量（ADR-029）', () => {
     }
     expect(bad).toEqual([])
   })
-  it('11 个页面根节点均套 ThemeRoot', () => {
+  it('13 个页面根节点均套 ThemeRoot', () => {
     const pages = vueFiles(path.join(ROOT, 'pages'))
-    expect(pages).toHaveLength(11)
+    expect(pages).toHaveLength(13)
     for (const file of pages) expect(fs.readFileSync(file, 'utf8'), file).toContain('<ThemeRoot>')
   })
 })

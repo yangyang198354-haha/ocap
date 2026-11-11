@@ -11,6 +11,11 @@
           <router-link to="/admin/flows">审批流程</router-link>
           <router-link to="/admin/finance">财务</router-link>
           <router-link to="/admin/users">账号</router-link>
+          <router-link to="/admin/content/posts">信息公开</router-link>
+          <router-link to="/admin/content/media">素材库</router-link>
+          <router-link to="/admin/content/services">AI 服务</router-link>
+          <router-link to="/admin/content/platforms">平台账户</router-link>
+          <router-link to="/admin/content/settings">内容参数</router-link>
           <router-link to="/admin/audit">审计/配置</router-link>
           <el-button size="small" @click="logout">退出</el-button>
         </nav>

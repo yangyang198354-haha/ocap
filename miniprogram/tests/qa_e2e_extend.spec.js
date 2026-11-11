@@ -38,7 +38,7 @@ describe('TC-E2E-203 小程序新增测试风格 D（AC-080-01/02）', () => {
     expect(requests().find((r) => r.method === 'PUT').data).toEqual({ theme: 'testd' })
     expect(wrapper.find('.theme-root').classes()).toContain('theme-testd')
     const files = fs.readdirSync(path.join(ROOT, 'pages'), { recursive: true }).filter((f) => String(f).endsWith('.vue'))
-    expect(files).toHaveLength(11)
+    expect(files).toHaveLength(13)
     for (const f of files) expect(fs.readFileSync(path.join(ROOT, 'pages', String(f)), 'utf8'), String(f)).not.toMatch(/testd|测试风格/)
   })
 })

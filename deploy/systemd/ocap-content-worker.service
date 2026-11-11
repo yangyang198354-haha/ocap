@@ -1,0 +1,19 @@
+[Unit]
+Description=ocap content worker
+After=network-online.target ocap-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=yangyang
+WorkingDirectory=/home/yangyang/ocap/backend
+EnvironmentFile=/home/yangyang/ocap/backend/.env
+ExecStart=/home/yangyang/ocap/backend/venv/bin/python manage.py run_content_worker
+Restart=on-failure
+RestartSec=5
+Nice=10
+MemoryMax=400M
+TimeoutStopSec=150
+
+[Install]
+WantedBy=multi-user.target

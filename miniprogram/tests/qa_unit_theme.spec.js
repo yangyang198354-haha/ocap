@@ -47,8 +47,8 @@ describe('TC-UNIT-202 底部标签栏（AC-083-02、AC-077-01）', () => {
     const n = bento().native.tabBar
     expect([tb.color, tb.selectedColor, tb.backgroundColor, tb.borderStyle]).toEqual([n.color, n.selectedColor, n.backgroundColor, n.borderStyle])
   })
-  it('页面清单为 11 页', () => {
-    expect(pagesJson().pages).toHaveLength(11)
+  it('页面清单为 13 页', () => {
+    expect(pagesJson().pages).toHaveLength(13)
   })
 })
 

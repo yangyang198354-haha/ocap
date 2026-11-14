@@ -28,8 +28,8 @@
       <phase id="PHASE_10" status="DONE"/><phase id="PHASE_11a" status="DONE"/>
     </group>
     <group id="GROUP_E2" agent="devops-engineer" status="DONE" gate_decision="PASS" environment="测试（内网树莓派 192.168.31.51 / 外网 ai-freeark.xin/ocap/）"/>
-    <group id="GROUP_Z" agent="kb-curator" status="PENDING" gate_decision="PENDING" retries="0">
-      <phase id="PHASE_12" status="PENDING"/>
+    <group id="GROUP_Z" agent="kb-curator" status="DONE" gate_decision="PASS" retries="0">
+      <phase id="PHASE_12" status="DONE"/>
     </group>
   </groups>
   <artifacts>
@@ -47,6 +47,7 @@
     <artifact path="project_workspace/ocap_identity_display/deployment/cicd_pipeline.md" agent="devops-engineer" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/deployment/deployment_plan.md" agent="devops-engineer" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/deployment/deployment_report.md" agent="devops-engineer" version="1.0.0" status="DEPLOYED_SUCCESSFULLY"/>
+    <artifact path="project_workspace/_kb_distillation/distill_20261114T1956.md" agent="kb-curator" version="1.0.0" status="APPROVED"/>
   </artifacts>
   <invocations>
     <invocation id="ocap_identity_display-GROUP_A-001" agent="requirement-analyst" group="GROUP_A" start="2026-11-14T17:09:06+08:00" end="2026-11-14T17:13:30+08:00" result="CLARIFICATION_NEEDED"/>
@@ -56,6 +57,7 @@
     <invocation id="ocap_identity_display-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-14T17:42:00+08:00" end="2026-11-14T17:47:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-14T17:47:00+08:00" end="2026-11-14T17:56:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-14T19:49:43+08:00" end="2026-11-14T19:52:00+08:00" result="SUCCESS"/>
+    <invocation id="ocap_identity_display-GROUP_Z-001" agent="kb-curator" group="GROUP_Z" start="2026-11-14T19:55:20+08:00" end="2026-11-14T19:57:00+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate group="GROUP_A" invocation="ocap_identity_display-GROUP_A-002" reviewer="pm-orchestrator" time="2026-11-14T17:30:00+08:00" decision="PASS">
@@ -101,6 +103,10 @@
       <check id="GE2-4" result="PASS">功能冒烟：labels=['产权业主']，房屋明细字段齐全（1栋1单元9层902号 / 住宅 / 88.50 ㎡ / 产权业主）</check>
       <conditions/>
     </gate>
+    <gate group="GROUP_Z" invocation="ocap_identity_display-GROUP_Z-001" reviewer="pm-orchestrator" time="2026-11-14T19:57:00+08:00" decision="PASS">
+      <check id="GZ-1" result="PASS">6 条候选合并为 5 条经验；5 条均晋升到对应 agent 项目记忆，日志已追加 committed</check>
+      <check id="GZ-2" result="PASS">记忆文件已回读确认；无凭据/个人信息；无通用知识候选（单项目出现）</check>
+    </gate>
   </gate_reviews>
   <clarifications>
     <clarification id="CL-ID-01" invocation="ocap_identity_display-GROUP_A-001" time="2026-11-14T17:13:30+08:00" status="ANSWERED">
@@ -132,5 +138,7 @@
     <event time="2026-11-14T19:49:43+08:00" type="DEPLOY_START" actor="devops-engineer">锚点 20261114194943；按 deployment_plan.md 执行 DEPLOY-001~006</event>
     <event time="2026-11-14T19:52:00+08:00" type="DEPLOY_END" actor="devops-engineer">DEPLOYED_SUCCESSFULLY；后端 active、无 Traceback；内外网前端与静态 200；功能冒烟 labels=['产权业主']、房屋明细字段齐全</event>
     <event time="2026-11-14T19:55:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_E2 PASS（GE2-1~GE2-4）。交付完成；GROUP_Z 待知识蒸馏</event>
+    <event time="2026-11-14T19:56:00+08:00" type="DISTILLATION" actor="kb-curator">6 条候选合并为 5 条并晋升：M-RA-011、M-SA-011、M-SD-026、M-TE-019、M-DE-018；日志追加 committed</event>
+    <event time="2026-11-14T19:57:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_Z PASS。全流程完成（A→Z，E2 已部署成功）</event>
   </audit_log>
 </phase_status>

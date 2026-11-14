@@ -115,8 +115,8 @@ class XlsxImportTests(XlsxImportBase):
         raw = b"".join(resp.streaming_content) if resp.streaming else resp.content
         result = self.import_xlsx(raw)
         self.assert_ok(result)
-        self.assertEqual((result.data["rows_total"], result.data["failed"]), (4, 0))
-        self.assertEqual(result.data["imported"], 2)
+        self.assertEqual((result.data["rows_total"], result.data["failed"]), (6, 0))
+        self.assertEqual(result.data["imported"], 4)
 
 
 class AutoBindDefectTests(RegistryImportTestBase):

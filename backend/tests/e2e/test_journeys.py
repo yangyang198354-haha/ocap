@@ -39,7 +39,7 @@ class OwnerOnboardingJourneyTests(ApiTestBase):
         self.assertEqual(cert.data["role"], "HEAD")
         me = self.api("get", "/me", token=token)
         self.assert_ok(me)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
         profile = self.api("patch", "/me/profile", {"nickname": "业主小李"}, token=token)
         self.assert_ok(profile)
         self.assertEqual(profile.data["nickname"], "业主小李")
@@ -89,7 +89,7 @@ class AppealJourneyTests(ApiTestBase):
         self.assert_ok(decision)
         me = self.api("get", "/me", token=token)
         self.assert_ok(me)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
 
 
 class DesignatedResolutionJourneyTests(ApiTestBase):

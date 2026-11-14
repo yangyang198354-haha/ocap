@@ -20,7 +20,7 @@
     </view>
     <view class="card">
       <view class="title">{{ auth.me?.profile?.nickname || '业主' }}</view>
-      <view class="muted">身份：{{ (auth.me?.identities?.labels || []).join('、') || '游客' }}</view>
+      <view class="muted">身份：{{ auth.me ? ((auth.me.identities?.labels || []).join('、') || '游客') : '加载中…' }}</view>
       <view class="muted">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</view>
     </view>
     <view class="card">

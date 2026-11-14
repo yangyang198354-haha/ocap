@@ -61,7 +61,7 @@ class AccountMergeJourneyTests(ApiTestBase):
         self.assert_ok(me)
         units = {u["unit_id"]: u["role"] for u in me.data["identities"]["units"]}
         self.assertEqual(units, {unit_a.id: "HEAD", unit_w.id: "RESIDENT"})
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
         self.assert_error(self.api("get", "/me", token=w_token), 401)
         detail = self.api("get", f"/polls/{poll.data['id']}", token=new_token)
         self.assertEqual([x["value"] for x in detail.data["my_response"]], ["同意"])

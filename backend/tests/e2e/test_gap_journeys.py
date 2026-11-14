@@ -30,7 +30,7 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         user_id, token = reg.data["user"]["id"], reg.data["token"]
         # US-102：清册已登记该号码，注册即自动认证户主（原“注册后为游客”不再适用）
         self.assertEqual([row["unit_id"] for row in reg.data["auto_bound"]], [unit.id])
-        self.assertIn("户主", self.api("get", "/me", token=token).data["identities"]["labels"])
+        self.assertIn("产权业主", self.api("get", "/me", token=token).data["identities"]["labels"])
 
         # 换号：身份保留，旧号不能再登录，新号进入同一账号
         RateLimit.objects.all().delete()
@@ -46,7 +46,7 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         login = self.login_code(new_phone)
         self.assert_ok(login)
         self.assertEqual(login.data["user"]["id"], user_id)
-        self.assertIn("户主", self.api("get", "/me", token=login.data["token"]).data["identities"]["labels"])
+        self.assertIn("产权业主", self.api("get", "/me", token=login.data["token"]).data["identities"]["labels"])
 
         # 注销后同号再注册：全新游客，身份不恢复
         RateLimit.objects.all().delete()

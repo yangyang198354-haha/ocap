@@ -63,18 +63,18 @@ class CommitteeQuery:
 
     @staticmethod
     def identity_labels(user_id: int) -> list[str]:
-        labels = []
+        """C-34 / REQ-FUNC-136：用户可见身份只返回单一最高身份。"""
         seat = CommitteeQuery.active_seat(user_id)
         if seat is not None:
-            labels.append(seat.get_position_display())
+            return [seat.get_position_display()]
         from apps.residency.services import MembershipService
 
-        for membership in MembershipService.list_active(user_id):
-            labels.append(membership.get_role_display())
-            break
-        if not labels:
-            labels.append("游客")
-        return labels
+        memberships = MembershipService.list_active(user_id)
+        if any(membership.role in ("HEAD", "OWNER") for membership in memberships):
+            return ["产权业主"]
+        if memberships:
+            return ["同住人"]
+        return ["游客"]
 
     @staticmethod
     def denominator_for_half_majority(mode: str) -> int:

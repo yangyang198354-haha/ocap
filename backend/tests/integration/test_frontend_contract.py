@@ -139,7 +139,7 @@ class FieldContractTests(ApiTestBase):
         self.assertIsInstance(identities, dict)
         self.assertEqual(set(identities), {"is_guest", "units", "committee", "labels"})
         self.assertIsInstance(identities["labels"], list)
-        self.assertIn("户主", identities["labels"])
+        self.assertEqual(identities["labels"], ["主任"])
         self.assertEqual(identities["committee"]["position"], "CHAIR")
         id_re = re.compile(r"\bme\??\.identities\??\.(\w+)")
         committee_re = re.compile(r"\bidentities\??\.committee\??\.(\w+)")
@@ -157,6 +157,13 @@ class FieldContractTests(ApiTestBase):
                         read_committee - set(identities["committee"]))
         self.assertTrue(read_profile <= set(profile), read_profile - set(profile))
         self.assertIn("nickname", read_profile)
+
+    def test_me_unit_display_fields_read_by_both_clients(self):
+        """TC-INT-508：Web 与小程序都读取 units[] 的展示字段（REQ-FUNC-141）。"""
+        for label, sources in (("Web", self.web_sources), ("小程序", self.mini_sources)):
+            joined = "\n".join(sources.values())
+            self._assert_names_in(
+                ["unit_type_label", "area_display", "role_label", "specific_part"], joined, label)
 
     def test_web_auth_store_position_values_match_backend_enum(self):
         """前端 isCommittee/isChairOrVice 使用的职位枚举与后端 Seat.position 一致。"""

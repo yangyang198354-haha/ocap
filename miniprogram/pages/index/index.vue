@@ -5,7 +5,7 @@
       <view class="home-hero-scan" />
       <view class="home-hero-main">
         <view class="title home-greeting">你好，{{ auth.me?.profile?.nickname || '业主' }}</view>
-        <view class="muted home-meta">身份：{{ (auth.me?.identities?.labels || []).join('、') || '游客' }}</view>
+        <view class="muted home-meta">身份：{{ identityText }}</view>
       </view>
       <view class="home-metrics">
         <text class="chip">{{ countText(tasks) }} 项审批待办</text>
@@ -29,6 +29,19 @@
       <view v-for="(s, i) in stats" :key="s.label" class="card home-stat" :class="i % 2 ? 'is-even' : 'is-odd'">
         <view class="label">{{ s.label }}</view>
         <view class="stat-value">{{ s.value }}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="title">认证房屋</view>
+      <view class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套</view>
+      <view v-if="!auth.me" class="muted">加载中…</view>
+      <view v-else-if="!unitRows.length" class="muted">暂无已认证房屋</view>
+      <view v-for="unit in unitRows" :key="unit.unit_id" class="list-item">
+        <text>{{ unit.specific_part }}</text>
+        <view class="muted" style="margin-top: 8rpx">
+          {{ unit.unit_type_label || '未登记' }} · {{ unit.area_display || '未登记' }} · {{ unit.role_label || '产权业主' }}
+        </view>
       </view>
     </view>
 
@@ -75,10 +88,15 @@ const resolutions = ref([])
 const polls = ref(null)
 
 const countText = (list) => (list ? list.length : '—')
+const identityText = computed(() => {
+  if (auth.me) return (auth.me.identities?.labels || []).join('、') || '游客'
+  return '加载中…'
+})
+const unitRows = computed(() => auth.me?.identities?.units || [])
 const openPolls = computed(() => (polls.value ? polls.value.filter((p) => p.status === 'OPEN') : null))
 const poll = computed(() => openPolls.value?.[0] || null)
 const stats = computed(() => [
-  { label: '认证房屋', value: auth.me ? (auth.me.identities?.units || []).length : '—' },
+  { label: '认证房屋', value: auth.me ? unitRows.value.length : '—' },
   { label: '审批待办', value: countText(tasks.value) },
   { label: '进行中投票', value: countText(openPolls.value) },
   { label: '近期公开决议', value: resolutions.value.length }

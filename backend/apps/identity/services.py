@@ -1,4 +1,6 @@
 """身份聚合与账号合并（IFC-030~034 / REQ-FUNC-067）。"""
+from decimal import Decimal
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -14,17 +16,43 @@ from apps.residency.models import Membership
 from apps.residency.services import MembershipService
 
 
+ROLE_LABELS = {"HEAD": "产权业主", "OWNER": "产权业主", "RESIDENT": "同住人"}
+ROLE_RANK = {"HEAD": 3, "OWNER": 2, "RESIDENT": 1}
+
+
 class IdentityService:
     @staticmethod
+    def _unit_view(membership) -> dict:
+        unit = membership.unit
+        area_text = str(unit.area.quantize(Decimal("0.01"))) if unit.area is not None else None
+        return {
+            "unit_id": membership.unit_id,
+            "specific_part": unit.specific_part,
+            "role": membership.role,
+            "role_label": ROLE_LABELS.get(membership.role, "产权业主"),
+            "unit_type": unit.unit_type,
+            "unit_type_label": unit.get_unit_type_display() if unit.unit_type else "未登记",
+            "area": area_text,
+            "area_display": f"{area_text} ㎡" if area_text else "未登记",
+        }
+
+    @staticmethod
+    def _units(user) -> list[dict]:
+        memberships = Membership.objects.filter(user=user, ended_at__isnull=True).select_related("unit")
+        picked = {}
+        for membership in memberships:
+            current = picked.get(membership.unit_id)
+            if current is None or ROLE_RANK.get(membership.role, 0) > ROLE_RANK.get(current.role, 0):
+                picked[membership.unit_id] = membership
+        ordered = sorted(picked.values(), key=lambda m: (m.unit.specific_part, m.unit_id))
+        return [IdentityService._unit_view(m) for m in ordered]
+
+    @staticmethod
     def me(user) -> dict:
-        memberships = list(Membership.objects.filter(user=user, ended_at__isnull=True)
-                           .select_related("unit"))
-        units = [{"unit_id": m.unit_id, "specific_part": m.unit.specific_part, "role": m.role}
-                 for m in memberships]
-        seats = list(Seat.objects.filter(user=user, status="ACTIVE"))
-        committee_seat = seats[0] if seats else None
         from apps.committee.services import CommitteeQuery
 
+        units = IdentityService._units(user)
+        committee_seat = CommitteeQuery.active_seat(user.id)
         labels = CommitteeQuery.identity_labels(user.id)
         return {
             "profile": {
@@ -35,7 +63,7 @@ class IdentityService:
                 "email": user.email, "email_state": user.email_state,
             },
             "identities": {
-                "is_guest": len(units) == 0,
+                "is_guest": labels == ["游客"],
                 "units": units,
                 "committee": ({"position": committee_seat.position,
                                "term_end": committee_seat.term_end}

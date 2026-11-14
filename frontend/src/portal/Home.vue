@@ -6,7 +6,7 @@
         <div class="home-hero-main">
           <div class="label">{{ todayText }}</div>
           <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
-          <p class="muted home-meta">当前身份：{{ auth.identities.join('、') || '游客' }}</p>
+          <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
           <p class="muted home-meta">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</p>
         </div>
         <div class="home-metrics">
@@ -31,6 +31,23 @@
         <div class="label">{{ s.label }}</div>
         <div class="stat-value mono">{{ s.value }}</div>
         <div class="stat-note muted">{{ s.note }}</div>
+      </section>
+
+      <section class="card home-units" aria-label="认证房屋">
+        <div class="card-head">
+          <h3 class="title title-flat">认证房屋</h3>
+          <span class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套</span>
+        </div>
+        <p v-if="!auth.me" class="muted">{{ meError ? '加载失败，请重试' : '加载中…' }}</p>
+        <el-empty v-else-if="!unitRows.length" :image-size="48" description="暂无已认证房屋" />
+        <div v-for="unit in unitRows" :key="unit.unit_id" class="home-unit">
+          <b>{{ unit.specific_part }}</b>
+          <div class="meta">
+            <span>{{ unit.unit_type_label || '未登记' }}</span>
+            <span class="mono">{{ unit.area_display || '未登记' }}</span>
+            <span class="tag">{{ unit.role_label || '产权业主' }}</span>
+          </div>
+        </div>
       </section>
 
       <nav class="home-quick" aria-label="快捷入口">
@@ -87,6 +104,13 @@ const resolutions = ref([])
 // null 表示未取到（无权限或失败），区块显示空态；不编造数据
 const tasks = ref(null)
 const polls = ref(null)
+const meError = ref(false)
+
+const identityText = computed(() => {
+  if (auth.me) return auth.identities.join('、') || '游客'
+  return meError.value ? '加载失败，请重试' : '加载中…'
+})
+const unitRows = computed(() => auth.me?.identities?.units || [])
 
 const pad = (n) => String(n).padStart(2, '0')
 const countText = (list) => (list ? list.length : '—')
@@ -105,7 +129,7 @@ const countdown = computed(() => {
 })
 
 const stats = computed(() => [
-  { label: '认证房屋', value: auth.me ? (auth.me.identities?.units || []).length : '—', note: '已绑定的房屋数' },
+  { label: '认证房屋', value: auth.me ? unitRows.value.length : '—', note: '已绑定的房屋数' },
   { label: '审批待办', value: countText(tasks.value), note: '待我审批的事项' },
   { label: '进行中的投票', value: countText(openPolls.value), note: '可参与的投票 / 调查' },
   { label: '近期公开决议', value: resolutions.value.length, note: `其中 ${resolutions.value.filter((r) => r.status === 'APPROVED').length} 项已通过` }
@@ -122,11 +146,21 @@ const quick = computed(() => [
   ...(auth.isCommittee ? [{ label: '收入表', to: '/income', icon: 'income', hint: '收入登记与审批' }] : [])
 ])
 
-onMounted(async () => {
+async function retryMe() {
+  meError.value = false
   try {
     await auth.fetchMe()
   } catch (e) {
-    /* 401 由 http 拦截器处理 */
+    meError.value = true
+  }
+}
+
+onMounted(async () => {
+  try {
+    await auth.fetchMe()
+    meError.value = false
+  } catch (e) {
+    meError.value = true
   }
   try {
     const data = await resolutionApi.list('public', { page_size: 5 })

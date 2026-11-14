@@ -27,7 +27,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="DONE" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="DONE"/><phase id="PHASE_11a" status="DONE"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="DONE" gate_decision="PASS" environment="测试（内网树莓派 192.168.31.51 / 外网 ai-freeark.xin/ocap/）"/>
     <group id="GROUP_Z" agent="kb-curator" status="PENDING" gate_decision="PENDING" retries="0">
       <phase id="PHASE_12" status="PENDING"/>
     </group>
@@ -46,6 +46,7 @@
     <artifact path="project_workspace/ocap_identity_display/testing/e2e_test_report.md" agent="test-engineer" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/deployment/cicd_pipeline.md" agent="devops-engineer" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/deployment/deployment_plan.md" agent="devops-engineer" version="1.0.0" status="APPROVED"/>
+    <artifact path="project_workspace/ocap_identity_display/deployment/deployment_report.md" agent="devops-engineer" version="1.0.0" status="DEPLOYED_SUCCESSFULLY"/>
   </artifacts>
   <invocations>
     <invocation id="ocap_identity_display-GROUP_A-001" agent="requirement-analyst" group="GROUP_A" start="2026-11-14T17:09:06+08:00" end="2026-11-14T17:13:30+08:00" result="CLARIFICATION_NEEDED"/>
@@ -54,6 +55,7 @@
     <invocation id="ocap_identity_display-GROUP_C-001" agent="software-developer" group="GROUP_C" start="2026-11-14T17:38:00+08:00" end="2026-11-14T17:42:00+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-14T17:42:00+08:00" end="2026-11-14T17:47:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-14T17:47:00+08:00" end="2026-11-14T17:56:00+08:00" result="SUCCESS"/>
+    <invocation id="ocap_identity_display-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-14T19:49:43+08:00" end="2026-11-14T19:52:00+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate group="GROUP_A" invocation="ocap_identity_display-GROUP_A-002" reviewer="pm-orchestrator" time="2026-11-14T17:30:00+08:00" decision="PASS">
@@ -92,6 +94,13 @@
       <check id="GE1-4" result="PASS">预检与部署后验证清单完整；回滚使用 tar 快照锚点，未使用 git reset/clean</check>
       <conditions/>
     </gate>
+    <gate group="GROUP_E2" invocation="ocap_identity_display-GROUP_E2-001" reviewer="pm-orchestrator" time="2026-11-14T19:55:00+08:00" decision="PASS">
+      <check id="GE2-1" result="PASS">授权核对：用户本轮明确“部署”；环境为画像 P7 唯一测试环境，计划版本 1.0.0/APPROVED 一致</check>
+      <check id="GE2-2" result="PASS">DEPLOY-001~006 执行成功；007/008 nginx 未变更跳过；009 timer 已存在跳过</check>
+      <check id="GE2-3" result="PASS">部署后验证全部通过：后端 active、无 Traceback、内外网 200、静态资源 200、SPA 回退 200、Freeark 200</check>
+      <check id="GE2-4" result="PASS">功能冒烟：labels=['产权业主']，房屋明细字段齐全（1栋1单元9层902号 / 住宅 / 88.50 ㎡ / 产权业主）</check>
+      <conditions/>
+    </gate>
   </gate_reviews>
   <clarifications>
     <clarification id="CL-ID-01" invocation="ocap_identity_display-GROUP_A-001" time="2026-11-14T17:13:30+08:00" status="ANSWERED">
@@ -119,5 +128,9 @@
     <event time="2026-11-14T17:47:30+08:00" type="GATE" actor="pm-orchestrator">GROUP_D PASS（GD-1~GD-4 全通过）。进入 GROUP_E1 制定 CI/CD 与部署计划；E2 部署仍未授权</event>
     <event time="2026-11-14T17:56:00+08:00" type="SUBAGENT_RESPONSE" actor="pm-orchestrator">devops-engineer GROUP_E1-001 返回 SUCCESS；cicd_pipeline.md 与 deployment_plan.md 升 1.0.0/APPROVED。</event>
     <event time="2026-11-14T17:56:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_E1 PASS（GE1-1~GE1-4 全通过）。E2 保持 NOT_AUTHORIZED，等待用户当轮明确部署授权；GROUP_Z 待部署后再执行</event>
+    <event time="2026-11-14T19:49:43+08:00" type="AUTHORIZATION" actor="user">用户本轮明确“commit + push + 部署”，授权部署到测试环境</event>
+    <event time="2026-11-14T19:49:43+08:00" type="DEPLOY_START" actor="devops-engineer">锚点 20261114194943；按 deployment_plan.md 执行 DEPLOY-001~006</event>
+    <event time="2026-11-14T19:52:00+08:00" type="DEPLOY_END" actor="devops-engineer">DEPLOYED_SUCCESSFULLY；后端 active、无 Traceback；内外网前端与静态 200；功能冒烟 labels=['产权业主']、房屋明细字段齐全</event>
+    <event time="2026-11-14T19:55:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_E2 PASS（GE2-1~GE2-4）。交付完成；GROUP_Z 待知识蒸馏</event>
   </audit_log>
 </phase_status>

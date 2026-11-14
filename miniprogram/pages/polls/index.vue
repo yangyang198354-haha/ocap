@@ -11,6 +11,8 @@
         <text>{{ item.title }}</text>
         <StatusTag class="muted-gap" :status="item.status" />
       </view>
+      <button v-if="hasMore" style="margin-top: 16rpx" @click="more">加载更多</button>
+      <view v-else-if="items.length" class="muted">没有更多了，共 {{ total }} 条</view>
     </view>
   </view>
   </ThemeRoot>
@@ -19,18 +21,25 @@
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
 import StatusTag from '@/components/StatusTag.vue'
-import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
+import { usePaging } from '@/utils/paging'
 
-const items = ref([])
+const { items, total, hasMore, loadMore, reset } = usePaging({ fetch: (params) => api.polls(params) })
 
 async function load() {
   try {
-    const data = await api.polls()
-    items.value = data.results || data || []
+    await reset()
   } catch (e) {
     items.value = []
+  }
+}
+
+async function more() {
+  try {
+    await loadMore()
+  } catch (e) {
+    uni.showToast({ title: e.message, icon: 'none' })
   }
 }
 

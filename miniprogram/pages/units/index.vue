@@ -2,22 +2,42 @@
   <ThemeRoot>
   <view>
     <view class="card">
-      <view class="title">业主清册认证</view>
-      <picker mode="selector" :range="buildings" @change="pickBuilding">
-        <view class="muted">楼栋：{{ picked.building || '请选择' }}</view>
-      </picker>
-      <picker v-if="show.unit" mode="selector" :range="unitLabels" @change="pickUnit">
-        <view class="muted">单元：{{ picked.unitNo || '请选择' }}</view>
-      </picker>
-      <picker v-if="show.floor" mode="selector" :range="floorLabels" @change="pickFloor">
-        <view class="muted">楼层：{{ picked.floor || '请选择' }}</view>
-      </picker>
-      <picker mode="selector" :range="roomLabels" @change="pickRoom">
-        <view class="muted">房号：{{ picked.roomLabel || '请选择' }}</view>
-      </picker>
-      <view v-if="skipHint" class="muted">{{ skipHint }}</view>
+      <view class="title">我的身份与房屋</view>
+      <view class="muted">汇总身份：{{ housing.summary.label }}</view>
+      <view v-if="!housing.units.length" class="muted">暂无已认证房屋</view>
+      <view v-for="unit in housing.units" :key="unit.unit_id" class="list-item">
+        <view class="row">
+          <text>{{ unit.specific_part }}</text>
+          <text class="muted" style="margin-left: 12rpx">{{ unit.role_label }}</text>
+          <button v-if="unit.role === 'RESIDENT'" size="mini" style="margin-left: 12rpx" @click="leave(unit)">退出</button>
+        </view>
+        <view v-if="isOwner(unit)">
+          <view class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</view>
+          <view v-for="r in unit.residents" :key="r.user_id" class="row" style="margin-top: 8rpx">
+            <text>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</text>
+            <button size="mini" style="margin-left: 12rpx" @click="removeResident(unit, r)">移除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="card" id="review">
+      <view class="title">待我审批的同住人申请<text v-if="toReview.length" class="muted">（{{ toReview.length }}）</text></view>
+      <view v-if="!toReview.length" class="muted">暂无待审批的同住人申请</view>
+      <view v-for="item in toReview" :key="item.id" class="list-item">
+        <text>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</text>
+        <text class="muted" style="margin-left: 12rpx">{{ formatDateTime(item.created_at) }}</text>
+        <view class="row" style="margin-top: 8rpx">
+          <button size="mini" @click="decideResident(item.id, 'APPROVE')">通过</button>
+          <button size="mini" @click="decideResident(item.id, 'REJECT')">拒绝</button>
+        </view>
+      </view>
+    </view>
+    <view class="card">
+      <view class="title">选择房屋</view>
+      <UnitPicker v-model="pickedUnitId" />
       <button class="btn" style="margin-top: 20rpx" @click="certify">认证</button>
-      <view class="muted">微信登录且未绑定手机号时，请先到“我的 → 绑定/更换手机号”完成绑定。</view>
+      <button style="margin-top: 16rpx" @click="applyResident">申请成为同住人</button>
+      <view class="muted">微信登录且未绑定手机号时，请先到“我的 → 绑定/更换手机号”完成绑定。同住人须先有产权业主，由产权业主审批。</view>
     </view>
     <view class="card">
       <view class="title">认证申诉</view>
@@ -25,135 +45,135 @@
       <button style="margin-top: 16rpx" @click="chooseProof">{{ proofId ? '已上传，重新选择' : '上传产权证明' }}</button>
       <button style="margin-top: 16rpx" @click="submitAppeal">提交申诉</button>
     </view>
+    <view class="card">
+      <view class="title">我的同住人申请</view>
+      <view v-if="!myApplications.length" class="muted">暂无同住人申请</view>
+      <view v-for="item in myApplications" :key="item.id" class="list-item">
+        <text>{{ item.unit?.specific_part }}</text>
+        <text class="muted" style="margin-left: 12rpx">{{ statusLabel('application', item.status) }}</text>
+        <view class="muted">提交 {{ formatDateTime(item.created_at) }}<text v-if="item.decided_at"> · 处理 {{ formatDateTime(item.decided_at) }}</text></view>
+      </view>
+    </view>
+    <view class="card">
+      <view class="title">我的申诉</view>
+      <view v-if="!myAppeals.length" class="muted">暂无申诉</view>
+      <view v-for="item in myAppeals" :key="item.id" class="list-item">
+        <text>{{ item.unit?.specific_part }}</text>
+        <text class="muted" style="margin-left: 12rpx">{{ statusLabel('appeal', item.status) }}</text>
+        <view class="muted">提交 {{ formatDateTime(item.submitted_at) }}<text v-if="item.decided_at"> · 处理 {{ formatDateTime(item.decided_at) }}</text></view>
+        <view v-if="item.status === 'REJECTED' && item.reject_reason" class="muted">驳回原因：{{ item.reject_reason }}</view>
+      </view>
+    </view>
   </view>
   </ThemeRoot>
 </template>
 
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
-import { computed, reactive, ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import UnitPicker from '@/components/UnitPicker.vue'
+import { reactive, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
+import { confirmDanger } from '@/utils/confirm'
+import { ROLE_LABELS, formatDateTime, statusLabel } from '@/utils/labels'
+import { useAuthStore } from '@/store/auth'
 
-const buildings = ref([])
-const unitChoices = ref([])
-const floorChoices = ref([])
-const rooms = ref([])
-const show = reactive({ unit: false, floor: false })
-const skipHint = ref('')
-const picked = reactive({ building: '', unitNo: '', floor: '', roomLabel: '', unitId: null })
+const auth = useAuthStore()
+const pickedUnitId = ref(null)
 const proofId = ref('')
-// 选项：[{ value, label }]；has_empty 时插入“未划分”项（IFC-152）
-const unitLabels = computed(() => unitChoices.value.map((c) => c.label))
-const floorLabels = computed(() => floorChoices.value.map((c) => c.label))
-const roomLabels = computed(() => rooms.value.map((r) => r.label || r.value))
+const housing = reactive({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
+const toReview = ref([])
+const myApplications = ref([])
+const myAppeals = ref([])
+
+const isOwner = (unit) => unit.role === 'HEAD' || unit.role === 'OWNER'
 
 function toast(title) {
   uni.showToast({ title, icon: 'none' })
 }
 
-async function load(params = {}) {
+const listOf = (data) => data?.results || data || []
+
+async function loadHousing() {
   try {
-    const data = await api.options(params)
-    return data
+    Object.assign(housing, await api.housing())
   } catch (e) {
     toast(e.message)
-    return {}
   }
 }
 
-const values = (data) => (data.options || []).map((o) => o.value)
-
-async function init() {
-  buildings.value = values(await load({}))
-}
-
-async function pickBuilding(e) {
-  picked.building = buildings.value[Number(e.detail.value)]
-  resetBelow('building')
-  await apply(await load({ building: picked.building }), 'unit')
-}
-
-async function pickUnit(e) {
-  picked.unitNo = unitChoices.value[Number(e.detail.value)].value
-  resetBelow('unit')
-  await apply(await load({ building: picked.building, unit_no: picked.unitNo }), 'floor')
-}
-
-async function pickFloor(e) {
-  picked.floor = floorChoices.value[Number(e.detail.value)].value
-  picked.roomLabel = ''
-  picked.unitId = null
-  rooms.value = []
-  const data = await load({ building: picked.building, unit_no: picked.unitNo, floor: picked.floor })
-  if (data.level === 'room') rooms.value = data.options || []
-}
-
-function resetBelow(level) {
-  if (level === 'building') {
-    picked.unitNo = ''
-    picked.floor = ''
-    unitChoices.value = []
-    floorChoices.value = []
-    show.unit = false
-    show.floor = false
-    skipHint.value = ''
+async function loadLists() {
+  try {
+    const [review, applications, appeals] = await Promise.all([
+      api.residentApplicationsToReview(), api.myResidentApplications(), api.myAppeals()
+    ])
+    toReview.value = listOf(review)
+    myApplications.value = listOf(applications)
+    myAppeals.value = listOf(appeals)
+  } catch (e) {
+    toast(e.message)
   }
-  if (level === 'unit') {
-    picked.floor = ''
-    floorChoices.value = []
-    show.floor = false
-  }
-  picked.roomLabel = ''
-  picked.unitId = null
-  rooms.value = []
 }
 
-// 服务端返回 level/skipped：空串表示该层为空（IFC-152）
-async function apply(data, stage) {
-  if (data.level === 'room') {
-    rooms.value = data.options || []
-    return
-  }
-  if (stage === 'unit') {
-    if (data.level === 'unit_no') {
-      show.unit = true
-      unitChoices.value = data.has_empty
-        ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
-        : (data.options || [])
-      return
-    }
-    picked.unitNo = ''
-    skipHint.value = '该楼栋没有分单元，已自动跳过'
-    return apply(await load({ building: picked.building, unit_no: '' }), 'floor')
-  }
-  if (data.level === 'floor') {
-    show.floor = true
-    floorChoices.value = data.has_empty
-      ? [{ value: '', label: '未划分楼层' }, ...(data.options || [])]
-      : (data.options || [])
-    return
-  }
-  picked.floor = ''
-  skipHint.value = `${skipHint.value}该单元没有分楼层，已自动跳过`
-  rooms.value = (await load({ building: picked.building, unit_no: picked.unitNo, floor: '' })).options || []
-}
-
-function pickRoom(e) {
-  const room = rooms.value[Number(e.detail.value)]
-  picked.unitId = room?.unit_id
-  picked.roomLabel = room?.label || room?.value
+async function refresh() {
+  await Promise.all([loadHousing(), loadLists()])
 }
 
 async function certify() {
-  if (!picked.unitId) return toast('请先选择房号')
+  if (!pickedUnitId.value) return toast('请先选择房号')
   try {
-    const result = await api.certify(picked.unitId)
-    toast(`认证成功：${result.role}`)
+    const result = await api.certify(pickedUnitId.value)
+    toast(`认证成功，身份：${ROLE_LABELS[result.role] || result.role}`)
+    await auth.fetchMe()
+    await refresh()
   } catch (e) {
     if (e?.code === 'PHONE_NOT_IN_REGISTRY') {
       return toast('手机号与清册不一致，可提交产权申诉')
     }
+    toast(e.message)
+  }
+}
+
+async function applyResident() {
+  if (!pickedUnitId.value) return toast('请先选择房号')
+  try {
+    await api.createResidentApplication({ unit_id: pickedUnitId.value })
+    toast('申请已提交，等待产权业主审批')
+    await loadLists()
+  } catch (e) {
+    toast(e.message)
+  }
+}
+
+async function decideResident(id, decision) {
+  try {
+    await api.decideResidentApplication(id, decision)
+    toast('已处理')
+    await refresh()
+  } catch (e) {
+    toast(e.message)
+  }
+}
+
+async function removeResident(unit, resident) {
+  if (!(await confirmDanger('removeResident', { name: resident.nickname || resident.account_no }))) return
+  try {
+    await api.removeResident(unit.unit_id, resident.user_id)
+    toast('已移除')
+    await loadHousing()
+  } catch (e) {
+    toast(e.message)
+  }
+}
+
+async function leave(unit) {
+  if (!(await confirmDanger('leaveUnit', { name: unit.specific_part }))) return
+  try {
+    await api.leaveUnit(unit.unit_id)
+    toast('已退出')
+    await auth.fetchMe()
+    await refresh()
+  } catch (e) {
     toast(e.message)
   }
 }
@@ -174,15 +194,16 @@ function chooseProof() {
 }
 
 async function submitAppeal() {
-  if (!picked.unitId) return toast('请先选择房号')
+  if (!pickedUnitId.value) return toast('请先选择房号')
   if (!proofId.value) return toast('请先上传产权证明')
   try {
-    await api.createAppeal({ unit_id: picked.unitId, proof_ids: [proofId.value] })
+    await api.createAppeal({ unit_id: pickedUnitId.value, proof_ids: [proofId.value] })
     toast('申诉已提交')
+    await loadLists()
   } catch (e) {
     toast(e.message)
   }
 }
 
-onLoad(init)
+onShow(refresh)
 </script>

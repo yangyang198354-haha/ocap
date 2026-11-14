@@ -76,9 +76,9 @@ describe('utils/http + api', () => {
   it('TC-MP-007 登录：验证码 / 密码 / 微信一键登录的路径与字段', async () => {
     respondWith({ 'POST /auth/login/code': {}, 'POST /auth/login/password': {}, 'POST /auth/wechat/miniapp': {} })
     await api.loginByCode('13800000001', '123456')
-    expect(lastRequest()).toMatchObject({ path: '/auth/login/code', data: { phone: '13800000001', code: '123456' } })
+    expect(lastRequest()).toMatchObject({ path: '/auth/login/code', data: { phone: '13800000001', code: '123456', client: 'miniapp' } })
     await api.loginByPassword('acc', 'pw')
-    expect(lastRequest()).toMatchObject({ path: '/auth/login/password', data: { identifier: 'acc', password: 'pw' } })
+    expect(lastRequest()).toMatchObject({ path: '/auth/login/password', data: { identifier: 'acc', password: 'pw', client: 'miniapp' } })
     await api.loginByWechat('wxcode')
     expect(lastRequest()).toMatchObject({ path: '/auth/wechat/miniapp', data: { code: 'wxcode' } })
   })

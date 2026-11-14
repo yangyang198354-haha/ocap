@@ -109,14 +109,19 @@ class XlsxImportTests(XlsxImportBase):
         self.assertEqual(wb.worksheets[1].title, "填写说明")
 
     def test_tc_int_311_downloaded_template_imports_back(self):
-        """TC-INT-311 / AC-093-01：下载的 xlsx 模板（含示例行）不改动直接上传，示例行全部成功。"""
+        """TC-INT-311 / AC-093-01、AC-175-02、AC-175-03（REQ-FUNC-166；admin_polish REQ-FUNC-129、
+        AC-138-02、AC-138-03）：下载的 xlsx 模板（含示例行）不改动直接上传，示例行全部成功。
+        口径：总行数 6、失败 0、新增专有部分 4（US-175；原期望 4 行/2 个为 registry_import 批次旧口径）。"""
         resp = self.client_for(self.admin_token).get(
             "/api/v1/admin/registry/import/template", {"file_type": "xlsx"})
         raw = b"".join(resp.streaming_content) if resp.streaming else resp.content
         result = self.import_xlsx(raw)
         self.assert_ok(result)
-        self.assertEqual((result.data["rows_total"], result.data["failed"]), (4, 0))
-        self.assertEqual(result.data["imported"], 2)
+        self.assertEqual((result.data["rows_total"], result.data["failed"]), (6, 0))
+        self.assertEqual(result.data["imported"], 4)
+        self.assertEqual(
+            set(RegistryUnit.objects.values_list("specific_part", flat=True)),
+            {"1栋1单元3层301号", "车库A-088", "1栋负1层924号", "10栋1层1号"})
 
 
 class AutoBindDefectTests(RegistryImportTestBase):

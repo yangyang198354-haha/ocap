@@ -2,6 +2,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
 from apps.core.money import money
 from apps.core.permissions import IsCommitteeMember, IsMember
@@ -75,4 +76,9 @@ def report_summary(report: LedgerReport) -> dict:
 
 
 def report_detail(report: LedgerReport) -> dict:
-    return {**report_summary(report), "detail": report.detail}
+    detail = report.detail
+    # ADR-091 / ocap REQ-FUNC-050 OQ-08：报表明细默认不显示支出事由（不写回数据库）
+    if not SystemConfig.get("report.show_expense_reason") and isinstance(detail, list):
+        detail = [({**row, "summary": None} if isinstance(row, dict) and row.get("direction") == "EXPENSE"
+                   else row) for row in detail]
+    return {**report_summary(report), "detail": detail}

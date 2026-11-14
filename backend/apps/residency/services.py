@@ -1,12 +1,43 @@
 """房屋关系服务（IFC-050/055）。"""
+from typing import TypedDict
+
 from django.db import transaction
 from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
 
-from .models import Membership
+from .models import Appeal, Membership, ResidentApplication
 
 ROLE_RANK = {"HEAD": 3, "OWNER": 2, "RESIDENT": 1}
+
+
+class ClosedCounts(TypedDict):
+    resident_applications: int
+    appeals: int
+
+
+class PendingRequestService:
+    @staticmethod
+    def close_for_cancelled_user(user) -> ClosedCounts:
+        """注销时关闭本人待处理的同住人申请与产权申诉（IFC-277）；须在调用方事务内。"""
+        now = timezone.now()
+        actor = AuditActor("MEMBER", user.id, f"用户{user.account_no}")
+        applications = list(ResidentApplication.objects.filter(applicant=user, status="PENDING"))
+        appeals = list(Appeal.objects.filter(user=user, status="PENDING"))
+        for row in applications:
+            row.status, row.decided_at, row.pending_slot = "CLOSED", now, None
+            row.save(update_fields=["status", "decided_at", "pending_slot"])
+            AuditService.record(actor=actor, action="RESIDENT_APPLICATION_CLOSED",
+                                object_type="resident_application", object_id=str(row.id),
+                                result="SUCCESS",
+                                detail={"reason": "ACCOUNT_CANCELLED", "unit_id": row.unit_id})
+        for row in appeals:
+            row.status, row.decided_at, row.pending_slot = "CLOSED", now, None
+            row.save(update_fields=["status", "decided_at", "pending_slot"])
+            AuditService.record(actor=actor, action="APPEAL_CLOSED", object_type="appeal",
+                                object_id=str(row.id), result="SUCCESS",
+                                detail={"reason": "ACCOUNT_CANCELLED", "unit_id": row.unit_id})
+        return {"resident_applications": len(applications), "appeals": len(appeals)}
 
 
 class MembershipService:

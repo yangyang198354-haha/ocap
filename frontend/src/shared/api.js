@@ -19,6 +19,10 @@ export const authApi = {
 
 export const meApi = {
   me: () => get('/me'),
+  // 我的房屋聚合（IFC-261）：汇总身份、各房屋身份、同住人名单、待审数量
+  housing: () => get('/me/housing'),
+  // 当前生效的规则限制（IFC-272）
+  limits: () => get('/system/limits'),
   profile: () => get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),
   // 界面风格偏好（IFC-142/143）：{ theme: string | null }
@@ -51,7 +55,7 @@ export const unitApi = {
 
 export const approvalApi = {
   flows: (scope) => get('/approval/flows', scope ? { scope } : undefined),
-  tasks: (scope) => get('/approval/tasks', scope ? { scope } : undefined),
+  tasks: (scope, params) => get('/approval/tasks', scope || params ? { ...(scope ? { scope } : {}), ...params } : undefined),
   decide: (instanceId, action, comment) => post(`/approval/instances/${instanceId}/decision`, { action, comment })
 }
 
@@ -120,7 +124,9 @@ export const attachmentApi = {
     body.append('file', file)
     body.append('purpose', purpose)
     return http.post('/attachments', body)
-  }
+  },
+  // 头像等受保护附件：带令牌取 Blob（ADR-093）
+  download: (id) => http.get(`/attachments/${id}/download`, { responseType: 'blob' })
 }
 
 const admin = {
@@ -154,7 +160,7 @@ const admin = {
     adminHttp.post(`/admin/appeals/${id}/decision`, { decision, reject_reason: rejectReason }),
   memberships: (params) => adminHttp.get('/admin/memberships', { params }),
   revokeMembership: (userId, unitId) => adminHttp.post('/admin/memberships/revoke', { user_id: userId, unit_id: unitId }),
-  seats: () => adminHttp.get('/admin/committee/seats'),
+  seats: (params) => adminHttp.get('/admin/committee/seats', { params }),
   createSeat: (data) => adminHttp.post('/admin/committee/seats', data),
   updateSeat: (id, data) => adminHttp.patch(`/admin/committee/seats/${id}`, data),
   deleteSeat: (id) => adminHttp.delete(`/admin/committee/seats/${id}`),
@@ -165,6 +171,7 @@ const admin = {
   updateFlow: (id, data) => adminHttp.put(`/admin/approval/flows/${id}`, data),
   deleteFlow: (id) => adminHttp.delete(`/admin/approval/flows/${id}`),
   auditLogs: (params) => adminHttp.get('/admin/audit-logs', { params }),
+  systemConfigAll: () => adminHttp.get('/admin/system-config'),
   systemConfig: (key) => adminHttp.get(`/admin/system-config/${key}`),
   updateSystemConfig: (key, value) => adminHttp.put(`/admin/system-config/${key}`, { value }),
   downloadAttachment: (id) => adminHttp.get(`/attachments/${id}/download`, { responseType: 'blob' }),

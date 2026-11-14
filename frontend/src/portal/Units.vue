@@ -1,25 +1,48 @@
 <template>
   <div class="page">
     <div class="card">
-      <h3 class="title">业主清册认证</h3>
-      <p class="muted">选择你的专有部分。清册登记手机号与当前手机号一致时可立即认证为产权业主；首位认证者为户主。</p>
-      <div class="row">
-        <el-select v-model="picked.building" placeholder="楼栋" @change="onBuildingChange">
-          <el-option v-for="b in buildingOptions" :key="b.value" :label="b.value" :value="b.value" />
-        </el-select>
-        <el-select v-if="visibility.unit" v-model="picked.unit_no" placeholder="单元" @change="onUnitChange">
-          <el-option v-for="u in unitOptions" :key="u.value" :label="u.label || u.value" :value="u.value" />
-        </el-select>
-        <el-select v-if="visibility.floor" v-model="picked.floor" placeholder="楼层" @change="onFloorChange">
-          <el-option v-for="f in floorOptions" :key="f.value" :label="f.label || f.value" :value="f.value" />
-        </el-select>
-        <el-select v-if="visibility.room" v-model="picked.unitId" placeholder="户号">
-          <el-option v-for="r in roomOptions" :key="r.unit_id" :label="r.label || r.value" :value="r.unit_id" />
-        </el-select>
-        <el-button type="primary" :disabled="!picked.unitId" @click="certify">认证</el-button>
+      <h3 class="title">我的身份与房屋</h3>
+      <p>
+        汇总身份：<el-tag>{{ housing.summary.label }}</el-tag>
+      </p>
+      <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
+      <div v-for="unit in housing.units" :key="unit.unit_id" class="list-item-top">
+        <div class="row">
+          <strong>{{ unit.specific_part }}</strong>
+          <el-tag size="small" type="info">{{ unit.role_label }}</el-tag>
+          <el-button v-if="unit.role === 'RESIDENT'" size="small" @click="leave(unit)">退出</el-button>
+        </div>
+        <div v-if="isOwner(unit)">
+          <p class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</p>
+          <div v-for="r in unit.residents" :key="r.user_id" class="row">
+            <span>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</span>
+            <span class="muted">加入于 {{ formatDateTime(r.joined_at) }}</span>
+            <el-button size="small" @click="removeResident(unit, r)">移除</el-button>
+          </div>
+        </div>
       </div>
-      <p v-for="tip in skippedTips" :key="tip" class="muted">{{ tip }}</p>
-      <p v-if="picked.unitId" class="muted">{{ selectedUnitText }}</p>
+    </div>
+
+    <div id="review" class="card">
+      <h3 class="title">待我审批的同住人申请 <el-badge v-if="toReview.length" :value="toReview.length" /></h3>
+      <p v-if="!toReview.length" class="muted">暂无待审批的同住人申请</p>
+      <div v-for="item in toReview" :key="item.id" class="row list-item-top">
+        <span>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</span>
+        <span class="muted">{{ formatDateTime(item.created_at) }}</span>
+        <el-button size="small" type="primary" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
+        <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="title">选择房屋</h3>
+      <p class="muted">逐级选择你的专有部分，再选择下面的操作。</p>
+      <UnitCascader v-model="pickedUnitId" />
+      <div class="row" style="margin-top: 10px">
+        <el-button type="primary" :disabled="!pickedUnitId" @click="certify">认证产权</el-button>
+        <el-button :disabled="!pickedUnitId" @click="applyResident">申请成为同住人</el-button>
+      </div>
+      <p class="muted">清册登记手机号与当前手机号一致时可立即认证为产权业主；首位认证者为户主。若该户未登记你的手机号，请改用下方产权申诉。同住人须先有产权业主，由产权业主审批。</p>
     </div>
 
     <div class="card">
@@ -30,151 +53,92 @@
           <el-button>上传产权证明</el-button>
         </el-upload>
         <span class="muted" v-if="appeal.attachmentId">已上传</span>
-        <el-button type="primary" :disabled="!picked.unitId" @click="submitAppeal">提交申诉</el-button>
+        <el-button type="primary" :disabled="!pickedUnitId" @click="submitAppeal">提交申诉</el-button>
       </div>
     </div>
 
     <div class="card">
-      <h3 class="title">同住人</h3>
-      <p class="muted">无产权业主时不允许申请同住人；由户主审批。</p>
-      <div class="row">
-        <el-input v-model="resident.unitId" placeholder="专有部分 ID" style="max-width: 160px" />
-        <el-input v-model="resident.note" placeholder="说明（选填）" style="max-width: 260px" />
-        <el-button @click="applyResident">申请成为同住人</el-button>
-        <el-button @click="loadToReview">查看待我审批</el-button>
+      <h3 class="title">我的同住人申请</h3>
+      <p v-if="!myApplications.length" class="muted">暂无同住人申请</p>
+      <div v-for="item in myApplications" :key="item.id" class="row list-item-top">
+        <span>{{ item.unit?.specific_part }}</span>
+        <el-tag size="small">{{ statusLabel('application', item.status) }}</el-tag>
+        <span class="muted">提交 {{ formatDateTime(item.created_at) }}</span>
+        <span v-if="item.decided_at" class="muted">处理 {{ formatDateTime(item.decided_at) }}</span>
       </div>
-      <div v-for="item in toReview" :key="item.id" class="row list-item-top">
-        <span>{{ item.applicant?.nickname || item.applicant_id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
-        <el-button size="small" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
-        <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>
+    </div>
+
+    <div class="card">
+      <h3 class="title">我的申诉</h3>
+      <p v-if="!myAppeals.length" class="muted">暂无申诉</p>
+      <div v-for="item in myAppeals" :key="item.id" class="list-item-top">
+        <div class="row">
+          <span>{{ item.unit?.specific_part }}</span>
+          <el-tag size="small">{{ statusLabel('appeal', item.status) }}</el-tag>
+          <span class="muted">提交 {{ formatDateTime(item.submitted_at) }}</span>
+          <span v-if="item.decided_at" class="muted">处理 {{ formatDateTime(item.decided_at) }}</span>
+        </div>
+        <p v-if="item.status === 'REJECTED' && item.reject_reason" class="muted">驳回原因：{{ item.reject_reason }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { attachmentApi, unitApi } from '@/shared/api'
-import { errorText } from '@/shared/format'
+import { attachmentApi, meApi, unitApi } from '@/shared/api'
+import { errorText, formatDateTime } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
+import { ROLE_LABELS, statusLabel } from '@/shared/labels'
+import { useAuthStore } from '@/stores/auth'
+import UnitCascader from './parts/UnitCascader.vue'
 
-const buildingOptions = ref([])
-const unitOptions = ref([])
-const floorOptions = ref([])
-const roomOptions = ref([])
-const skippedTips = ref([])
-const visibility = reactive({ unit: false, floor: false, room: false })
-const picked = reactive({ building: null, unit_no: null, floor: null, unitId: null })
+const auth = useAuthStore()
+const pickedUnitId = ref(null)
 const appeal = reactive({ attachmentId: null })
-const resident = reactive({ unitId: '', note: '' })
+const housing = reactive({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
 const toReview = ref([])
+const myApplications = ref([])
+const myAppeals = ref([])
 
-const selectedUnit = computed(() => roomOptions.value.find((item) => item.unit_id === picked.unitId) || null)
-const selectedUnitText = computed(() => {
-  if (!selectedUnit.value) return ''
-  const parts = [selectedUnit.value.unit_type_label || '类型未登记']
-  parts.push(selectedUnit.value.area ? `${selectedUnit.value.area} ㎡` : '面积未登记')
-  return `${parts.join(' · ')}；若该户未登记你的手机号，请改用下方产权申诉。`
-})
+const isOwner = (unit) => unit.role === 'HEAD' || unit.role === 'OWNER'
 
-async function loadOptions(params) {
+async function loadHousing() {
   try {
-    const data = await unitApi.options(params)
-    return data
+    Object.assign(housing, await meApi.housing())
   } catch (e) {
     ElMessage.error(errorText(e))
-    return {}
   }
 }
 
-async function loadBuildings() {
-  const data = await loadOptions({})
-  buildingOptions.value = data.options || []
-}
-
-function resetBelow(level) {
-  if (level === 'building') {
-    picked.unit_no = null
-    picked.floor = null
-    visibility.unit = false
-    visibility.floor = false
-    unitOptions.value = []
-    floorOptions.value = []
-    skippedTips.value = []
+async function loadLists() {
+  try {
+    const [review, applications, appeals] = await Promise.all([
+      unitApi.residentApplicationsToReview(),
+      unitApi.myResidentApplications(),
+      unitApi.myAppeals()
+    ])
+    toReview.value = review.results || review || []
+    myApplications.value = applications.results || applications || []
+    myAppeals.value = appeals.results || appeals || []
+  } catch (e) {
+    ElMessage.error(errorText(e))
   }
-  if (level === 'unit') {
-    picked.floor = null
-    visibility.floor = false
-    floorOptions.value = []
-  }
-  picked.unitId = null
-  visibility.room = false
-  roomOptions.value = []
 }
 
-async function onBuildingChange() {
-  resetBelow('building')
-  if (picked.building === null) return
-  await applyLevel(await loadOptions({ building: picked.building }), 'unit')
-}
-
-async function onUnitChange() {
-  resetBelow('unit')
-  if (picked.unit_no === null) return
-  await applyLevel(await loadOptions({ building: picked.building, unit_no: picked.unit_no }), 'floor')
-}
-
-async function onFloorChange() {
-  resetBelow('floor')
-  if (picked.floor === null) return
-  showRooms(await loadOptions({ building: picked.building, unit_no: picked.unit_no, floor: picked.floor }))
-}
-
-async function applyLevel(data, stage) {
-  if (data.level === 'room') {
-    showRooms(data)
-    return
-  }
-  if (stage === 'unit') {
-    if (data.level === 'unit_no') {
-      visibility.unit = true
-      unitOptions.value = data.has_empty
-        ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
-        : (data.options || [])
-      return
-    }
-    picked.unit_no = ''
-    skippedTips.value = ['该楼栋没有分单元，已自动跳过']
-    await loadFloorsAfterSkip()
-    return
-  }
-  if (data.level === 'floor') {
-    visibility.floor = true
-    floorOptions.value = data.has_empty
-      ? [{ value: '', label: '未划分楼层' }, ...(data.options || [])]
-      : (data.options || [])
-    return
-  }
-  picked.floor = ''
-  skippedTips.value = [...skippedTips.value, '该单元没有分楼层，已自动跳过']
-  showRooms(await loadOptions({ building: picked.building, unit_no: picked.unit_no, floor: '' }))
-}
-
-async function loadFloorsAfterSkip() {
-  applyLevel(await loadOptions({ building: picked.building, unit_no: '' }), 'floor')
-}
-
-function showRooms(data) {
-  visibility.room = true
-  roomOptions.value = data.options || []
+async function refresh() {
+  await Promise.all([loadHousing(), loadLists()])
 }
 
 async function certify() {
   try {
-    const result = await unitApi.certify(picked.unitId)
-    ElMessage.success(`认证成功，身份：${result.role}`)
+    const result = await unitApi.certify(pickedUnitId.value)
+    ElMessage.success(`认证成功，身份：${ROLE_LABELS[result.role] || result.role}`)
+    await auth.fetchMe()
+    await refresh()
   } catch (e) {
-    if (e?.response?.data?.code === 'PHONE_NOT_IN_REGISTRY') {
+    if (e?.code === 'PHONE_NOT_IN_REGISTRY') {
       ElMessage.warning('手机号与清册不一致，可提交产权申诉')
       return
     }
@@ -195,8 +159,9 @@ async function uploadProof({ file }) {
 async function submitAppeal() {
   try {
     if (!appeal.attachmentId) return ElMessage.warning('请先上传产权证明')
-    await unitApi.createAppeal({ unit_id: picked.unitId, proof_ids: [appeal.attachmentId] })
+    await unitApi.createAppeal({ unit_id: pickedUnitId.value, proof_ids: [appeal.attachmentId] })
     ElMessage.success('申诉已提交，等待管理员审核')
+    await loadLists()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -204,17 +169,9 @@ async function submitAppeal() {
 
 async function applyResident() {
   try {
-    await unitApi.createResidentApplication({ unit_id: Number(resident.unitId), note: resident.note })
-    ElMessage.success('申请已提交')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function loadToReview() {
-  try {
-    const data = await unitApi.residentApplicationsToReview()
-    toReview.value = data.results || data || []
+    await unitApi.createResidentApplication({ unit_id: pickedUnitId.value })
+    ElMessage.success('申请已提交，等待产权业主审批')
+    await loadLists()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -224,11 +181,37 @@ async function decideResident(id, action) {
   try {
     await unitApi.decideResidentApplication(id, action)
     ElMessage.success('已处理')
-    loadToReview()
+    await refresh()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
-loadBuildings()
+async function removeResident(unit, resident) {
+  if (!(await confirmDanger('removeResident', { name: resident.nickname || resident.account_no }))) return
+  try {
+    await unitApi.removeResident(unit.unit_id, resident.user_id)
+    ElMessage.success('已移除')
+    await loadHousing()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function leave(unit) {
+  if (!(await confirmDanger('leaveUnit', { name: unit.specific_part }))) return
+  try {
+    await unitApi.leaveUnit(unit.unit_id)
+    ElMessage.success('已退出')
+    await auth.fetchMe()
+    await refresh()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+onMounted(async () => {
+  await refresh()
+  if (window.location.hash === '#review') document.getElementById('review')?.scrollIntoView?.()
+})
 </script>

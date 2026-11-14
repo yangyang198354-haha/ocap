@@ -17,6 +17,7 @@ globalThis.uni = {
   navigateBack: vi.fn(),
   login: vi.fn(),
   showToast: vi.fn(),
+  showModal: vi.fn(),
   // 风格原生部分：只记录调用，不代表微信真机行为
   setTabBarStyle: vi.fn(),
   setNavigationBarColor: vi.fn(),

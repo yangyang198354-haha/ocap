@@ -1,8 +1,11 @@
 from django.urls import path
 
-from .views import AttachmentDownloadView, AttachmentUploadView, AuditLogListView, SystemConfigView
+from .views import (
+    AttachmentDownloadView, AttachmentUploadView, AuditLogListView, SystemConfigView, SystemLimitsView,
+)
 
 urlpatterns = [
+    path("system/limits", SystemLimitsView.as_view()),
     path("admin/audit-logs", AuditLogListView.as_view()),
     path("admin/system-config", SystemConfigView.as_view()),
     path("admin/system-config/<str:key>", SystemConfigView.as_view()),

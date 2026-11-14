@@ -5,7 +5,8 @@
       <view class="home-hero-scan" />
       <view class="home-hero-main">
         <view class="title home-greeting">你好，{{ auth.me?.profile?.nickname || '业主' }}</view>
-        <view class="muted home-meta">身份：{{ (auth.me?.identities?.labels || []).join('、') || '游客' }}</view>
+        <view class="muted home-meta">身份：{{ auth.identitySummary.label }}</view>
+        <view v-if="pendingReview > 0" class="home-meta" @click="go('/pages/units/index?review=1')">待审批同住人申请：{{ pendingReview }}</view>
       </view>
       <view class="home-metrics">
         <text class="chip">{{ countText(tasks) }} 项审批待办</text>
@@ -13,7 +14,7 @@
       </view>
     </view>
 
-    <view class="card home-todo">
+    <view v-if="auth.isCommittee" class="card home-todo">
       <view class="title">待办</view>
       <view v-if="!tasks || !tasks.length" class="muted">暂无审批待办</view>
       <view v-for="task in tasks || []" :key="task.instance_id" class="list-item">
@@ -23,6 +24,8 @@
           <button size="mini" @click="decide(task, 'REJECT')">拒绝</button>
         </view>
       </view>
+      <button v-if="taskPaging.hasMore.value" style="margin-top: 12rpx" @click="loadMoreTasks">加载更多</button>
+      <view v-else-if="tasks && tasks.length" class="muted">没有更多了，共 {{ taskPaging.total.value }} 条</view>
     </view>
 
     <view class="home-stats">
@@ -67,9 +70,13 @@ import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 import { useAuthStore } from '@/store/auth'
+import { usePaging } from '@/utils/paging'
 
 const auth = useAuthStore()
+// 待办：仅业委会成员（REQ-FUNC-157）；分页“加载更多”（REQ-FUNC-152）
+const taskPaging = usePaging({ fetch: (params) => api.tasks(params) })
 const tasks = ref(null)
+const pendingReview = ref(0)
 const resolutions = ref([])
 // null 表示未取到（无权限或失败），区块显示空态，不编造数据
 const polls = ref(null)
@@ -83,15 +90,15 @@ const stats = computed(() => [
   { label: '进行中投票', value: countText(openPolls.value) },
   { label: '近期公开决议', value: resolutions.value.length }
 ])
-const quick = [
+const quick = computed(() => [
   { label: '我的房屋', open: () => go('/pages/units/index') },
   { label: '决议', open: () => tab('/pages/resolutions/index') },
   { label: '投票', open: () => tab('/pages/polls/index') },
-  { label: '报销', open: () => go('/pages/claims/index') },
+  ...(auth.isCommittee ? [{ label: '报销', open: () => go('/pages/claims/index') }] : []),
   { label: '手机号', open: () => go('/pages/phone/index') },
   { label: '信息公开', open: () => go('/pages/info/index') },
   { label: '我的', open: () => tab('/pages/me/index') }
-]
+])
 
 function go(url) {
   uni.navigateTo({ url })
@@ -108,12 +115,24 @@ async function load() {
   } catch (e) {
     /* 未登录由 http 统一跳转 */
   }
-  try {
-    // 审批待办仅业委会成员可见，其他身份后端返回 403，此处按空处理
-    const data = await api.tasks()
-    tasks.value = data.results || data || []
-  } catch (e) {
-    tasks.value = null
+  // 产权业主：待审批同住人申请数量（失败静默，不影响首页其他区块）
+  pendingReview.value = 0
+  if ((auth.me?.identities?.units || []).some((u) => u.role === 'HEAD' || u.role === 'OWNER')) {
+    try {
+      pendingReview.value = Number((await api.housing())?.pending_review_count) || 0
+    } catch (e) {
+      pendingReview.value = 0
+    }
+  }
+  // 审批待办仅业委会成员可见（与接口权限一致）；失败按空处理
+  tasks.value = null
+  if (auth.isCommittee) {
+    try {
+      await taskPaging.reset()
+      tasks.value = taskPaging.items.value
+    } catch (e) {
+      tasks.value = null
+    }
   }
   try {
     const data = await api.resolutions('public')
@@ -126,6 +145,15 @@ async function load() {
     polls.value = data.results || data || []
   } catch (e) {
     polls.value = null
+  }
+}
+
+async function loadMoreTasks() {
+  try {
+    await taskPaging.loadMore()
+    tasks.value = taskPaging.items.value
+  } catch (e) {
+    uni.showToast({ title: e.message, icon: 'none' })
   }
 }
 

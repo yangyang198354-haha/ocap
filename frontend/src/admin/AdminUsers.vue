@@ -8,7 +8,9 @@
       <el-table :data="admins" size="small">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="username" label="账号" width="160" />
-        <el-table-column prop="is_active" label="启用" width="90" />
+        <el-table-column label="启用" width="90">
+          <template #default="{ row }">{{ yesNo(row.is_active) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="160">
           <template #default="{ row }">
             <el-button size="small" @click="reset(row)">重置密码</el-button>
@@ -19,13 +21,15 @@
 
     <div class="card">
       <h3 class="title">注册用户</h3>
-      <el-input v-model="keyword" placeholder="昵称 / 手机号 / 账号 / 实名" style="max-width: 260px" @change="loadUsers" />
+      <el-input v-model="keyword" placeholder="昵称 / 手机号 / 账号 / 实名" style="max-width: 260px" @change="resetAndLoad" />
       <el-table :data="users" size="small" style="margin-top: 10px">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="account_no" label="账号" width="150" />
         <el-table-column prop="phone" label="手机号" width="140" />
         <el-table-column prop="nickname" label="昵称" min-width="120" />
-        <el-table-column prop="status" label="状态" width="110" />
+        <el-table-column label="状态" width="110">
+          <template #default="{ row }">{{ statusLabel('account', row.status) }}</template>
+        </el-table-column>
         <el-table-column prop="identity_label" label="身份" width="110" />
         <el-table-column label="认证" width="130">
           <template #default="{ row }">
@@ -41,6 +45,7 @@
           <template #default="{ row }">{{ formatDateTime(row.last_login_at) || '从未登录' }}</template>
         </el-table-column>
       </el-table>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="新建管理员" width="420px">
@@ -55,31 +60,44 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
+import PagerBar from '@/shared/PagerBar.vue'
 import { errorText, formatDateTime } from '@/shared/format'
+import { statusLabel, yesNo } from '@/shared/labels'
+import { usePaging } from '@/shared/usePaging'
 
 const admins = ref([])
-const users = ref([])
 const keyword = ref('')
 const showCreate = ref(false)
 const createForm = reactive({ username: '', password: '' })
+// 搜索关键词在翻页时保持不变（REQ-FUNC-152）
+const filters = computed(() => ({ q: keyword.value || undefined }))
+const { items: users, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
+  fetch: (params) => admin.users(params), filters
+})
 
 async function load() {
   try {
-    const [adminData, userData] = await Promise.all([admin.admins(), admin.users()])
+    const [adminData] = await Promise.all([admin.admins(), reload()])
     admins.value = adminData.results || adminData || []
-    users.value = userData.results || userData || []
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
-async function loadUsers() {
+async function resetAndLoad() {
   try {
-    const data = await admin.users({ q: keyword.value || undefined })
-    users.value = data.results || data || []
+    await pagingReset()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
   } catch (e) {
     ElMessage.error(errorText(e))
   }

@@ -5,7 +5,7 @@
         <h3 class="title" style="margin: 0">业委会决议</h3>
         <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起决议</el-button>
       </div>
-      <el-radio-group v-model="scope" style="margin-top: 12px" @change="load">
+      <el-radio-group v-model="scope" style="margin-top: 12px" @change="resetAndLoad">
         <el-radio-button value="public">公开决议</el-radio-button>
         <el-radio-button value="mine">我发起的</el-radio-button>
         <el-radio-button value="todo">待我表决</el-radio-button>
@@ -46,8 +46,10 @@
         </div>
       </article>
     </div>
+    <div class="card"><PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" /></div>
 
     <el-dialog v-model="showCreate" title="发起决议" width="560px">
+      <p v-if="limits && limits.vote_min_window_minutes" class="muted">半数同意决议：表决窗口不少于 {{ limits.vote_min_window_minutes }} 分钟</p>
       <el-input v-model="form.title" placeholder="标题" maxlength="200" />
       <el-input v-model="form.content" type="textarea" :rows="5" placeholder="内容" style="margin-top: 10px" />
       <el-select v-model="form.approval_flow_id" placeholder="审批流程" style="margin-top: 10px; width: 100%">
@@ -79,15 +81,21 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { approvalApi, attachmentApi, resolutionApi } from '@/shared/api'
+import { approvalApi, attachmentApi, meApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
+import PagerBar from '@/shared/PagerBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { datetime, errorText } from '@/shared/format'
+import { usePaging } from '@/shared/usePaging'
 import { voteShare } from '@/shared/voteShare'
 
 const auth = useAuthStore()
 const scope = ref('public')
-const items = ref([])
+const filters = computed(() => ({ scope: scope.value }))
+const { items, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
+  fetch: ({ scope: s, ...params }) => resolutionApi.list(s, params), filters
+})
+const limits = ref(null)
 const flows = ref([])
 const showCreate = ref(false)
 const form = reactive({ title: '', content: '', approval_flow_id: null, vote_deadline: null })
@@ -101,8 +109,23 @@ const share = (item) => voteShare(item.vote_counts)
 
 async function load() {
   try {
-    const data = await resolutionApi.list(scope.value)
-    items.value = data.results || data || []
+    await reload()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function resetAndLoad() {
+  try {
+    await pagingReset()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -135,6 +158,11 @@ async function create() {
 onMounted(async () => {
   await auth.fetchMe().catch(() => null)
   load()
+  try {
+    limits.value = await meApi.limits()
+  } catch (e) {
+    limits.value = null
+  }
   try {
     const data = await approvalApi.flows('RESOLUTION')
     flows.value = data.results || data || []

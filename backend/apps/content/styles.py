@@ -2,10 +2,12 @@
 import re
 from typing import Mapping
 
+from django.db.models import Count
+
 from apps.core.errors import ApiError
 
 from .conf import ContentSettings
-from .models import StyleTemplate
+from .models import ContentPost, StyleTemplate
 
 COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -43,10 +45,17 @@ class StyleService:
     @staticmethod
     def list_all() -> list[dict]:
         items = [dict(item) for item in BUILTIN_TEMPLATES.values()]
+        usage = dict(ContentPost.objects.filter(style_key__startswith="custom:")
+                     .values_list("style_key").annotate(n=Count("id")))
         for row in StyleTemplate.objects.order_by("id"):
-            items.append({"key": f"custom:{row.id}", "name": row.name,
-                          "builtin": False, "tokens": row.tokens})
+            key = f"custom:{row.id}"
+            items.append({"key": key, "name": row.name, "builtin": False, "tokens": row.tokens,
+                          "id": row.id, "usage_count": usage.get(key, 0)})
         return items
+
+    @staticmethod
+    def usage_count(template_id: int) -> int:
+        return ContentPost.objects.filter(style_key=f"custom:{template_id}").count()
 
     @staticmethod
     def resolve_tokens(style_key: str) -> dict:
@@ -97,7 +106,8 @@ class StyleService:
         row = StyleTemplate.objects.create(name=clean_name,
                                            tokens=StyleService.validate_tokens(tokens),
                                            created_by_admin_id=admin_id)
-        return {"key": f"custom:{row.id}", "name": row.name, "builtin": False, "tokens": row.tokens}
+        return {"key": f"custom:{row.id}", "name": row.name, "builtin": False, "tokens": row.tokens,
+                "id": row.id, "usage_count": 0}
 
     @staticmethod
     def update(template_id: int, *, name: str | None, tokens: Mapping | None) -> dict:
@@ -115,11 +125,18 @@ class StyleService:
         if tokens is not None:
             row.tokens = StyleService.validate_tokens(tokens)
         row.save()
-        return {"key": f"custom:{row.id}", "name": row.name, "builtin": False, "tokens": row.tokens}
+        return {"key": f"custom:{row.id}", "name": row.name, "builtin": False, "tokens": row.tokens,
+                "id": row.id, "usage_count": StyleService.usage_count(row.id)}
 
     @staticmethod
     def delete(template_id: int) -> None:
         from apps.core.errors import NotFound
+        if not StyleTemplate.objects.filter(id=template_id).exists():
+            raise NotFound("样式模板不存在")
+        count = StyleService.usage_count(template_id)
+        if count > 0:
+            raise ApiError("STYLE_IN_USE", f"该模板被 {count} 条内容使用，不能删除", 409,
+                           {"count": count})
         deleted, _ = StyleTemplate.objects.filter(id=template_id).delete()
         if not deleted:
             raise NotFound("样式模板不存在")

@@ -94,6 +94,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import { errorText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
 import RegistryImportDialog from './RegistryImportDialog.vue'
 
 const UNIT_TYPES = [
@@ -251,6 +252,7 @@ async function saveEdit() {
 }
 
 async function remove(row) {
+  if (!(await confirmDanger('deleteUnit', { name: row.specific_part }))) return
   try {
     await admin.deleteRegistryUnit(row.id)
     ElMessage.success('已删除')

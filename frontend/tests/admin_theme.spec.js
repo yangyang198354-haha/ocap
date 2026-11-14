@@ -148,7 +148,7 @@ describe('口径 5~7：对比度与叠加层（AC-142-05、REQ-NFUNC-21）', () 
 })
 
 describe('口径 8~9：布局结构与构建校验（AC-139-01、AC-142-04）', () => {
-  it('AdminLayout 渲染品牌、13 个导航链接、当前页高亮与顶栏切换入口', async () => {
+  it('AdminLayout 渲染品牌、14 个导航链接（含“版式模板”，REQ-FUNC-153）、当前页高亮与顶栏切换入口', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -161,7 +161,7 @@ describe('口径 8~9：布局结构与构建校验（AC-139-01、AC-142-04）', 
     const wrapper = mount(AdminLayout, { global: { plugins: [createPinia(), router, ElementPlus] } })
     await flushPromises()
     expect(wrapper.find('.admin-bar .brand').exists()).toBe(true)
-    expect(wrapper.findAll('.admin-bar .topnav a')).toHaveLength(13)
+    expect(wrapper.findAll('.admin-bar .topnav a')).toHaveLength(14)
     expect(wrapper.find('.admin-bar .admin-theme-trigger').exists()).toBe(true)
     expect(wrapper.find('.admin-bar .topnav a.is-active').text()).toBe('业主清册')
     wrapper.unmount()

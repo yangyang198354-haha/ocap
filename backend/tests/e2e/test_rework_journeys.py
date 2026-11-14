@@ -163,6 +163,7 @@ class IncomeManualEntryJourneyTests(ApiTestBase):
         self.assert_ok(sheets)
         self.assertEqual(sheets.data["results"][0]["total_amount"], "200.00")
         # 作废后重新生成，收入不再计入
-        self.assert_ok(self.api("post", f"/admin/income/sheets/{sheet.data['id']}/void", token=clerk_token))
+        # AC-060-04/10：由原审批流程指定的审批人作废
+        self.assert_ok(self.api("post", f"/admin/income/sheets/{sheet.data['id']}/void", token=approver_token))
         report = self.api("post", "/ledger/reports/generate", {"period_type": "YEAR", "year": today.year}, token=clerk_token)
         self.assertEqual(report.data["total_income"], "0.00")

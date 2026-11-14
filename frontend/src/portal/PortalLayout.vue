@@ -35,10 +35,9 @@ const navItems = computed(() => [
   { label: '我的房屋', to: '/units' },
   { label: '决议', to: '/resolutions' },
   { label: '投票/调查', to: '/polls' },
-  { label: '报销/备用金', to: '/claims' },
-  ...(auth.isCommittee ? [{ label: '收入表', to: '/income' }] : []),
+  ...(auth.isCommittee ? [{ label: '报销/备用金', to: '/claims' }, { label: '收入表', to: '/income' }] : []),
   { label: '财务报表', to: '/reports' },
-  { label: '待办', to: '/tasks' },
+  ...(auth.isCommittee ? [{ label: '待办', to: '/tasks' }] : []),
   { label: '个人中心', to: '/me' }
 ])
 

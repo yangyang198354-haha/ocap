@@ -3,8 +3,8 @@
     <div class="card" v-if="item">
       <h3 class="title">{{ item.title }}</h3>
       <p class="muted">
-        状态：<StatusTag :status="item.status" /> · 审批方式：{{ item.approval_mode }}
-        <span v-if="item.vote_deadline">· 表决截止：{{ item.vote_deadline }}</span>
+        状态：<StatusTag :status="item.status" /> · 审批方式：{{ textOf(APPROVAL_MODE_TEXT, item.approval_mode) }}
+        <span v-if="item.vote_deadline">· 表决截止：{{ formatDateTime(item.vote_deadline) }}</span>
       </p>
       <p style="white-space: pre-wrap">{{ item.content }}</p>
       <div class="row" v-if="item.attachments?.length">
@@ -60,7 +60,9 @@ import { approvalApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
 import { apiUrl } from '@/shared/http'
 import { useAuthStore } from '@/stores/auth'
-import { errorText } from '@/shared/format'
+import { errorText, formatDateTime } from '@/shared/format'
+import { APPROVAL_MODE_TEXT, textOf } from '@/shared/labels'
+import { confirmDanger } from '@/shared/confirm'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -91,6 +93,7 @@ async function vote(choice) {
 }
 
 async function withdraw() {
+  if (!(await confirmDanger('withdrawResolution'))) return
   try {
     await resolutionApi.withdraw(route.params.id)
     ElMessage.success('已撤回')

@@ -11,22 +11,27 @@ import Login from '../pages/login/index.vue'
 import ProfileSetup from '../pages/profile-setup/index.vue'
 import { useAuthStore } from '@/store/auth'
 
-const ME = (labels, phone = '138****0000') => ({
+// position：业委会职务（成员才能发起报销/备用金、查看待办，REQ-FUNC-146/157）；summary：汇总身份（IFC-262）
+const ME = (labels, phone = '138****0000', position = null, summary = { code: 'GUEST', label: '游客' }) => ({
   profile: { id: 1, nickname: '张三', phone },
-  identities: { is_guest: labels.includes('游客'), units: [], committee: null, labels }
+  identities: {
+    is_guest: labels.includes('游客'), units: [], labels, summary,
+    committee: position ? { position, term_end: '2027-01-01' } : null
+  }
 })
+const MEMBER_ME = ME(['户主', '业委会委员'], undefined, 'MEMBER', { code: 'MEMBER', label: '委员' })
 
 describe('首页身份显示（CR-012）', () => {
-  it('TC-MP-014 显示昵称与 identities.labels；加载待办与公开决议', async () => {
+  it('TC-MP-014 显示昵称与汇总身份 identities.summary；加载待办与公开决议', async () => {
     respondWith({
-      'GET /me': ME(['户主', '业委会委员']),
+      'GET /me': MEMBER_ME,
       'GET /approval/tasks': { results: [{ instance_id: 3, scope: 'EXPENSE', subject_title: '报销#1' }] },
       'GET /resolutions': { results: [{ id: 1, title: '加装电梯决议', status: 'APPROVED' }] }
     })
     const { wrapper } = await mountPage(Index)
     const text = wrapper.text()
     expect(text).toContain('你好，张三')
-    expect(text).toContain('身份：户主、业委会委员')
+    expect(text).toContain('身份：委员') // REQ-FUNC-149：汇总身份取最高一项
     expect(text).toContain('报销#1')
     expect(text).toContain('加装电梯决议')
     expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public' })
@@ -41,12 +46,25 @@ describe('首页身份显示（CR-012）', () => {
     })
     const { wrapper } = await mountPage(Index)
     expect(wrapper.text()).toContain('身份：游客')
+    // REQ-FUNC-157：非成员看不到“待办”卡片，也不会请求待办接口
+    expect(wrapper.text()).not.toContain('暂无审批待办')
+    expect(requests().some((r) => r.path === '/approval/tasks')).toBe(false)
+  })
+
+  it('TC-MP-015b 成员：待办接口 403 时按空处理，不抛错', async () => {
+    uni.request.mockImplementation(({ url, success }) => {
+      const path = url.replace('/api/v1', '')
+      if (path === '/me') return success({ statusCode: 200, data: MEMBER_ME })
+      if (path === '/approval/tasks') return success({ statusCode: 403, data: { code: 'FORBIDDEN', message: 'x' } })
+      return success({ statusCode: 200, data: { results: [] } })
+    })
+    const { wrapper } = await mountPage(Index)
     expect(wrapper.text()).toContain('暂无审批待办')
   })
 
   it('TC-MP-016 审批待办“同意”：POST /approval/instances/{id}/decision { action: APPROVE }', async () => {
     respondWith({
-      'GET /me': ME(['户主']),
+      'GET /me': MEMBER_ME,
       'GET /approval/tasks': { results: [{ instance_id: 3, scope: 'EXPENSE', subject_title: '报销#1' }] },
       'GET /resolutions': { results: [] },
       'POST /approval/instances/3/decision': {}
@@ -61,7 +79,7 @@ describe('首页身份显示（CR-012）', () => {
 
 describe('报销与核销表单（CR-013）', () => {
   const routes = {
-    'GET /me': ME(['户主', '业委会委员']),
+    'GET /me': MEMBER_ME,
     'GET /approval/flows': { results: [{ id: 7, name: '报销流程' }] },
     'POST /attachments': {}
   }
@@ -79,7 +97,7 @@ describe('报销与核销表单（CR-013）', () => {
     const gets = requests().filter((r) => r.method === 'GET')
     expect(gets.find((r) => r.path === '/approval/flows').data).toEqual({ scope: 'EXPENSE' })
     expect(gets.filter((r) => r.path === '/claims').map((r) => r.data)).toEqual([
-      { scope: 'mine' },
+      { scope: 'mine', page: 1, page_size: 20 },
       { scope: 'mine', type: 'ADVANCE', status: 'APPROVED', page_size: 100 },
       { scope: 'mine', type: 'REIMBURSEMENT', status: 'APPROVED', page_size: 100 }
     ])

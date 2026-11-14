@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 
 from .attachments import AttachmentService
 from .audit import AuditActor, AuditService
-from .config import EDITABLE_KEYS, SystemConfig
+from .config import EDITABLE_KEYS, EDITABLE_VALIDATORS, SystemConfig
 from .errors import ApiError, NotFound
+from .limits import current_limits
 from .models import AuditLog
 from .permissions import IsAdmin, IsMember, IsMemberOrAdmin
 from .ratelimit import RateLimiter
@@ -50,13 +51,9 @@ class SystemConfigView(APIView):
         if key not in EDITABLE_KEYS:
             raise NotFound("配置项不可编辑")
         value = (request.data or {}).get("value")
-        if key == "audit.retention_months":
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise ApiError("INVALID_VALUE", "保留期限必须为整数")
-            if value < 6:
-                raise ApiError("RETENTION_TOO_SHORT", "保留期限不得低于 6 个月")
-            if value > 120:
-                raise ApiError("RETENTION_TOO_LONG", "保留期限不得高于 120 个月")
+        validator = EDITABLE_VALIDATORS.get(key)
+        if validator is not None:
+            value = validator(value)
         before = SystemConfig.get(key)
         SystemConfig.set(key, value, request.user.id)
         AuditService.record(
@@ -65,6 +62,14 @@ class SystemConfigView(APIView):
             result="SUCCESS", detail={"before": before, "after": value},
         )
         return Response({"key": key, "value": value})
+
+
+class SystemLimitsView(APIView):
+    """当前生效的规则限制（IFC-272），供两端发起界面提示。"""
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        return Response(current_limits())
 
 
 class AttachmentUploadView(APIView):

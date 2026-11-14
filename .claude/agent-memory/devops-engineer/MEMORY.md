@@ -16,3 +16,5 @@
 - [M-DE-014] 计划中标 [INFERRED] 的目标机事实（Python 版本、wheel 可用性）在预检里实测 — conf 0.6 · 证据 content deployment_report.md PRE-105（cryptography 已预装） · 首见 2026-11-11 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
+- [P-DE-001] CI 默认浅克隆时，依赖 git show 基线提交的测试会 skipUnless 跳过；不要给 CI 加 paths-ignore 排除被扫描的文档目录（本批 test_requirements_numbering 扫 project_workspace） — 自记 2026-11-14 · 证据 ocap_product_review cicd_pipeline.md、test_requirements_numbering.py:215
+- [P-DE-002] 夹具类口令经 stdin 传给远端（单引号远端命令内 read -r 再 export），避免进 argv/ps；远程 E2E 前先只读列出夹具将占用的真实对象（房屋 id）供用户确认 — 自记 2026-11-14 · 证据 ocap_product_review deployment_plan.md DEPLOY-009（未执行，待 E2 验证）

@@ -29,7 +29,7 @@ class Membership(models.Model):
 
 
 class Appeal(models.Model):
-    STATUSES = [("PENDING", "待审"), ("APPROVED", "通过"), ("REJECTED", "拒绝")]
+    STATUSES = [("PENDING", "待审"), ("APPROVED", "通过"), ("REJECTED", "拒绝"), ("CLOSED", "已关闭")]
 
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="appeals")
     unit = models.ForeignKey(RegistryUnit, on_delete=models.CASCADE, related_name="appeals")
@@ -45,7 +45,7 @@ class Appeal(models.Model):
 
 
 class ResidentApplication(models.Model):
-    STATUSES = [("PENDING", "待审"), ("APPROVED", "通过"), ("REJECTED", "拒绝")]
+    STATUSES = [("PENDING", "待审"), ("APPROVED", "通过"), ("REJECTED", "拒绝"), ("CLOSED", "已关闭")]
 
     applicant = models.ForeignKey("accounts.User", on_delete=models.CASCADE,
                                   related_name="resident_applications")

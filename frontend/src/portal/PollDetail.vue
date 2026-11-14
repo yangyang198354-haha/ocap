@@ -4,7 +4,7 @@
       <h3 class="title">{{ poll.title }}</h3>
       <p class="muted">{{ poll.description }}</p>
       <p class="muted">
-        {{ poll.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · 状态：{{ poll.status }} · 截止：{{ poll.deadline }}
+        {{ poll.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · 状态：{{ statusLabel('poll', poll.status) }} · 截止：{{ formatDateTime(poll.deadline) }}
       </p>
       <div v-for="q in poll.questions || []" :key="q.id" style="margin-top: 14px">
         <strong>{{ q.title }}</strong>
@@ -56,7 +56,8 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { pollApi } from '@/shared/api'
-import { errorText } from '@/shared/format'
+import { errorText, formatDateTime } from '@/shared/format'
+import { statusLabel } from '@/shared/labels'
 
 const route = useRoute()
 const poll = ref(null)

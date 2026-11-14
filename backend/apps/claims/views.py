@@ -14,14 +14,14 @@ from apps.approval.services import ApprovalEngine
 from apps.committee.services import CommitteeQuery
 from apps.core.attachments import AttachmentService, count_limit, linked_attachment_list
 from apps.core.audit import AuditActor, AuditService
+from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
 from apps.core.money import money
-from apps.core.permissions import IsAdmin, IsIncomeMember, IsMember
+from apps.core.permissions import IsAdmin, IsCommitteeMember, IsIncomeMember, IsMember
 from apps.core.serializers import page_response
 
 from .models import Claim
 
-MAX_AMOUNT = Decimal("1000000.00")
 
 
 def claim_view(claim: Claim) -> dict:
@@ -42,13 +42,16 @@ class ClaimSerializer:
         self.data = [claim_view(r) for r in rows]
 
 
-def _parse_amount(raw) -> Decimal:
+def _parse_amount(raw, limit: Decimal | None = None) -> Decimal:
     try:
         amount = Decimal(str(raw))
     except (InvalidOperation, TypeError, ValueError) as exc:
         raise ApiError("INVALID_VALUE", "金额格式不正确") from exc
-    if amount < Decimal("0.01") or amount > MAX_AMOUNT:
-        raise ApiError("INVALID_VALUE", "金额须在 0.01~1000000 之间")
+    if limit is None:
+        limit = SystemConfig.amount_max()
+    if amount < Decimal("0.01") or amount > limit:
+        raise ApiError("INVALID_VALUE", f"金额须在 0.01~{limit:.2f} 之间（当前上限 {limit:.2f} 元）",
+                       400, {"max_amount": f"{limit:.2f}"})
     if amount.as_tuple().exponent < -2:
         raise ApiError("INVALID_VALUE", "金额最多两位小数")
     return amount
@@ -81,7 +84,7 @@ def _applicant_labels(user) -> str:
 
 
 class ReimbursementCreateView(APIView):
-    permission_classes = [IsMember]
+    permission_classes = [IsCommitteeMember]
 
     def post(self, request):
         data = request.data or {}
@@ -108,7 +111,7 @@ class ReimbursementCreateView(APIView):
 
 
 class AdvanceCreateView(APIView):
-    permission_classes = [IsMember]
+    permission_classes = [IsCommitteeMember]
 
     def post(self, request):
         data = request.data or {}

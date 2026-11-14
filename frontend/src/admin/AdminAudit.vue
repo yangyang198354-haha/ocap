@@ -15,12 +15,18 @@
         <el-input v-model="filters.object_type" placeholder="对象类型" style="max-width: 180px" @change="load" />
       </div>
       <el-table :data="logs" size="small" style="margin-top: 10px">
-        <el-table-column prop="occurred_at" label="时间" width="180" />
-        <el-table-column prop="actor_type" label="主体" width="90" />
+        <el-table-column label="时间" width="180">
+          <template #default="{ row }">{{ datetime(row.occurred_at) }}</template>
+        </el-table-column>
+        <el-table-column label="主体" width="90">
+          <template #default="{ row }">{{ textOf(AUDIT_ACTOR_TEXT, row.actor_type) }}</template>
+        </el-table-column>
         <el-table-column prop="action" label="动作" width="170" />
         <el-table-column prop="object_type" label="对象" width="120" />
         <el-table-column prop="object_id" label="对象 ID" width="110" />
-        <el-table-column prop="result" label="结果" width="90" />
+        <el-table-column label="结果" width="90">
+          <template #default="{ row }">{{ textOf(AUDIT_RESULT_TEXT, row.result) }}</template>
+        </el-table-column>
       </el-table>
       <div class="row" style="margin-top: 10px">
         <el-button :disabled="page <= 1" @click="go(page - 1)">上一页</el-button>
@@ -35,7 +41,9 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
-import { errorText } from '@/shared/format'
+import { datetime, errorText } from '@/shared/format'
+import { textOf } from '@/shared/labels'
+import { AUDIT_ACTOR_TEXT, AUDIT_RESULT_TEXT } from '@/shared/adminText'
 
 const retention = ref(24)
 const logs = ref([])

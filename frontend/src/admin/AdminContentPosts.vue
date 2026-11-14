@@ -17,8 +17,12 @@
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">{{ statusText(row.status) }}</template>
       </el-table-column>
-      <el-table-column prop="published_at" label="发布时间" width="180" />
-      <el-table-column prop="updated_at" label="更新时间" width="180" />
+      <el-table-column label="发布时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.published_at) }}</template>
+      </el-table-column>
+      <el-table-column label="更新时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.updated_at) }}</template>
+      </el-table-column>
       <el-table-column label="操作" width="260">
         <template #default="{ row }">
           <el-button size="small" @click="$router.push(`/admin/content/posts/${row.id}`)">编辑</el-button>
@@ -38,6 +42,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
+import { formatDateTime } from '@/shared/format'
 
 const router = useRouter()
 const items = ref([])

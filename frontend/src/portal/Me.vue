@@ -6,10 +6,20 @@
     </div>
 
     <div class="card">
+      <h3 class="title">身份</h3>
+      <p>汇总身份：<el-tag>{{ auth.identitySummary.label }}</el-tag></p>
+      <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
+      <p v-for="unit in housing.units" :key="unit.unit_id" class="row">
+        <span>{{ unit.specific_part }}</span>
+        <el-tag size="small" type="info">{{ unit.role_label }}</el-tag>
+      </p>
+    </div>
+
+    <div class="card">
       <h3 class="title">常用入口</h3>
       <div class="row">
         <el-button @click="router.push('/units')">我的房屋</el-button>
-        <el-button @click="router.push('/tasks')">待办</el-button>
+        <el-button v-if="auth.isCommittee" @click="router.push('/tasks')">待办</el-button>
         <el-button v-if="auth.isCommittee" @click="router.push('/income')">收入表</el-button>
         <el-button @click="router.push('/reports')">财务报表</el-button>
         <el-button @click="logoutNow">退出登录</el-button>
@@ -23,13 +33,16 @@
         <el-select v-model="profile.gender" placeholder="性别" clearable style="width: 120px">
           <el-option label="未知" :value="0" /><el-option label="男" :value="1" /><el-option label="女" :value="2" />
         </el-select>
+        <el-date-picker v-model="profile.birthday" type="date" value-format="YYYY-MM-DD" placeholder="生日（选填）" style="max-width: 180px" />
         <el-button type="primary" @click="saveProfile">保存</el-button>
       </div>
       <p class="muted" style="margin-top: 10px">手机号：{{ profile.phone || '未绑定' }}；邮箱：{{ profile.email || '未填写' }}</p>
       <div class="row">
-        <el-upload :show-file-list="false" :http-request="uploadAvatar" accept="image/*">
+        <AuthImage :src="profile.avatar_url" alt="暂无头像" :size="64" />
+        <el-upload :show-file-list="false" :http-request="uploadAvatar" :before-upload="checkAvatar" accept=".jpg,.jpeg,.png">
           <el-button>更换头像</el-button>
         </el-upload>
+        <span class="muted">jpg/png，不超过 2 MB</span>
       </div>
     </div>
 
@@ -101,11 +114,15 @@ import { ElMessage } from 'element-plus'
 import { attachmentApi, meApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
 import ThemePicker from '@/theme/ThemePicker.vue'
+import AuthImage from './parts/AuthImage.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
-const profile = reactive({ nickname: '', gender: 0, phone: '', email: '', avatar_url: '' })
+const profile = reactive({ nickname: '', gender: 0, birthday: null, phone: '', email: '', avatar_url: '' })
+const housing = reactive({ units: [] })
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024
 const pwd = reactive({ current: '', password: '', confirm: '' })
 const bind = reactive({ phone: '', code: '' })
 const change = reactive({ oldPhone: '', newPhone: '', oldCode: '', newCode: '' })
@@ -127,21 +144,49 @@ async function loadProfile() {
   }
 }
 
-onMounted(loadProfile)
+async function loadHousing() {
+  try {
+    Object.assign(housing, await meApi.housing())
+  } catch (e) {
+    housing.units = []
+  }
+}
+
+onMounted(() => {
+  loadProfile()
+  loadHousing()
+})
 
 async function saveProfile() {
   try {
-    Object.assign(profile, await meApi.updateProfile({ nickname: profile.nickname, gender: profile.gender }))
+    Object.assign(profile, await meApi.updateProfile({
+      nickname: profile.nickname, gender: profile.gender, birthday: profile.birthday || null
+    }))
     ElMessage.success('已保存')
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
+// 上传前预校验类型与大小（服务端校验仍为最终防线，C-18）
+function checkAvatar(file) {
+  const okType = ['image/jpeg', 'image/png'].includes(file.type) || /\.(jpe?g|png)$/i.test(file.name || '')
+  if (!okType) {
+    ElMessage.error('头像仅支持 jpg/png 格式')
+    return false
+  }
+  if (file.size > AVATAR_MAX_BYTES) {
+    ElMessage.error('头像不能超过 2 MB')
+    return false
+  }
+  return true
+}
+
 async function uploadAvatar({ file }) {
   try {
     const uploaded = await attachmentApi.upload(file, 'AVATAR')
     await meApi.updateProfile({ avatar_attachment_id: uploaded.id })
+    await loadProfile()
     ElMessage.success('头像已更新')
   } catch (e) {
     ElMessage.error(errorText(e))
@@ -231,6 +276,7 @@ async function verifyEmail() {
 }
 
 async function cancelAccount() {
+  if (!(await confirmDanger('cancelAccount'))) return
   try {
     await meApi.cancelAccount(cancel.phone, cancel.code)
     await auth.logout()

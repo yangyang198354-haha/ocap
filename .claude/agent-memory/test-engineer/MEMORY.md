@@ -20,3 +20,11 @@
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
+- [P-TE-007] 复核"定位级 CONSISTENT"故事时，先 `git grep` 各故事 US/AC 编号找出无任何测试引用的故事，再补 AC 级用例；14 个无引用故事里 3 个暴露既有缺陷 — 自记 2026-11-14 · 证据 DEF-017/018/019、backend/tests/integration/test_product_review_gap_stories.py
+- [P-TE-008] 测"仅原审批人/某角色可操作"类 AC：每个非授权角色各造一份独立数据再各试一次；同一份数据上首个越权成功会改状态，后续尝试得到 409 被误当成"已拒绝" — 自记 2026-11-14 · 证据 TC-INT-514（DEF-019）首版写法
+- [P-TE-009] 远程 HTTP 套件在客户端加写操作白名单与目标主机校验（越界请求发出前抛错），并用本地 runserver + 临时 SQLite 跑两遍自检（第二遍验证用例自行恢复数据） — 自记 2026-11-14 · 证据 backend/tests/remote/remote_client.py、本地自检 22 条两次均 OK
+- [P-TE-010] 缺陷"同类扫描"类修复（如中文显示 REQ-FUNC-158）验收时自己再扫一遍：正则找模板里未经 formatDateTime/textOf/label 的 `{{ …_at|deadline|.scope|.status }}`；DEF-020 修了 5 处后仍漏首页待办与决议详情截止时间（DEF-021/022） — 自记 2026-11-14 · 证据 frontend/tests/product_review_rework1.spec.js TC-UNIT-586/587
+- [P-TE-011] 无法用 git archive HEAD 得到"修复前树"时（改动未提交），在 scratchpad 复制 backend 或 frontend/src+tests（node_modules 用符号链接），只回退被测的几行/几个页面做变异，确认新用例失败再回仓库跑 — 自记 2026-11-14 · 证据 TC-INT-539/541、TC-UNIT-579~585 变异副本均失败
+- [P-TE-012] 前端"枚举→中文"映射表的守护：键集合用后端模型 choices（解析 models.py 的元组）做"不多不少"比对，另加"登记范围"扫描（全大写键→中文值的导出表只允许出现在登记文件）；扫描正则要排除 API 函数对象与弹窗文案表，否则首版误报 — 自记 2026-11-14 · 证据 frontend/tests/product_review_rework2.spec.js TC-UNIT-598/601
+- [P-TE-013] 后端新增响应字段（如 can_void）的字段级契约：同一用例里解析前端 `item.xxx` 读取集合 ⊆ 后端真实列表项键集，并在去掉该字段的 scratchpad 后端副本上确认失败 — 自记 2026-11-14 · 证据 backend/tests/integration/test_product_review_rework2.py TC-INT-544
+- [P-TE-014] 本地自检远程 HTTP 套件：派生 settings（scratchpad，文件库 SQLite）+ `migrate --run-syncdb` + 预置住宅清册行 + runserver；结束用 `ps | grep [r]unserver | xargs kill`（`pkill -f` 会匹配自身命令行而退出 144） — 自记 2026-11-14 · 证据 回流 2 自检两遍 Ran 22 OK (skipped=2)

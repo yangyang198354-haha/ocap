@@ -137,7 +137,9 @@ class FieldContractTests(ApiTestBase):
         self.assert_ok(resp)
         identities, profile = resp.data["identities"], resp.data["profile"]
         self.assertIsInstance(identities, dict)
-        self.assertEqual(set(identities), {"is_guest", "units", "committee", "labels"})
+        self.assertEqual(set(identities), {"is_guest", "units", "committee", "labels", "summary"})
+        self.assertEqual(identities["summary"], {"code": "CHAIR", "label": "主任"})
+        self.assertEqual(identities["units"][0]["role_label"], "户主")
         self.assertIsInstance(identities["labels"], list)
         self.assertIn("户主", identities["labels"])
         self.assertEqual(identities["committee"]["position"], "CHAIR")
@@ -437,8 +439,11 @@ class RegistryImportContractTests(ApiTestBase):
         self.assertTrue({"value", "label"} <= set(options.data["options"][0]))
         dialog = self._src("frontend/src/admin/RegistryImportDialog.vue")
         helper = self._src("frontend/src/admin/registryImport.js")
-        web_units = self._src("frontend/src/portal/Units.vue")
-        mini_units = self._src("miniprogram/pages/units/index.vue")
+        # MOD-082 / MOD-085：逐级选房逻辑自 Units 页抽出到选择器组件，页面与组件合并后检查字段名
+        web_units = (self._src("frontend/src/portal/Units.vue")
+                     + self._src("frontend/src/portal/parts/UnitCascader.vue"))
+        mini_units = (self._src("miniprogram/pages/units/index.vue")
+                      + self._src("miniprogram/components/UnitPicker.vue"))
         for name in ("rows_total", "imported", "updated", "owners_created", "failed"):
             self.assertIn(name, helper)
         for name in ("errors", "changes", "row", "reason"):
@@ -461,3 +466,244 @@ class RegistryImportContractTests(ApiTestBase):
             self.assertIn(name, result.data)
         self.assertTrue(result.data["dry_run"])
 
+
+
+# ===================================================================================
+# ocap_product_review GROUP_D：字段级契约（GR-A-001 condition；AC-178-02、REQ-NFUNC-028）
+# 做法：用真实 HTTP 响应得到后端字段集合，再静态解析消费该响应的前端源码（Web 页面、小程序页面），
+# 断言"前端读取的字段 ⊆ 后端响应字段"，并断言前端确实读取了关键字段（防止后端改名后前端仍通过）。
+# ===================================================================================
+JS_NON_FIELDS = {"length", "value", "map", "filter", "some", "find", "forEach", "join", "slice", "push",
+                 "includes", "concat", "reduce", "toFixed", "trim", "indexOf", "sort", "reverse"}
+
+
+def reads(source: str, roots: list[str]) -> set[str]:
+    """源码里 `root.field` / `root?.field` 的 field 集合（root 前不得是点号或单词字符）。"""
+    found = set()
+    for root in roots:
+        for m in re.finditer(rf"(?<![\w.$]){re.escape(root)}\??\.(\w+)", source):
+            found.add(m.group(1))
+    return found - JS_NON_FIELDS
+
+
+def src(rel: str) -> str:
+    return (REPO / rel).read_text(encoding="utf-8")
+
+
+class ProductReviewFieldContractTests(ApiTestBase):
+    def setUp(self):
+        super().setUp()
+        from apps.core.models import Attachment  # noqa: F401  (保持与既有契约用例同样的导入习惯)
+        from apps.ledger.models import LedgerReport
+        from apps.residency.models import Appeal, ResidentApplication
+
+        self.owner, self.otoken, self.unit = self.make_owner()
+        self.resident, _ = self.make_resident(self.unit)
+        self.applicant, self.atoken = self.make_user(nickname="申请人")
+        self.application = ResidentApplication.objects.create(applicant=self.applicant, unit=self.unit)
+        Appeal.objects.create(user=self.applicant, unit=self.make_unit(), status="REJECTED",
+                              pending_slot=None, reject_reason="材料不清")
+        self.admin, self.admin_token = self.make_admin()
+        self.report = LedgerReport.objects.create(
+            period_type="QUARTER", year=2026, quarter=1,
+            detail=[{"direction": "EXPENSE", "amount": "1.00", "entry_type": "REIMBURSEMENT", "seq": 0,
+                     "summary": "x", "occurred_on": "2026-01-02", "source_type": "claim", "source_id": 1}])
+
+    # ---------- 新增 / 改动调用的"路径 + 方法"清单（在两个 api.js 中都必须出现）----------
+    def test_tc_int_486_new_calls_present_in_both_api_files_and_resolve(self):
+        """TC-INT-486 / AC-178-02：本批新增/改动的前端调用（路径+方法）都在 api.js 中，且 resolve 到后端视图。"""
+        norm = lambda p: re.sub(r"\$\{[^}]*\}", "${id}", p)
+        web = {(m, norm(p)) for _, m, p, _ in extract_calls(WEB_API)}
+        mini = {(m, norm(p)) for _, m, p, _ in extract_calls(MINI_API)}
+        both = [("GET", "/me/housing"), ("GET", "/system/limits"), ("GET", "/appeals/mine"),
+                ("GET", "/resident-applications/mine"), ("GET", "/resident-applications/to-review"),
+                ("POST", "/resident-applications"), ("POST", "/resident-applications/${id}/decision"),
+                ("POST", "/units/${id}/leave"), ("GET", "/ledger/reports/${id}")]
+        for call in both:
+            self.assertTrue(call in web, f"Web api.js 缺少 {call}")
+            self.assertTrue(call in mini, f"小程序 api.js 缺少 {call}")
+        web_only = [("DELETE", "/units/${id}/residents/${id}"), ("GET", "/admin/system-config"),
+                    ("PUT", "/admin/system-config/${key}"), ("GET", "/admin/content/style-templates"),
+                    ("POST", "/admin/content/style-templates"),
+                    ("PUT", "/admin/content/style-templates/${id}"),
+                    ("DELETE", "/admin/content/style-templates/${id}"), ("GET", "/admin/users"),
+                    ("GET", "/attachments/${id}/download")]
+        for method, path in web_only:
+            self.assertTrue((method, norm(path)) in web, f"Web api.js 缺少 {method} {path}")
+        self.assertTrue(("DELETE", "/units/${id}/residents/${id}") in mini, "小程序 api.js 缺少移除同住人调用")
+        for client, method, template, where in extract_calls(WEB_API) + extract_calls(MINI_API):
+            match = resolve_path(template)
+            self.assertTrue(hasattr(match.func.cls, method.lower()), f"{where} {method} {template}")
+
+    # ---------- 请求字段 ----------
+    def test_tc_int_487_request_field_names_match_backend(self):
+        """TC-INT-487 / AC-178-02：前端提交的请求字段名与后端接受的一致（unit_id / decision / approver_ids / user_id / value / client）。"""
+        web_api, mini_api = src("frontend/src/shared/api.js"), src("miniprogram/utils/api.js")
+        self.assertRegex(src("frontend/src/portal/Units.vue"), r"createResidentApplication\(\s*\{\s*unit_id")
+        self.assertRegex(mini_api, r"decideResidentApplication:[^\n]*\{\s*decision")
+        self.assertRegex(web_api, r"decideResidentApplication[^\n]*\{\s*decision")
+        self.assertRegex(mini_api, r"createResidentApplication:[^\n]*\bdata\b")
+        self.assertIn("approver_ids", src("frontend/src/admin/AdminFlows.vue"))
+        self.assertIn("user_id", src("frontend/src/admin/AdminSeats.vue"))
+        self.assertRegex(web_api, r"updateSystemConfig[^\n]*\{\s*value")
+        self.assertRegex(mini_api, r"loginByCode:[^\n]*client:\s*'miniapp'")
+        self.assertRegex(mini_api, r"loginByPassword:[\s\S]{0,160}?client:\s*'miniapp'")
+        # 后端用这些字段名真实调用成功
+        resp = self.api("post", f"/resident-applications/{self.application.id}/decision",
+                        {"decision": "APPROVE"}, token=self.otoken)
+        self.assert_ok(resp)
+        self.assert_ok(self.api("put", "/admin/system-config/claim.amount_max", {"value": "2000000"},
+                                token=self.admin_token))
+        self.assertEqual(self.api("get", "/admin/system-config", token=self.admin_token).data["claim.amount_max"],
+                         "2000000.00")
+
+    # ---------- /me/housing ----------
+    def test_tc_int_488_me_housing_response_fields_vs_web_and_miniprogram_reads(self):
+        """TC-INT-488 / AC-157-01、AC-151-01、AC-178-02：/me/housing 的字段 ⊇ Web 与小程序页面读取的字段。"""
+        data = self.assert_ok(self.api("get", "/me/housing", token=self.otoken)).data
+        top = set(data)
+        unit = data["units"][0]
+        res = unit["residents"][0]
+        self.assertEqual(top, {"summary", "units", "pending_review_count"})
+        self.assertEqual(set(data["summary"]), {"code", "label"})
+        self.assertEqual(set(unit), {"unit_id", "specific_part", "role", "role_label", "certified_at",
+                                     "residents", "pending_application_count"})
+        self.assertEqual(set(res), {"user_id", "nickname", "account_no", "joined_at"})
+        web_units, web_me, web_home = (src("frontend/src/portal/Units.vue"), src("frontend/src/portal/Me.vue"),
+                                       src("frontend/src/portal/Home.vue"))
+        mini_units, mini_me = src("miniprogram/pages/units/index.vue"), src("miniprogram/pages/me/index.vue")
+        for label, text in (("Web Units", web_units), ("Mini units", mini_units)):
+            self.assertLessEqual(reads(text, ["housing"]), top | {"summary", "units"}, label)
+            self.assertLessEqual(reads(text, ["housing.summary"]), {"label", "code"}, label)
+            self.assertRegex(text, r"housing\.summary\.label")
+            self.assertLessEqual(reads(text, ["unit"]), set(unit), label)
+            self.assertLessEqual(reads(text, ["r"]), set(res), label)
+        self.assertLessEqual(reads(web_me, ["housing", "unit"]), top | set(unit), "Web Me")
+        self.assertLessEqual(reads(mini_me, ["u"]) , set(unit), "Mini me")
+        self.assertIn("pending_review_count", web_home)
+        self.assertIn("pending_review_count", src("miniprogram/pages/index/index.vue"))
+        for needed in ("role_label", "specific_part", "residents"):
+            self.assertIn(needed, web_units + web_me)
+        self.assertIn("role_label", mini_me)
+        self.assertIn("joined_at", web_units)
+        self.assertIn("residents", mini_units)
+
+    def test_tc_int_489_identity_summary_fields_in_me_and_auth_stores(self):
+        """TC-INT-489 / AC-157-01、AC-155-*：/me identities.summary / units[].role_label / committee 与两端 auth store 的 getter 读取一致。"""
+        self.make_seat(self.owner, "VICE_CHAIR")
+        me = self.assert_ok(self.api("get", "/me", token=self.otoken)).data["identities"]
+        self.assertEqual(set(me), {"is_guest", "units", "committee", "labels", "summary"})
+        self.assertEqual(set(me["committee"]), {"position", "term_end"})
+        for rel in ("frontend/src/stores/auth.js", "miniprogram/store/auth.js"):
+            text = src(rel)
+            self.assertRegex(text, r"identities\??\.summary")
+            self.assertRegex(text, r"committee\??\.position")
+            self.assertIn("isCommittee", text)
+        positions = set(re.findall(r"'(CHAIR|VICE_CHAIR|MEMBER|REPRESENTATIVE)'", src("frontend/src/stores/auth.js")))
+        self.assertTrue(positions <= {"CHAIR", "VICE_CHAIR", "MEMBER", "REPRESENTATIVE"})
+
+    # ---------- 申请 / 申诉列表 ----------
+    def test_tc_int_490_my_applications_appeals_and_to_review_fields(self):
+        """TC-INT-490 / AC-152-01、AC-156-02、AC-151-01、AC-178-02：三个列表的响应字段 ⊇ 页面读取字段（含 reject_reason、submitted_at、applicant.nickname）。"""
+        apps = self.assert_ok(self.api("get", "/resident-applications/mine", token=self.atoken)).data
+        appeals = self.assert_ok(self.api("get", "/appeals/mine", token=self.atoken)).data
+        review = self.assert_ok(self.api("get", "/resident-applications/to-review", token=self.otoken)).data
+        self.assertEqual(set(apps[0]), {"id", "unit", "status", "created_at", "decided_at"})
+        self.assertEqual(set(appeals[0]), {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason"})
+        self.assertEqual(set(review[0]["applicant"]), {"id", "account_no", "nickname", "phone"})
+        self.assertEqual(set(apps[0]["unit"]), {"unit_id", "specific_part"})
+        allowed = set(apps[0]) | set(appeals[0]) | set(review[0])
+        for label, text in (("Web Units", src("frontend/src/portal/Units.vue")),
+                            ("Mini units", src("miniprogram/pages/units/index.vue"))):
+            self.assertLessEqual(reads(text, ["item"]), allowed, label)
+            self.assertLessEqual(reads(text, ["item.applicant"]), set(review[0]["applicant"]), label)
+            self.assertLessEqual(reads(text, ["item.unit"]), set(apps[0]["unit"]), label)
+            for needed in ("reject_reason", "submitted_at", "created_at", "decided_at"):
+                self.assertIn(needed, text, f"{label} 未读取 {needed}")
+
+    # ---------- /system/limits ----------
+    def test_tc_int_491_limits_fields_vs_pages(self):
+        """TC-INT-491 / AC-172-01、AC-170-01、AC-178-02：/system/limits 的 7 个字段与各页面读取的 limits.* 一致。"""
+        _, mtoken, _ = self.make_owner()
+        limits = self.assert_ok(self.api("get", "/system/limits", token=mtoken)).data
+        pages = ["frontend/src/portal/Claims.vue", "frontend/src/portal/Resolutions.vue",
+                 "frontend/src/portal/Income.vue", "frontend/src/portal/Polls.vue",
+                 "miniprogram/pages/claims/index.vue"]
+        used = set()
+        for rel in pages:
+            got = reads(src(rel), ["limits", "limits.value", "data"]) & set(limits) | (
+                reads(src(rel), ["limits", "limits.value"]) - {"claim", "value"})
+            self.assertLessEqual(reads(src(rel), ["limits", "limits.value"]), set(limits), rel)
+            used |= got
+        self.assertGreaterEqual(used, {"claim_amount_max", "poll_max_questions", "poll_options_min",
+                                       "poll_options_max", "vote_min_window_minutes"})
+
+    # ---------- 版式模板 ----------
+    def test_tc_int_492_style_template_list_fields_vs_admin_page(self):
+        """TC-INT-492 / AC-162-01~05、AC-178-02：模板列表字段（id / usage_count / builtin / key / name / tokens）⊇ AdminStyleTemplates 读取字段。"""
+        self.assert_ok(self.api("post", "/admin/content/style-templates",
+                                {"name": "e2e_契约", "tokens": {"font_size": 16}}, token=self.admin_token), 201)
+        rows = self.assert_ok(self.api("get", "/admin/content/style-templates", token=self.admin_token)).data
+        custom = next(r for r in rows if not r["builtin"])
+        self.assertEqual(set(custom), {"key", "name", "builtin", "tokens", "id", "usage_count"})
+        builtin = next(r for r in rows if r["builtin"])
+        self.assertEqual(set(builtin), {"key", "name", "builtin", "tokens"})
+        text = src("frontend/src/admin/AdminStyleTemplates.vue")
+        self.assertLessEqual(reads(text, ["row"]), set(custom))
+        for needed in ("usage_count", "builtin", "tokens", "name"):
+            self.assertIn(needed, text)
+        self.assertIn("STYLE_IN_USE", text)
+        self.assertIn("details", text)
+
+    # ---------- 报表明细 ----------
+    def test_tc_int_493_report_detail_fields_vs_web_and_mini_pages(self):
+        """TC-INT-493 / AC-168-01、AC-178-02：报表明细响应的合计与明细行字段 ⊇ Web Reports.vue、小程序 reports/detail.vue 读取的字段；支出 summary 为 null 且前端不读取 summary。"""
+        _, token = self.make_user()
+        data = self.assert_ok(self.api("get", f"/ledger/reports/{self.report.id}", token=token)).data
+        row = data["detail"][0]
+        self.assertTrue({"direction", "amount", "entry_type", "occurred_on", "summary"} <= set(row))
+        self.assertIsNone(row["summary"])
+        web, mini = src("frontend/src/portal/Reports.vue"), src("miniprogram/pages/reports/detail.vue")
+        self.assertLessEqual(reads(web, ["detail"]), set(data))
+        self.assertLessEqual(reads(web, ["row"]), set(row))
+        self.assertLessEqual(reads(mini, ["report"]), set(data))
+        self.assertLessEqual(reads(mini, ["row"]), set(row))
+        self.assertNotIn("summary", reads(web, ["row"]) | reads(mini, ["row"]))
+        for needed in ("total_income", "total_expense", "balance"):
+            self.assertIn(needed, web)
+            self.assertIn(needed, mini)
+
+    # ---------- 管理端用户搜索与系统配置 ----------
+    def test_tc_int_494_admin_users_candidate_fields_vs_user_picker(self):
+        """TC-INT-494 / AC-159-01、AC-178-02：/admin/users 候选字段 ⊇ UserPicker 读取字段；分页参数 q/page/page_size 被后端接受。"""
+        data = self.assert_ok(self.api("get", "/admin/users", {"q": "", "page": 1, "page_size": 10},
+                                       token=self.admin_token)).data
+        self.assertTrue({"count", "results"} <= set(data))
+        cand = data["results"][0]
+        text = src("frontend/src/admin/parts/UserPicker.vue")
+        self.assertLessEqual(reads(text, ["item", "u", "row", "c", "user"]), set(cand) | {"id"})
+        for needed in ("nickname", "account_no", "phone", "identity_label", "real_names"):
+            self.assertIn(needed, set(cand), needed)
+            self.assertIn(needed, text, f"UserPicker 未读取 {needed}")
+        self.assertIn("page_size", text)
+
+    def test_tc_int_495_system_config_fields_vs_admin_finance(self):
+        """TC-INT-495 / AC-170-01、AC-178-02：/admin/system-config 的键 claim.amount_max 与 AdminFinance 读取一致；PUT 响应 {key, value}。"""
+        cfg = self.assert_ok(self.api("get", "/admin/system-config", token=self.admin_token)).data
+        self.assertEqual(set(cfg), {"audit.retention_months", "claim.amount_max"})
+        self.assertIn("claim.amount_max", src("frontend/src/admin/AdminFinance.vue"))
+        put = self.assert_ok(self.api("put", "/admin/system-config/claim.amount_max", {"value": "1"},
+                                      token=self.admin_token)).data
+        self.assertEqual(set(put), {"key", "value"})
+
+    def test_tc_int_496_paged_list_shape_vs_use_paging(self):
+        """TC-INT-496 / AC-160-03、AC-161-02、AC-178-02：分页形态 {count, page, page_size, results} 与 usePaging / paging.js 读取的 count、results 一致。"""
+        data = self.assert_ok(self.api("get", "/resolutions", {"scope": "public", "page": 1, "page_size": 20},
+                                       token=self.atoken)).data
+        self.assertEqual(set(data), {"count", "page", "page_size", "results"})
+        for rel in ("frontend/src/shared/usePaging.js", "miniprogram/utils/paging.js"):
+            text = src(rel)
+            self.assertLessEqual(reads(text, ["data", "res", "result", "resp"]), {"count", "results", "page", "page_size"} | {"length"}, rel)
+            self.assertIn("count", text)
+            self.assertIn("results", text)
+            self.assertIn("page_size", text)

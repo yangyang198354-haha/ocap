@@ -16,16 +16,17 @@ from apps.approval.models import ApprovalFlow
 from apps.approval.services import ApprovalEngine
 from apps.core.attachments import AttachmentService, count_limit, linked_attachment_list
 from apps.core.audit import AuditActor, AuditService
+from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
+from apps.core.limits import INCOME_IMPORT_MAX_ROWS, INCOME_MANUAL_MAX_RECORDS
 from apps.core.money import money
 from apps.core.permissions import IsIncomeMember, IsMember
 from apps.core.serializers import page_response
 
 from .models import IncomeRecord, IncomeSheet
-from .services import recalculate, void_sheet
+from .services import is_original_approver_of, recalculate, void_sheet
 
 COLUMNS = ["日期", "金额", "收入类别", "来源说明", "备注"]
-MAX_AMOUNT = Decimal("1000000.00")
 
 
 def _parse_date(raw) -> object:
@@ -40,13 +41,15 @@ def _parse_date(raw) -> object:
     raise ValueError("日期格式不正确")
 
 
-def _parse_amount(raw) -> Decimal:
+def _parse_amount(raw, limit: Decimal | None = None) -> Decimal:
+    if limit is None:
+        limit = SystemConfig.amount_max()
     try:
         amount = Decimal(str(raw).replace(",", "").strip())
     except (InvalidOperation, ValueError) as exc:
         raise ValueError("金额格式不正确") from exc
-    if amount <= 0 or amount > MAX_AMOUNT or amount.as_tuple().exponent < -2:
-        raise ValueError("金额须为正数、最多两位小数且不超过 1000000")
+    if amount <= 0 or amount > limit or amount.as_tuple().exponent < -2:
+        raise ValueError(f"金额须为正数、最多两位小数且不超过 {limit:.2f}")
     return amount
 
 
@@ -54,7 +57,7 @@ _FIELD_ALIASES = {"occurred_on": "日期", "amount": "金额", "category": "收�
                   "source_note": "来源说明", "remark": "备注"}
 
 
-def _record_row(values: dict, line_no: int = 1) -> dict:
+def _record_row(values: dict, line_no: int = 1, *, limit: Decimal | None = None) -> dict:
     if not isinstance(values, dict):
         raise ValueError("记录格式不正确")
     # 接口 JSON 使用英文字段名（IFC-110），导入文件使用中文列名；统一成中文列名处理
@@ -71,12 +74,14 @@ def _record_row(values: dict, line_no: int = 1) -> dict:
     remark = str(values.get("备注", "") or "").strip()
     if len(remark) > 200:
         raise ValueError("备注超长")
-    return {"line_no": line_no, "occurred_on": occurred_on, "amount": _parse_amount(values["金额"]),
+    return {"line_no": line_no, "occurred_on": occurred_on, "amount": _parse_amount(values["金额"], limit),
             "category": category, "source_note": source_note, "remark": remark}
 
 
-def _parse_rows(rows: list[list]) -> dict:
-    if len(rows) > 5001:
+def _parse_rows(rows: list[list], *, limit: Decimal | None = None) -> dict:
+    if limit is None:
+        limit = SystemConfig.amount_max()
+    if len(rows) > INCOME_IMPORT_MAX_ROWS + 1:
         raise ApiError("IMPORT_FILE_INVALID", "文件行数超过 5000")
     if not rows:
         raise ApiError("IMPORT_COLUMNS_MISSING", "缺少列", 400, {"columns": COLUMNS})
@@ -94,7 +99,7 @@ def _parse_rows(rows: list[list]) -> dict:
         total += 1
         values = {c: (row[index[c]] if index[c] < len(row) else "") for c in COLUMNS}
         try:
-            parsed = _record_row(values, line_no=len(valid) + 1)
+            parsed = _record_row(values, line_no=len(valid) + 1, limit=limit)
         except ValueError as exc:
             # REQ-FUNC-059 / AC-059-03：错误行跳过并提示，其余有效行照常导入
             errors.append({"row": row_no, "reason": "INVALID_FIELD", "detail": str(exc)})
@@ -143,7 +148,7 @@ class IncomeImportView(APIView):
             raise
         except Exception as exc:
             raise ApiError("IMPORT_FILE_INVALID", "文件无法解析") from exc
-        parsed = _parse_rows(rows)
+        parsed = _parse_rows(rows, limit=SystemConfig.amount_max())
         # AC-059-02：与已有 PENDING/EFFECTIVE 记录四项全同的行同样跳过
         existing = _existing_duplicate_keys()
         kept = []
@@ -209,18 +214,20 @@ class AdminSheetListView(APIView):
             value = request.query_params.get(param)
             if value:
                 qs = qs.filter(**{param: value})
-        return page_response(qs, request, SheetSerializer)
+        # DEF-019：带 can_void，前端据此显示作废按钮（与 void_sheet 的原审批人校验一致）
+        return page_response(qs, request, SheetSerializer, user_id=request.user.id)
 
     def post(self, request):
         """单条/多条逐条录入（REQ-FUNC-048，AC-058-01/-08）：创建只含所录记录的 DRAFT 收入表。"""
         data = request.data or {}
         rows = data.get("records")
-        if not isinstance(rows, list) or not (1 <= len(rows) <= 500):
+        if not isinstance(rows, list) or not (1 <= len(rows) <= INCOME_MANUAL_MAX_RECORDS):
             raise ApiError("INVALID_VALUE", "records 须为 1~500 条")
+        limit = SystemConfig.amount_max()
         valid, errors = [], []
         for idx, raw in enumerate(rows, start=1):
             try:
-                valid.append(_record_row(raw, line_no=idx))
+                valid.append(_record_row(raw, line_no=idx, limit=limit))
             except ValueError as exc:
                 errors.append({"row": idx, "reason": "INVALID_FIELD", "detail": str(exc)})
         if errors:  # 逐条录入不跳过错误：整体拒绝，便于当场更正
@@ -274,10 +281,11 @@ class AdminSheetDetailView(APIView):
             raise ApiError("INVALID_VALUE", "缺少 records")
         if not isinstance(rows, list):
             raise ApiError("INVALID_VALUE", "records 须为列表")
+        limit = SystemConfig.amount_max()
         valid, errors = [], []
         for idx, raw in enumerate(rows, start=1):
             try:
-                valid.append(_record_row(raw, line_no=len(valid) + 1))
+                valid.append(_record_row(raw, line_no=len(valid) + 1, limit=limit))
             except ValueError as exc:
                 errors.append({"row": idx, "reason": "INVALID_FIELD", "detail": str(exc)})
         voucher_ids = _voucher_ids(data.get("voucher_ids"))
@@ -396,7 +404,10 @@ class IncomeSheetDetailView(APIView):
 class SheetSerializer:
     def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
-        self.data = [sheet_view(r) for r in rows]
+        user_id = (context or {}).get("user_id")
+        self.data = [sheet_view(r) if user_id is None else
+                     {**sheet_view(r), "can_void": r.status == "EFFECTIVE" and is_original_approver_of(r, user_id)}
+                     for r in rows]
 
 
 def sheet_view(sheet: IncomeSheet) -> dict:

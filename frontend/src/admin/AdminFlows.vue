@@ -10,9 +10,15 @@
     <div class="card">
       <el-table :data="flows" size="small">
         <el-table-column prop="name" label="名称" min-width="160" />
-        <el-table-column prop="scope" label="适用" width="130" />
-        <el-table-column prop="mode" label="方式" width="150" />
-        <el-table-column prop="is_active" label="启用" width="90" />
+        <el-table-column label="适用" width="130">
+          <template #default="{ row }">{{ textOf(FLOW_SCOPE_TEXT, row.scope) }}</template>
+        </el-table-column>
+        <el-table-column label="方式" width="150">
+          <template #default="{ row }">{{ textOf(APPROVAL_MODE_TEXT, row.mode) }}</template>
+        </el-table-column>
+        <el-table-column label="启用" width="90">
+          <template #default="{ row }">{{ yesNo(row.is_active) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button size="small" @click="toggle(row)">{{ row.is_active ? '停用' : '启用' }}</el-button>
@@ -20,6 +26,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="新建审批流程" width="520px">
@@ -33,7 +40,14 @@
         <el-option label="指定负责人审批" value="DESIGNATED" />
         <el-option label="半数人员同意" value="HALF_MAJORITY" />
       </el-select>
-      <el-input v-model="approversText" placeholder="审批人用户 ID，逗号分隔" style="margin-top: 8px" />
+      <div style="margin-top: 8px">
+        <p class="muted">审批人（须是现任业委会成员，可多选）：</p>
+        <p v-for="a in approvers" :key="a.id" class="row">
+          <b>{{ a.nickname || a.account_no }}</b><el-tag size="small" type="info">{{ a.identity_label }}</el-tag>
+          <el-button size="small" link @click="removeApprover(a.id)">移除</el-button>
+        </p>
+        <UserPicker :model-value="null" placeholder="搜索并添加审批人" @change="addApprover" />
+      </div>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
         <el-button type="primary" @click="create">保存</el-button>
@@ -46,27 +60,48 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
+import PagerBar from '@/shared/PagerBar.vue'
 import { errorText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
+import { APPROVAL_MODE_TEXT, FLOW_SCOPE_TEXT, textOf, yesNo } from '@/shared/labels'
+import { usePaging } from '@/shared/usePaging'
+import UserPicker from './parts/UserPicker.vue'
 
-const flows = ref([])
+const { items: flows, total, page, pageSize, reload, goto } = usePaging({ fetch: (params) => admin.flows(params) })
 const showCreate = ref(false)
-const approversText = ref('')
+const approvers = ref([])
 const form = reactive({ name: '', scope: 'RESOLUTION', mode: 'DESIGNATED' })
+
+function addApprover(user) {
+  if (user && !approvers.value.some((a) => a.id === user.id)) approvers.value.push(user)
+}
+
+function removeApprover(id) {
+  approvers.value = approvers.value.filter((a) => a.id !== id)
+}
 
 async function load() {
   try {
-    const data = await admin.flows()
-    flows.value = data.results || data || []
+    await reload()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
 async function create() {
-  const approver_ids = approversText.value.split(',').map((x) => Number(x.trim())).filter(Boolean)
+  const approver_ids = approvers.value.map((a) => a.id)
   try {
     await admin.createFlow({ ...form, approver_ids })
     showCreate.value = false
+    approvers.value = []
     ElMessage.success('已创建')
     load()
   } catch (e) {
@@ -84,6 +119,7 @@ async function toggle(row) {
 }
 
 async function remove(row) {
+  if (!(await confirmDanger('deleteFlow', { name: row.name }))) return
   try {
     await admin.deleteFlow(row.id)
     load()

@@ -224,9 +224,9 @@ describe('TC-INT-104 退出登录保留设备记忆（AC-079-02/03）', () => {
 })
 
 describe('TC-INT-105 布局：导航高亮与底部 5 标签（AC-084-01、AC-085-01/02）', () => {
-  async function layoutAt(p) {
+  async function layoutAt(p, me = ME) {
     localStorage.setItem('ocap_token', 'tok')
-    http.get.mockImplementation(async () => ME)
+    http.get.mockImplementation(async () => me)
     const { createMemoryHistory, createRouter } = await import('vue-router')
     const r = createRouter({
       history: createMemoryHistory(),
@@ -255,7 +255,9 @@ describe('TC-INT-105 布局：导航高亮与底部 5 标签（AC-084-01、AC-08
     expect(wrapper.findAll('.tabbar a.is-active')).toHaveLength(1)
   })
   it('布局始终渲染底部标签栏 5 项（宽屏由 CSS 隐藏），顶部导航保留', async () => {
-    const { wrapper } = await layoutAt('/')
+    const { wrapper } = await layoutAt('/', {
+      ...ME, identities: { ...ME.identities, committee: { position: 'MEMBER', term_end: '2027-01-01' } }
+    })
     expect(wrapper.findAll('.tabbar a').map((a) => a.text())).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(wrapper.find('.topnav').exists()).toBe(true)
   })

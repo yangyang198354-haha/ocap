@@ -44,6 +44,18 @@ def on_withdrawn(subject_id: int) -> None:
                         detail={"status": "WITHDRAWN"})
 
 
+def is_original_approver_of(sheet: IncomeSheet, user_id: int | None) -> bool:
+    """AC-060-04/10（Q109=B）：作废权限只属于该收入表原审批流程指定的审批人。"""
+    from apps.approval.models import ApprovalInstance
+    from apps.approval.services import ApprovalEngine
+
+    if user_id is None:
+        return False
+    instance = ApprovalInstance.objects.filter(
+        subject_type="income_sheet", subject_id=sheet.id, status="APPROVED").order_by("-id").first()
+    return instance is not None and ApprovalEngine.is_original_approver(instance.id, user_id)
+
+
 def void_sheet(sheet_id: int, by_user) -> IncomeSheet:
     sheet = IncomeSheet.objects.filter(id=sheet_id).first()
     if sheet is None:
@@ -52,6 +64,12 @@ def void_sheet(sheet_id: int, by_user) -> IncomeSheet:
     if sheet.status != "EFFECTIVE":
         from apps.core.errors import ApiError
         raise ApiError("IMMUTABLE", "仅已生效收入表可作废", 409)
+    if not is_original_approver_of(sheet, by_user.id):
+        from apps.core.errors import ApiError
+        AuditService.record(actor=AuditActor("MEMBER", by_user.id, by_user.identity_label),
+                            action="INCOME_VOIDED", object_type="income_sheet",
+                            object_id=str(sheet.id), result="DENIED")
+        raise ApiError("FORBIDDEN", "仅原审批流程指定的审批人可作废", 403)
     for record in sheet.records.all():
         LedgerService.void_by_source(source_type="income_record", source_id=record.id)
     sheet.status = "VOID"

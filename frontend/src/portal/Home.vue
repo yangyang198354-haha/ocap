@@ -6,8 +6,11 @@
         <div class="home-hero-main">
           <div class="label">{{ todayText }}</div>
           <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
-          <p class="muted home-meta">当前身份：{{ auth.identities.join('、') || '游客' }}</p>
+          <p class="muted home-meta">当前身份：{{ auth.identitySummary.label }}</p>
           <p class="muted home-meta">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</p>
+          <p v-if="pendingReview > 0" class="home-meta">
+            <router-link to="/units#review" class="link">待审批同住人申请：{{ pendingReview }}</router-link>
+          </p>
         </div>
         <div class="home-metrics">
           <span class="chip"><b class="mono">{{ countText(tasks) }}</b> 项审批待办</span>
@@ -21,8 +24,8 @@
         <div v-for="task in (tasks || []).slice(0, 3)" :key="task.instance_id" class="todo-item">
           <span class="todo-icon"><UiIcon name="task" /></span>
           <div class="todo-body">
-            <b>{{ task.title || task.subject_title || task.scope }}</b>
-            <div class="meta"><span>{{ task.scope }}</span><span v-if="task.submitted_at">{{ task.submitted_at }}</span></div>
+            <b>{{ task.title || task.subject_title || textOf(FLOW_SCOPE_TEXT, task.scope) }}</b>
+            <div class="meta"><span>{{ textOf(FLOW_SCOPE_TEXT, task.scope) }}</span><span v-if="task.submitted_at">{{ formatDateTime(task.submitted_at) }}</span></div>
           </div>
         </div>
       </section>
@@ -76,8 +79,10 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { approvalApi, pollApi, resolutionApi } from '@/shared/api'
+import { approvalApi, meApi, pollApi, resolutionApi } from '@/shared/api'
 import { remaining } from '@/shared/voteShare'
+import { formatDateTime } from '@/shared/format'
+import { FLOW_SCOPE_TEXT, textOf } from '@/shared/labels'
 import { useAuthStore } from '@/stores/auth'
 import StatusTag from './StatusTag.vue'
 import UiIcon from './UiIcon.vue'
@@ -87,6 +92,7 @@ const resolutions = ref([])
 // null 表示未取到（无权限或失败），区块显示空态；不编造数据
 const tasks = ref(null)
 const polls = ref(null)
+const pendingReview = ref(0)
 
 const pad = (n) => String(n).padStart(2, '0')
 const countText = (list) => (list ? list.length : '—')
@@ -115,11 +121,15 @@ const quick = computed(() => [
   { label: '认证我的房屋', to: '/units', icon: 'key', hint: '绑定业主身份' },
   { label: '查看决议', to: '/resolutions', icon: 'doc', hint: '公开 / 我发起 / 待表决' },
   { label: '参与投票', to: '/polls', icon: 'vote', hint: '投票与调查' },
-  { label: '待办', to: '/tasks', icon: 'task', hint: '审批事项' },
+  ...(auth.isCommittee ? [{ label: '待办', to: '/tasks', icon: 'task', hint: '审批事项' }] : []),
   { label: '财务报表', to: '/reports', icon: 'chart', hint: '季报 / 年报' },
   { label: '信息公开', to: '/info', icon: 'doc', hint: '公告与通知' },
-  { label: '报销 / 备用金', to: '/claims', icon: 'wallet', hint: '发起申请' },
-  ...(auth.isCommittee ? [{ label: '收入表', to: '/income', icon: 'income', hint: '收入登记与审批' }] : [])
+  ...(auth.isCommittee
+    ? [
+        { label: '报销 / 备用金', to: '/claims', icon: 'wallet', hint: '发起申请' },
+        { label: '收入表', to: '/income', icon: 'income', hint: '收入登记与审批' }
+      ]
+    : [])
 ])
 
 onMounted(async () => {
@@ -134,12 +144,23 @@ onMounted(async () => {
   } catch (e) {
     resolutions.value = []
   }
-  // 仅用于首页区块展示；无权限（如非委员的审批待办 403）或失败时保持 null，区块显示空态
-  try {
-    const data = await approvalApi.tasks()
-    tasks.value = data.results || data || []
-  } catch (e) {
-    tasks.value = null
+  // 产权业主：待审批同住人申请数量（失败静默，不影响首页其他区块）
+  if ((auth.me?.identities?.units || []).some((u) => u.role === 'HEAD' || u.role === 'OWNER')) {
+    try {
+      const data = await meApi.housing()
+      pendingReview.value = Number(data?.pending_review_count) || 0
+    } catch (e) {
+      pendingReview.value = 0
+    }
+  }
+  // 仅业委会成员可访问审批待办（REQ-FUNC-157）；失败时保持 null，区块显示空态
+  if (auth.isCommittee) {
+    try {
+      const data = await approvalApi.tasks()
+      tasks.value = data.results || data || []
+    } catch (e) {
+      tasks.value = null
+    }
   }
   try {
     const data = await pollApi.list()

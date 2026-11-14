@@ -32,6 +32,10 @@
         <text v-if="item.vote_deadline">截止 {{ String(item.vote_deadline).replace('T', ' ').slice(0, 16) }}</text>
       </view>
     </view>
+    <view v-if="items.length" class="card">
+      <button v-if="hasMore" @click="more">加载更多</button>
+      <view v-else class="muted">没有更多了，共 {{ total }} 条</view>
+    </view>
   </view>
   </ThemeRoot>
 </template>
@@ -39,12 +43,15 @@
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
 import StatusTag from '@/components/StatusTag.vue'
-import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
+import { usePaging } from '@/utils/paging'
 import { voteShare } from '@/utils/voteShare'
 
-const items = ref([])
+// 列表“加载更多”并显示总数（REQ-FUNC-152）
+const { items, total, hasMore, loadMore, reset } = usePaging({
+  fetch: (params) => api.resolutions('public', params)
+})
 
 // 卡片展示用：编号由 id 派生（接口无决议编号字段）；比例同 Web 的 voteShare
 const resNo = (id) => `R-${String(id).padStart(4, '0')}`
@@ -53,10 +60,17 @@ const share = (item) => voteShare(item.vote_counts)
 
 async function load() {
   try {
-    const data = await api.resolutions('public')
-    items.value = data.results || data || []
+    await reset()
   } catch (e) {
     items.value = []
+  }
+}
+
+async function more() {
+  try {
+    await loadMore()
+  } catch (e) {
+    uni.showToast({ title: e.message, icon: 'none' })
   }
 }
 

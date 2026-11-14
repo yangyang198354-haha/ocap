@@ -113,6 +113,12 @@ class AdminCommitteeConfigView(APIView):
             if field in data and data[field] is not None:
                 value = data[field]
                 if not isinstance(value, int) or isinstance(value, bool) or not (low <= value <= high):
+                    from apps.core.audit import AuditActor, AuditService
+
+                    # DEF-017：AC-040-08/AC-064-06 保存失败也写"结果为失败"的审计
+                    AuditService.record(actor=AuditActor("ADMIN", request.user.id, request.user.username),
+                                        action="COMMITTEE_CONFIG_CHANGED", object_type="committee_config",
+                                        object_id="1", result="FAILURE", detail={"field": field})
                     raise ApiError("INVALID_VALUE", f"{field} 取值须在 {low}~{high}")
                 setattr(config, field, value)
         config.updated_by_admin_id = request.user.id

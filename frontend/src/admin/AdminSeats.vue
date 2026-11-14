@@ -19,7 +19,9 @@
         <el-table-column label="职位" width="130">
           <template #default="{ row }">{{ positionLabel(row.position) }}</template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="110" />
+        <el-table-column label="状态" width="110">
+          <template #default="{ row }">{{ statusLabel('seat', row.status) }}</template>
+        </el-table-column>
         <el-table-column prop="term_start" label="任期开始" width="130" />
         <el-table-column prop="term_end" label="任期结束" width="130" />
         <el-table-column label="操作" width="320">
@@ -34,10 +36,11 @@
           </template>
         </el-table-column>
       </el-table>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="赋予席位" width="480px">
-      <el-input v-model="form.user_id" placeholder="用户 ID（须是有效产权业主）" />
+      <UserPicker v-model="form.user_id" placeholder="搜索用户（须是有效产权业主）" />
       <el-select v-model="form.position" style="width: 100%; margin-top: 8px">
         <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
       </el-select>
@@ -67,7 +70,12 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
+import PagerBar from '@/shared/PagerBar.vue'
 import { errorText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
+import { statusLabel } from '@/shared/labels'
+import { usePaging } from '@/shared/usePaging'
+import UserPicker from './parts/UserPicker.vue'
 
 const positions = [
   { value: 'CHAIR', label: '主任' },
@@ -87,26 +95,34 @@ const configFields = [
 ]
 const positionLabel = (p) => positions.find((x) => x.value === p)?.label || p
 
-const seats = ref([])
+const { items: seats, total, page, pageSize, reload, goto } = usePaging({ fetch: (params) => admin.seats(params) })
 const config = reactive({})
 const changeTo = reactive({})
 const showCreate = ref(false)
 const showConfig = ref(false)
-const form = reactive({ user_id: '', position: 'MEMBER', term_start: '' })
+const form = reactive({ user_id: null, position: 'MEMBER', term_start: '' })
 
 async function load() {
   try {
-    const [seatData, configData] = await Promise.all([admin.seats(), admin.committeeConfig()])
-    seats.value = seatData.results || seatData || []
+    const [, configData] = await Promise.all([reload(), admin.committeeConfig()])
     Object.assign(config, configData)
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
-async function create() {
+async function gotoPage(n) {
   try {
-    const body = { user_id: Number(form.user_id), position: form.position }
+    await goto(n)
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function create() {
+  if (!form.user_id) return ElMessage.warning('请先搜索并选择用户')
+  try {
+    const body = { user_id: form.user_id, position: form.position }
     if (form.term_start) body.term_start = form.term_start
     await admin.createSeat(body)
     showCreate.value = false
@@ -128,6 +144,7 @@ async function change(row) {
 }
 
 async function revoke(row) {
+  if (!(await confirmDanger('revokeSeat', { name: row.user?.nickname || row.user?.account_no }))) return
   try {
     await admin.deleteSeat(row.id)
     ElMessage.success('已撤销')

@@ -120,7 +120,9 @@
           <template #default="{ row }">{{ pushStatusText(row.status) }}</template>
         </el-table-column>
         <el-table-column prop="operator" label="操作人" width="120" />
-        <el-table-column prop="created_at" label="时间" />
+        <el-table-column label="时间">
+          <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+        </el-table-column>
       </el-table>
     </el-dialog>
   </div>
@@ -131,6 +133,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
+import { formatDateTime } from '@/shared/format'
 import RichEditor from './editor/RichEditor.vue'
 import MediaPicker from './editor/MediaPicker.vue'
 import {

@@ -3,8 +3,8 @@
     <div class="card">
       <h3 class="title">收入表</h3>
       <p class="muted">
-        支持逐条录入，也支持 CSV / xlsx 批量导入（≤5MB、≤5000 行）。导入时重复行与错误行会被跳过并提示行号，其余行照常导入；
-        录入后提交审批，通过后生效。
+        支持逐条录入（一次最多 {{ limits.income_manual_max_records || 500 }} 条），也支持 CSV / xlsx 批量导入（≤5MB、≤{{ limits.income_import_max_rows || 5000 }} 行）。导入时重复行与错误行会被跳过并提示行号，其余行照常导入；
+        录入后提交审批，通过后生效。<template v-if="amountMax">单笔金额上限 ¥{{ amountMax }}。</template>
       </p>
       <div class="row">
         <el-button type="primary" @click="openCreate">逐条录入</el-button>
@@ -27,7 +27,7 @@
           <div>
             <strong>¥{{ item.total_amount }}</strong>
             <span class="muted" style="margin-left: 8px">{{ item.period_start }} ~ {{ item.period_end }}</span>
-            <el-tag size="small" style="margin-left: 8px">{{ item.status }}</el-tag>
+            <el-tag size="small" style="margin-left: 8px">{{ textOf(INCOME_STATUS_TEXT, item.status) }}</el-tag>
           </div>
           <div class="row">
             <el-button size="small" @click="showDetail(item.id)">明细</el-button>
@@ -35,10 +35,11 @@
               {{ item.status === 'DRAFT' ? '提交' : '重新提交' }}
             </el-button>
             <el-button v-if="item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
-            <el-button v-if="item.status === 'EFFECTIVE'" size="small" type="danger" @click="voidSheet(item.id)">作废</el-button>
+            <el-button v-if="item.status === 'EFFECTIVE' && item.can_void" size="small" type="danger" @click="voidSheet(item.id)">作废</el-button>
           </div>
         </div>
       </div>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="逐条录入收入" width="560px">
@@ -81,11 +82,17 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { approvalApi, attachmentApi, incomeApi } from '@/shared/api'
+import { approvalApi, attachmentApi, incomeApi, meApi } from '@/shared/api'
 import { apiUrl } from '@/shared/http'
-import { errorText } from '@/shared/format'
+import PagerBar from '@/shared/PagerBar.vue'
+import { errorText, moneyText } from '@/shared/format'
+import { INCOME_STATUS_TEXT, textOf } from '@/shared/labels'
+import { confirmDanger } from '@/shared/confirm'
+import { usePaging } from '@/shared/usePaging'
 
-const items = ref([])
+const { items, total, page, pageSize, reload, goto } = usePaging({ fetch: (params) => incomeApi.adminList(params) })
+const limits = ref({})
+const amountMax = ref('')
 const flows = ref([])
 const flowId = ref(null)
 const skipped = ref([])
@@ -98,10 +105,27 @@ const form = reactive({ records: [newRecord()] })
 
 async function load() {
   try {
-    const data = await incomeApi.adminList()
-    items.value = data.results || data || []
+    await reload()
   } catch (e) {
     ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function loadLimits() {
+  try {
+    const data = await meApi.limits()
+    limits.value = data && !Array.isArray(data) ? data : {}
+    amountMax.value = moneyText(limits.value.claim_amount_max)
+  } catch (e) {
+    limits.value = {}
   }
 }
 
@@ -168,6 +192,7 @@ async function submit(item) {
 }
 
 async function withdraw(id) {
+  if (!(await confirmDanger('withdrawIncome'))) return
   try {
     await incomeApi.withdraw(id)
     ElMessage.success('已撤回')
@@ -178,6 +203,7 @@ async function withdraw(id) {
 }
 
 async function voidSheet(id) {
+  if (!(await confirmDanger('voidIncome'))) return
   try {
     await incomeApi.voidSheet(id)
     ElMessage.success('已作废')
@@ -189,6 +215,7 @@ async function voidSheet(id) {
 
 onMounted(async () => {
   load()
+  loadLimits()
   try {
     const data = await approvalApi.flows('INCOME')
     flows.value = data.results || data || []

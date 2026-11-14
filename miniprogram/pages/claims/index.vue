@@ -5,7 +5,10 @@
       <view class="title">报销 / 备用金</view>
       <view class="muted">报销凭发票；备用金为预借现金，办完后核销，核销按差额调整支出（多退少补）。</view>
     </view>
-    <view class="card">
+    <view v-if="!canCreate" class="card">
+      <view class="muted">需要业委会成员身份：仅现任业委会成员可发起报销与备用金。</view>
+    </view>
+    <view v-if="canCreate" class="card">
       <view class="title">新建申请</view>
       <view class="type-cards">
         <view v-for="(label, i) in typeLabels" :key="label" class="type-card" :class="{ 'is-selected': typeIndex === i }" @click="pickType({ detail: { value: i } })">
@@ -20,7 +23,7 @@
         <text class="money-cur">¥</text>
         <input v-model="amount" placeholder="0.00" class="money-field" />
       </view>
-      <view class="muted">最多两位小数</view>
+      <view class="muted">最多两位小数<text v-if="limits"> · 单笔上限 ¥{{ limits.claim_amount_max }}</text></view>
       <textarea v-model="reason" placeholder="事由（1~500 字）" class="field mt-16" style="width: 100%" />
       <view class="muted field-count">{{ reason.length }} / 500</view>
       <view class="claim-steps">
@@ -40,7 +43,7 @@
       </template>
       <button class="btn" style="margin-top: 20rpx" @click="create">提交</button>
     </view>
-    <view class="card">
+    <view v-if="canCreate" class="card">
       <view class="title">备用金核销</view>
       <picker :range="advanceLabels" @change="(e) => (settle.advanceIndex = Number(e.detail.value))">
         <view class="muted">备用金：{{ advanceLabels[settle.advanceIndex] || '请选择已通过且未核销的备用金' }}</view>
@@ -64,6 +67,8 @@
         <StatusTag class="muted-gap" :status="item.status" />
         <button v-if="item.status === 'PENDING'" size="mini" style="margin-left: 12rpx" @click="withdraw(item.id)">撤回</button>
       </view>
+      <button v-if="hasMore" style="margin-top: 16rpx" @click="more">加载更多</button>
+      <view v-else-if="items.length" class="muted">没有更多了，共 {{ total }} 条</view>
     </view>
   </view>
   </ThemeRoot>
@@ -75,6 +80,8 @@ import StatusTag from '@/components/StatusTag.vue'
 import { computed, reactive, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
+import { usePaging } from '@/utils/paging'
+import { useAuthStore } from '@/store/auth'
 
 const typeLabels = ['报销', '备用金预借']
 const typeHints = ['已垫付费用，凭票报销', '先借后用，事后核销']
@@ -87,7 +94,13 @@ const occurredOn = ref('')
 const expectedUsage = ref('')
 const expectedSettleOn = ref('')
 const invoiceIds = ref([])
-const items = ref([])
+const auth = useAuthStore()
+// 我的申请：“加载更多”并显示总数（REQ-FUNC-152）
+const { items, total, hasMore, loadMore, reset } = usePaging({
+  fetch: (params) => api.claims({ scope: 'mine', ...params })
+})
+const limits = ref(null)
+const canCreate = computed(() => auth.isCommittee)
 const advances = ref([])
 const reimbursements = ref([])
 const settle = reactive({ advanceIndex: -1, reimbursementIds: [], reason: '' })
@@ -125,8 +138,17 @@ function pickFlow(e) {
 
 async function load() {
   try {
-    const data = await api.claims({ scope: 'mine' })
-    items.value = data.results || data || []
+    if (!auth.me) await auth.fetchMe()
+  } catch (e) {
+    /* 未登录由 http 统一跳转 */
+  }
+  try {
+    limits.value = await api.limits()
+  } catch (e) {
+    limits.value = null
+  }
+  try {
+    await reset()
     const adv = await api.claims({ scope: 'mine', type: 'ADVANCE', status: 'APPROVED', page_size: 100 })
     advances.value = (adv.results || []).filter((a) => !a.settlement_id)
     const reimb = await api.claims({ scope: 'mine', type: 'REIMBURSEMENT', status: 'APPROVED', page_size: 100 })
@@ -140,6 +162,14 @@ async function load() {
     flows.value = list.results || list || []
   } catch (e) {
     flows.value = []
+  }
+}
+
+async function more() {
+  try {
+    await loadMore()
+  } catch (e) {
+    toast(e.message)
   }
 }
 

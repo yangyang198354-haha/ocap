@@ -43,6 +43,7 @@ const routes = [
       { path: 'audit', component: () => import('@/admin/AdminAudit.vue') },
       { path: 'content/posts', component: () => import('@/admin/AdminContentPosts.vue') },
       { path: 'content/posts/:id', component: () => import('@/admin/AdminContentEditor.vue') },
+      { path: 'content/styles', component: () => import('@/admin/AdminStyleTemplates.vue') },
       { path: 'content/media', component: () => import('@/admin/AdminMedia.vue') },
       { path: 'content/services', component: () => import('@/admin/AdminAiServices.vue') },
       { path: 'content/platforms', component: () => import('@/admin/AdminPlatforms.vue') },

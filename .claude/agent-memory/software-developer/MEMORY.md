@@ -23,4 +23,7 @@
 - [M-SD-021] openpyxl `read_only=True` 没有 merged_cells，要展开合并单元格须用普通模式读取（20000 行×8 列实测约 4.8 s，在 60 s 预算内） — conf 0.6 · 证据 registry DEF-008（GR-C-002 J-C-DEF-008 PM 构造合并单元格 xlsx 复核）、apps/registry/importing.py:243 · 首见 2026-11-11 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
+- [P-SD-005] 新增页面/导航项/底部标签后，先 grep 测试里硬编码的页面数、导航数、标签数（前端 qa_unit_theme/admin_theme/theme、小程序 qa_unit_theme/qa_e2e_pages/qa_e2e_extend/theme 共 4 处 13 页断言），一次改全 — 自记 2026-11-14 · 证据：ocap_product_review GROUP_C-002 自验证
+- [P-SD-006] 把页面逻辑抽成组件后，后端 test_frontend_contract 的 `_src` 按页面文本找字段名，需把组件文件并入读取范围；api.js 函数加可选参数后，test_ui_theme_qa 里按函数签名写的正则也要放宽 — 自记 2026-11-14 · 证据：TC-CONTRACT-4、TC-INT-003
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
+- [P-SD-007] 做"原值直出"同类扫描时，除模板插值 `{{ }}` 外必须再扫 `<el-table-column prop="…_at|status|type">`（el-table 列直出不经插值），并再扫组件 import 以确认新建映射表不会触发 labels.js 导出集合守护测试（TC-UNIT-588），新映射放独立文件 — 自记 2026-11-14 · 证据：ocap_product_review DEF-021/022 回流 2

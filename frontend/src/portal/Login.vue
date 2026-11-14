@@ -13,7 +13,7 @@
           <el-button type="primary" style="width: 100%; margin-top: 12px" :loading="loading" @click="loginCode">登录</el-button>
         </el-tab-pane>
         <el-tab-pane label="密码" name="password">
-          <el-input v-model="form.identifier" placeholder="手机号 / 邮箱 / 账号" />
+          <el-input v-model="form.identifier" placeholder="账号或手机号" />
           <el-input v-model="form.password" type="password" placeholder="密码" style="margin-top: 10px" show-password />
           <el-checkbox v-model="form.remember" style="margin-top: 10px">记住我（7 天）</el-checkbox>
           <el-button type="primary" style="width: 100%; margin-top: 12px" :loading="loading" @click="loginPassword">登录</el-button>

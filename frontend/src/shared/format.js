@@ -3,6 +3,13 @@ export function money(value) {
   return String(value)
 }
 
+// 两位小数展示；无法转数字时原样返回
+export function moneyText(value) {
+  if (value === null || value === undefined || value === '') return ''
+  const n = Number(value)
+  return Number.isNaN(n) ? String(value) : n.toFixed(2)
+}
+
 export function datetime(value) {
   if (!value) return ''
   return String(value).replace('T', ' ').slice(0, 19)

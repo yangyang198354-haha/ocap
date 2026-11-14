@@ -187,12 +187,20 @@ describe('底部标签栏与导航高亮（AC-084-01、AC-085-01/02）', () => {
     await router.isReady()
     return mount(BottomTabBar, { global: { plugins: [router] } })
   }
-  it('恰好 5 项，顺序与文案固定，每项带图标', async () => {
+  it('恰好 5 项，顺序与文案固定，每项带图标（业委会成员；非成员无“报销”见 REQ-FUNC-146）', async () => {
+    setActivePinia(createPinia())
+    const { useAuthStore } = await import('@/stores/auth')
+    useAuthStore().me = { identities: { committee: { position: 'MEMBER' } } }
     const wrapper = await mountBar('/')
     const links = wrapper.findAll('a')
     expect(links.map((a) => a.text())).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(links.map((a) => a.attributes('href'))).toEqual(['/', '/resolutions', '/polls', '/claims', '/me'])
     expect(wrapper.findAll('svg')).toHaveLength(5)
+  })
+  it('非业委会成员不显示“报销”（REQ-FUNC-146 / 157）', async () => {
+    setActivePinia(createPinia())
+    const wrapper = await mountBar('/')
+    expect(wrapper.findAll('a').map((a) => a.text())).toEqual(['首页', '决议', '投票', '我的'])
   })
   it('决议详情页仅高亮“决议”；切到投票页高亮项数量恒为 1', async () => {
     let wrapper = await mountBar('/resolutions/12')

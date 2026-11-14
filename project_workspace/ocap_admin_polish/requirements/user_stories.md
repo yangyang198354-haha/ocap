@@ -2,7 +2,7 @@
   <author_agent>requirement-analyst</author_agent>
   <timestamp>2026-11-11T22:10:39+08:00</timestamp>
   <project_name>ocap_admin_polish</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>project_workspace/ocap_admin_polish/requirements/requirements_spec.md</file>
     <file>project_workspace/ocap_admin_polish/phase_status.md</file>
@@ -159,3 +159,10 @@
 
 故事点明细：US-132 3、US-133 5、US-134 8、US-135 5、US-136 3、US-137 5、US-138 2、US-139 5、US-140 2、US-141 5、US-142 8、US-143 3、US-144 3；AC 总数 67（0.2.0 新增 AC-133-08、AC-133-09）。
 需求覆盖：REQ-FUNC-123 → US-132；124 → US-133；125 → US-134；126 → US-135；127 → US-136；128 → US-137；129 → US-138；130 → US-139；131 → US-140；132 → US-141；133 → US-142；134 → US-143；135 → US-144。REQ-NFUNC-19、23 → US-134；REQ-NFUNC-20 → US-144 及全部故事回归；REQ-NFUNC-21 → US-142；REQ-NFUNC-22 → US-139、US-141。
+
+## 修订记录（ocap_product_review，REWORK_AUTHORIZED）
+
+| 日期 | 版本 | CORR | 修改内容 |
+|---|---|---|---|
+| 2026-11-13 | 1.1.0 | CORR-019（Q9=A） | 本文 US-132 ~ 144、AC-132-xx ~ 144-xx 编号保持不变；与之重复的 ocap_user_directory 已改为 US-145 ~ 149、AC-145-xx ~ 149-xx。此后 US-132 ~ 136 及其 AC 仅指本批 |
+| 2026-11-13 | 1.1.0 | 版本头 | 版本 1.0.0 → 1.1.0，状态 APPROVED → DRAFT（协议 §B）。除上述注记外正文未改 |

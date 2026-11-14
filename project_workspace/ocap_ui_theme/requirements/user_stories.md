@@ -2,7 +2,7 @@
   <author_agent>requirement-analyst</author_agent>
   <timestamp>2026-11-09T13:56:30+08:00</timestamp>
   <project_name>ocap_ui_theme</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md (0.2.0)</file>
     <file>../ocap/requirements/user_stories.md (3.0.0 基线，末位编号 US-073)</file>
@@ -120,6 +120,7 @@
 ### US-082: 管理端固定使用风格 B
 - 故事：As a 管理员, I want to 管理后台是统一的风格 B 且不受普通用户设置影响, so that 后台界面稳定一致
 - 关联需求：REQ-FUNC-076；优先级：Must Have；故事点：3 [ESTIMATE]
+- 注记（2026-11-13，ocap_product_review CORR-020）：本故事"管理端固定使用风格 B、不存在风格切换入口"（AC-082-01、AC-082-03 的"固定 B / 无入口"部分）已被 ocap_admin_polish REQ-FUNC-135 / US-139 ~ US-141 替代：管理端可切换三套风格，默认 B；AC-082-02（不受普通用户所选风格影响）与 AC-082-04（登录、权限、令牌行为不变）仍有效；原文保留。
 - AC-082-01：Given 管理员登录管理端 / When 访问管理员登录页及 8 个后台页（业主清册、申诉、房屋关系、业委会席位、审批流程、财务、账号、审计/配置）与布局 / Then 9 个页面均呈现风格 B（9/9 通过）
 - AC-082-02：Given 同一浏览器中某普通用户已选择风格 C / When 管理员在该浏览器访问管理端 / Then 管理端仍呈现风格 B，普通用户的选择不影响管理端
 - AC-082-03：Given 管理端任一页面 / When 查看全部控件 / Then 不存在风格切换或风格设置入口；管理员账号没有个人中心页的现状不变
@@ -200,3 +201,10 @@
 | Should Have | 6 | 19 |
 | Could Have | 0 | 0 |
 | 合计 | 18 | 81 |
+
+## 修订记录（ocap_product_review，REWORK_AUTHORIZED）
+
+| 日期 | 版本 | CORR | 修改内容 |
+|---|---|---|---|
+| 2026-11-13 | 1.1.0 | CORR-020 | US-082 增注记：管理端固定 B 已被 ocap_admin_polish REQ-FUNC-135 替代，原文保留 |
+| 2026-11-13 | 1.1.0 | 版本头 | 版本 1.0.0 → 1.1.0，状态 APPROVED → DRAFT（协议 §B）。除上述注记外正文未改 |

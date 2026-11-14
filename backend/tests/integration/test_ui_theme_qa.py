@@ -42,7 +42,7 @@ class ThemeContractTests(ApiTestBase):
     def test_tc_int_003_home_new_calls_resolve_to_backend(self):
         """TC-INT-003 GR-C-002 条件④：Home.vue 新增 approvalApi.tasks / pollApi.list 的路径+方法能对应后端路由。"""
         web = WEB_API.read_text(encoding="utf-8")
-        self.assertRegex(web, r"tasks:\s*\(scope\)\s*=>\s*get\('/approval/tasks'")
+        self.assertRegex(web, r"tasks:\s*\(scope(?:,\s*params)?\)\s*=>\s*get\('/approval/tasks'")  # IFC-281：增加可选 params
         self.assertRegex(web, r"pollApi\s*=\s*\{\s*\n\s*list:\s*\(params\)\s*=>\s*get\('/polls'")
         home = (REPO / "frontend/src/portal/Home.vue").read_text(encoding="utf-8")
         self.assertRegex(home, r"approvalApi\.tasks\(")
@@ -52,8 +52,8 @@ class ThemeContractTests(ApiTestBase):
         mini_home = (REPO / "miniprogram/pages/index/index.vue").read_text(encoding="utf-8")
         self.assertRegex(mini_home, r"api\.polls\(")
         mini = MINI_API.read_text(encoding="utf-8")
-        self.assertRegex(mini, r"polls:\s*\(\)\s*=>\s*http\.get\('/polls'\)")
-        self.assertRegex(mini, r"tasks:\s*\(\)\s*=>\s*http\.get\('/approval/tasks'\)")
+        self.assertRegex(mini, r"polls:\s*\((?:params)?\)\s*=>\s*http\.get\('/polls'(?:,\s*params)?\)")  # IFC-283：可选分页参数
+        self.assertRegex(mini, r"tasks:\s*\((?:params)?\)\s*=>\s*http\.get\('/approval/tasks'(?:,\s*params)?\)")
 
     def test_tc_int_004_home_new_calls_real_http_by_role(self):
         """TC-INT-004 AC-081-03/CR-008：普通户主 GET /polls=200、GET /approval/tasks=403（前端吞错按空态）；委员两者 200。"""

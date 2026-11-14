@@ -7,6 +7,8 @@ const mocked = await vi.hoisted(async () => {
   return createHttpMock()
 })
 vi.mock('@/shared/http', () => mocked)
+// 破坏性操作的确认框（REQ-FUNC-150）：本文件的用例直接调用页面方法并视为已确认；取消路径见 product_review_confirm.spec.js
+vi.mock('@/shared/confirm', () => ({ confirmDanger: vi.fn().mockResolvedValue(true) }))
 
 import { mountPage, routeTable } from './helpers.js'
 import Home from '@/portal/Home.vue'
@@ -17,13 +19,14 @@ import { useAuthStore } from '@/stores/auth'
 
 const { http } = mocked
 
-const ME = (labels, position = null) => ({
+const ME = (labels, position = null, summary = { code: 'GUEST', label: '游客' }) => ({
   profile: { id: 1, nickname: '张三', phone: '138****0000' },
   identities: {
     is_guest: labels.includes('游客'),
     units: [],
     committee: position ? { position, term_end: '2027-01-01' } : null,
-    labels
+    labels,
+    summary
   }
 })
 
@@ -41,13 +44,13 @@ beforeEach(() => {
 describe('首页身份显示（CR-012）', () => {
   it('TC-WEB-017 委员：显示 identities.labels、昵称、手机号，并出现“收入表”入口', async () => {
     http.get.mockImplementation(routeTable({
-      '/me': ME(['户主', '业委会委员'], 'MEMBER'),
+      '/me': ME(['户主', '业委会委员'], 'MEMBER', { code: 'MEMBER', label: '委员' }),
       '/resolutions': { results: [{ id: 1, title: '加装电梯决议', status: 'APPROVED' }] }
     }))
     const { wrapper } = await mountPage(Home)
     const text = wrapper.text()
     expect(text).toContain('你好，张三')
-    expect(text).toContain('当前身份：户主、业委会委员')
+    expect(text).toContain('当前身份：委员') // REQ-FUNC-149：汇总身份取最高一项
     expect(text).toContain('手机号：138****0000')
     expect(text).toContain('加装电梯决议')
     expect(text).toContain('收入表')
@@ -77,7 +80,7 @@ describe('报销与核销表单（CR-013）', () => {
   it('TC-WEB-019 挂载后按 scope=mine 拉取列表、按 EXPENSE 拉取审批流程；委员可见“备用金核销”', async () => {
     http.get.mockImplementation(claimsRoutes(ME(['户主', '业委会委员'], 'MEMBER')))
     const { wrapper } = await mountPage(Claims)
-    expect(http.get).toHaveBeenCalledWith('/claims', { params: { scope: 'mine' } })
+    expect(http.get).toHaveBeenCalledWith('/claims', { params: { scope: 'mine', page: 1, page_size: 20 } })
     expect(http.get).toHaveBeenCalledWith('/approval/flows', { params: { scope: 'EXPENSE' } })
     expect(wrapper.text()).toContain('报销 / 备用金')
     expect(button(wrapper, '备用金核销')).toBeTruthy()

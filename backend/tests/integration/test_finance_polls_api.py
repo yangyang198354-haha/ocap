@@ -229,7 +229,11 @@ class IncomeTests(ApiTestBase):
                         {"action": "APPROVE"}, token=self.approver_token)
         self.assert_ok(resp)
         self.assertEqual(IncomeSheet.objects.get(id=sheet_id).status, "EFFECTIVE")
+        # AC-060-04/10：作废只能由原审批人执行（录入人被拒）
         resp = self.api("post", f"/admin/income/sheets/{sheet_id}/void", token=self.clerk_token)
+        self.assert_error(resp, 403, "FORBIDDEN")
+        self.assertEqual(IncomeSheet.objects.get(id=sheet_id).status, "EFFECTIVE")
+        resp = self.api("post", f"/admin/income/sheets/{sheet_id}/void", token=self.approver_token)
         self.assert_ok(resp)
         self.assertEqual(resp.data["status"], "VOID")
 

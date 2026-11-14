@@ -12,12 +12,16 @@
       <div v-for="item in items" :key="item.id" class="list-item">
         <router-link :to="`/polls/${item.id}`">{{ item.title }}</router-link>
         <span class="muted" style="margin-left: 8px">
-          {{ item.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · {{ item.status }} · 截止 {{ item.deadline }}
+          {{ item.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · {{ statusLabel('poll', item.status) }} · 截止 {{ formatDateTime(item.deadline) }}
         </span>
       </div>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="发起投票/调查" width="680px">
+      <p v-if="limits && limits.poll_max_questions" class="muted poll-limits">
+        最多 {{ limits.poll_max_questions }} 道题；单选/多选题选项 {{ limits.poll_options_min }} ~ {{ limits.poll_options_max }} 个；表决窗口不少于 {{ limits.vote_min_window_minutes }} 分钟
+      </p>
       <el-radio-group v-model="form.kind">
         <el-radio-button value="SURVEY">调查</el-radio-button>
         <el-radio-button value="REP_VOTE">业主代表投票</el-radio-button>
@@ -44,7 +48,7 @@
         </div>
         <div v-if="['SINGLE', 'MULTI'].includes(q.qtype)" class="row" style="margin-top: 6px">
           <el-input v-for="(o, oi) in q.options" :key="oi" v-model="q.options[oi]" :placeholder="`选项 ${oi + 1}`" style="max-width: 160px" />
-          <el-button size="small" :disabled="q.options.length >= 10" @click="q.options.push('')">加选项</el-button>
+          <el-button size="small" :disabled="q.options.length >= (limits?.poll_options_max || 10)" @click="q.options.push('')">加选项</el-button>
         </div>
       </div>
       <el-button style="margin-top: 10px" @click="addQuestion">加题目</el-button>
@@ -59,12 +63,16 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { pollApi } from '@/shared/api'
+import { meApi, pollApi } from '@/shared/api'
+import PagerBar from '@/shared/PagerBar.vue'
 import { useAuthStore } from '@/stores/auth'
-import { errorText } from '@/shared/format'
+import { errorText, formatDateTime } from '@/shared/format'
+import { statusLabel } from '@/shared/labels'
+import { usePaging } from '@/shared/usePaging'
 
 const auth = useAuthStore()
-const items = ref([])
+const { items, total, page, pageSize, reload, goto } = usePaging({ fetch: (params) => pollApi.list(params) })
+const limits = ref(null)
 const showCreate = ref(false)
 const newQuestion = () => ({ title: '', qtype: 'AGREE_OPPOSE_ABSTAIN', required: true, options: ['', ''] })
 const form = reactive({
@@ -82,10 +90,25 @@ function resetOptions(q) {
 
 async function load() {
   try {
-    const data = await pollApi.list()
-    items.value = data.results || data || []
+    await reload()
   } catch (e) {
     ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function loadLimits() {
+  try {
+    limits.value = await meApi.limits()
+  } catch (e) {
+    limits.value = null
   }
 }
 
@@ -116,5 +139,6 @@ async function create() {
 onMounted(async () => {
   await auth.fetchMe().catch(() => null)
   load()
+  loadLimits()
 })
 </script>

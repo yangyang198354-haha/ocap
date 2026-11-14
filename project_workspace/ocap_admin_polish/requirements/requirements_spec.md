@@ -2,7 +2,7 @@
   <author_agent>requirement-analyst</author_agent>
   <timestamp>2026-11-11T22:10:39+08:00</timestamp>
   <project_name>ocap_admin_polish</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>project_workspace/ocap_admin_polish/phase_status.md</file>
     <file>project_workspace/ocap_registry_import/requirements/requirements_spec.md</file>
@@ -158,3 +158,11 @@ Q-AP-01 ~ Q-AP-07 已于用户 2026-11-11 答复"全部按照推荐"（phase_sta
   - A. 确认 B，即"户号以楼层值+层开头时省略楼层段"（当前写入）
   - B. 实际指 A，改回保持 `圣灯路155号1层1层`
   - 暂按：A；放行设计阶段时一并确认。
+
+## 修订记录（ocap_product_review，REWORK_AUTHORIZED）
+
+| 日期 | 版本 | CORR | 修改内容 |
+|---|---|---|---|
+| 2026-11-13 | 1.1.0 | CORR-019（Q9=A） | 本文编号保持不变（REQ-FUNC-123 ~ 135、REQ-NFUNC-19 ~ 23、US-132 ~ 144、C-31 ~ C-34）。与之重复的 ocap_user_directory 已整体重新编号为 REQ-FUNC-136 ~ 141、REQ-NFUNC-024/025、US-145 ~ 149、C-35 ~ C-39；此后 REQ-FUNC-123 ~ 128、US-132 ~ 136、AC-132-xx ~ 136-xx、C-31 ~ C-34 仅指本批 |
+| 2026-11-13 | 1.1.0 | CORR-020 | 本文 REQ-FUNC-135 对 ocap_ui_theme REQ-FUNC-076、US-082、C-23 的替代声明，以及 REQ-FUNC-123 对 ocap_registry_import AC-098-01/05/06 的替代，已在对方文档回注（见其修订记录）；本文正文未改 |
+| 2026-11-13 | 1.1.0 | 版本头 | 版本 1.0.0 → 1.1.0，状态 APPROVED → DRAFT（协议 §B）。除上述注记外正文未改 |

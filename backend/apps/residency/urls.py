@@ -2,11 +2,12 @@ from django.urls import path
 
 from .views import (
     AdminAppealDecisionView, AdminAppealListView, AppealListCreateView, CertificationView,
-    ResidentApplicationCreateView, ResidentApplicationDecisionView, ResidentApplicationMineView,
+    MyHousingView, ResidentApplicationCreateView, ResidentApplicationDecisionView, ResidentApplicationMineView,
     ResidentApplicationToReviewView, ResidentRemoveView, UnitLeaveView,
 )
 
 urlpatterns = [
+    path("me/housing", MyHousingView.as_view()),
     path("certifications", CertificationView.as_view()),
     path("appeals", AppealListCreateView.as_view()),
     path("appeals/mine", AppealListCreateView.as_view()),

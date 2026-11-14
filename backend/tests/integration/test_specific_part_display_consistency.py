@@ -36,4 +36,4 @@ class SpecificPartDisplayConsistencyTests(RegistryImportTestBase):
         me = self.api("get", "/me", token=token)
         self.assert_ok(me)
         unit_row = me.data["identities"]["units"][0]
-        self.assertEqual(set(unit_row), {"unit_id", "specific_part", "role"})
+        self.assertEqual(set(unit_row), {"unit_id", "specific_part", "role", "role_label"})

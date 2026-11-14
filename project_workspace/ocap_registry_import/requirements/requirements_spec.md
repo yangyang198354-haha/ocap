@@ -2,7 +2,7 @@
   <author_agent>requirement-analyst</author_agent>
   <timestamp>2026-11-10T21:27:17+08:00</timestamp>
   <project_name>ocap_registry_import</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>project_workspace/ocap_registry_import/phase_status.md</file>
     <file>project_workspace/ocap/requirements/requirements_spec.md</file>
@@ -186,3 +186,11 @@
 - Q-RI-23：60 秒的计量环境与超时提示（非阻断，见上）。
 - 同一手机号出现在同一文件的多个专有部分：继承现状允许（C-24），不另提问。
 - 本版把 5 列旧文件整体拒绝（Q-RI-12=A）；上线时是否需要提前通知管理员改用新模板，属运营事项，不在需求范围。
+
+## 修订记录（ocap_product_review，REWORK_AUTHORIZED）
+
+| 日期 | 版本 | CORR | 修改内容 |
+|---|---|---|---|
+| 2026-11-13 | 1.1.0 | CORR-019 | 本批约束 C-21 ~ C-24 与 ocap_ui_theme 的 C-21 ~ C-24 同号、C-25/26 与 ocap_content_publish 的 C-25/26 同号。原编号不改，全局引用一律加批次前缀：`registry_import/C-21` ~ `registry_import/C-26`、`ui_theme/C-21` ~ `ui_theme/C-24`、`content_publish/C-25`、`content_publish/C-26`。本文正文中不带前缀的 C-21 ~ C-26 均指本批 |
+| 2026-11-13 | 1.1.0 | CORR-020 | 本批 user_stories 的 AC-098-01/05/06 的旧标识示例已被 ocap_admin_polish REQ-FUNC-123 替代，见 user_stories.md 对应注记；本文 REQ-FUNC-091 的"标识由已填写的层级按序以'-'连接"同样已被替代（新格式为直接连接并补后缀，如 `1栋1单元1层101号`、`车库A-088`），原文保留 |
+| 2026-11-13 | 1.1.0 | 版本头 | 版本 1.0.0 → 1.1.0，状态 APPROVED → DRAFT（协议 §B）。除上述注记外正文未改 |

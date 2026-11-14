@@ -33,6 +33,7 @@ const navItems = [
   { label: '财务', to: '/admin/finance' },
   { label: '账号', to: '/admin/users' },
   { label: '信息公开', to: '/admin/content/posts' },
+  { label: '版式模板', to: '/admin/content/styles' },
   { label: '素材库', to: '/admin/content/media' },
   { label: 'AI 服务', to: '/admin/content/services' },
   { label: '平台账户', to: '/admin/content/platforms' },

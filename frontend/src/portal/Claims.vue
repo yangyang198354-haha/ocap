@@ -4,12 +4,12 @@
       <div class="row" style="justify-content: space-between">
         <h3 class="title" style="margin: 0">报销 / 备用金</h3>
         <div class="row">
-          <el-button type="primary" @click="openCreate">新建申请</el-button>
+          <el-button v-if="auth.isCommittee" type="primary" @click="openCreate">新建申请</el-button>
           <el-button v-if="auth.isCommittee" @click="openSettle">备用金核销</el-button>
         </div>
       </div>
       <p class="muted">报销凭发票；备用金为预借现金，办完后核销，实际支出再凭票报销；核销按差额调整支出，多退少补。</p>
-      <el-radio-group v-model="scope" style="margin-top: 8px" @change="load">
+      <el-radio-group v-model="scope" style="margin-top: 8px" @change="resetAndLoad">
         <el-radio-button value="mine">我提交的</el-radio-button>
         <el-radio-button value="todo">待我审批</el-radio-button>
       </el-radio-group>
@@ -34,6 +34,7 @@
           </div>
         </div>
       </div>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="新建申请" width="760px">
@@ -57,7 +58,7 @@
               <span class="money-cur">¥</span>
               <input id="claim-amount" v-model="form.amount" class="mono" inputmode="decimal" placeholder="0.00" aria-label="金额" />
             </div>
-            <span class="field-hint">最多两位小数</span>
+            <span class="field-hint">最多两位小数<template v-if="amountMax">；单笔金额上限 ¥{{ amountMax }}</template></span>
           </div>
           <div class="field-block">
             <label class="field-label">事由</label>
@@ -164,16 +165,23 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { approvalApi, attachmentApi, claimApi } from '@/shared/api'
+import { approvalApi, attachmentApi, claimApi, meApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
 import UiIcon from './UiIcon.vue'
+import PagerBar from '@/shared/PagerBar.vue'
 import { useAuthStore } from '@/stores/auth'
-import { errorText } from '@/shared/format'
+import { errorText, moneyText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
+import { usePaging } from '@/shared/usePaging'
 
 const auth = useAuthStore()
 const scope = ref('mine')
-const items = ref([])
+const filters = computed(() => ({ scope: scope.value }))
+const { items, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
+  fetch: (params) => claimApi.list(params), filters
+})
 const flows = ref([])
+const amountMax = ref('')
 const invoiceIds = ref([])
 // 附件列表仅用于展示文件名 / 大小，提交仍用 invoiceIds
 const invoiceFiles = ref([])
@@ -213,10 +221,35 @@ const diffText = computed(() => {
 
 async function load() {
   try {
-    const data = await claimApi.list({ scope: scope.value })
-    items.value = data.results || data || []
+    await reload()
   } catch (e) {
     ElMessage.error(errorText(e))
+  }
+}
+
+async function resetAndLoad() {
+  try {
+    await pagingReset()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function gotoPage(n) {
+  try {
+    await goto(n)
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+// 当前金额上限（IFC-272），失败静默
+async function loadLimits() {
+  try {
+    const data = await meApi.limits()
+    amountMax.value = moneyText(data?.claim_amount_max)
+  } catch (e) {
+    amountMax.value = ''
   }
 }
 
@@ -299,6 +332,7 @@ async function submitSettle() {
 }
 
 async function withdraw(id) {
+  if (!(await confirmDanger('withdrawClaim'))) return
   try {
     await claimApi.withdraw(id)
     ElMessage.success('已撤回')
@@ -312,5 +346,6 @@ onMounted(async () => {
   await auth.fetchMe().catch(() => null)
   load()
   loadFlows()
+  loadLimits()
 })
 </script>

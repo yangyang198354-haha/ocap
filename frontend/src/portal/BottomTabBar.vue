@@ -10,18 +10,22 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
+const auth = useAuthStore()
 
-// IFC-148：固定 5 项；每项图标 + 文字标签
-const tabs = [
+// IFC-148：成员 5 项；非业委会成员不显示"报销"（REQ-FUNC-146）；每项图标 + 文字标签
+const allTabs = [
   { label: '首页', to: '/', icon: 'M3 11l9-8 9 8M5 10v10h14V10' },
   { label: '决议', to: '/resolutions', icon: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6' },
   { label: '投票', to: '/polls', icon: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
-  { label: '报销', to: '/claims', icon: 'M4 7h16v12H4zM4 7l2-3h12l2 3M12 11v4M10 13h4' },
+  { label: '报销', to: '/claims', icon: 'M4 7h16v12H4zM4 7l2-3h12l2 3M12 11v4M10 13h4', committeeOnly: true },
   { label: '我的', to: '/me', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0' }
 ]
+const tabs = computed(() => allTabs.filter((tab) => !tab.committeeOnly || auth.isCommittee))
 
 // 当前项：路径前缀匹配，'/' 仅精确匹配
 const isActive = (to) => (to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`))

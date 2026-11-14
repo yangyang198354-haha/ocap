@@ -12,6 +12,7 @@ from apps.committee.services import CommitteeQuery
 from apps.core.audit import AuditActor, AuditService
 from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
+from apps.core.limits import POLL_OPTIONS_MAX, POLL_OPTIONS_MIN
 from apps.core.permissions import IsChairOrVice, IsMember
 from apps.core.serializers import page_response
 from apps.residency.services import MembershipService
@@ -105,7 +106,7 @@ def _validate_questions(questions) -> list[dict]:
             raise ApiError("INVALID_VALUE", "题型不合法")
         if qtype in {"SINGLE", "MULTI"}:
             options = raw.get("options")
-            if not isinstance(options, list) or not (2 <= len(options) <= 10):
+            if not isinstance(options, list) or not (POLL_OPTIONS_MIN <= len(options) <= POLL_OPTIONS_MAX):
                 raise ApiError("INVALID_VALUE", "每个题目需要 2~10 个选项")
             for opt in options:
                 if not isinstance(opt, str) or not opt.strip():

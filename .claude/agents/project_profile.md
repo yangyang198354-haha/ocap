@@ -12,9 +12,9 @@
 
 <file_header>
   <author_agent>pm-orchestrator</author_agent>
-  <timestamp>2026-11-10T23:35:57+08:00</timestamp>
+  <timestamp>2026-11-13T22:58:00+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
   <status>APPROVED</status>
 </file_header>
 
@@ -53,7 +53,7 @@
 - 迁移：每个 app 的 `migrations/` 手写、单 app 范围（见 P6）
 - 不可修改的目录：`.trae/**`（Trae 套件维护；Claude 子代理只读）
 
-## P4. 命令（在开发机或 CI 上运行，严禁连接测试机或生产库）
+## P4. 命令（在开发机或 CI 上运行，严禁连接测试机或生产库；唯一例外见 P4-1）
 | 用途 | 工作目录 | 命令 | 备注 |
 |---|---|---|---|
 | 静态检查 | 仓库根 | `python -m compileall -q backend` | 无第三方 linter |
@@ -69,6 +69,14 @@
 - 已知既有失败 / 基线：后端 120/120 通过（2026-11-08 实测）；前端与小程序没有用例
 - 缺依赖时的处理：如实标 BLOCKED，不自行安装
 - 外部服务：测试只经 `apps/integrations/fakes.py`，不得调用真实的微信、阿里云、邮件服务
+- 已知既有失败（2026-11-13 实测，HEAD afa1fe8，Python 3.12 + Django 5.2.19）：后端 561 条中 1 条失败 `tests.integration.test_registry_import_xlsx_defects.XlsxImportTests.test_tc_int_311_downloaded_template_imports_back`（期望 4 行、实际 6 行）；前端 vitest 181/181、小程序 75/75 通过
+
+### P4-1 测试环境 HTTP 端到端测试（仅部署后，USER 2026-11-13 Q3=A、Q4=A）
+- 只经公开入口 `https://ai-freeark.xin/ocap/` 发 HTTP 请求；不直连测试机数据库，不经 SSH 执行测试
+- 只用带固定前缀 `e2e_` 的专用测试账号；账号由 GROUP_E2（devops-engineer）在部署后用 manage.py 在测试机上创建，测完由 E2 清理该前缀账号及其产生的数据
+- 允许写入：仅限测试账号自身及其产生的数据（创建、修改、删除）；**不得修改或删除已导入的业主清册（RegistryUnit 等）和任何非 `e2e_` 账号的数据**
+- 短信为 console 替身；需要验证码的流程优先用账号密码登录，或由 E2 从服务日志只读获取
+- 测试代码放 `backend/tests/remote/`（默认测试命令不得收集，需显式指定入口与目标 URL 环境变量）
 
 ## P5. 质量判定
 - FULL_FLOW `gate_mode`: threshold — unit_pass 0.80 / integration_pass 0.90 / critical_path 1.00 / coverage_min 无
@@ -101,6 +109,7 @@
 | 禁用的技术 / 操作 | 原因 |
 |---|---|
 | 测试连接生产数据库或测试机数据库 | 协议 §L-4 |
+| 测试环境 HTTP 端到端测试越出 P4-1 范围（非 `e2e_` 数据写入、改动清册） | USER 2026-11-13 Q4=A |
 | Docker / 任何容器化方案 | 沿用 Freeark 约定 [USER 确认] |
 | pscp 逐文件上传部署 | 沿用 Freeark 约定 |
 | 提交 makemigrations 产物；在目标机上生成迁移 | 沿用 Freeark 约定；CR-023 |
@@ -154,3 +163,7 @@
 
 ## 修订清单（1.3.0 → 1.4.0，PM 2026-11-10T23:35:57+08:00）
 1. P11-3：新增 ocap_content_publish 涉及的 7 个外部服务。用户确认（2026-11-10）：P1=A 以 GenPlatform 参考实现为资料、无实现者按"无文档"；P2=A 小红书/头条本批走导出复制、接口层预留；P3=A 测试只用 fakes.py 新增替身，凭据后台录入加密存库、密钥经环境变量；P4=是 GenPlatform 实现线上调用成功过。参考实现在另一仓库，引用时写 `[P11: 文件:行]`。
+
+## 修订清单（1.4.0 → 1.5.0，PM 2026-11-13T22:58:00+08:00）
+1. P4：登记 2026-11-13 基线（后端 1 条既有失败）；新增 P4-1 测试环境 HTTP 端到端测试许可与边界（用户 2026-11-13 Q3=A、Q4=A）。
+2. P8：新增越出 P4-1 范围的禁用项。

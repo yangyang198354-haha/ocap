@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from apps.committee.models import Seat
 from apps.core.attachments import AttachmentService
 from apps.core.audit import AuditActor, AuditService
+from apps.core.config import SystemConfig
 from apps.core.errors import ApiError, RateLimited
 from apps.core.masking import EMAIL_RE, PHONE_RE, mask_email, mask_phone
 from apps.core.models import Attachment
@@ -39,8 +40,20 @@ def auth_result(user: User, token: str, *, is_new: bool = False) -> dict:
     return {"token": token, "user": user_brief(user), "is_new": is_new}
 
 
+def _check_client(payload) -> str:
+    """IFC-268：client 缺省为 web；非字符串或不在 {web, miniapp} → 400。"""
+    client = payload.get("client", "web")
+    if not isinstance(client, str) or client not in {"web", "miniapp"}:
+        raise ApiError("INVALID_VALUE", "client 不合法")
+    return client
+
+
 def _session_kind(payload, *, default: str = "IDLE") -> str:
-    return "EXTENDED" if bool(payload.get("remember_me")) else default
+    if bool(payload.get("remember_me")):
+        return "EXTENDED"
+    if _check_client(payload) == "miniapp" and SystemConfig.get("session.miniapp_extended"):
+        return "EXTENDED"
+    return default
 
 
 class CodeRequestView(APIView):
@@ -107,6 +120,7 @@ class RegisterView(APIView):
 class LoginByCodeView(APIView):
     def post(self, request):
         data = request.data or {}
+        _check_client(data)
         user = AccountService.login_by_phone_code(phone=str(data.get("phone", "")),
                                                   code=str(data.get("code", "")))
         token = AccountService.issue_token(user, session_kind=_session_kind(data))
@@ -116,6 +130,7 @@ class LoginByCodeView(APIView):
 class LoginByPasswordView(APIView):
     def post(self, request):
         data = request.data or {}
+        _check_client(data)
         identifier = str(data.get("identifier", ""))
         password = str(data.get("password", ""))
         if len(identifier) > 32 or len(password) > 128:
@@ -128,6 +143,7 @@ class LoginByPasswordView(APIView):
 class LoginByEmailView(APIView):
     def post(self, request):
         data = request.data or {}
+        _check_client(data)
         if "password" in data:
             raise ApiError("PASSWORD_NOT_SUPPORTED_FOR_EMAIL", "邮箱登录不支持密码")
         user = AccountService.login_by_email_code(email=str(data.get("email", "")),

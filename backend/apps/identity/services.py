@@ -2,6 +2,7 @@
 from django.db import transaction
 from django.utils import timezone
 
+from apps.accounts.directory import identity_view
 from apps.accounts.models import User
 from apps.accounts.services import AccountService
 from apps.committee.models import Seat
@@ -11,7 +12,7 @@ from apps.core.errors import ApiError
 from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.user_refs import references
 from apps.residency.models import Membership
-from apps.residency.services import MembershipService
+from apps.residency.services import MembershipService, PendingRequestService
 
 
 class IdentityService:
@@ -19,12 +20,13 @@ class IdentityService:
     def me(user) -> dict:
         memberships = list(Membership.objects.filter(user=user, ended_at__isnull=True)
                            .select_related("unit"))
-        units = [{"unit_id": m.unit_id, "specific_part": m.unit.specific_part, "role": m.role}
-                 for m in memberships]
+        units = [{"unit_id": m.unit_id, "specific_part": m.unit.specific_part, "role": m.role,
+                  "role_label": m.get_role_display()} for m in memberships]
         seats = list(Seat.objects.filter(user=user, status="ACTIVE"))
-        committee_seat = seats[0] if seats else None
         from apps.committee.services import CommitteeQuery
 
+        committee_seat = CommitteeQuery.active_seat(user.id)  # ADR-082：与接口权限同口径（校验任期）
+        summary = identity_view(memberships=memberships, seats=seats)
         labels = CommitteeQuery.identity_labels(user.id)
         return {
             "profile": {
@@ -41,6 +43,7 @@ class IdentityService:
                                "term_end": committee_seat.term_end}
                               if committee_seat else None),
                 "labels": labels,
+                "summary": {"code": summary["identity_code"], "label": summary["identity_label"]},
             },
         }
 
@@ -110,6 +113,7 @@ class IdentityService:
             user=user, ended_at__isnull=True, role="HEAD"
         ).values_list("unit_id", flat=True))
         with transaction.atomic():
+            PendingRequestService.close_for_cancelled_user(user)
             Membership.objects.filter(user=user, ended_at__isnull=True).update(
                 ended_at=timezone.now(), end_reason="CANCELLED", active_slot=None, head_slot=None,
             )

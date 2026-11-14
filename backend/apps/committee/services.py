@@ -67,11 +67,13 @@ class CommitteeQuery:
         seat = CommitteeQuery.active_seat(user_id)
         if seat is not None:
             labels.append(seat.get_position_display())
-        from apps.residency.services import MembershipService
+        from apps.residency.services import ROLE_RANK, MembershipService
 
-        for membership in MembershipService.list_active(user_id):
-            labels.append(membership.get_role_display())
-            break
+        # ADR-080：多户取最高房屋身份，同级取认证最早者
+        active = MembershipService.list_active(user_id)
+        if active:
+            best = max(active, key=lambda m: (ROLE_RANK.get(m.role, 0), -m.certified_at.timestamp(), -m.id))
+            labels.append(best.get_role_display())
         if not labels:
             labels.append("游客")
         return labels
@@ -173,6 +175,13 @@ class CommitteeCommands:
         return {"invalidated": len(seats)} if seats else None
 
     @staticmethod
+    def _audit_merge_invalidated(seat: Seat) -> None:
+        # DEF-018：AC-066-05/AC-064-08 合并使身份失效时写身份失效审计
+        AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="SEAT_INVALIDATED",
+                            object_type="seat", object_id=str(seat.id), result="SUCCESS",
+                            detail={"reason": "ACCOUNT_MERGED", "position": seat.position})
+
+    @staticmethod
     def merge_seats(primary_id: int, secondary_id: int) -> list[str]:
         moved: list[str] = []
         primary = Seat.objects.filter(user_id=primary_id, status="ACTIVE").first()
@@ -189,6 +198,7 @@ class CommitteeCommands:
                 primary.status = "MERGED"
                 primary.active_slot = None
                 primary.save()
+                CommitteeCommands._audit_merge_invalidated(primary)
                 seat.user_id = primary_id
                 seat.status = "ACTIVE"
                 seat.active_slot = 1
@@ -199,6 +209,7 @@ class CommitteeCommands:
                 seat.status = "MERGED"
                 seat.active_slot = None
                 seat.save()
+                CommitteeCommands._audit_merge_invalidated(seat)
                 moved.append(f"drop:{seat.id}")
         return moved
 

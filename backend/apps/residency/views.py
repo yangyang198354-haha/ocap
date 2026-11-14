@@ -18,12 +18,29 @@ from apps.core.serializers import page_response
 from apps.registry.models import RegistryUnit
 from apps.registry.services import RegistryService
 
+from .housing import housing_view
 from .models import Appeal, Membership, ResidentApplication
 from .services import MembershipService
+
+MINE_LIMIT = 100  # IFC-263：我的申请/申诉只返回最近 100 条
 
 
 def _unit_view(unit: RegistryUnit) -> dict:
     return {"unit_id": unit.id, "specific_part": unit.specific_part}
+
+
+class MyHousingView(APIView):
+    """GET /me/housing（IFC-261）：汇总身份、各房屋身份、同住人名单与待审数量。"""
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        payload = housing_view(request.user)
+        summary = payload["summary"]
+        return Response({
+            "summary": {"code": summary["identity_code"], "label": summary["identity_label"]},
+            "units": payload["units"],
+            "pending_review_count": payload["pending_review_count"],
+        })
 
 
 class CertificationView(APIView):
@@ -56,7 +73,8 @@ class AppealListCreateView(APIView):
     permission_classes = [IsMember]
 
     def get(self, request):
-        rows = Appeal.objects.filter(user=request.user).select_related("unit").order_by("-submitted_at")
+        rows = (Appeal.objects.filter(user=request.user).select_related("unit")
+                .order_by("-submitted_at")[:MINE_LIMIT])
         return Response([appeal_view(a) for a in rows])
 
     def post(self, request):
@@ -142,6 +160,8 @@ class AdminAppealDecisionView(APIView):
         appeal = Appeal.objects.select_related("unit", "user").filter(id=appeal_id).first()
         if appeal is None:
             raise ApiError("NOT_FOUND", "申诉不存在", 404)
+        if appeal.status == "CLOSED":
+            raise ApiError("ALREADY_CLOSED", "该申诉已关闭", 409)
         if appeal.status != "PENDING":
             raise ApiError("ALREADY_DECIDED", "该申诉已处理", 409)
         with transaction.atomic():
@@ -198,7 +218,7 @@ class ResidentApplicationMineView(APIView):
 
     def get(self, request):
         rows = (ResidentApplication.objects.filter(applicant=request.user)
-                .select_related("unit").order_by("-created_at"))
+                .select_related("unit").order_by("-created_at")[:MINE_LIMIT])
         return Response([application_view(a) for a in rows])
 
 
@@ -235,6 +255,10 @@ class ResidentApplicationDecisionView(APIView):
                    .update(status="APPROVED" if decision == "APPROVE" else "REJECTED",
                            decided_by=request.user, decided_at=timezone.now(), pending_slot=None))
         if not updated:
+            current = ResidentApplication.objects.filter(id=application_id).values_list(
+                "status", flat=True).first()
+            if current == "CLOSED":
+                raise ApiError("ALREADY_CLOSED", "该申请已关闭", 409)
             raise ApiError("ALREADY_DECIDED", "该申请已处理", 409)
         if decision == "APPROVE" and not Membership.objects.filter(
             user_id=application.applicant_id, unit_id=application.unit_id, ended_at__isnull=True

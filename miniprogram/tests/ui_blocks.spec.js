@@ -9,7 +9,7 @@ import { voteShare } from '../utils/voteShare.js'
 
 const ME = {
   profile: { id: 1, nickname: '张三', phone: '138****0000' },
-  identities: { is_guest: false, units: [{ id: 1 }], committee: null, labels: ['户主'] }
+  identities: { is_guest: false, units: [{ id: 1 }], committee: { position: 'MEMBER' }, labels: ['户主'] } // 成员：待办、报销入口可见（REQ-FUNC-146/157）
 }
 
 describe('首页语义区块', () => {
@@ -66,7 +66,7 @@ describe('决议卡片三段比例', () => {
     expect(cards[0].text()).toContain('同意 5')
     expect(cards[0].text()).toContain('半数同意')
     expect(cards[1].find('.vote-bar').exists()).toBe(false)
-    expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public' })
+    expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public', page: 1, page_size: 20 })
   })
 })
 

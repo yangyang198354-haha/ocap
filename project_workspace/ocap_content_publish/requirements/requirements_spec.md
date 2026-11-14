@@ -2,7 +2,7 @@
   <author_agent>requirement-analyst</author_agent>
   <timestamp>2026-11-10T23:28:00+08:00</timestamp>
   <project_name>ocap_content_publish</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files><file>phase_status.md</file><file>requirements/requirements_spec.md（0.2.0）</file></input_files>
   <phase>PHASE_01</phase>
   <status>APPROVED</status>
@@ -202,3 +202,11 @@
 - OQ-4：已解决。用户原文"一键发布到多个平台"与"一键保存到……草稿箱"措辞不一致，经 Q-CP-17=A 确认为保存到草稿箱。
 - OQ-5：已关闭。用户在 2026-11-10 第二次答复（"其他按推荐"、"需求确认"）中确认接受 I-1 ~ I-4。
 - OQ-6（非阻断，来自 Q-CP-14）：(1) 素材库总配额用户未给，不自拟；(2) C-18 只规定"图片或 pdf"，没有视频格式，视频允许的格式清单用户未给；"视频沿用 C-18 口径"暂按"单个不超过 10 MB"理解（C-29），该数值对视频是否合适（10 MB 对视频偏小）请用户确认或另给数值。未答复前，视频类 AC 的大小用 10 MB、格式清单写"按已确认的视频格式（OQ-6）"。
+
+## 修订记录（ocap_product_review，REWORK_AUTHORIZED）
+
+| 日期 | 版本 | CORR | 修改内容 |
+|---|---|---|---|
+| 2026-11-13 | 1.1.0 | CORR-019 | 本批约束 C-25、C-26 与 ocap_registry_import 的 C-25、C-26 同号；C-30 曾与 ocap_user_directory 的 C-30 同号（user_directory 已改为 C-35 ~ C-39，重复已消除）。原编号不改，全局引用加批次前缀：`content_publish/C-25`、`content_publish/C-26`、`registry_import/C-25`、`registry_import/C-26`；本文正文中不带前缀的 C-25 ~ C-30 均指本批 |
+| 2026-11-13 | 1.1.0 | 版本头 | 版本 1.0.0 → 1.1.0，状态 APPROVED → DRAFT（协议 §B）。除上述注记外正文未改 |
+| — | — | 备忘（未改正文） | 本批 REQ-FUNC-104 / US-112 AC-112-02 的"自定义版式模板"管理入口缺失，由 ocap_product_review REQ-FUNC-153 / US-162 补齐 |

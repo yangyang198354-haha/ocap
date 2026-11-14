@@ -3,11 +3,16 @@ import { http, setToken, getToken, upload } from '@/utils/http'
 export const api = {
   sendCode: (target, purpose, targetType = 'PHONE') =>
     http.post('/auth/codes', { target, purpose, target_type: targetType }),
-  loginByCode: (phone, code) => http.post('/auth/login/code', { phone, code }),
+  // client: 'miniapp'：所有小程序登录方式均为 7 天会话（IFC-268 / REQ-FUNC-147）
+  loginByCode: (phone, code) => http.post('/auth/login/code', { phone, code, client: 'miniapp' }),
   // 密码登录：identifier 为账号或手机号（REQ-FUNC-003 / AC-003-02）
-  loginByPassword: (identifier, password) => http.post('/auth/login/password', { identifier, password }),
+  loginByPassword: (identifier, password) =>
+    http.post('/auth/login/password', { identifier, password, client: 'miniapp' }),
   loginByWechat: (code) => http.post('/auth/wechat/miniapp', { code }),
   me: () => http.get('/me'),
+  // 我的房屋聚合（IFC-261）与当前规则限制（IFC-272）
+  housing: () => http.get('/me/housing'),
+  limits: () => http.get('/system/limits'),
   profile: () => http.get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),
   // 界面风格偏好（IFC-142/143）
@@ -23,11 +28,19 @@ export const api = {
   certify: (unitId) => http.post('/certifications', { unit_id: unitId }),
   // data: { unit_id, proof_ids: [附件 id] }，后端要求至少一份产权证明
   createAppeal: (data) => http.post('/appeals', data),
+  myAppeals: () => http.get('/appeals/mine'),
+  // 同住人链路（REQ-FUNC-142~145）
+  createResidentApplication: (data) => http.post('/resident-applications', data),
+  myResidentApplications: () => http.get('/resident-applications/mine'),
+  residentApplicationsToReview: () => http.get('/resident-applications/to-review'),
+  decideResidentApplication: (id, decision) => http.post(`/resident-applications/${id}/decision`, { decision }),
+  removeResident: (unitId, userId) => http.delete(`/units/${unitId}/residents/${userId}`),
+  leaveUnit: (unitId) => http.post(`/units/${unitId}/leave`, {}),
   upload,
-  resolutions: (scope = 'public') => http.get('/resolutions', { scope }),
+  resolutions: (scope = 'public', params) => http.get('/resolutions', { scope, ...params }),
   resolution: (id) => http.get(`/resolutions/${id}`),
   vote: (id, choice) => http.post(`/resolutions/${id}/votes`, { choice }),
-  polls: () => http.get('/polls'),
+  polls: (params) => http.get('/polls', params),
   poll: (id) => http.get(`/polls/${id}`),
   // answers: [{ question_id, value }]；多选题 value 为选项数组
   respond: (id, answers) => http.post(`/polls/${id}/responses`, { answers }),
@@ -39,9 +52,10 @@ export const api = {
   createAdvance: (data) => http.post('/claims/advances', data),
   createSettlement: (data) => http.post('/claims/settlements', data),
   withdrawClaim: (id) => http.post(`/claims/${id}/withdraw`, {}),
-  tasks: () => http.get('/approval/tasks'),
+  tasks: (params) => http.get('/approval/tasks', params),
   decide: (instanceId, action) => http.post(`/approval/instances/${instanceId}/decision`, { action }),
-  reports: () => http.get('/ledger/reports'),
+  reports: (params) => http.get('/ledger/reports', params),
+  report: (id) => http.get(`/ledger/reports/${id}`),
   infoPosts: (params) => http.get('/info/posts', params),
   infoPost: (id) => http.get(`/info/posts/${id}`, { fmt: 'blocks' })
 }

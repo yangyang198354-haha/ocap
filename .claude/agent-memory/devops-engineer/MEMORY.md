@@ -18,3 +18,5 @@
 ## 待验证
 - [P-DE-001] CI 默认浅克隆时，依赖 git show 基线提交的测试会 skipUnless 跳过；不要给 CI 加 paths-ignore 排除被扫描的文档目录（本批 test_requirements_numbering 扫 project_workspace） — 自记 2026-11-14 · 证据 ocap_product_review cicd_pipeline.md、test_requirements_numbering.py:215
 - [P-DE-002] 夹具类口令经 stdin 传给远端（单引号远端命令内 read -r 再 export），避免进 argv/ps；远程 E2E 前先只读列出夹具将占用的真实对象（房屋 id）供用户确认 — 自记 2026-11-14 · 证据 ocap_product_review deployment_plan.md DEPLOY-009（未执行，待 E2 验证）
+- [P-DE-003] 上一轮 E2 无返回时，先只读核对目标机：用 sha256 对比各候选 commit 的文件、查 showmigrations、新增文件是否存在、快照/ocap.old 是否有新项；目标机可能含 CRLF 文件，比对前剥离 CR，否则误判为未知版本 — 自记 2026-11-15 · 证据 ocap_product_review deployment_report.md「E2-001 状态核对」
+- [P-DE-004] 不要用 pkill -f 带命令行片段去杀后台 curl，会匹配到自己的 shell（退出码 144）；用 curl -m 超时，内网地址改从目标机内 curl — 自记 2026-11-15 · 证据 本次 V-10 重跑

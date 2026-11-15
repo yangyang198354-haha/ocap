@@ -20,7 +20,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="IN_PROGRESS" gate_decision="PENDING" retries="0" environment="测试"/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0" environment="测试"/>
   </groups>
   <artifacts>
     <artifact path="requirements/product_review.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -64,6 +64,7 @@
     <artifact path="deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="development/merge_resolution.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
+    <artifact path="deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -80,6 +81,7 @@
     <invocation id="ocap_product_review-GROUP_D-003" agent="test-engineer" start="2026-11-14T09:31:33+08:00" end="2026-11-14T09:51:43+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_E1-001" agent="devops-engineer" start="2026-11-14T09:51:43+08:00" end="2026-11-14T09:59:04+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_E2-001" agent="devops-engineer" start="2026-11-14T10:02:01+08:00" end="" result=""/>
+    <invocation id="ocap_product_review-GROUP_E2-002" agent="devops-engineer" start="2026-11-15T18:32:30+08:00" end="2026-11-15T20:16:26+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_C-merge-001" agent="software-developer" start="2026-11-15T11:36:59+08:00" end="2026-11-15T11:51:18+08:00" result="PARTIAL_SUCCESS"/>
   </invocations>
   <gate_reviews>
@@ -255,6 +257,20 @@ makemigrations --check --dry-run → No changes detected
 (cd miniprogram && npx vitest run --passWithNoTests) -> Test Files 14 passed (14) / Tests 97 passed (97)
 Python 3.12.3 / Django 5.2.19（≤ CI 3.13，M-PM-005）]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_product_review-GROUP_E2-002" decision="PASS_WITH_CONDITIONS" time="2026-11-15T20:16:26+08:00">
+      <reviewed_files><file path="deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2 DEPLOYED_SUCCESSFULLY" result="SATISFIED">deployment_report.md:26 最终状态 DEPLOYED_SUCCESSFULLY；DEPLOY-001~008 每步有实际输出，未触发回滚</criterion>
+      <criterion id="J-E2 验证项有实际结果" result="SATISFIED">V-01~V-14 有输出并通过；V-15/16/20~23 属 DEPLOY-009~011，按授权范围 NOT_EXECUTED</criterion>
+      <finding id="GR-E2-001-F01" severity="MAJOR">远程 HTTP E2E（22 条）仍未执行：UC-02~05 未经用户确认</finding>
+      <finding id="GR-E2-001-F02" severity="MINOR">GROUP_E2-001（11-14）核实为未对目标机做任何变更（目标机为 58558da 干净状态）；目标机约 78 个 .py 为 CRLF 行尾（既有）</finding>
+      <condition>用户确认 UC-02~05 后另行授权执行 DEPLOY-009~011（远程 E2E + 夹具清理）</condition>
+      <condition>小程序包人工构建与发布（UC-08）</condition>
+      <verification><![CDATA[curl https://ai-freeark.xin/ocap/ -> 200；/ocap/api/v1/me -> 401；https://ai-freeark.xin/ (Freeark) -> 200
+线上 index 引用 assets/index-CbVinVRe.js（与报告 DEPLOY-007 一致）
+ssh(只读): systemctl is-active ocap-backend ocap-content-worker ocap-run-due-jobs.timer -> active active active；failed_units=0
+showmigrations residency -> [X] 0001_initial / [X] 0002_closed_status
+snapshots/*20261115184022*（backend/web tar、sql.gz、fingerprint、registry-counts）与 web/ocap.old-20261115184022 存在；dump-err 0 字节]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-13T22:50:00+08:00" answered_by="用户"><![CDATA[Q1 ocap_admin_polish 处理方式：git pull 后发现已交付并部署，问题作废。Q2=A 评审全部批次（pull 后为 7 批）。Q3=A 主力 E2E 本地；部署后对 https://ai-freeark.xin/ocap/ 跑 HTTP E2E，用 e2e_ 前缀测试账号，由 E2 用 manage.py 创建并清理，不改清册。Q4=A 只允许创建/清理带前缀测试数据。Q5=A 评审后修正清单由用户逐条确认。同意在 scratchpad 建 venv。]]></clarification>
@@ -303,5 +319,9 @@ Python 3.12.3 / Django 5.2.19（≤ CI 3.13，M-PM-005）]]></verification>
     <event time="2026-11-15T12:00:22+08:00" type="RUN" actor="pm-orchestrator">经用户 Q6=A 提交合并 commit 90b3946（未 push）；git stash pop 恢复本文件既有未提交改动。注：GROUP_E2-001 调用记录 end/result 仍为空，沿用 stash 前状态，未改动。</event>
     <event time="2026-11-15T12:16:33+08:00" type="GATE" actor="pm-orchestrator">ocap_identity_display GR-A-003 PASS_WITH_CONDITIONS（编号顺延）；全量回归：后端 723 OK、前端 248/248+build、小程序 97/97、主题检查通过。TC-INT-478/480 已恢复，GR-C-merge-001 第 1 条 condition 关闭。</event>
     <event time="2026-11-15T12:16:33+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮明确要求"github action 绿后再部署"，主会话模式；结果：有条件采纳——仅测试环境、仅对 CI 全绿后的本次 E2 调用有效。</event>
+    <event time="2026-11-15T18:32:30+08:00" type="EXCEPTION" actor="pm-orchestrator">GROUP_E2-001（2026-11-14，commit 8ba53a8）无 agent_response、无 deployment_report，结果未知；原记录不改，由 E2-002 预检只读核对目标机实际版本后在报告中补述。</event>
+    <event time="2026-11-15T18:32:30+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮消息"确认部署"，主会话模式，结果：采纳——仅测试环境、仅本次 GROUP_E2-002、版本 3ffd868（CI run 43698549347 全绿）；UC-02~05 本轮未确认，按计划只执行 DEPLOY-001~008，不执行 DEPLOY-009~011。</event>
+    <event time="2026-11-15T18:32:30+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-002），PRODUCTION_DEPLOY_CONFIRM=true，环境=测试，commit 3ffd868。</event>
+    <event time="2026-11-15T20:16:26+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS_WITH_CONDITIONS；deployment_report 升 1.0.0 APPROVED。测试环境运行 3ffd868。GROUP_E2-001 补述：目标机核实无该次变更。</event>
   </audit_log>
 </phase_status>

@@ -1,4 +1,4 @@
-<phase_status project="ocap_product_review" mode="INCREMENTAL" created="2026-11-13T22:58:42+08:00" updated="2026-11-14T09:59:04+08:00">
+<phase_status project="ocap_product_review" mode="INCREMENTAL" created="2026-11-13T22:58:42+08:00" updated="2026-11-14T10:02:01+08:00">
   <request time="2026-11-13T22:32:20+08:00"><![CDATA[全面评审需求，用户故事，代码实现，三者是否一致。补充端到端测试用例并且在测试环境上测试。以用户的角度思考产品设计是否合理、易用。并且做出设计修正，并再次迭代开发]]></request>
   <request_context><![CDATA[基线：HEAD afa1fe8（2026-11-13 git pull 快进 f54464e..afa1fe8）。现有批次 6 个：ocap、ocap_ui_theme、ocap_registry_import、ocap_content_publish、ocap_admin_polish、ocap_user_directory（均已交付）。
 测试环境只读核验（2026-11-13T22:58:42+08:00 前）：ocap-backend active；最新快照 20261112002120；accounts/registry 迁移列表与仓库一致；https://ai-freeark.xin/ocap/ 200。
@@ -20,7 +20,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="IN_PROGRESS" gate_decision="PENDING" retries="0" environment="测试"/>
   </groups>
   <artifacts>
     <artifact path="requirements/product_review.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -63,6 +63,7 @@
     <artifact path="testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="development/merge_resolution.md" version="1.0.0" status="APPROVED" group="GROUP_C"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -78,6 +79,8 @@
     <invocation id="ocap_product_review-GROUP_C-005" agent="software-developer" start="2026-11-14T09:15:33+08:00" end="2026-11-14T09:31:33+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_D-003" agent="test-engineer" start="2026-11-14T09:31:33+08:00" end="2026-11-14T09:51:43+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_E1-001" agent="devops-engineer" start="2026-11-14T09:51:43+08:00" end="2026-11-14T09:59:04+08:00" result="SUCCESS"/>
+    <invocation id="ocap_product_review-GROUP_E2-001" agent="devops-engineer" start="2026-11-14T10:02:01+08:00" end="" result=""/>
+    <invocation id="ocap_product_review-GROUP_C-merge-001" agent="software-developer" start="2026-11-15T11:36:59+08:00" end="2026-11-15T11:51:18+08:00" result="PARTIAL_SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_product_review-GROUP_A-001" decision="PASS_WITH_CONDITIONS" time="2026-11-13T23:13:26+08:00">
@@ -234,11 +237,31 @@ makemigrations --check --dry-run → No changes detected
       <finding id="GR-E1-001-F03" severity="MAJOR">夹具对真实用户可见影响大于 GR-B-001-F03 所述：公开决议列表 25 条 e2e_决议、25 个 e2e_bulk 用户、审计记录永久保留（UC-05）。须用户在授权时确认。</finding>
       <condition>E2 须用户当轮明确授权测试环境部署，并逐项确认 UC-01~UC-07；UC-02~UC-05 未确认时只执行 DEPLOY-001~008，不执行夹具与远程 E2E。</condition>
     </gate_review>
+    <gate_review id="GR-C-merge-001" invocation_id="ocap_product_review-GROUP_C-merge-001" decision="OVERRIDDEN" time="2026-11-15T12:00:22+08:00">
+      <reviewed_files><file path="development/merge_resolution.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-C 冲突全部解决" result="SATISFIED">git diff --name-only --diff-filter=U 为空；backend/frontend/src/miniprogram 无冲突标记</criterion>
+      <criterion id="J-C 合并规则（用户 Q4=A）" result="SATISFIED">committee/services.py identity_labels 单一最高身份（C-34）；identity/services.py 保留 active_seat（ADR-082）与 summary；Home.vue、miniprogram index/me 保留 pendingReview、housingUnits 并含 meError 重试</criterion>
+      <criterion id="J-C PM 复跑无新增失败" result="NOT_SATISFIED">后端 Ran 723 FAILED (failures=2)：TC-INT-478、TC-INT-480（test_requirements_numbering，本地 8ba53a8 新增的守护测试 × origin ocap_identity_display 文档编号 REQ-FUNC-136~141、C-34~38 相撞）；用户 Q6=A 接受为已知失败</criterion>
+      <criterion id="J-C 客户端构建与测试" result="SATISFIED">frontend vitest 248 passed (248)，build ✓ built in 42.68s；miniprogram vitest 97 passed (97)</criterion>
+      <finding id="GR-C-merge-001-F01" severity="MAJOR">accounts/directory.identity_view 把管理端目录的 HEAD 也改为 OWNER/产权业主，超出 C-34“用户端”范围；用户 Q7=A 确认接受</finding>
+      <finding id="GR-C-merge-001-F02" severity="MINOR">notes 自述未读 identity_display user_stories.md、product_review requirements_spec.md、implementation_plan.md（M-PM-001 再现）；产出未见因此出错</finding>
+      <finding id="GR-C-merge-001-F03" severity="MINOR">ADR-080、IFC-262/274/244 等 APPROVED 设计文字与合并后代码不一致，待 GROUP_B 更新</finding>
+      <condition>下一迭代回流 GROUP_A 为 ocap_identity_display 重编号 REQ-FUNC-136~141、C-34~38，使 TC-INT-478/480 恢复通过</condition>
+      <condition>下一迭代 GROUP_B 更新 ADR-080、IFC-244/262/274 文字至 C-34 口径（含管理端目录不再显示“户主”）</condition>
+      <verification><![CDATA[(cd backend && venv/py manage.py check --settings=config.test_settings) -> System check identified no issues (0 silenced).
+(cd backend && venv/py manage.py test --settings=config.test_settings) -> Ran 723 tests in 66.039s / FAILED (failures=2) [TC-INT-478, TC-INT-480]
+(cd frontend && npx vitest run --passWithNoTests) -> Test Files 24 passed (24) / Tests 248 passed (248)
+(cd frontend && npm run build -- --base=/ocap/) -> ✓ built in 42.68s
+(cd miniprogram && npx vitest run --passWithNoTests) -> Test Files 14 passed (14) / Tests 97 passed (97)
+Python 3.12.3 / Django 5.2.19（≤ CI 3.13，M-PM-005）]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-13T22:50:00+08:00" answered_by="用户"><![CDATA[Q1 ocap_admin_polish 处理方式：git pull 后发现已交付并部署，问题作废。Q2=A 评审全部批次（pull 后为 7 批）。Q3=A 主力 E2E 本地；部署后对 https://ai-freeark.xin/ocap/ 跑 HTTP E2E，用 e2e_ 前缀测试账号，由 E2 用 manage.py 创建并清理，不改清册。Q4=A 只允许创建/清理带前缀测试数据。Q5=A 评审后修正清单由用户逐条确认。同意在 scratchpad 建 venv。]]></clarification>
     <clarification time="2026-11-13T23:50:03+08:00" answered_by="用户"><![CDATA[用户原话："按照推荐"。即：做 product_review §5 全部"建议做"项 CORR-001~009、011~015、019~023、026；Q1=C 金额上限由管理员配置；Q2=A 报销/备用金限业委会成员；Q3=A 同住人 Web+小程序都补；Q4=B 小程序只补同住人与报表明细（CORR-017 按此范围）；Q5=B 微信登录保持跳转链接、改需求文字（CORR-010 不做代码，转文档修正）；Q6=A 半数分母取在任人数；Q7=A 现有自拟规则写进需求；Q8=A 补自定义版式模板管理页；Q9=A user_directory 整体重新编号；Q10=A 注销自动关闭待处理申请/申诉。不做：016、018、024、025、027、028。]]></clarification>
     <clarification time="2026-11-14T10:01:53+08:00" answered_by="用户"><![CDATA[用户原话："授权本轮部署，问题按照推荐。" → E2 测试环境部署授权（本轮有效）；UC-01=A 先提交本地 main（不 push）按该 commit 打包；UC-02~05 同意（含 25 条 e2e_决议等可见影响）；UC-06 远程不改 claim.amount_max；UC-07 跳过 31 分钟慢用例；UC-08/09 知悉；GR-C-003-F02 中文措辞（审计 成员/管理员/系统、成功/失败/拒绝，报销状态）按开发现状；OBS-9 审计时间含秒保持。]]></clarification>
+    <clarification time="2026-11-15T12:00:22+08:00" answered_by="用户"><![CDATA[git pull 分叉处理：Q1=A merge；Q2=A stash；Q3=A 合并后全量回归；Q4=A 身份标签以 identity_display 为准并保留双方新增；Q5=A 交 software-developer 解决、PM 门控；Q6=A 完成合并，TC-INT-478/480 记已知失败，下一迭代回流需求重编号；Q7=A 管理端目录同样不再显示“户主”。]]></clarification>
+    <clarification time="2026-11-15T12:16:33+08:00" answered_by="用户"><![CDATA[用户原话："先本地回归测试，通过后commit + push， github action 绿后， 再部署"；Q8=A 编号根因修复后再推送；Q9=A 沿用本批已批准部署计划，打包 CI 绿的提交，部署前核对测试机当前版本并补齐 11-14 E2 结果。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -272,5 +295,13 @@ makemigrations --check --dry-run → No changes detected
     <event time="2026-11-14T09:51:43+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E1-001）。</event>
     <event time="2026-11-14T09:59:04+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS；部署两文档升 1.0.0。等待用户授权 E2（测试环境）。</event>
     <event time="2026-11-14T10:01:53+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮明确授权测试环境部署（"授权本轮部署，问题按照推荐"），主会话模式，结果：采纳，仅对本次 GROUP_E2-001 调用有效；环境=测试。</event>
+    <event time="2026-11-14T10:02:01+08:00" type="RUN" actor="pm-orchestrator">经用户 UC-01=A 确认，本地提交 8ba53a8（未 push）。</event>
+    <event time="2026-11-14T10:02:01+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-001），PRODUCTION_DEPLOY_CONFIRM=true，环境=测试，commit 8ba53a8。</event>
+    <event time="2026-11-15T11:36:59+08:00" type="RUN" actor="pm-orchestrator">主会话模式（用户直接下达 git pull）。pull 分叉（本地 8ba53a8 / origin 35ce9f5），经用户 Q1=A、Q2=A 执行 stash + git pull --no-rebase，9 文件冲突；PM 解决 _kb_inbox.jsonl（两侧并集）。</event>
+    <event time="2026-11-15T11:36:59+08:00" type="INVOCATION" actor="pm-orchestrator">调用 software-developer（GROUP_C-merge-001）解决 8 个代码/测试冲突，REWORK_AUTHORIZED 限冲突文件及因合并规则需调整的断言。</event>
+    <event time="2026-11-15T12:00:22+08:00" type="OVERRIDE" actor="pm-orchestrator">GR-C-merge-001 原结论 FAIL（复跑新增 2 条失败 TC-INT-478/480）；用户 Q6=A 接受为已知失败并完成合并 → OVERRIDDEN。</event>
+    <event time="2026-11-15T12:00:22+08:00" type="RUN" actor="pm-orchestrator">经用户 Q6=A 提交合并 commit 90b3946（未 push）；git stash pop 恢复本文件既有未提交改动。注：GROUP_E2-001 调用记录 end/result 仍为空，沿用 stash 前状态，未改动。</event>
+    <event time="2026-11-15T12:16:33+08:00" type="GATE" actor="pm-orchestrator">ocap_identity_display GR-A-003 PASS_WITH_CONDITIONS（编号顺延）；全量回归：后端 723 OK、前端 248/248+build、小程序 97/97、主题检查通过。TC-INT-478/480 已恢复，GR-C-merge-001 第 1 条 condition 关闭。</event>
+    <event time="2026-11-15T12:16:33+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮明确要求"github action 绿后再部署"，主会话模式；结果：有条件采纳——仅测试环境、仅对 CI 全绿后的本次 E2 调用有效。</event>
   </audit_log>
 </phase_status>

@@ -33,8 +33,10 @@
     </group>
   </groups>
   <artifacts>
-    <artifact path="project_workspace/ocap_identity_display/requirements/requirements_spec.md" agent="requirement-analyst" version="1.0.0" status="APPROVED"/>
-    <artifact path="project_workspace/ocap_identity_display/requirements/user_stories.md" agent="requirement-analyst" version="1.0.0" status="APPROVED"/>
+    <artifact path="project_workspace/ocap_identity_display/requirements/requirements_spec.md" agent="requirement-analyst" version="1.0.0" status="SUPERSEDED"/>
+    <artifact path="project_workspace/ocap_identity_display/requirements/requirements_spec.md" agent="requirement-analyst" version="2.0.0" status="APPROVED"/>
+    <artifact path="project_workspace/ocap_identity_display/requirements/user_stories.md" agent="requirement-analyst" version="1.0.0" status="SUPERSEDED"/>
+    <artifact path="project_workspace/ocap_identity_display/requirements/user_stories.md" agent="requirement-analyst" version="2.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/architecture/architecture_design.md" agent="system-architect" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/architecture/module_design.md" agent="system-architect" version="1.0.0" status="APPROVED"/>
     <artifact path="project_workspace/ocap_identity_display/architecture/tech_stack.md" agent="system-architect" version="1.0.0" status="APPROVED"/>
@@ -58,6 +60,7 @@
     <invocation id="ocap_identity_display-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-14T17:47:00+08:00" end="2026-11-14T17:56:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-14T19:49:43+08:00" end="2026-11-14T19:52:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_display-GROUP_Z-001" agent="kb-curator" group="GROUP_Z" start="2026-11-14T19:55:20+08:00" end="2026-11-14T19:57:00+08:00" result="SUCCESS"/>
+    <invocation id="ocap_identity_display-GROUP_A-003" agent="requirement-analyst" start="2026-11-15T12:06:00+08:00" end="2026-11-15T12:16:33+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate group="GROUP_A" invocation="ocap_identity_display-GROUP_A-002" reviewer="pm-orchestrator" time="2026-11-14T17:30:00+08:00" decision="PASS">
@@ -107,6 +110,17 @@
       <check id="GZ-1" result="PASS">6 条候选合并为 5 条经验；5 条均晋升到对应 agent 项目记忆，日志已追加 committed</check>
       <check id="GZ-2" result="PASS">记忆文件已回读确认；无凭据/个人信息；无通用知识候选（单项目出现）</check>
     </gate>
+    <gate_review id="GR-A-003" invocation_id="ocap_identity_display-GROUP_A-003" decision="PASS_WITH_CONDITIONS" time="2026-11-15T12:16:33+08:00">
+      <reviewed_files><file path="requirements/requirements_spec.md" version="1.1.0"/><file path="requirements/user_stories.md" version="1.1.0"/></reviewed_files>
+      <criterion id="仅编号修订" result="SATISFIED">去编号对比旧版：正文无语义变化；新增新旧编号对照表（REQ-FUNC-136~141→167~172、REQ-NFUNC-024~026→029~031、US-145~148→179~182、C-34~38→46~50）</criterion>
+      <criterion id="编号唯一（TC-INT-478/480）" result="SATISFIED">全量后端 Ran 723 OK</criterion>
+      <finding id="GR-A-003-F01" severity="MINOR">下游架构/开发/测试文档、代码与测试注释仍引用旧编号（RA notes 列出清单），目前靠对照表解释</finding>
+      <condition>下一迭代同步 identity_display 下游文档与代码/测试注释中的旧编号（与 product_review GR-C-merge-001 的 GROUP_B 条件合并处理）</condition>
+      <verification><![CDATA[去编号 diff：正文除文件头、修订说明与对照表外无变化
+(cd backend && venv/py manage.py test --settings=config.test_settings) -> Ran 723 tests in 73.892s / OK
+check: no issues; makemigrations --check: No changes detected; themes --strict --check exit=0
+frontend vitest 248 passed (248); build ✓ built in 44.17s; miniprogram vitest 97 passed (97)]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="CL-ID-01" invocation="ocap_identity_display-GROUP_A-001" time="2026-11-14T17:13:30+08:00" status="ANSWERED">
@@ -117,6 +131,7 @@
       <question id="Q-ID-05">多套是否全部展示？A. 全部（推荐）；B. 前 N 套 + 查看全部</question>
       <question id="Q-ID-06">“户主”是否在用户端彻底不出现？A. 一律显示产权业主（推荐）；B. 仅主页改</question>
     </clarification>
+    <clarification time="2026-11-15T12:16:33+08:00" answered_by="用户"><![CDATA[2026-11-15 Q8=A：根因修复编号冲突，本批整体顺延；Q9=A 部署沿用 product_review 已批准计划。]]></clarification>
   </clarifications>
   <audit_log>
     <event time="2026-11-14T17:09:06+08:00" type="RUN" actor="pm-orchestrator">主会话模式（判定规则 3：用户直接指令）。用户明确要求先整理需求与用户故事、对照当前实现、确认后再开发。本轮只执行 GROUP_A，不进入 B/C/D/E。已读 shared_protocol、project_profile 1.4.0、pm-orchestrator 通用经验与 PM 记忆。</event>
@@ -140,5 +155,7 @@
     <event time="2026-11-14T19:55:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_E2 PASS（GE2-1~GE2-4）。交付完成；GROUP_Z 待知识蒸馏</event>
     <event time="2026-11-14T19:56:00+08:00" type="DISTILLATION" actor="kb-curator">6 条候选合并为 5 条并晋升：M-RA-011、M-SA-011、M-SD-026、M-TE-019、M-DE-018；日志追加 committed</event>
     <event time="2026-11-14T19:57:00+08:00" type="GATE" actor="pm-orchestrator">GROUP_Z PASS。全流程完成（A→Z，E2 已部署成功）</event>
+    <event time="2026-11-15T12:06:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 requirement-analyst（GROUP_A-003），REWORK_AUTHORIZED 两份需求文档，仅编号顺延（用户 Q8=A）。</event>
+    <event time="2026-11-15T12:16:33+08:00" type="GATE" actor="pm-orchestrator">GR-A-003 PASS_WITH_CONDITIONS；需求两文档升 2.0.0，1.0.0 SUPERSEDED。</event>
   </audit_log>
 </phase_status>

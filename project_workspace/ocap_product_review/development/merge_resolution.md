@@ -2,7 +2,7 @@
   <author_agent>software-developer</author_agent>
   <timestamp>2026-11-15T11:51:18+08:00</timestamp>
   <project_name>ocap_product_review</project_name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <input_files>
     <file>project_workspace/ocap_identity_display/requirements/requirements_spec.md</file>
     <file>project_workspace/ocap_identity_display/requirements/user_stories.md</file>
@@ -13,7 +13,7 @@
     <file>project_workspace/ocap_product_review/development/implementation_plan.md</file>
   </input_files>
   <phase>PHASE_05,PHASE_06</phase>
-  <status>DRAFT</status>
+  <status>APPROVED</status>
 </file_header>
 
 # 合并解决记录（本地 8ba53a8 ocap_product_review ⟵ origin/main 35ce9f5 ocap_identity_display）

@@ -20,7 +20,7 @@
     </view>
     <view class="card">
       <view class="title">{{ auth.me?.profile?.nickname || '业主' }}</view>
-      <view class="muted">汇总身份：{{ auth.identitySummary.label }}</view>
+      <view class="muted">身份：{{ auth.me ? auth.identitySummary.label : '加载中…' }}</view>
       <view v-if="!housingUnits.length" class="muted">暂无已认证房屋</view>
       <view v-for="u in housingUnits" :key="u.unit_id" class="muted">{{ u.specific_part }}（{{ u.role_label }}）</view>
       <view class="muted">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</view>

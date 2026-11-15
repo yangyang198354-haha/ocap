@@ -301,7 +301,7 @@ class AppealAndIdentityTests(PRBase):
                                 {"decision": "APPROVE"}, token=admin_token))
         self.assertEqual(self.api("get", "/appeals/mine", token=token).data[0]["status"], "APPROVED")
         units = self.api("get", "/me/housing", token=token).data["units"]
-        self.assertEqual([(u["unit_id"], u["role_label"]) for u in units], [(unit.id, "户主")])
+        self.assertEqual([(u["unit_id"], u["role_label"]) for u in units], [(unit.id, "产权业主")])
 
     def test_tc_int_441_ac_157_01_three_sources_agree_and_stable_order(self):
         """TC-INT-441 / AC-157-01、AC-157-04：/me、/me/housing、管理端目录三处身份一致；多次刷新顺序不变。"""
@@ -318,20 +318,20 @@ class AppealAndIdentityTests(PRBase):
                    [(u["unit_id"], u["role_label"]) for u in housing["units"]])
             first = first or seq
             self.assertEqual(seq, first)
-        self.assertEqual(first[0], [(a.id, "户主"), (b.id, "同住人")])
+        self.assertEqual(first[0], [(a.id, "产权业主"), (b.id, "同住人")])
         self.assertEqual(first[0], first[1])
-        self.assertEqual(me["summary"], {"code": "HEAD", "label": "户主"})
+        self.assertEqual(me["summary"], {"code": "OWNER", "label": "产权业主"})
         self.assertEqual(housing["summary"], me["summary"])
         listed = self.api("get", "/admin/users", {"q": user.account_no}, token=admin_token).data["results"]
-        self.assertEqual(listed[0]["identity_label"], "户主")
+        self.assertEqual(listed[0]["identity_label"], "产权业主")
 
     def test_tc_int_442_ac_157_02_vice_chair_summary_but_rows_show_head(self):
-        """TC-INT-442 / AC-157-02：副主任 + 户主 → 汇总"副主任"，房屋行仍"户主"。"""
+        """TC-INT-442 / AC-157-02：副主任 + 产权业主 → 汇总"副主任"，房屋行为"产权业主"（C-34：不出现"户主"）。"""
         user, token, unit = self.make_owner()
         self.make_seat(user, "VICE_CHAIR")
         data = self.api("get", "/me/housing", token=token).data
         self.assertEqual(data["summary"]["label"], "副主任")
-        self.assertEqual(data["units"][0]["role_label"], "户主")
+        self.assertEqual(data["units"][0]["role_label"], "产权业主")
 
     def test_tc_int_443_ac_157_03_guest_summary(self):
         """TC-INT-443 / AC-157-03：游客汇总"游客"，房屋列表为空。"""
@@ -373,7 +373,7 @@ class AdminSearchAndPagingTests(PRBase):
             hit = [r for r in rows if r["id"] == user.id]
             self.assertTrue(hit, q)
         r = hit[0]
-        self.assertEqual((r["nickname"], r["account_no"], r["identity_label"]), ("e2e_甲", user.account_no, "户主"))
+        self.assertEqual((r["nickname"], r["account_no"], r["identity_label"]), ("e2e_甲", user.account_no, "产权业主"))
         self.assertEqual(r["real_names"], ["清册实名丙"])
         self.assertEqual(r["phone"], "138****0001")
         self.assertNotIn(phone, str(r))

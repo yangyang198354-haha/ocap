@@ -12,7 +12,8 @@ export const useAuthStore = defineStore('auth', {
     // 业委会成员：主任、副主任、委员（业主代表不是业委会成员）
     isCommittee: (s) => ['CHAIR', 'VICE_CHAIR', 'MEMBER'].includes(s.me?.identities?.committee?.position),
     // 汇总身份（IFC-262 / IFC-282）：与管理端注册用户目录同口径
-    identitySummary: (s) => s.me?.identities?.summary ?? { code: 'GUEST', label: '游客' },
+    // 无 summary 时回退到单一身份 labels（C-34：labels 恒为单元素，与 summary 同口径）
+    identitySummary: (s) => s.me?.identities?.summary ?? { code: 'GUEST', label: (s.me?.identities?.labels || []).join('、') || '游客' },
     isChairOrVice: (s) => ['CHAIR', 'VICE_CHAIR'].includes(s.me?.identities?.committee?.position)
   },
   actions: {

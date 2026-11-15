@@ -9,6 +9,7 @@ from apps.residency.models import Membership
 
 POSITION_RANK = {"CHAIR": 4, "VICE_CHAIR": 3, "MEMBER": 2, "REPRESENTATIVE": 1}
 ROLE_RANK = {"HEAD": 3, "OWNER": 2, "RESIDENT": 1}
+ROLE_LABELS = {"HEAD": "产权业主", "OWNER": "产权业主", "RESIDENT": "同住人"}  # C-34：用户可见文案
 
 
 class IdentityView(TypedDict):
@@ -17,7 +18,7 @@ class IdentityView(TypedDict):
 
 
 def identity_view(*, memberships: Sequence[Membership], seats: Sequence[Seat]) -> IdentityView:
-    """按 IFC-244 取最高身份：业委会职务 > 户主 > 产权业主 > 同住人 > 游客。"""
+    """最高身份：业委会职务 > 产权业主 > 同住人 > 游客（REQ-FUNC-136 / C-34：户主不作为身份文案，HEAD 与 OWNER 同为产权业主）。"""
     today = timezone.localdate()
     active_seats = [s for s in seats if s.status == "ACTIVE" and s.term_end >= today]
     if active_seats:
@@ -27,7 +28,8 @@ def identity_view(*, memberships: Sequence[Membership], seats: Sequence[Seat]) -
     if active_memberships:
         membership = max(active_memberships,
                          key=lambda m: (ROLE_RANK.get(m.role, 0), m.certified_at, m.id or 0))
-        return {"identity_code": membership.role, "identity_label": membership.get_role_display()}
+        code = "RESIDENT" if membership.role == "RESIDENT" else "OWNER"
+        return {"identity_code": code, "identity_label": ROLE_LABELS.get(membership.role, "产权业主")}
     return {"identity_code": "GUEST", "identity_label": "游客"}
 
 

@@ -109,18 +109,18 @@ class IdentityRulesTests(TestCase):
         return RegistryUnit.objects.create(building="1", unit_no=f"u{RegistryUnit.objects.count()}", floor="1", room="1")
 
     def test_tc_unit_512_identity_view_precedence_and_expired_seat(self):
-        """TC-UNIT-512 / AC-157-01~03：职务 > 户主 > 产权业主 > 同住人 > 游客；过期席位不计；同级取认证最早。"""
+        """TC-UNIT-512 / AC-157-01~03：职务 > 产权业主（HEAD/OWNER 同码同文案）> 同住人 > 游客；过期席位不计；同级取认证最早。"""
         user = self._user()
         a, b = self._unit(), self._unit()
         m_res = Membership.objects.create(user=user, unit=a, role="RESIDENT", source="APPLICATION", active_slot=1)
         m_head = Membership.objects.create(user=user, unit=b, role="HEAD", source="APPEAL", active_slot=1, head_slot=1)
         self.assertEqual(identity_view(memberships=[m_res], seats=[])["identity_label"], "同住人")
-        self.assertEqual(identity_view(memberships=[m_res, m_head], seats=[])["identity_code"], "HEAD")
+        self.assertEqual(identity_view(memberships=[m_res, m_head], seats=[])["identity_code"], "OWNER")
         self.assertEqual(identity_view(memberships=[], seats=[])["identity_label"], "游客")
         today = timezone.localdate()
         expired = Seat.objects.create(user=user, position="CHAIR", term_start=today - timedelta(days=60),
                                       term_end=today - timedelta(days=1), status="ACTIVE", active_slot=1)
-        self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_code"], "HEAD")
+        self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_code"], "OWNER")
         expired.term_end = today
         self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_label"], "主任")
 

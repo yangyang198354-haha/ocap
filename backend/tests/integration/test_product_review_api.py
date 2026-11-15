@@ -46,10 +46,10 @@ class HousingTests(ApiTestBase):
         with CaptureQueriesContext(connection) as ctx:
             data = self.assert_ok(self.api("get", "/me/housing", token=token)).data
         self.assertLessEqual(len(ctx), 12)
-        self.assertEqual(data["summary"], {"code": "HEAD", "label": "户主"})
+        self.assertEqual(data["summary"], {"code": "OWNER", "label": "产权业主"})
         self.assertEqual(data["pending_review_count"], 1)
         rows = {u["unit_id"]: u for u in data["units"]}
-        self.assertEqual(rows[unit.id]["role_label"], "户主")
+        self.assertEqual(rows[unit.id]["role_label"], "产权业主")
         self.assertEqual([r["user_id"] for r in rows[unit.id]["residents"]], [resident.id])
         self.assertNotIn("phone", rows[unit.id]["residents"][0])
         self.assertEqual(rows[other_unit.id]["residents"], [])
@@ -78,9 +78,9 @@ class HousingTests(ApiTestBase):
         Membership.objects.create(user=user, unit=high, role="HEAD", source="APPEAL", active_slot=1,
                                   head_slot=1)
         me = self.assert_ok(self.api("get", "/me", token=token)).data["identities"]
-        self.assertEqual(me["summary"], {"code": "HEAD", "label": "户主"})
-        self.assertEqual(me["labels"], ["户主"])
-        self.assertEqual({u["role_label"] for u in me["units"]}, {"同住人", "户主"})
+        self.assertEqual(me["summary"], {"code": "OWNER", "label": "产权业主"})
+        self.assertEqual(me["labels"], ["产权业主"])
+        self.assertEqual({u["role_label"] for u in me["units"]}, {"同住人", "产权业主"})
 
     def test_me_committee_ignores_expired_seat(self):
         """TC-INT-518 / AC-157-02、AC-154-03（GROUP_C 自验证，GROUP_D 接管）：/me committee 忽略已到期席位。"""
@@ -90,7 +90,7 @@ class HousingTests(ApiTestBase):
         seat.save()
         me = self.assert_ok(self.api("get", "/me", token=token)).data["identities"]
         self.assertIsNone(me["committee"])
-        self.assertEqual(me["summary"]["code"], "HEAD")
+        self.assertEqual(me["summary"]["code"], "OWNER")
 
 
 class ClosedStatusTests(ApiTestBase):
@@ -351,5 +351,5 @@ class IdentityLabelsTests(ApiTestBase):
         Membership.objects.create(user=user, unit=a, role="RESIDENT", source="APPLICATION", active_slot=1)
         Membership.objects.create(user=user, unit=b, role="OWNER", source="APPEAL", active_slot=1)
         self.make_seat(user, "VICE_CHAIR")
-        self.assertEqual(CommitteeQuery.identity_labels(user.id), ["副主任", "产权业主"])
+        self.assertEqual(CommitteeQuery.identity_labels(user.id), ["副主任"])  # C-34：职务直接显示，不并列"产权业主"
         self.assertEqual(Seat.objects.filter(user=user).count(), 1)

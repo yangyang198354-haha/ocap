@@ -690,7 +690,7 @@ class AutoBindTests(RegistryImportTestBase):
         self.assertEqual((membership.role, membership.source), ("HEAD", "REGISTRY"))
         me = self.api("get", "/me", token=token)
         self.assert_ok(me)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
 
     def test_tc_int_152_register_binds_all_units(self):
         """TC-INT-152 / AC-102-02：同一手机号登记 3 个专有部分，全部绑定且相互独立。"""

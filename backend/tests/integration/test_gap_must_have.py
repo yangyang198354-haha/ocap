@@ -152,7 +152,7 @@ class SingleAccountAcrossEntriesTests(ApiTestBase):
             self.assertEqual(resp.data["user"]["id"], owner.id)
             me = self.api("get", "/me", token=resp.data["token"])
             self.assertEqual(me.data["profile"]["id"], owner.id)
-            self.assertIn("户主", me.data["identities"]["labels"])
+            self.assertIn("产权业主", me.data["identities"]["labels"])
 
     def _pwd(self, token):
         resp = self.api("put", "/me/password",
@@ -351,7 +351,7 @@ class ChangePhoneTests(ApiTestBase):
         self.assertFalse(resp.data["merged"])
         self.assertEqual(User.objects.get(id=owner.id).phone, new_phone)
         me = self.api("get", "/me", token=token)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
         self.assertTrue(Membership.objects.filter(user=owner, unit=unit, role="HEAD",
                                                   ended_at__isnull=True).exists())
 
@@ -366,7 +366,7 @@ class ChangePhoneTests(ApiTestBase):
         self.assertIn(resp.status_code, (400, 429), resp.content)
         self.assertEqual(User.objects.get(id=owner.id).phone, old_phone)
         me = self.api("get", "/me", token=token)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
 
     def test_old_phone_cannot_login_after_change(self):
         """AC-028-04：更换成功后旧号登录失败（404 PHONE_NOT_REGISTERED），新号登录进入同一账号。"""
@@ -410,7 +410,7 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
         self.assert_ok(resp)
         self.assertTrue(Membership.objects.filter(user=user, unit=unit, ended_at__isnull=True).exists())
         me = self.api("get", "/me", token=token)
-        self.assertIn("户主", me.data["identities"]["labels"])
+        self.assertIn("产权业主", me.data["identities"]["labels"])
 
     def test_delete_registry_phone_keeps_head(self):
         """AC-035-02：管理员把清册手机号全部删除 → 户主身份仍在。"""

@@ -95,7 +95,7 @@ class AppealIdentityJourneyTests(ApiTestBase):
         me = self.api("get", "/me", token=token).data["identities"]
         housing = self.api("get", "/me/housing", token=token).data
         users = self.api("get", "/admin/users", {"q": user.account_no}, token=admin_token).data["results"]
-        self.assertEqual({me["summary"]["label"], housing["summary"]["label"], users[0]["identity_label"]}, {"户主"})
+        self.assertEqual({me["summary"]["label"], housing["summary"]["label"], users[0]["identity_label"]}, {"产权业主"})
         self.assert_ok(self.api("post", "/admin/memberships/revoke", {"user_id": user.id, "unit_id": unit.id},
                                 token=admin_token))
         self.assertEqual(self.api("get", "/me/housing", token=token).data["units"], [])

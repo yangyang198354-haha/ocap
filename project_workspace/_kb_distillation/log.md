@@ -156,3 +156,9 @@
 | 2026-11-11T23:44:22+08:00 | ocap_admin_polish-GROUP_D-001-2 | 淘汰：与 generic/test-engineer「不写死本机绝对路径」重复 | committed |
 | 2026-11-11T23:44:22+08:00 | ocap_admin_polish-GROUP_E1-001-1 | 晋升→M-DE-016 | committed |
 | 2026-11-11T23:44:22+08:00 | ocap_admin_polish-GROUP_E1-001-2 | 晋升→M-DE-017 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_A-001-1 | 合并→M-RA-011 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_A-002-1 | 合并→M-RA-011 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_B-001-1 | 晋升→M-SA-011 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_C-001-1 | 晋升→M-SD-026 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_D-001-1 | 晋升→M-TE-019 | committed |
+| 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_E1-001-1 | 晋升→M-DE-018 | committed |

@@ -86,7 +86,7 @@ class AdminUserDirectoryTests(ApiTestBase):
         rows = self.rows()
         self.assertEqual(rows[u1.id]["identity_label"], "委员")
         self.assertEqual(rows[u2.id]["identity_label"], "主任")
-        self.assertEqual(rows[u3.id]["identity_label"], "户主")
+        self.assertEqual(rows[u3.id]["identity_label"], "产权业主")
         self.assertEqual(rows[u4.id]["identity_label"], "同住人")
         self.assertEqual(rows[u5.id]["identity_label"], "游客")
         self.assertEqual(rows[u5.id]["certified_units"], 0)
@@ -105,7 +105,7 @@ class AdminUserDirectoryTests(ApiTestBase):
         membership_b.save(update_fields=["ended_at", "active_slot"])
         row = self.rows()[user.id]
         self.assertEqual(row["certified_units"], 1)
-        self.assertEqual(row["identity_label"], "户主")
+        self.assertEqual(row["identity_label"], "产权业主")
 
     def test_tc_int_391_real_names_dedupe_and_join(self):
         """TC-INT-391 / US-133 AC-133-01 ~ 03：多套实名去重保序。"""

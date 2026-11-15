@@ -5,7 +5,7 @@
       <view class="home-hero-scan" />
       <view class="home-hero-main">
         <view class="title home-greeting">你好，{{ auth.me?.profile?.nickname || '业主' }}</view>
-        <view class="muted home-meta">身份：{{ auth.identitySummary.label }}</view>
+        <view class="muted home-meta">身份：{{ identityText }}<text v-if="meError" class="link" @click="load"> 重试</text></view>
         <view v-if="pendingReview > 0" class="home-meta" @click="go('/pages/units/index?review=1')">待审批同住人申请：{{ pendingReview }}</view>
       </view>
       <view class="home-metrics">
@@ -32,6 +32,19 @@
       <view v-for="(s, i) in stats" :key="s.label" class="card home-stat" :class="i % 2 ? 'is-even' : 'is-odd'">
         <view class="label">{{ s.label }}</view>
         <view class="stat-value">{{ s.value }}</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="title">认证房屋</view>
+      <view class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套</view>
+      <view v-if="!auth.me" class="muted">{{ meError ? '加载失败，请重试' : '加载中…' }}</view>
+      <view v-else-if="!unitRows.length" class="muted">暂无已认证房屋</view>
+      <view v-for="unit in unitRows" :key="unit.unit_id" class="list-item">
+        <text>{{ unit.specific_part }}</text>
+        <view class="muted" style="margin-top: 8rpx">
+          {{ unit.unit_type_label || '未登记' }} · {{ unit.area_display || '未登记' }} · {{ unit.role_label || '产权业主' }}
+        </view>
       </view>
     </view>
 
@@ -77,15 +90,21 @@ const auth = useAuthStore()
 const taskPaging = usePaging({ fetch: (params) => api.tasks(params) })
 const tasks = ref(null)
 const pendingReview = ref(0)
+const meError = ref(false)
 const resolutions = ref([])
 // null 表示未取到（无权限或失败），区块显示空态，不编造数据
 const polls = ref(null)
 
 const countText = (list) => (list ? list.length : '—')
+const identityText = computed(() => {
+  if (auth.me) return auth.identitySummary.label // C-34 / ADR-080：单一最高身份，与 Web、管理端同口径
+  return meError.value ? '加载失败，请重试' : '加载中…'
+})
+const unitRows = computed(() => auth.me?.identities?.units || [])
 const openPolls = computed(() => (polls.value ? polls.value.filter((p) => p.status === 'OPEN') : null))
 const poll = computed(() => openPolls.value?.[0] || null)
 const stats = computed(() => [
-  { label: '认证房屋', value: auth.me ? (auth.me.identities?.units || []).length : '—' },
+  { label: '认证房屋', value: auth.me ? unitRows.value.length : '—' },
   { label: '审批待办', value: countText(tasks.value) },
   { label: '进行中投票', value: countText(openPolls.value) },
   { label: '近期公开决议', value: resolutions.value.length }
@@ -112,8 +131,9 @@ function tab(url) {
 async function load() {
   try {
     await auth.fetchMe()
+    meError.value = false
   } catch (e) {
-    /* 未登录由 http 统一跳转 */
+    meError.value = true // 未登录由 http 统一跳转；其余失败显示"加载失败，请重试"，不显示"游客"
   }
   // 产权业主：待审批同住人申请数量（失败静默，不影响首页其他区块）
   pendingReview.value = 0

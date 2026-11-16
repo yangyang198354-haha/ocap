@@ -21,19 +21,18 @@
 - [M-TE-019] 组件测试须同时覆盖“数据未返回”和“请求失败”两态，防止加载中/失败被误显示为游客 — conf 0.6 · 证据 GR-D-001 / GD-2 / TC-WEB-503、504 · 首见 2026-11-14 · 命中 1
 - [M-TE-020] 复核“定位级 CONSISTENT”故事时，先 git grep 各故事 US/AC 编号找无测试引用者再补 AC 级用例；14 个无引用故事里 3 个暴露既有缺陷 — conf 0.6 · 证据 product_review GR-D-001-F01/F02（DEF-017/018/019）、backend/tests/integration/test_product_review_gap_stories.py · 首见 2026-11-13 · 命中 1
 - [M-TE-021] 测“仅某角色可操作”AC：每个非授权角色各造一份独立数据再各试一次；同一份数据上首个越权成功会改状态，后续得 409 被误当“已拒绝” — conf 0.6 · 证据 TC-INT-514（test_product_review_gap_stories.py） · 首见 2026-11-13 · 命中 1
-- [M-TE-022] 远程 HTTP 套件：客户端内置目标主机校验与写操作白名单/GET 护栏（越界请求发出前抛错），先 ast.parse 再跑；本地用派生 settings（文件库 SQLite）+ migrate --run-syncdb + 预置清册行 + runserver 跑两遍自检（第二遍验证用例自行恢复数据） — conf 1.0 · 证据 backend/tests/remote/remote_client.py、product_review GR-D-003（本地自检）、unit_sort_filters GR-E2-004-F02（探测脚本错误致夹具循环 3 次） · 首见 2026-11-13 · 命中 3
+- [M-TE-022] 远程 HTTP 套件：客户端内置目标主机校验与写操作白名单/GET 护栏（越界请求发出前抛错），先 ast.parse 再跑；本地用派生 settings（文件库 SQLite）+ migrate --run-syncdb + 预置清册行 + runserver 跑两遍自检（第二遍验证用例自行恢复数据） — conf 1.0 · 证据 backend/tests/remote/remote_client.py、product_review GR-D-003（本地自检）、unit_sort_filters GR-E2-004-F02（探测脚本错误致夹具循环 3 次） · 首见 2026-11-13 · 命中 4；owner_auth_v2 GR-C-001-F02：远程用例对真实房屋提交并通过申诉越出 P4-1，GR-D-001 改为只提交/驳回并在 remote_client 加护栏
 - [M-TE-023] 缺陷“同类扫描”类修复验收时自己再扫：正则找模板里未经 formatDateTime/textOf/label 的 `{{ …_at|deadline|.scope|.status }}`；DEF-020 修 5 处后仍漏首页待办与决议详情（DEF-021/022） — conf 0.8 · 证据 product_review GR-D-001-F03、GR-D-002-F01 · 首见 2026-11-14 · 命中 2
 - [M-TE-024] 前端“枚举→中文”映射表守护：键集合与后端模型 choices 逐键比对（不多不少），另加登记范围扫描，正则排除 API 函数对象与弹窗文案表 — conf 0.6 · 证据 frontend/tests/product_review_rework2.spec.js TC-UNIT-598/601 · 首见 2026-11-14 · 命中 1
 - [M-TE-025] 后端新增响应字段的契约用例：前端 item.xxx 读取集合 ⊆ 后端真实列表项键集，并在去掉该字段的 scratch 副本上确认失败 — conf 0.6 · 证据 backend/tests/integration/test_product_review_rework2.py TC-INT-544 · 首见 2026-11-14 · 命中 1
 - [M-TE-026] 测 Element Plus 过滤页：el-select 占位在 .el-select__placeholder，用 findAllComponents({name:'ElSelect'}) 读 props、emit update:modelValue 选值，比点 popper 稳 — conf 0.6 · 证据 frontend/tests/registry_filters.spec.js 11/11（GR-D-001） · 首见 2026-11-16 · 命中 1
-- [M-TE-027] 管理命令用 call_command 测：CommandError(returncode=N) 用 exc.returncode 断言；dry-run/导出零写入用 CaptureQueriesContext；文件产物写临时目录 — conf 0.6 · 证据 backend/tests/integration/test_underground_relocation_cmd.py、test_registry_export_cmd.py（GR-D-001） · 首见 2026-11-16 · 命中 1
+- [M-TE-027] 管理命令用 call_command 测：CommandError(returncode=N) 用 exc.returncode 断言；dry-run/导出零写入用 CaptureQueriesContext；文件产物写临时目录 — conf 0.6 · 证据 backend/tests/integration/test_underground_relocation_cmd.py、test_registry_export_cmd.py（GR-D-001） · 首见 2026-11-16 · 命中 2；“只写预期表”：CaptureQueriesContext 取全部写 SQL 表名集合与允许集合比较，比业务表快照更能抓多余写入（test_owner_auth_v2_shops.py::test_tc_int_629）
 - [M-TE-028] 造导出/导入样例前先查既有规则：导入校验拒绝含“-”的楼层、build_specific_part 对中文楼层不补“层”；样例用被认可写法，被拒写法另写专测（用 -2 会令预检 rows_failed=1） — conf 0.6 · 证据 unit_sort_filters GR-D-001-F02（TC-INT-605/620） · 首见 2026-11-16 · 命中 1
+- [M-TE-029] 守卫类用例（输出位置、权限位）先把其余条件调合规（临时 0700 目录 + override_settings）再断言被拒，并用变异（`if _inside(...)`→`if False`）确认能失败，否则因另一检查而假通过 — conf 0.6 · 证据 backend/tests/unit/test_owner_auth_v2_rules.py::test_tc_unit_665、GR-D-001 · 首见 2026-11-16 · 命中 1
+- [M-TE-030] AC 场景在数据模型下不可达（如“追加号码恰为他人账号手机号”而手机号唯一）时，转为可观测不变量并在 test_plan 写明依据，不硬造用例 — conf 0.6 · 证据 test_owner_auth_v2_residency.py::test_tc_int_685/686、test_plan AC-203-07 · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
-- [P-TE-007] 守卫类用例（输出位置/权限位）要先把其余条件调成合规再断言被拒（用 override_settings 把 BASE_DIR/MEDIA_ROOT 指向 0700 临时目录），否则"位置守卫"去掉后仍因权限检查被拒而假通过；以变异（`if _inside(...)`→`if False`）确认能失败 — 自记 2026-11-16 · 证据 ocap_owner_auth_v2 test_owner_auth_v2_rules.py TC-UNIT-665、变异 6 失败
-- [P-TE-008] 断言管理命令"只写预期表"：CaptureQueriesContext 取全部 INSERT/UPDATE/DELETE 的表名集合并与允许集合比较（TC-INT-629），比只比对业务表快照更能抓到多余写入 — 自记 2026-11-16 · 证据 backend/tests/integration/test_owner_auth_v2_shops.py::test_tc_int_629
-- [P-TE-009] AC 里的场景在数据模型下不可达时（如"追加号码恰为他人账号手机号"而手机号唯一），不硬造用例，转为可观测不变量（他人认证数不变、不调用 AutoBindService）并在 test_plan 写明依据 — 自记 2026-11-16 · 证据 test_plan AC-203-07、TC-INT-685/686
 

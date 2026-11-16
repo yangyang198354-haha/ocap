@@ -27,6 +27,11 @@
 - [M-DE-025] 需求改了用户可见文案（如“户主”→“产权业主”）时，同步 grep backend/tests/remote 的期望字符串；远程 E2E 不在 CI 跑，过期期望只在部署后暴露 — conf 0.6 · 证据 product_review deployment_report 1.1.0 TC-E2E-321/324 · 首见 2026-11-15 · 命中 1
 - [M-DE-026] 数据修正命令 --apply 的输出可能只有 before_*/after_*，没有 differences 行：验收用独立只读计数 + 一次幂等 dry-run 补证；backup_sha256 是备份正文摘要，不等于整文件 sha256 — conf 0.6 · 证据 unit_sort_filters deployment_report 阶段 C、GR-E2-003 · 首见 2026-11-16 · 命中 1
 - [M-DE-027] 一次变更同时含代码部署、改库、导出个人信息时，拆成各自独立授权的阶段；回滚顺序先数据后代码，默认只回滚代码 — conf 0.6 · 证据 unit_sort_filters deployment_plan 阶段拆分、GR-E1-001、GR-E2-001~004 按段执行 · 首见 2026-11-16 · 命中 1
+- [M-DE-028] 迁移加 NOT NULL 且带 default 的列（如 CharField(blank=True, default="")）：迁移前 `migrate --plan` 门控（输出恰含本批迁移才继续）；目标机 sql_mode 实测 STRICT，旧代码插入可能失败，回滚须先 `migrate` 回退再恢复旧代码（与 M-DE-005 的“可空列只回退代码”不同；回退本身未实测） — conf 0.8 · 证据 owner_auth_v2 deployment_report PRE-A15、DEPLOY-004、GR-E2-001 · 首见 2026-11-16 · 命中 2
+- [M-DE-029] 站点有 SPA 回退（try_files→index.html）时，“导出文件不可经站点取得”的判据是响应内容类型/大小 ≠ 文件（200 text/html 同 index.html 大小），不能看 404；导出目录放部署根同级并设 700 — conf 0.6 · 证据 deployment_plan DEPLOY-010/012、deployment_report 验证表 · 首见 2026-11-16 · 命中 1
+- [M-DE-030] 计划里写 API 路径要带 /api/v1/ 前缀并对照 config/urls.py 与各 app urls.py；本批计划省略前缀，执行时才补全 — conf 0.6 · 证据 owner_auth_v2 deployment_report 偏差 3、backend/config/urls.py · 首见 2026-11-16 · 命中 1
+- [M-DE-031] 目标机只读核对脚本用 Write 写本地文件，经 `ssh host '…manage.py shell' < 脚本` 经 stdin 喂入，只输出计数；备份 jsonl 首行是 header，逐条核对按含 id 的记录过滤 — conf 0.6 · 证据 owner_auth_v2 deployment_report DEPLOY-012、GR-E2-002 · 首见 2026-11-16 · 命中 1
+- [M-DE-032] 远程 E2E 护栏 WRITE_ALLOWLIST 不含 POST /certifications，认证负例无法远程验证；E1 计划阶段先核对护栏是否覆盖待验写路径，不覆盖则列人工项或回流扩展护栏（仅限 e2e_ 夹具房屋） — conf 0.6 · 证据 owner_auth_v2 GR-E2-003-F01、backend/tests/remote/remote_client.py · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 

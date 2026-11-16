@@ -83,6 +83,7 @@
     <invocation id="ocap_product_review-GROUP_E2-001" agent="devops-engineer" start="2026-11-14T10:02:01+08:00" end="" result=""/>
     <invocation id="ocap_product_review-GROUP_E2-002" agent="devops-engineer" start="2026-11-15T18:32:30+08:00" end="2026-11-15T20:16:26+08:00" result="SUCCESS"/>
     <invocation id="ocap_product_review-GROUP_C-merge-001" agent="software-developer" start="2026-11-15T11:36:59+08:00" end="2026-11-15T11:51:18+08:00" result="PARTIAL_SUCCESS"/>
+    <invocation id="ocap_product_review-GROUP_E2-003" agent="devops-engineer" start="2026-11-15T20:50:45+08:00" end="2026-11-15T21:34:25+08:00" result="PARTIAL_SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_product_review-GROUP_A-001" decision="PASS_WITH_CONDITIONS" time="2026-11-13T23:13:26+08:00">
@@ -271,6 +272,18 @@ ssh(只读): systemctl is-active ocap-backend ocap-content-worker ocap-run-due-j
 showmigrations residency -> [X] 0001_initial / [X] 0002_closed_status
 snapshots/*20261115184022*（backend/web tar、sql.gz、fingerprint、registry-counts）与 web/ocap.old-20261115184022 存在；dump-err 0 字节]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-002" invocation_id="ocap_product_review-GROUP_E2-003" decision="FAIL" time="2026-11-15T21:34:25+08:00">
+      <reviewed_files><file path="deployment/deployment_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-E2 DEPLOYED_SUCCESSFULLY" result="NOT_SATISFIED">远程 E2E Ran 22 / FAILED (failures=2, skipped=1)：TC-E2E-321、TC-E2E-324；报告最终状态 DEPLOYED_WITH_ISSUES</criterion>
+      <criterion id="夹具清理与数据边界" result="SATISFIED">PM 只读复核 e2e_fixture status：e2e 全部计数 0；RegistryUnit/Owner/Phone 5742/7862/4301 与基线一致；claim_amount_max 1000000.00</criterion>
+      <finding id="GR-E2-002-F01" severity="MAJOR">DEF-A：/me identities.units 按 (specific_part, unit_id) 排序（identity/services.py:48），/me/housing 按 (certified_at, id) 排序（residency/housing.py:41），跨视图顺序不一致（AC-157-01“顺序不变”）</finding>
+      <finding id="GR-E2-002-F02" severity="MAJOR">DEF-A/DEF-B：backend/tests/remote/remote_cases.py:77、78、83、114 仍期望“户主”，合并 C-34（现 C-46）后过期；远程套件不在 CI 中运行，合并时未被发现</finding>
+      <finding id="GR-E2-002-F03" severity="MINOR">product_review AC-157-01/02 原文仍写“户主”，需注记被 identity_display C-46 替代</finding>
+      <verification><![CDATA[ssh(只读) e2e_fixture status -> e2e 全部计数 0；registry_counts RegistryUnit 5742 / RegistryOwner 7862 / RegistryPhone 4301；claim_amount_max 1000000.00
+systemctl is-active ocap-backend -> active；https://ai-freeark.xin/ocap/ -> 200
+代码：identity/services.py:48 sorted(key=(specific_part, unit_id))；residency/housing.py:41 order_by("certified_at","id")]]></verification>
+      <feedback_to_agent>缺陷需回流 A→B→C→D；本项目 GROUP_D defect_loops 已为 2（上限），按协议 §H 上报，待用户决定是否继续。</feedback_to_agent>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-13T22:50:00+08:00" answered_by="用户"><![CDATA[Q1 ocap_admin_polish 处理方式：git pull 后发现已交付并部署，问题作废。Q2=A 评审全部批次（pull 后为 7 批）。Q3=A 主力 E2E 本地；部署后对 https://ai-freeark.xin/ocap/ 跑 HTTP E2E，用 e2e_ 前缀测试账号，由 E2 用 manage.py 创建并清理，不改清册。Q4=A 只允许创建/清理带前缀测试数据。Q5=A 评审后修正清单由用户逐条确认。同意在 scratchpad 建 venv。]]></clarification>
@@ -278,6 +291,7 @@ snapshots/*20261115184022*（backend/web tar、sql.gz、fingerprint、registry-c
     <clarification time="2026-11-14T10:01:53+08:00" answered_by="用户"><![CDATA[用户原话："授权本轮部署，问题按照推荐。" → E2 测试环境部署授权（本轮有效）；UC-01=A 先提交本地 main（不 push）按该 commit 打包；UC-02~05 同意（含 25 条 e2e_决议等可见影响）；UC-06 远程不改 claim.amount_max；UC-07 跳过 31 分钟慢用例；UC-08/09 知悉；GR-C-003-F02 中文措辞（审计 成员/管理员/系统、成功/失败/拒绝，报销状态）按开发现状；OBS-9 审计时间含秒保持。]]></clarification>
     <clarification time="2026-11-15T12:00:22+08:00" answered_by="用户"><![CDATA[git pull 分叉处理：Q1=A merge；Q2=A stash；Q3=A 合并后全量回归；Q4=A 身份标签以 identity_display 为准并保留双方新增；Q5=A 交 software-developer 解决、PM 门控；Q6=A 完成合并，TC-INT-478/480 记已知失败，下一迭代回流需求重编号；Q7=A 管理端目录同样不再显示“户主”。]]></clarification>
     <clarification time="2026-11-15T12:16:33+08:00" answered_by="用户"><![CDATA[用户原话："先本地回归测试，通过后commit + push， github action 绿后， 再部署"；Q8=A 编号根因修复后再推送；Q9=A 沿用本批已批准部署计划，打包 CI 绿的提交，部署前核对测试机当前版本并补齐 11-14 E2 结果。]]></clarification>
+    <clarification time="2026-11-15T20:50:45+08:00" answered_by="用户"><![CDATA[用户原话："做1,3，4，5"（PM 上一条汇报第 1 项列明 UC-02 占 3 套住宅、UC-03 临时 2 委员+1 业主代表、UC-04 1990000 号段、UC-05 公开决议列表临时 25 条测试决议，确认后执行远程 E2E）→ 视为 UC-02~05 按推荐项同意；UC-06 保守（不改 claim.amount_max）、UC-07 不跑慢用例按计划默认。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -323,5 +337,8 @@ snapshots/*20261115184022*（backend/web tar、sql.gz、fingerprint、registry-c
     <event time="2026-11-15T18:32:30+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮消息"确认部署"，主会话模式，结果：采纳——仅测试环境、仅本次 GROUP_E2-002、版本 3ffd868（CI run 43698549347 全绿）；UC-02~05 本轮未确认，按计划只执行 DEPLOY-001~008，不执行 DEPLOY-009~011。</event>
     <event time="2026-11-15T18:32:30+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-002），PRODUCTION_DEPLOY_CONFIRM=true，环境=测试，commit 3ffd868。</event>
     <event time="2026-11-15T20:16:26+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS_WITH_CONDITIONS；deployment_report 升 1.0.0 APPROVED。测试环境运行 3ffd868。GROUP_E2-001 补述：目标机核实无该次变更。</event>
+    <event time="2026-11-15T20:50:45+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮"做1"，主会话模式；结果：采纳——仅测试环境、仅本次 GROUP_E2-003，范围 DEPLOY-009~011（夹具 setup、远程 HTTP E2E、cleanup），不重新部署代码。</event>
+    <event time="2026-11-15T20:50:45+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-003），PRODUCTION_DEPLOY_CONFIRM=true，环境=测试，线上版本 3ffd868。</event>
+    <event time="2026-11-15T21:34:25+08:00" type="GATE" actor="pm-orchestrator">GR-E2-002 FAIL（DEPLOYED_WITH_ISSUES，远程 E2E 19/22 通过，2 失败 1 跳过）；夹具已清理并经 PM 复核。defect_loops 已达上限 2，按 §H 上报用户。</event>
   </audit_log>
 </phase_status>

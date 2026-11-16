@@ -16,6 +16,9 @@
 - [M-SA-014] 同一用户在同一专有部分可有 OWNER+RESIDENT 两条有效 Membership：/me 按专有部分去重，/me/housing 不去重；统一排序只排房屋行输出，不动传给 identity_view 的 memberships 顺序 — conf 0.6 · 证据 backend/tests/integration/test_identity_display.py:118-123 · 首见 2026-11-16 · 命中 1
 - [M-SA-015] 改私有函数签名前先 git grep 测试对它的直接导入（如 _parse_amount），新增参数带缺省值保持旧调用兼容 — conf 0.6 · 证据 backend/tests/unit/test_domain_rules.py、test_product_review_rules.py 直接导入 · 首见 2026-11-13 · 命中 1
 - [M-SA-016] 需求写“Web 已有明细/入口”时读页面核对；报表 API 的支出事由违反 OQ-08（show_expense_reason 配置），新增移动端入口前先在服务端脱敏 — conf 0.6 · 证据 product_review GR-B-001-F01、backend/apps/ledger/views.py、backend/apps/core/config.py · 首见 2026-11-13 · 命中 1
+- [M-SA-017] 导出/备份文件不能放进部署根（/home/yangyang/ocap/）内：预检要求该目录仅 backend/web/snapshots，回滚会 rm -rf backend；放同级目录（ocap_exports，700）并在命令里做位置守卫 — conf 0.8 · 证据 SKILL.md:93、owner_auth_v2 ADR-110、deployment_report DEPLOY-010/012 实际执行 · 首见 2026-11-16 · 命中 2
+- [M-SA-018] 附件无权访问现为 404；需求要 401/403 时在附件策略 `can_open`（如 residency/apps.py）内对“已登录无权者”抛 403，不动通用 open；先自行 grep 现有 404 断言（GR-B-001-F01：引用的 test_rework_cr011_024.py:376 并非 404 断言） — conf 0.6 · 证据 core/attachments.py、owner_auth_v2 ADR-112、GR-B-001-F01 · 首见 2026-11-16 · 命中 1
+- [M-SA-019] 把原楼栋写入 unit_no 时纯数字要补“栋”，否则 build_specific_part 会生成“商铺1单元…” — conf 0.6 · 证据 backend/apps/registry/models.py `_SUFFIXES`、owner_auth_v2 ADR-106 · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SA-001] 取微信官方服务端接口文档时，用 `developers.weixin.qq.com/miniprogram/dev/server/API/<分类>/<api_xxx>.md`（带 .md）可拿到干净正文；`/framework/open-ability/*.html` 页面正文过长，WebFetch 只返回导航 — 自记 2026-11-07 · 证据 WebFetch 结果（不可核验）
@@ -27,7 +30,5 @@
 - [P-SA-010] 迁移拆分旧版无归属数据时，要提前定义"同人多号吸收并入"规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）
 - [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
-- [P-SA-015] 导出/备份类文件不可放 `/home/yangyang/ocap/` 内：部署预检要求该目录仅 backend/web/snapshots，后端叠加解包、回滚 `rm -rf backend`；用同级目录（如 `/home/yangyang/ocap_exports/`）并在命令里做位置守卫 — 自记 2026-11-16 · 证据 .claude/skills/ocap-deploy/SKILL.md:93,132,280（ocap_owner_auth_v2 ADR-110）
-- [P-SA-016] 附件无权访问现为 404（`AttachmentService.open`），需求写 401/403 时在附件策略 `can_open` 内对"已登录无权者"抛 ApiError 403 即可，不用动通用 open；并先 grep 现有 404 断言（test_rework_cr011_024.py:376） — 自记 2026-11-16 · 证据 core/attachments.py:112-132（ocap_owner_auth_v2 ADR-112）
 - [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）
 

@@ -218,3 +218,24 @@
 | 2026-11-16T14:53:12+08:00 | generic-confirm:M-PM-003 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |
 | 2026-11-16T14:53:12+08:00 | generic-confirm:M-TE-012 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |
 | 2026-11-16T14:53:12+08:00 | generic-confirm:M-DE-022 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_A-001-1 | 晋升→M-RA-019 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_A-001-2 | 合并→M-RA-013 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_A-002-1 | 晋升→M-RA-020 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_A-002-2 | 合并→M-RA-020 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_B-001-1 | 晋升→M-SA-017 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_B-001-2 | 晋升→M-SA-018 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_B-001-3 | 保留→P-SA-017（仅 WebFetch 摘要） | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_B-001-4 | 晋升→M-SA-019 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_C-001-1 | 晋升→M-SD-031 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_C-001-2 | 晋升→M-SD-032 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_C-001-3 | 合并→M-SD-014 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_D-001-1 | 晋升→M-TE-029 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_D-001-2 | 合并→M-TE-027 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_D-001-3 | 晋升→M-TE-030 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E1-001-1 | 晋升→M-DE-028 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E1-001-2 | 晋升→M-DE-029 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-001-1 | 合并→M-DE-028 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-001-2 | 晋升→M-DE-030 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-002-1 | 晋升→M-DE-031 | committed |
+| 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-003-1 | 晋升→M-DE-032 | committed |
+| 2026-11-16T22:10:59+08:00 | pm-evidence:owner_auth_v2 | M-PM-001 命中+3、M-PM-002 命中+1、M-TE-022 命中+1 | committed |

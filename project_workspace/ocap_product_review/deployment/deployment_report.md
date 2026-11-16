@@ -1,20 +1,23 @@
 <file_header>
   <author_agent>devops-engineer</author_agent>
-  <timestamp>2026-11-15T18:45:09+08:00</timestamp>
+  <timestamp>2026-11-15T21:32:29+08:00</timestamp>
   <project_name>ocap_product_review</project_name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <input_files>
     <file>project_workspace/ocap_product_review/deployment/deployment_plan.md</file>
     <file>project_workspace/ocap_product_review/deployment/cicd_pipeline.md</file>
+    <file>project_workspace/ocap_product_review/testing/e2e_test_report.md</file>
     <file>project_workspace/ocap_identity_display/deployment/deployment_report.md</file>
   </input_files>
   <phase>PHASE_11b</phase>
-  <status>APPROVED</status>
+  <status>DRAFT</status>
 </file_header>
 
 # 部署报告：产品评审修正（测试环境）
 
 ## 摘要
+
+> 1.1.0 追加：GROUP_E2-003 已执行 DEPLOY-009 ~ 011（见文末"远程 E2E（GROUP_E2-003）"）。下列 1.0.0 摘要中"DEPLOY-009 ~ 011 未执行"的表述被该节取代；代码部署结论（DEPLOYED_SUCCESSFULLY）不变。
 
 - 目标环境：测试（树莓派 `raspberrypi`，外网 SSH 57279；入口 `https://ai-freeark.xin/ocap/`）
 - 策略：recreate（单实例）
@@ -156,3 +159,74 @@ DEPLOY-001 备份文件 SHA256（目标机 `/home/yangyang/ocap/snapshots/`）�
 - 快照与备份保留 ≥ 7 天后再人工清理：`web/ocap.old-20261115184022`、`snapshots/*-20261115184022.*`。
 - 本次未复跑小程序 vitest 与主题检查（以 CI 为据）。
 - 本次 `3ffd868` 部署后，建议用户提交 `phase_status.md` 与本报告（子代理不执行 commit/push，画像 P9）。
+
+---
+
+## 远程 E2E（GROUP_E2-003）
+
+执行时间：2026-11-15 20:51 ~ 20:54（Asia/Shanghai）。范围：DEPLOY-009 ~ 011；线上版本 `3ffd868`，不重新部署、不重启服务、不跑迁移。
+
+### 授权核对（E2-003）
+
+- 授权来源：invocation `special_instructions`：`PRODUCTION_DEPLOY_CONFIRM=true`，用户 2026-11-15 本轮消息"做1,3，4，5"第 1 项（执行远程 HTTP E2E）；仅测试环境、仅本次调用、仅 DEPLOY-009 ~ 011。
+- 环境名"测试" = 计划环境 = 画像 P7 环境。deployment_plan 1.0.0 与 phase_status 登记的 APPROVED 版本一致。
+- UC 结论：UC-02/03/04/05 同意；UC-06 保守（远程不改 `claim.amount_max`）；UC-07 不跑 TC-E2E-332；UC-08 小程序上传不在范围。
+- 前置：外网 SSH 指纹 `SHA256:TfpCSrSLuK1UspD2mpikebK0bE0IFnPH8bSigERWnmk` 与画像一致；ControlMaster 套接字在 `/tmp/ocs.gY6Q`。连接期间出现 3 次建连 `Connection closed`（M-DE-009，只重试建连，均发生在只读命令），之后稳定。
+
+### 执行前只读核对
+
+| 项 | 实际结果 | 通过 |
+|---|---|---|
+| 服务与前端版本 | `ocap-backend`、`ocap-content-worker`、`ocap-run-due-jobs.timer` 均 `active`；`web/ocap/assets` 为 `index-CbVinVRe.js`/`index-DwTVKv1n.css`（与部署一致） | 是 |
+| V-14 夹具命令与基线 | `e2e_fixture status` 退出 0：e2e 全部计数 0；`registry_counts` 5742/7862/4301；`claim_amount_max="1000000.00"` | 是 |
+| V-15 选房 | `_free_units(3, set())` 返回 3 套：`(7, '1栋1单元1层101号')`、`(8, '1栋1单元1层102号')`、`(10, '1栋2单元1层102号')`；满足 UC-02 的 ≥3 | 是 |
+| V-16 进行中的半数决议 | `Resolution` 状态/模式分布 `[]`（表中无任何决议）；`PENDING_HALF []` | 是（无进行中半数决议） |
+
+### 分步执行
+
+| DEPLOY | 命令摘要 | 开始 | 耗时 | 结果 | 输出摘要 |
+|---|---|---|---|---|---|
+| 009 | 本地生成口令（不回显、不落盘），经 stdin 传到远端 `read -r`；`OCAP_E2E_FIXTURE=1 manage.py e2e_fixture setup --units 3 --bulk-users 25 --bulk-resolutions 25` | 20:52:08 | 3 秒 | SUCCESS | `SETUP_EXIT=0`；JSON 含 accounts（手机号脱敏 `199****xxxx`、无口令）、units（U1=7、U2=8、U3=10）、flows、`registry_counts` 5742/7862/4301，与基线相同 |
+| 010 | `OCAP_E2E_BASE_URL=https://ai-freeark.xin/ocap/ OCAP_E2E_PASSWORD=*** python3 backend/tests/remote/run_remote.py -v`（未设 `OCAP_E2E_SLOW`、`OCAP_E2E_ALLOW_LOCAL`） | 20:52:11 | 74.1 秒（套件）/ 74 秒（墙钟） | **FAILED（2 条）** | `Ran 22 tests in 74.098s`；`FAILED (failures=2, skipped=1)`；`RUN_EXIT=1`；ok 19、FAIL 2、skipped 1（TC-E2E-332 慢用例，UC-07）。TC-E2E-328 未 SKIP（测试环境已有报表，已实际通过） |
+| 011 | `cleanup`（dry-run）→ `cleanup --execute` → `status` → `REGISTRY_NOW` | 20:53:34 | 约 14 秒 | SUCCESS | dry-run 退出 0，`would_delete` 与 `status` 的 e2e 数据逐项相同（users 35、admins 1、flows 3、memberships 12、seats 3、appeals 2、resident_applications 3、claims 1、resolutions 25、approval_instances 1、attachments 4、tokens 13），无 `LedgerEntry`（未出现退出码 2）；`--execute` 退出 0（deleted users 35、resolutions 25、memberships 12 等，flows 7 含测试中新建的流程）；`status` 全 0 |
+
+E2E 失败按计划**不回滚代码**；DEPLOY-010 失败后立即执行 DEPLOY-011。
+
+### 远程 E2E 用例结果（22 条）
+
+| TC | 结果 | 说明 |
+|---|---|---|
+| TC-E2E-320、322、323、325、326、327、328、329、330、331 | PASS | 共 10 条（ReadOnlyChecks）；328 因测试环境已有报表而执行通过 |
+| TC-E2E-321 | **FAIL** | 见缺陷 DEF-A |
+| TC-E2E-324 | **FAIL** | 见缺陷 DEF-B |
+| TC-E2E-332 | SKIP | 慢用例，UC-07，列人工清单 H-7 |
+| TC-E2E-333 ~ 341 | PASS | 共 9 条（MutatingFlows） |
+
+合计：22 = 19 pass + 2 fail + 1 skip（0 blocked、0 not_testable）；通过率 = 19 / (19+2+0) = 90.5%。全部请求经 `https://ai-freeark.xin/ocap/`；护栏未触发。
+
+失败详情（HTTP 状态均为 200，为断言失败，不含令牌/口令）：
+
+- **DEF-A TC-E2E-321**（`backend/tests/remote/remote_cases.py:76`）：`GET /ocap/api/v1/me/housing` 的 `units` 顺序为 `[(10,'产权业主'),(8,'同住人')]`，`GET /ocap/api/v1/me` 的 `identities.units` 为 `[(8,'同住人'),(10,'产权业主')]`，两个视图顺序不一致，用例在此断言处失败。我读了源码，不是本调用的修复范围：`identity/services.py:48` 按 `(specific_part, unit_id)` 排序，`residency/housing.py:41` 按 `certified_at, id` 排序（后者使 e2e_multi 两行的顺序取决于认证时间）。该用例其后的断言 `sorted(labels)==["同住人","户主"]`、汇总 `"户主"` 也与 C-34（户主不再作为身份文案，`identity/services.py:20` 的 `ROLE_LABELS` 为"产权业主"）矛盾，即便顺序一致仍会失败。归类：产品两视图排序不一致（AC-157-03 跨视图一致）+ 测试期望未跟随 identity_display 批次。
+- **DEF-B TC-E2E-324**（`remote_cases.py:114`）：管理员 `GET /ocap/api/v1/admin/users?q=…` 返回 `identity_label='产权业主'`，用例期望 `'户主'`。`accounts/directory.py:12,32` 的 `ROLE_LABELS` 已于 identity_display 批次把 HEAD/OWNER 都显示为"产权业主"（C-34）。归类：测试期望过期（`remote_cases.py` 最后修改于 8ba53a8，早于 identity_display 合并），产品行为符合新需求。
+
+### 验证结果（本节负责的项）
+
+| 检查项 | 实际结果 | 通过 |
+|---|---|---|
+| V-15 夹具选房前置 | 返回 3 套，见上 | 是 |
+| V-16 窗口内无进行中的半数决议 | `Resolution` 表无记录 | 是 |
+| V-20 远程 E2E 结果 | `Ran 22`；2 失败（TC-E2E-321、324）；`RUN_EXIT=1`；skip 1（预期 2：328 实际通过，332 SKIP） | **否**（非关键 → `DEPLOYED_WITH_ISSUES`） |
+| V-21 清理验收 | `status` e2e 计数全 0；`registry_counts` 5742/7862/4301 = `REGISTRY_BASE`；`claim_amount_max="1000000.00"`；`REGISTRY_NOW 5742 7862 4301` 逐项相同 | 是（关键） |
+| V-22 E2E 期间无服务端异常 | 自 20:52:00 起 `journalctl -u ocap-backend`：`Traceback` 计数 0，`ERROR` 计数 0；`ocap-backend` 仍 `active` | 是 |
+| V-23 人工验证 H-1 ~ H-9 | 不由 E2 执行；留给用户（含 H-7 慢用例） | NOT_EXECUTED |
+
+### 最终状态
+
+DEPLOYED_WITH_ISSUES（代码部署 DEPLOYED_SUCCESSFULLY 不变；远程 E2E 22 条中 19 通过、2 失败、1 跳过）。夹具已全部清理，清册计数与基线一致，无需人工干预数据。
+
+### 遗留问题（追加）
+
+- DEF-A（产品：`/me` 与 `/me/housing` 房屋排序不一致 + 测试期望含"户主"）与 DEF-B（测试期望过期）需回 GROUP_C/D 处理，修复后重跑远程 E2E 须重新获得授权（夹具需重新 setup）。
+- `AuditLog` 中永久含本次 e2e 记录（夹具设计保留审计）；`e2e_` 数据窗口内（约 20:52:11 ~ 20:53:48）公开决议列表曾出现 25 条 `e2e_决议`，已清理。
+- 目标机上 `/tmp` 无本次新增的包或口令；口令只存在于本调用的 shell 变量中，未写入文件、argv 或本报告。
+- 本地中间日志在会话 scratchpad，未入库。

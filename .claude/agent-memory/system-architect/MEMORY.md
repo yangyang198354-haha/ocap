@@ -9,6 +9,13 @@
 - [M-SA-007] 新增前端 API 调用前先看 backend/tests/integration/test_frontend_contract.py:30-97：正则只认 `http.`/`adminHttp.` + 字面量路径，路径不带 `?`，管理端接口只能 IsAdmin、用户端只能 IsMember，设计 IFC 时按此写 — conf 0.6 · 证据 test_frontend_contract.py:30-97（git grep）、content GROUP_B-1 · 首见 2026-11-10 · 命中 1
 - [M-SA-008] IFC 里类静态方法不要取 list/dict/set 等内建类型名：类体内同名成员遮蔽注解 `list[...]`，Python 3.12/3.13 导入即 TypeError（3.14 延迟注解不报，本地版本新于 CI 时测不出） — conf 0.8 · 证据 content GR-C-002-F01（media.py）、registry GR-D-003-F01 · 首见 2026-11-11 · 命中 2
 - [M-SA-009] 凡有"写审计"类 AC，module_design 给"审计落点表"（AC→动作→唯一写入处，含批次/全失败/无任务分支），否则开发只在主路径写审计、漏删除与全人工分支 — conf 0.6 · 证据 content GR-C-002-F03 · 首见 2026-11-11 · 命中 1
+- [M-SA-010] DRF 列表增加跨表派生字段优先固定 prefetch + 应用层计算，并用“每页查询数不随行数增长”测试守 N+1；跨表搜索用 Exists 避免 distinct 放大 — conf 0.6 · 证据 GR-B-001-F02 / TC-INT-397 · 首见 2026-11-11 · 命中 1
+- [M-SA-011] 共享展示型聚合函数被多个输出面复用时，改口径前枚举全部消费方，在“唯一来源”（identity_view）改一次再批量调整下游断言，不在调用处分别打补丁 — conf 0.8 · 证据 GR-B-001 / GB-3 / IFC-247；product_review 合并 TC-INT-478/480；backend/apps/accounts/directory.py identity_view · 首见 2026-11-14 · 命中 2
+- [M-SA-012] 需单独授权的数据修正不放 Django 数据迁移（部署每次跑 migrate --noinput，测试 MIGRATION_MODULES 置空测不到）；用默认 dry-run 的 management command，apply 要求 --backup 与 --expect-changes — conf 0.6 · 证据 .agents/skills/ocap-deploy/SKILL.md:149、unit_sort_filters ADR-101 · 首见 2026-11-16 · 命中 1
+- [M-SA-013] 改 RegistryUnit.building 会经 build_specific_part 重算 specific_part，且有标识与四元组两道唯一约束；批量改归属须按最终状态预演两类冲突，冲突即整批停止；改写唯一派生列新值可能等于另一行旧值，用先检测+占位值两阶段+单事务 — conf 0.8 · 证据 backend/apps/registry/models.py build_specific_part、ADR-101、M-SD-023（独立观察） · 首见 2026-11-11 · 命中 2
+- [M-SA-014] 同一用户在同一专有部分可有 OWNER+RESIDENT 两条有效 Membership：/me 按专有部分去重，/me/housing 不去重；统一排序只排房屋行输出，不动传给 identity_view 的 memberships 顺序 — conf 0.6 · 证据 backend/tests/integration/test_identity_display.py:118-123 · 首见 2026-11-16 · 命中 1
+- [M-SA-015] 改私有函数签名前先 git grep 测试对它的直接导入（如 _parse_amount），新增参数带缺省值保持旧调用兼容 — conf 0.6 · 证据 backend/tests/unit/test_domain_rules.py、test_product_review_rules.py 直接导入 · 首见 2026-11-13 · 命中 1
+- [M-SA-016] 需求写“Web 已有明细/入口”时读页面核对；报表 API 的支出事由违反 OQ-08（show_expense_reason 配置），新增移动端入口前先在服务端脱敏 — conf 0.6 · 证据 product_review GR-B-001-F01、backend/apps/ledger/views.py、backend/apps/core/config.py · 首见 2026-11-13 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SA-001] 取微信官方服务端接口文档时，用 `developers.weixin.qq.com/miniprogram/dev/server/API/<分类>/<api_xxx>.md`（带 .md）可拿到干净正文；`/framework/open-ability/*.html` 页面正文过长，WebFetch 只返回导航 — 自记 2026-11-07 · 证据 WebFetch 结果（不可核验）
@@ -18,13 +25,6 @@
 - [P-SA-006] uni-app `rich-text` 会屏蔽节点事件（链接/图片不可点击），小程序要"可点击链接/视频"的富文本应由服务端出结构化块、自定义组件渲染 — 自记 2026-11-10 · 证据 uniapp.dcloud.net.cn/component/rich-text.html（WebFetch 摘要）
 - [P-SA-007] 查包信息：npm 用 `registry.npmjs.org/<pkg>/latest`（小）；PyPI 的 `/pypi/<pkg>/json` 超长被截断，改用 `/pypi/<pkg>/<version>/json` 才能看到 upload_time 与轮子文件名 — 自记 2026-11-10 · 证据 WebFetch 结果
 - [P-SA-010] 迁移拆分旧版无归属数据时，要提前定义"同人多号吸收并入"规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）
-- [P-SA-011] 批量改写带唯一约束的派生列时，新值可能等于另一行的旧值（如 `车库A-088`），单遍更新会中途违反约束；设计为"先全量检测冲突 → 占位值两阶段更新 → 单事务"，MySQL 无事务性 DDL 须在 RunPython 内显式 `transaction.atomic` — 自记 2026-11-11 · 证据 ocap_admin_polish ADR-067（设计推演，待实现与测试验证）
-- [P-SA-012] 主题/风格的"仅某一端"覆盖规则要挂在 `<html data-surface>` 之类全局属性上，不能挂布局根类，因 Element Plus 弹层 Teleport 到 body 够不着 — 自记 2026-11-11 · 证据 ocap_admin_polish ADR-075（基线 ADR-026 已述 Teleport）
 - [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
-- [P-SA-015] 改私有函数签名前先 git grep 测试对它的直接导入（如 tests/unit/test_domain_rules.py 导入 claims.views._parse_amount、income.views._parse_rows），新增参数一律带缺省值（limit=None 时自读配置）以保持旧调用兼容 — 自记 2026-11-14 · 证据 ocap_product_review module_design IFC-265/266（git grep 实测）
-- [P-SA-016] 前端有按文件/路由数量断言的守护测试（frontend/tests/qa_unit_theme.spec.js:273 admin 路由页数 16）；新增路由页要同步数字，公共组件放 portal/parts、admin/parts 子目录以避开顶层 .vue 扫描 — 自记 2026-11-14 · 证据 ocap_product_review MOD-084/086（git grep 实测）
-- [P-SA-017] 需求写"Web 已有明细/已有入口"时必须读页面核对：Reports.vue 只渲染合计，而 GET /ledger/reports/<id> 的 detail 含支出事由 summary，违反已确认的 OQ-08（report.show_expense_reason 配置无读取点）；新增移动端入口会放大暴露面，设计成服务端脱敏 — 自记 2026-11-14 · 证据 backend/apps/ledger/views.py:77、frontend/src/portal/Reports.vue:25-31
-- [P-SA-018] 需单独授权的数据修正不能放 Django 数据迁移：ocap-deploy 每次部署都跑 `manage.py migrate --noinput`，且测试 MIGRATION_MODULES 置空测不到迁移；改用默认 dry-run 的 management command（先例 registry_specific_part_preview），apply 需 --backup 与 --expect-changes — 自记 2026-11-16 · 证据 .claude/skills/ocap-deploy/SKILL.md:149、ocap_unit_sort_filters ADR-101
-- [P-SA-019] 改 RegistryUnit.building 会经 build_specific_part 重算 specific_part（非纯数字楼栋不补"栋"），且有 specific_part 与四元组两道唯一约束；批量改归属须按"最终状态"预演两类冲突，冲突即整批停止，则无需占位值两步更新 — 自记 2026-11-16 · 证据 backend/apps/registry/models.py:47-56,65,71-74（设计推演，待实现验证）
-- [P-SA-020] 同一用户在同一专有部分可有 OWNER+RESIDENT 两条有效 Membership：/me 按专有部分去重，/me/housing 不去重；统一排序时只排房屋行输出，不改传给 identity_view 的 memberships 顺序 — 自记 2026-11-16 · 证据 backend/tests/integration/test_identity_display.py:118-123、backend/apps/identity/services.py:42-48
+

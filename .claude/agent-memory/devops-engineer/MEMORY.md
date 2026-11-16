@@ -8,15 +8,25 @@
 - [M-DE-006] 无 git 的目标机部署，锚点应记录本地 HEAD + 工作树状态 + tar SHA256，仅时间戳不足以定位版本 — conf 0.6 · 证据 registry GR-E1-001、DEPLOY-004 两端 SHA256 一致 · 首见 2026-11-10 · 命中 1
 - [M-DE-007] 大文件上传/长任务上线前核实 gunicorn `--timeout` 与 nginx `client_max_body_size`/`proxy_read_timeout`（缺省 1m）；经 Freeark 反代的上传路径要同时核对 ocap 站点与 Freeark `^~ /ocap/` 块；`sed -i` 改 sites-enabled 软链加 `--follow-symlinks` — conf 0.8 · 证据 registry GR-B-001-F01、DEPLOY-003（60→90）、GR-E2-001；content deployment_plan.md:42,52、PRE-109 · 首见 2026-11-10 · 命中 2
 - [M-DE-008] 目标测试 MySQL 使用自签证书，mysqldump 需 `--skip-ssl`（Django 侧 `DB_SSL_DISABLED=1`） — conf 0.6 · 证据 registry DEPLOY-002 输出 DUMP_EXIT=0 · 首见 2026-11-10 · 命中 1
-- [M-DE-009] 外网 SSH 通道（VPS+frp）对连续新建连接间歇 `Connection closed`：用 ControlMaster 复用长连接，只对"建连"重试，已开始的非幂等命令先只读核对；远端多行脚本用 `ssh host bash -s -- "$TS" <<'EOF'` 传本地值，避免单引号内 `$VAR` 在远端为空 — conf 0.8 · 证据 registry deployment_report.md:90（4 次断开）、content deployment_plan.md:56,80 · 首见 2026-11-11 · 命中 2
+- [M-DE-009] 外网 SSH 通道（VPS+frp）对连续新建连接间歇 `Connection closed`：用 ControlMaster 复用长连接，只对"建连"重试，已开始的非幂等命令先只读核对；远端多行脚本用 `ssh host bash -s -- "$TS" <<'EOF'` 传本地值，建连可用循环重试（间隔数秒、至多 8 次），连上后一次性完成全部只读命令（unit_sort_filters 第 4 次/第 6 次建连才成功）；避免单引号内 `$VAR` 在远端为空 — conf 1.0 · 证据 registry deployment_report.md:90（4 次断开）、unit_sort_filters GR-E2-001/002、content deployment_plan.md:56,80 · 首见 2026-11-11 · 命中 3
 - [M-DE-010] ssh ControlPath 放在长目录（如会话 scratchpad）会超 Unix socket 108 字节上限致建连全失败，套接字目录用 `mktemp -d /tmp/ocs.XXXX` — conf 0.6 · 证据 content deployment_report.md:38 · 首见 2026-11-11 · 命中 1
 - [M-DE-011] 快照含 venv/var/.env 时回滚「叠加解包」而不是 rm -rf 目录；快照用 --exclude 排除 venv、var、.env，既防膨胀也防回滚误删 — conf 0.6 · 证据 registry deployment_plan.md:110,355,437（R2-ROLLBACK-002） · 首见 2026-11-11 · 命中 1
 - [M-DE-012] 增量重部署后端用 `git archive <commit>:backend` 打包（只含已提交跟踪文件）；前端在工作树构建，预检要求 frontend/ 无未跟踪文件 — conf 0.6 · 证据 registry deployment_plan.md R2-DEPLOY-002(:364-370)、R2-PRE-003(:331) · 首见 2026-11-11 · 命中 1
-- [M-DE-013] 目标机 web/ocap 属 root（1.0.0 以 sudo 写入），前端替换需 sudo rm/tar；部署前先只读 stat 属主，避免半删除状态 — conf 0.6 · 证据 registry GR-E1-002-F01 · 首见 2026-11-11 · 命中 1
+- [M-DE-013] 目标机 web/ocap 属 root（1.0.0 以 sudo 写入），前端替换需 sudo rm/tar；部署前先只读 stat 属主，避免半删除状态（属主会变：unit_sort_filters 预检 PRE-A11 实测属 yangyang，sudo 写法仍兼容） — conf 0.8 · 证据 registry GR-E1-002-F01 · 首见 2026-11-11 · 命中 2
 - [M-DE-014] 计划中标 [INFERRED] 的目标机事实（Python 版本、wheel 可用性）在预检里实测 — conf 0.6 · 证据 content deployment_report.md PRE-105（cryptography 已预装） · 首见 2026-11-11 · 命中 1
+- [M-DE-015] 无迁移的只读页面增量，回滚重点是前端静态目录与后端源码快照；新增文件在旧代码中无引用，回滚时可保留 — conf 0.6 · 证据 GR-E1-001 / deployment_plan ROLLBACK-001~004 · 首见 2026-11-11 · 命中 1
+- [M-DE-016] 数据迁移上线前先跑只读预览命令，把 conflicts=0 作为 migrate 门控；停服务窗口内完成上传、预检、迁移与启动 — conf 0.6 · 证据 GR-E1-001 / deployment_plan DEPLOY-002~005 · 首见 2026-11-11 · 命中 1
+- [M-DE-017] 可逆数据迁移的反向仍可能因迁移后新增数据而冲突：标 MANUAL_ROLLBACK_REQUIRED，并准备 JSON 与整库两级备份 — conf 0.6 · 证据 GR-E1-001 / deployment_plan ROLLBACK-005、DEPLOY-001 · 首见 2026-11-11 · 命中 1
+- [M-DE-018] 无迁移的展示层增量可用“快照 → 后端解包重启 → 前端静态替换”四步部署，回滚按逆序用同一时间戳锚点恢复 — conf 0.8 · 证据 GR-E1-001 / GE1-2 / E2 部署成功、锚点 20261114194943 · 首见 2026-11-14 · 命中 1
+- [M-DE-019] CI 默认浅克隆时，依赖 git show 基线提交的测试会 skipUnless 跳过；不要给 CI 加 paths-ignore 排除被扫描的文档目录 — conf 0.6 · 证据 backend/tests/integration/test_requirements_numbering.py:215、product_review cicd_pipeline.md · 首见 2026-11-14 · 命中 1
+- [M-DE-020] 远程 E2E 夹具循环（setup→探测→cleanup）放进同一个带 `trap cleanup EXIT` 的脚本/同一次 shell 调用，口令只在进程内存或经 stdin 传入（远端 read -r 再 export），避免进 argv/ps；先只读列出夹具将占用的真实对象供用户确认；探测脚本先 ast.parse，复用 remote_client.Remote 并遵守其 GET 护栏 — conf 0.8 · 证据 product_review E2-003 DEPLOY-009~011；unit_sort_filters GR-E2-004-F02（探测脚本错误致夹具循环 3 次，均已清理） · 首见 2026-11-14 · 命中 2
+- [M-DE-021] 上一轮 E2 无返回时先只读核对目标机：各候选 commit 文件 sha256 对比、showmigrations、新增文件是否存在、快照/ocap.old 新项；目标机含 CRLF 文件，比对前剥离 CR — conf 0.6 · 证据 product_review GR-E2-001-F02、deployment_report「E2-001 状态核对」 · 首见 2026-11-15 · 命中 1
+- [M-DE-022] 不要用 pkill -f 带命令行片段杀后台命令（匹配到自身 shell，退出码 144）；用 curl -m 超时，本地服务用 ps | grep [r]unserver | xargs kill，内网地址改从目标机内 curl — conf 0.8 · 证据 product_review deployment_report V-10 重跑、GROUP_D-003 本地自检（DE 与 TE 独立遇到） · 首见 2026-11-15 · 命中 2 · 已晋升通用（用户确认 2026-11-16 → generic/devops-engineer.md）
+- [M-DE-023] 写含内嵌 `<<'EOF'` 示例的计划文档不要用 Bash heredoc（内层 EOF 提前结束外层，后续文本被当命令执行；空 $SCRATCH 会让 git archive 写到 /）；改用 Write 工具，示例里的临时目录变量先 mktemp 并校验非空 — conf 0.6 · 证据 unit_sort_filters GR-E1-001-F01（MAJOR）、audit_log EXCEPTION 2026-11-16T12:54:34（/ 下遗留 2 个空 tar.gz） · 首见 2026-11-16 · 命中 1
+- [M-DE-024] 导出含个人信息文件的核对：目标机 export 自检输出（diff_*、precheck_*、roundtrip_mismatches）+ 两端 sha256 + 本地 `python3 -I` 解析 xlsx 的 XML 只数行数/楼栋/类型，不打印姓名手机号；本机可能没装 openpyxl — conf 0.6 · 证据 unit_sort_filters deployment_report 阶段 D、GR-E2-004 · 首见 2026-11-16 · 命中 1
+- [M-DE-025] 需求改了用户可见文案（如“户主”→“产权业主”）时，同步 grep backend/tests/remote 的期望字符串；远程 E2E 不在 CI 跑，过期期望只在部署后暴露 — conf 0.6 · 证据 product_review deployment_report 1.1.0 TC-E2E-321/324 · 首见 2026-11-15 · 命中 1
+- [M-DE-026] 数据修正命令 --apply 的输出可能只有 before_*/after_*，没有 differences 行：验收用独立只读计数 + 一次幂等 dry-run 补证；backup_sha256 是备份正文摘要，不等于整文件 sha256 — conf 0.6 · 证据 unit_sort_filters deployment_report 阶段 C、GR-E2-003 · 首见 2026-11-16 · 命中 1
+- [M-DE-027] 一次变更同时含代码部署、改库、导出个人信息时，拆成各自独立授权的阶段；回滚顺序先数据后代码，默认只回滚代码 — conf 0.6 · 证据 unit_sort_filters deployment_plan 阶段拆分、GR-E1-001、GR-E2-001~004 按段执行 · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
-- [P-DE-001] CI 默认浅克隆时，依赖 git show 基线提交的测试会 skipUnless 跳过；不要给 CI 加 paths-ignore 排除被扫描的文档目录（本批 test_requirements_numbering 扫 project_workspace） — 自记 2026-11-14 · 证据 ocap_product_review cicd_pipeline.md、test_requirements_numbering.py:215
-- [P-DE-002] 夹具类口令经 stdin 传给远端（单引号远端命令内 read -r 再 export），避免进 argv/ps；远程 E2E 前先只读列出夹具将占用的真实对象（房屋 id）供用户确认 — 自记 2026-11-14 · 证据 ocap_product_review deployment_plan.md DEPLOY-009（未执行，待 E2 验证）
-- [P-DE-003] 上一轮 E2 无返回时，先只读核对目标机：用 sha256 对比各候选 commit 的文件、查 showmigrations、新增文件是否存在、快照/ocap.old 是否有新项；目标机可能含 CRLF 文件，比对前剥离 CR，否则误判为未知版本 — 自记 2026-11-15 · 证据 ocap_product_review deployment_report.md「E2-001 状态核对」
-- [P-DE-004] 不要用 pkill -f 带命令行片段去杀后台 curl，会匹配到自己的 shell（退出码 144）；用 curl -m 超时，内网地址改从目标机内 curl — 自记 2026-11-15 · 证据 本次 V-10 重跑
+

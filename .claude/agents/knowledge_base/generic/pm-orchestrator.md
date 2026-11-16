@@ -15,3 +15,4 @@
 ## 流程
 - 知识提案的收集以协议 §M 为准：子代理的 `<kb_proposals>` 由 SubagentStop hook 写入 `project_workspace/_kb_inbox.jsonl`，hook 未记录时 PM 按 pm-orchestrator §8 补记；无人值守时 `.claude/` 可能不可写，kb-curator 会把记忆改动写成 `project_workspace/_kb_distillation/pending_patch.md`。
 - 用户授权部署只对当次有效；不要把上一次会话里的"可以部署"当成本次授权。
+- 脚本或重试循环里不要让 `grep -c`（计数为 0 时返回码 1）成为末条命令，也不要把它与 `&&`/`break` 串联：脚本会静默不往下执行，或循环因判据恒失败而重复执行。成功判据用显式 echo 标记或 `; true`，批量替换后打印每处匹配数并核对状态。

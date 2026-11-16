@@ -162,3 +162,59 @@
 | 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_C-001-1 | 晋升→M-SD-026 | committed |
 | 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_D-001-1 | 晋升→M-TE-019 | committed |
 | 2026-11-14T19:56:00+08:00 | ocap_identity_display-GROUP_E1-001-1 | 晋升→M-DE-018 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_A-001-1 | 晋升→M-RA-012 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_A-001-2 | 合并→M-RA-013 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_A-002-1 | 晋升→M-RA-018 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_A-002-2 | 晋升→M-RA-014 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_A-002-3 | 合并→M-RA-013 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_B-001-1 | 晋升→M-SA-012 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_B-001-2 | 合并→M-SA-013（与 P-SA-019 合并） | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_B-001-3 | 晋升→M-SA-014 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_C-001-1 | 晋升→M-SD-027 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_C-001-2 | 保留→P-SD-009（仅自验证，无独立证据） | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_D-001-1 | 晋升→M-TE-026 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_D-001-2 | 晋升→M-TE-027（returncode 部分并入 M-SD-027） | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_D-001-3 | 晋升→M-TE-028 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E1-001-1 | 晋升→M-DE-023 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E1-001-2 | 晋升→M-DE-027 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-001-1 | 合并→M-DE-009 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-001-2 | 合并→M-DE-013 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-002-1 | 合并→M-DE-009 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-002-pm-1 | 合并→M-PM-003 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-003-1 | 晋升→M-DE-026 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-004-1 | 合并→M-DE-020 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-004-2 | 晋升→M-DE-024 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_unit_sort_filters-GROUP_E2-004-3 | 淘汰：一次性后续待办（新增远程用例建议），非可复用经验 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_A-001-1 | 晋升→M-RA-015 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_A-001-2 | 保留→P-RA-008（单次观察，无门控证据） | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_A-002-1 | 保留→P-RA-009（仅自查，无门控 finding） | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_A-002-2 | 晋升→M-RA-016 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_A-002-3 | 晋升→M-RA-017 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_B-001-1 | 晋升→M-SA-015 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_B-001-2 | 合并→M-SD-028 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_B-001-3 | 晋升→M-SA-016 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-002-1 | 晋升→M-SD-028 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-002-2 | 晋升→M-SD-029 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-004-1 | 合并→M-SD-014 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-004-2 | 合并→M-SD-030 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-005-1 | 晋升→M-SD-030 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-001-1 | 晋升→M-TE-020 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-001-2 | 晋升→M-TE-021 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-001-3 | 晋升→M-TE-022 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-002-1 | 晋升→M-TE-023 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-002-2 | 合并→M-TE-012 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-003-1 | 晋升→M-TE-024 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-003-2 | 晋升→M-TE-025 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_D-003-3 | 合并→M-TE-022 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E1-001-1 | 晋升→M-DE-019 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E1-001-2 | 合并→M-DE-020 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-merge-001-1 | 合并→M-SA-011 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_C-merge-001-2 | 合并→M-RA-015 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E2-002-1 | 晋升→M-DE-021 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E2-002-2 | 晋升→M-DE-022 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E2-003-1 | 晋升→M-DE-025 | committed |
+| 2026-11-16T14:37:47+08:00 | ocap_product_review-GROUP_E2-003-2 | 合并→M-DE-020 | committed |
+| 2026-11-16T14:37:47+08:00 | resync:.trae→.claude M-RA-009~011,M-SA-010~011,M-SD-022~026,M-TE-010/017~019,M-DE-015~018 | 回读校验发现 distill_20261114T1956 等写入 .trae 而 .claude 缺失，已按原编号移植（见 M-KC-001） | committed |
+| 2026-11-16T14:53:12+08:00 | generic-confirm:M-PM-003 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |
+| 2026-11-16T14:53:12+08:00 | generic-confirm:M-TE-012 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |
+| 2026-11-16T14:53:12+08:00 | generic-confirm:M-DE-022 | 用户确认（2026-11-16「1.都写。」）→ 写入 knowledge_base/generic 对应文件，项目记忆标已晋升通用 | committed |

@@ -10,24 +10,27 @@
 - [M-TE-008] 共用分页/序列化辅助函数的调用约定变化后，对所有使用方的列表接口按角色冒烟遍历；回归用例放到未修复树确认能失败（5/6 失败，修复后 6/6） — conf 0.6 · 证据 DEF-001、backend/tests/integration/test_admin_appeals_regression.py、GR-D-002 · 首见 2026-11-09 · 命中 1
 - [M-TE-009] 导入类测试必须做"同文件预检 vs 正式导入"逐项数字比对，并构造同单元跨行类型冲突的整组失败用例 — conf 0.8 · 证据 registry GR-D-001、TC-INT-122/144/145 · 首见 2026-11-10 · 命中 1
 - [M-TE-011] 产品行为由"禁用按钮"改为"可点击并提示"后，旧 disabled 断言成过期用例；缺陷修复回流时 grep 反向断言（disabled / not.toBeCalled）并同步更新 — conf 0.8 · 证据 content DEF-016/TC-UNIT-404、GR-D-003 condition；registry GR-C-002-F01 同类 · 首见 2026-11-11 · 命中 2
-- [M-TE-012] 补"修复无专门测试"类缺陷的用例时，把新测试放进 `git archive HEAD` 导出的修复前树运行，确认失败（10/15 失败；DEF-013 用例修复前确定失败），才证明用例能抓住缺陷 — conf 0.8 · 证据 registry DEF-007~011、test_registry_import_query_bounds.py（DEF-013） · 首见 2026-11-11 · 命中 2
+- [M-TE-012] 补"修复无专门测试"类缺陷的用例时，把新测试放进 `git archive HEAD` 导出的修复前树运行，确认失败（10/15 失败；DEF-013 用例修复前确定失败），才证明用例能抓住缺陷；改动未提交拿不到修复前树时，在 scratchpad 复制代码只回退被测几行/页面（node_modules 符号链接）做变异 — conf 1.0 · 证据 registry DEF-007~011、test_registry_import_query_bounds.py（DEF-013）、product_review TC-INT-539/541（test_product_review_rework1.py） · 首见 2026-11-11 · 命中 3 · 已晋升通用（用户确认 2026-11-16 → generic/test-engineer.md）
 - [M-TE-013] 对递归结构（引用/列表嵌套）做序列化后处理（如去 URL 前缀）的接口，用例要含引用内、列表内的节点，只测顶层会漏 — conf 0.6 · 证据 DEF-014、test_content_wechat_and_gaps.py:438 TC-INT-388 · 首见 2026-11-11 · 命中 1
 - [M-TE-014] 性能类缺陷（慢查询、每批带全集）的回归用例不断言墙钟耗时，用 `connection.execute_wrapper` 记录每条 SQL 绑定参数个数与查询条数，机器无关 — conf 0.6 · 证据 backend/tests/integration/test_registry_import_query_bounds.py:6,64,109、DEF-013 · 首见 2026-11-11 · 命中 1
 - [M-TE-015] Tiptap/ProseMirror 可在 vitest+jsdom 真实挂载并跑命令；需垫 ClipboardEvent（pasteHTML）与 Range.getClientRects，撤销重做用 `vi.useFakeTimers({toFake:["Date"]})` 跨过历史分组间隔 — conf 0.6 · 证据 frontend/tests/content_editor.spec.js（22/23 通过） · 首见 2026-11-11 · 命中 1
 - [M-TE-016] DRF `FileResponse` 无 content 属性，ZIP/文件断言读 `b"".join(resp.streaming_content)` — conf 0.6 · 证据 backend/tests/e2e/test_content_flows.py:163,270 · 首见 2026-11-11 · 命中 1
+- [M-TE-010] 前后端契约测试应同时解析客户端源码调用路径与 Django 路由，可低成本发现路径/方法漂移 — conf 0.6 · 证据 GR-D-001 / TC-INT-164、165 · 首见 2026-11-10 · 命中 1
+- [M-TE-017] 列表派生字段测试要同时覆盖值正确与查询数不随行数增长；跨表搜索必须加同记录负向用例 — conf 0.6 · 证据 GR-D-001 / TC-INT-395、TC-INT-397 · 首见 2026-11-11 · 命中 1
+- [M-TE-018] 验证“多端显示一致”时，同时断言管理端列表、房屋关系输出与 /me 读取同一存储列 — conf 0.6 · 证据 GR-D-001 / TC-INT-421 / test_specific_part_display_consistency.py · 首见 2026-11-11 · 命中 1
+- [M-TE-019] 组件测试须同时覆盖“数据未返回”和“请求失败”两态，防止加载中/失败被误显示为游客 — conf 0.6 · 证据 GR-D-001 / GD-2 / TC-WEB-503、504 · 首见 2026-11-14 · 命中 1
+- [M-TE-020] 复核“定位级 CONSISTENT”故事时，先 git grep 各故事 US/AC 编号找无测试引用者再补 AC 级用例；14 个无引用故事里 3 个暴露既有缺陷 — conf 0.6 · 证据 product_review GR-D-001-F01/F02（DEF-017/018/019）、backend/tests/integration/test_product_review_gap_stories.py · 首见 2026-11-13 · 命中 1
+- [M-TE-021] 测“仅某角色可操作”AC：每个非授权角色各造一份独立数据再各试一次；同一份数据上首个越权成功会改状态，后续得 409 被误当“已拒绝” — conf 0.6 · 证据 TC-INT-514（test_product_review_gap_stories.py） · 首见 2026-11-13 · 命中 1
+- [M-TE-022] 远程 HTTP 套件：客户端内置目标主机校验与写操作白名单/GET 护栏（越界请求发出前抛错），先 ast.parse 再跑；本地用派生 settings（文件库 SQLite）+ migrate --run-syncdb + 预置清册行 + runserver 跑两遍自检（第二遍验证用例自行恢复数据） — conf 1.0 · 证据 backend/tests/remote/remote_client.py、product_review GR-D-003（本地自检）、unit_sort_filters GR-E2-004-F02（探测脚本错误致夹具循环 3 次） · 首见 2026-11-13 · 命中 3
+- [M-TE-023] 缺陷“同类扫描”类修复验收时自己再扫：正则找模板里未经 formatDateTime/textOf/label 的 `{{ …_at|deadline|.scope|.status }}`；DEF-020 修 5 处后仍漏首页待办与决议详情（DEF-021/022） — conf 0.8 · 证据 product_review GR-D-001-F03、GR-D-002-F01 · 首见 2026-11-14 · 命中 2
+- [M-TE-024] 前端“枚举→中文”映射表守护：键集合与后端模型 choices 逐键比对（不多不少），另加登记范围扫描，正则排除 API 函数对象与弹窗文案表 — conf 0.6 · 证据 frontend/tests/product_review_rework2.spec.js TC-UNIT-598/601 · 首见 2026-11-14 · 命中 1
+- [M-TE-025] 后端新增响应字段的契约用例：前端 item.xxx 读取集合 ⊆ 后端真实列表项键集，并在去掉该字段的 scratch 副本上确认失败 — conf 0.6 · 证据 backend/tests/integration/test_product_review_rework2.py TC-INT-544 · 首见 2026-11-14 · 命中 1
+- [M-TE-026] 测 Element Plus 过滤页：el-select 占位在 .el-select__placeholder，用 findAllComponents({name:'ElSelect'}) 读 props、emit update:modelValue 选值，比点 popper 稳 — conf 0.6 · 证据 frontend/tests/registry_filters.spec.js 11/11（GR-D-001） · 首见 2026-11-16 · 命中 1
+- [M-TE-027] 管理命令用 call_command 测：CommandError(returncode=N) 用 exc.returncode 断言；dry-run/导出零写入用 CaptureQueriesContext；文件产物写临时目录 — conf 0.6 · 证据 backend/tests/integration/test_underground_relocation_cmd.py、test_registry_export_cmd.py（GR-D-001） · 首见 2026-11-16 · 命中 1
+- [M-TE-028] 造导出/导入样例前先查既有规则：导入校验拒绝含“-”的楼层、build_specific_part 对中文楼层不补“层”；样例用被认可写法，被拒写法另写专测（用 -2 会令预检 rows_failed=1） — conf 0.6 · 证据 unit_sort_filters GR-D-001-F02（TC-INT-605/620） · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
-- [P-TE-007] 复核"定位级 CONSISTENT"故事时，先 `git grep` 各故事 US/AC 编号找出无任何测试引用的故事，再补 AC 级用例；14 个无引用故事里 3 个暴露既有缺陷 — 自记 2026-11-14 · 证据 DEF-017/018/019、backend/tests/integration/test_product_review_gap_stories.py
-- [P-TE-008] 测"仅原审批人/某角色可操作"类 AC：每个非授权角色各造一份独立数据再各试一次；同一份数据上首个越权成功会改状态，后续尝试得到 409 被误当成"已拒绝" — 自记 2026-11-14 · 证据 TC-INT-514（DEF-019）首版写法
-- [P-TE-009] 远程 HTTP 套件在客户端加写操作白名单与目标主机校验（越界请求发出前抛错），并用本地 runserver + 临时 SQLite 跑两遍自检（第二遍验证用例自行恢复数据） — 自记 2026-11-14 · 证据 backend/tests/remote/remote_client.py、本地自检 22 条两次均 OK
-- [P-TE-010] 缺陷"同类扫描"类修复（如中文显示 REQ-FUNC-158）验收时自己再扫一遍：正则找模板里未经 formatDateTime/textOf/label 的 `{{ …_at|deadline|.scope|.status }}`；DEF-020 修了 5 处后仍漏首页待办与决议详情截止时间（DEF-021/022） — 自记 2026-11-14 · 证据 frontend/tests/product_review_rework1.spec.js TC-UNIT-586/587
-- [P-TE-011] 无法用 git archive HEAD 得到"修复前树"时（改动未提交），在 scratchpad 复制 backend 或 frontend/src+tests（node_modules 用符号链接），只回退被测的几行/几个页面做变异，确认新用例失败再回仓库跑 — 自记 2026-11-14 · 证据 TC-INT-539/541、TC-UNIT-579~585 变异副本均失败
-- [P-TE-012] 前端"枚举→中文"映射表的守护：键集合用后端模型 choices（解析 models.py 的元组）做"不多不少"比对，另加"登记范围"扫描（全大写键→中文值的导出表只允许出现在登记文件）；扫描正则要排除 API 函数对象与弹窗文案表，否则首版误报 — 自记 2026-11-14 · 证据 frontend/tests/product_review_rework2.spec.js TC-UNIT-598/601
-- [P-TE-013] 后端新增响应字段（如 can_void）的字段级契约：同一用例里解析前端 `item.xxx` 读取集合 ⊆ 后端真实列表项键集，并在去掉该字段的 scratchpad 后端副本上确认失败 — 自记 2026-11-14 · 证据 backend/tests/integration/test_product_review_rework2.py TC-INT-544
-- [P-TE-014] 本地自检远程 HTTP 套件：派生 settings（scratchpad，文件库 SQLite）+ `migrate --run-syncdb` + 预置住宅清册行 + runserver；结束用 `ps | grep [r]unserver | xargs kill`（`pkill -f` 会匹配自身命令行而退出 144） — 自记 2026-11-14 · 证据 回流 2 自检两遍 Ran 22 OK (skipped=2)
-- [P-TE-015] 测 Element Plus 过滤页：el-select 占位文字在 `.el-select__placeholder` 而非 input[placeholder]，选项与 no-data-text 用 `findAllComponents({name:'ElSelect'})` 读 props，选值用 `vm.$emit('update:modelValue'/'change')`，比点击 popper 稳 — 自记 2026-11-16 · 证据 frontend/tests/registry_filters.spec.js（11/11 通过，首轮 TC-UNIT-640 因漏取而失败）
-- [P-TE-016] 管理命令用 `call_command` 测退出码：Django 5.2 的 `CommandError(returncode=N)` 可在用例里用 `exc.returncode` 断言；写库命令另用 `CaptureQueriesContext` 断言 dry-run/导出零 INSERT/UPDATE/DELETE，备份与导出文件写 `tempfile.TemporaryDirectory()` — 自记 2026-11-16 · 证据 backend/tests/integration/test_underground_relocation_cmd.py、test_registry_export_cmd.py（33 条通过）
-- [P-TE-017] 造期望值前先查既有数据规则：`build_specific_part` 对中文楼层“负一”不补“层”、导入校验拒绝含“-”的楼层；用 `-2` 造导出样例会令预检失败（rows_failed=1）。样例数据用导入校验认可的写法，另写一条专测被拒绝写法 — 自记 2026-11-16 · 证据 TC-INT-605/620、TC-UNIT-625
+

@@ -7,6 +7,7 @@
 - 数据迁移不可简单逆向：写明逆向命令与数据风险，标 MANUAL_ROLLBACK_REQUIRED。
 
 ## 远端命令
+- 不要用 `pkill -f <命令片段>` 终止后台命令：模式会匹配到执行它的 shell 自身，导致自杀（退出码 144）。改用命令自带的超时参数（如 `curl -m`），或按 PID 终止（`ps | grep [x]yz | xargs kill`）。
 - `ssh host '<命令>'` 单引号中的 `$VAR` 在远端展开，通常为空。要用本地变量时用双引号或先 echo 完整命令核对。
 - 典型后果：`ssh <host> 'git checkout $REF -- <files>'` 中 `$REF` 在远端为空 → 变成从索引恢复，拿回的仍是新代码，回滚静默失效。
 - 执行回滚前核验变量：锚点是完整哈希且 `git cat-file -t` 为 `commit`；执行后检查恢复的文件确实变化。

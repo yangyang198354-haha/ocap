@@ -44,7 +44,10 @@ class PollListCreateView(APIView):
         if not (1 <= len(title) <= 200):
             raise ApiError("INVALID_VALUE", "标题须为 1~200 字符")
         description = str(data.get("description", ""))[:5000]
-        deadline = parse_datetime(str(data.get("deadline", "")))
+        try:
+            deadline = parse_datetime(str(data.get("deadline", "")))
+        except ValueError:  # DEF-025：日期不存在（如 2026-02-30T10:00）
+            deadline = None
         if deadline is None:
             raise ApiError("INVALID_VALUE", "截止时间格式不正确")
         if deadline.tzinfo is None:

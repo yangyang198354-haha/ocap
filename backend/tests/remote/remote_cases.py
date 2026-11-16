@@ -65,7 +65,7 @@ class ReadOnlyChecks(RemoteBase):
         self.assertTrue({"account_no", "phone", "nickname", "avatar_url", "birthday", "email"} <= set(prof))
 
     def test_321_ac_157_01_03_04_identity_consistent_across_views(self):
-        """TC-E2E-321 / AC-157-01、03、04：e2e_multi 两行（户主 + 同住人）、汇总"户主"且多次刷新不变；游客汇总"游客"；管理端标签一致。"""
+        """TC-E2E-321 / AC-157-01、03、04：e2e_multi 两行（产权业主 + 同住人）、汇总"产权业主"且多次刷新不变；游客汇总"游客"；管理端标签一致。"""
         first = None
         for _ in range(3):
             h = self.j(R.get("/me/housing", "e2e_multi"))
@@ -74,13 +74,13 @@ class ReadOnlyChecks(RemoteBase):
             first = first or seq
             self.assertEqual(seq, first)
             self.assertEqual([(u["unit_id"], u["role_label"]) for u in me["units"]], seq)
-        self.assertEqual(sorted(label for _, label in first), ["同住人", "户主"])
-        self.assertEqual(h["summary"]["label"], "户主")
+        self.assertEqual(sorted(label for _, label in first), ["产权业主", "同住人"])
+        self.assertEqual(h["summary"]["label"], "产权业主")
         guest = self.j(R.get("/me/housing", "e2e_guest"))
         self.assertEqual((guest["summary"]["label"], guest["units"]), ("游客", []))
         account_no = self.j(R.get("/me/profile", "e2e_multi"))["account_no"]
         users = self.j(R.get("/admin/users", "admin", params={"q": account_no}))["results"]
-        self.assertEqual([u["identity_label"] for u in users if u["account_no"] == account_no], ["户主"])
+        self.assertEqual([u["identity_label"] for u in users if u["account_no"] == account_no], ["产权业主"])
 
     def test_322_ac_166_02_tasks_forbidden_for_non_members(self):
         """TC-E2E-322 / AC-166-02：非业委会成员请求待办 → 403；委员 → 200。"""
@@ -111,7 +111,7 @@ class ReadOnlyChecks(RemoteBase):
         r = hit[0]
         self.assertEqual(r["phone"], "199****0001")
         self.assertNotIn("19900000001", str(r))
-        self.assertEqual(r["identity_label"], "户主")
+        self.assertEqual(r["identity_label"], "产权业主")
         self.err(R.get("/admin/users", "e2e_guest", params={"q": "e2e"}), 403)
 
     def test_325_ac_159_03_grant_seat_to_guest_rejected(self):

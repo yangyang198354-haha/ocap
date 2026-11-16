@@ -92,7 +92,10 @@ class ReimbursementCreateView(APIView):
         reason = str(data.get("reason", "")).strip()
         if not (1 <= len(reason) <= 500):
             raise ApiError("INVALID_VALUE", "事由须为 1~500 字符")
-        occurred_on = parse_date(str(data.get("occurred_on", "")))
+        try:
+            occurred_on = parse_date(str(data.get("occurred_on", "")))
+        except ValueError:  # DEF-025：日期不存在（如 2026-02-30）
+            occurred_on = None
         if occurred_on is None:
             raise ApiError("INVALID_VALUE", "请填写费用发生日期")
         if occurred_on > date.today():
@@ -122,7 +125,10 @@ class AdvanceCreateView(APIView):
         expected_usage = str(data.get("expected_usage", "")).strip()
         if not (1 <= len(expected_usage) <= 200):
             raise ApiError("INVALID_VALUE", "资金用途须为 1~200 字符")
-        expected_settle_on = parse_date(str(data.get("expected_settle_on", "")))
+        try:
+            expected_settle_on = parse_date(str(data.get("expected_settle_on", "")))
+        except ValueError:  # DEF-025：日期不存在（如 2026-02-30）
+            expected_settle_on = None
         if expected_settle_on is None or expected_settle_on <= date.today():
             raise ApiError("INVALID_VALUE", "预计核销日期须晚于今日")
         flow = _flow(data, "EXPENSE")

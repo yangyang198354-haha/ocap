@@ -66,7 +66,10 @@ class AdminSeatListCreateView(APIView):
             raise ApiError("NOT_FOUND", "用户不存在", 404)
         if not MembershipService.is_owner_of_any(user_id):
             raise ApiError("NOT_AN_OWNER", "目标须是有效产权业主", 422)
-        term_start = parse_date(str(data.get("term_start"))) if data.get("term_start") else timezone.localdate()
+        try:
+            term_start = parse_date(str(data.get("term_start"))) if data.get("term_start") else timezone.localdate()
+        except ValueError:  # DEF-024：格式合法但日期不存在（如 2026-02-30）
+            term_start = None
         if term_start is None:
             raise ApiError("INVALID_VALUE", "term_start 格式不正确")
         # IFC-312：不再限制开始日早于今天；上界防止 add_months 对极大日期抛 ValueError [ASSUMPTION] OQ-04

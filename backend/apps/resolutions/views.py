@@ -211,7 +211,10 @@ def _validate_submission(data: dict):
         from django.utils.dateparse import parse_datetime
 
         raw = data.get("vote_deadline")
-        deadline = parse_datetime(str(raw)) if raw else None
+        try:
+            deadline = parse_datetime(str(raw)) if raw else None
+        except ValueError:  # DEF-025：日期不存在（如 2026-02-30T10:00）
+            deadline = None
         if deadline is None:
             raise ApiError("INVALID_VALUE", "半数同意决议须填写投票截止时间")
         if deadline.tzinfo is None:

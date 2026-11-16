@@ -246,7 +246,10 @@ class ProfileView(APIView):
         patch = {}
         for key, value in data.items():
             if key == "birthday" and value is not None:
-                value = parse_date(value)
+                try:
+                    value = parse_date(value)
+                except (TypeError, ValueError):  # DEF-025：日期不存在（如 2026-02-30）或非字符串
+                    value = None
                 if value is None:
                     raise ApiError("INVALID_VALUE", "生日格式不正确")
             if key == "avatar_attachment_id" and value is not None:

@@ -92,6 +92,8 @@ def guard(method: str, path: str, params=None, json=None):
     if path.startswith("/admin/system-config/"):
         if (json or {}).get("value") not in BAD_AMOUNTS:
             raise GuardError("远程不得写入全局配置有效值（Q-B-02）；只允许非法值负例")
+    if re.fullmatch(r"/admin/appeals/\d+/decision", path) and (json or {}).get("decision") != "REJECT":
+        raise GuardError("申诉通过会向真实清册追加产权人，越出 P4-1（GR-C-001-F02）；远程只允许 REJECT")
     if path == "/admin/committee/seats" and (json or {}).get("position") not in {"MEMBER", "REPRESENTATIVE", "CHAIR", "VICE_CHAIR"}:
         raise GuardError("席位负例的 position 非法")
 

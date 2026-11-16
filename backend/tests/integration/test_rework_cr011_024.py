@@ -370,8 +370,8 @@ class AdminAttachmentDownloadTests(ApiTestBase):
             "file": SimpleUploadedFile("proof.png", content, content_type="image/png"),
             "purpose": "APPEAL_PROOF"}, token=token)
         self.assert_ok(uploaded, 201)
-        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "proof_ids": [uploaded.data["id"]]},
-                          token=token)
+        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "业主甲",
+                                               "proof_ids": [uploaded.data["id"]]}, token=token)
         self.assert_ok(appeal, 201)
         _, admin_token = self.make_admin()
         path = f"/attachments/{uploaded.data['id']}/download"
@@ -380,8 +380,10 @@ class AdminAttachmentDownloadTests(ApiTestBase):
         self.assertEqual(b"".join(resp.streaming_content), content)
         self.assertIn("proof.png", resp["Content-Disposition"])
         self.assertEqual(resp["X-Content-Type-Options"], "nosniff")
-        # 无关普通用户不可见（404）
+        # 无关普通用户被拒绝（ocap_owner_auth_v2 ADR-112 / OQ-07：404 → 403，响应体无资料字节）
         _, stranger = self.make_user()
-        self.assertEqual(self.client_for(stranger).get(f"/api/v1{path}").status_code, 404)
+        denied = self.client_for(stranger).get(f"/api/v1{path}")
+        self.assertEqual(denied.status_code, 403)
+        self.assertNotIn(content, denied.content)
         # 未登录 401
         self.assertEqual(self.client_for().get(f"/api/v1{path}").status_code, 401)

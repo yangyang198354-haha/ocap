@@ -1,4 +1,6 @@
 """业委会视图（IFC-060/061）。"""
+from datetime import timedelta
+
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,10 +12,13 @@ from apps.core.permissions import IsAdmin
 from apps.core.serializers import page_response
 from apps.residency.services import MembershipService
 
+from .effective import is_effective
 from .models import CommitteeConfig, Seat
 from .services import CAP_FIELDS, CommitteeCommands
 
 from django.utils.dateparse import parse_date
+
+TERM_START_MAX_DAYS = 5 * 366  # 开始日上界：今天起约 5 年（OQ-04，待用户确认）
 
 
 def seat_view(seat: Seat) -> dict:
@@ -23,6 +28,7 @@ def seat_view(seat: Seat) -> dict:
         "user": {"id": user.id, "account_no": user.account_no, "nickname": user.nickname,
                  "phone": mask_phone(user.phone) if user.phone else None},
         "term_start": seat.term_start, "term_end": seat.term_end, "status": seat.status,
+        "effective": is_effective(seat, timezone.localdate()),
     }
 
 
@@ -63,8 +69,9 @@ class AdminSeatListCreateView(APIView):
         term_start = parse_date(str(data.get("term_start"))) if data.get("term_start") else timezone.localdate()
         if term_start is None:
             raise ApiError("INVALID_VALUE", "term_start 格式不正确")
-        if term_start < timezone.localdate():
-            raise ApiError("INVALID_VALUE", "任期开始日不得早于今天")
+        # IFC-312：不再限制开始日早于今天；上界防止 add_months 对极大日期抛 ValueError [ASSUMPTION] OQ-04
+        if term_start > timezone.localdate() + timedelta(days=TERM_START_MAX_DAYS):
+            raise ApiError("INVALID_VALUE", "任期开始日过远")
         seat = CommitteeCommands.grant(user_id=user_id, position=position, term_start=term_start,
                                        admin_id=request.user.id)
         return Response(seat_view(seat), status=status.HTTP_201_CREATED)

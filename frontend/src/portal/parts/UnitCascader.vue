@@ -5,7 +5,7 @@
       <el-select v-model="picked.building" placeholder="楼栋" @change="onBuildingChange">
         <el-option v-for="b in buildingOptions" :key="b.value" :label="b.value" :value="b.value" />
       </el-select>
-      <el-select v-if="visibility.unit" v-model="picked.unit_no" placeholder="单元" @change="onUnitChange">
+      <el-select v-if="visibility.unit" v-model="picked.unit_no" :placeholder="levelLabel" @change="onUnitChange">
         <el-option v-for="u in unitOptions" :key="u.value" :label="u.label || u.value" :value="u.value" />
       </el-select>
       <el-select v-if="visibility.floor" v-model="picked.floor" placeholder="楼层" @change="onFloorChange">
@@ -34,6 +34,7 @@ const unitOptions = ref([])
 const floorOptions = ref([])
 const roomOptions = ref([])
 const skippedTips = ref([])
+const levelLabel = ref('单元') // IFC-300：商铺第二级由接口返回 level_label（"楼栋/门牌"），其余为"单元"
 const visibility = reactive({ unit: false, floor: false, room: false })
 const picked = reactive({ building: null, unit_no: null, floor: null })
 const pickedUnitId = ref(props.modelValue)
@@ -75,6 +76,7 @@ function resetBelow(level) {
     unitOptions.value = []
     floorOptions.value = []
     skippedTips.value = []
+    levelLabel.value = '单元'
   }
   if (level === 'unit') {
     picked.floor = null
@@ -112,6 +114,7 @@ async function applyLevel(data, stage) {
   if (stage === 'unit') {
     if (data.level === 'unit_no') {
       visibility.unit = true
+      levelLabel.value = data.level_label || '单元'
       unitOptions.value = data.has_empty
         ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
         : (data.options || [])

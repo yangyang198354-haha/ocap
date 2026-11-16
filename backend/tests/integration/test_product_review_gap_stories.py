@@ -81,10 +81,12 @@ class AccountStoryTests(ApiTestBase):
                                 {"owners": [{"name": "业主甲", "phones": [p1, p2]}]}, token=admin_token))
         for phone in (p1, p2):
             user, token = self.make_user(phone=phone)
-            self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+            self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                    token=token), 201)
         empty = RegistryUnit.objects.create(building="9", unit_no="1", floor="1", room="102")
         _, token = self.make_user()
-        body = self.assert_error(self.api("post", "/certifications", {"unit_id": empty.id}, token=token), 422, "PHONE_NOT_IN_REGISTRY")
+        body = self.assert_error(self.api("post", "/certifications", {"unit_id": empty.id, "name": "业主甲"},
+                                          token=token), 422, "OWNER_NOT_MATCHED")
         self.assertTrue(body["details"]["appeal_available"])
         owner, otoken, _ = self.make_owner()
         for path in ("/admin/registry/units", f"/admin/registry/units/{unit.id}"):
@@ -100,8 +102,9 @@ class AccountStoryTests(ApiTestBase):
         申诉通过后成为产权业主。"""
         _, otoken, unit = self.make_owner()
         stranger, token = self.make_user()
-        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 422, "PHONE_NOT_IN_REGISTRY")
-        app = self.api("post", "/resident-applications", {"unit_id": unit.id}, token=token).data
+        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=token),
+                          422, "OWNER_NOT_MATCHED")
+        app =self.api("post", "/resident-applications", {"unit_id": unit.id}, token=token).data
         self.assert_ok(self.api("post", f"/resident-applications/{app['id']}/decision", {"decision": "APPROVE"}, token=otoken))
         self.assertEqual(self.api("get", "/me/housing", token=token).data["units"][0]["role"], "RESIDENT")
         before = self.api("get", "/me", token=token).data["identities"]
@@ -113,7 +116,8 @@ class AccountStoryTests(ApiTestBase):
         guest, gtoken = self.make_user()
         up = self.upload("/attachments", {"file": SimpleUploadedFile("p.png", b"\x89PNG\r\n\x1a\n" + uuid4().bytes, content_type="image/png"),
                                           "purpose": "APPEAL_PROOF"}, token=gtoken)
-        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "proof_ids": [up.data["id"]]}, token=gtoken).data
+        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "业主甲",
+                                               "proof_ids": [up.data["id"]]}, token=gtoken).data
         _, admin_token = self.make_admin()
         self.assert_ok(self.api("post", f"/admin/appeals/{appeal['id']}/decision", {"decision": "APPROVE"}, token=admin_token))
         self.assertIn(self.api("get", "/me/housing", token=gtoken).data["units"][0]["role"], {"OWNER", "HEAD"})

@@ -41,8 +41,8 @@ export const meApi = {
 
 export const unitApi = {
   options: (params) => get('/units/options', params),
-  certify: (unitId) => post('/certifications', { unit_id: unitId }),
-  // data: { unit_id, proof_ids: [附件 id] }，后端要求至少一份产权证明
+  certify: (unitId, name) => post('/certifications', { unit_id: unitId, name }),
+  // data: { unit_id, owner_name, proof_ids: [附件 id 1~5 个] }，后端要求产权人名字与至少一份产权证明
   createAppeal: (data) => post('/appeals', data),
   myAppeals: () => get('/appeals/mine'),
   createResidentApplication: (data) => post('/resident-applications', data),

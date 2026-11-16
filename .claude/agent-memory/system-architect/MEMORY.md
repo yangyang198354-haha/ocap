@@ -27,4 +27,7 @@
 - [P-SA-010] 迁移拆分旧版无归属数据时，要提前定义"同人多号吸收并入"规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）
 - [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
+- [P-SA-015] 导出/备份类文件不可放 `/home/yangyang/ocap/` 内：部署预检要求该目录仅 backend/web/snapshots，后端叠加解包、回滚 `rm -rf backend`；用同级目录（如 `/home/yangyang/ocap_exports/`）并在命令里做位置守卫 — 自记 2026-11-16 · 证据 .claude/skills/ocap-deploy/SKILL.md:93,132,280（ocap_owner_auth_v2 ADR-110）
+- [P-SA-016] 附件无权访问现为 404（`AttachmentService.open`），需求写 401/403 时在附件策略 `can_open` 内对"已登录无权者"抛 ApiError 403 即可，不用动通用 open；并先 grep 现有 404 断言（test_rework_cr011_024.py:376） — 自记 2026-11-16 · 证据 core/attachments.py:112-132（ocap_owner_auth_v2 ADR-112）
+- [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）
 

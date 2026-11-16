@@ -151,9 +151,11 @@ class MultiOwnerImportTests(RegistryImportTestBase):
         unit = RegistryUnit.objects.get()
         self.assertEqual(len(self.owners_of(unit)), 6)
         roles = []
-        for phone in ("13700000001", "13700000002", "13700000003", "13700000004"):
+        for phone, owner_name in (("13700000001", "张一"), ("13700000002", "张二"),
+                                  ("13700000003", "张三"), ("13700000004", "张四")):
             user, token = self.make_user(phone=phone)
-            certified = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+            certified = self.api("post", "/certifications", {"unit_id": unit.id, "name": owner_name},
+                                 token=token)
             self.assert_ok(certified, 201)
             roles.append(certified.data["role"])
         self.assertEqual(roles[0], "HEAD")
@@ -258,7 +260,8 @@ class SingleEntryTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         owner = self.add_owner(unit, "张伟", ["13800000013"])
         user, token = self.make_user(phone="13800000013")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "张伟"},
+                                token=token), 201)
         resp = self.api("put", f"/admin/registry/units/{unit.id}/owners", {"owners": []},
                         token=self.admin_token)
         self.assert_ok(resp)
@@ -272,7 +275,8 @@ class SingleEntryTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000014"])
         user, token = self.make_user(phone="13800000014")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "张伟"},
+                                token=token), 201)
         resp = self.api("get", "/me", token=token)
         self.assert_ok(resp)
         text = resp.content.decode("utf-8")
@@ -398,7 +402,8 @@ class SingleUnitAdminTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         owner = self.add_owner(unit, "张伟", ["13800000015"])
         user, token = self.make_user(phone="13800000015")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "张伟"},
+                                token=token), 201)
         resp = self.api("patch", f"/admin/registry/units/{unit.id}",
                         {"unit_type": "APARTMENT", "area": "90.00"}, token=self.admin_token)
         self.assert_ok(resp)
@@ -555,7 +560,8 @@ class ReimportTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         self.add_owner(unit, "李娜", ["13800000018"])
         user, token = self.make_user(phone="13800000018")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "李娜"},
+                                token=token), 201)
         self.assert_ok(self.import_rows([row(name="王强")]))
         self.assertIn("李娜", [o.name for o in self.owners_of(unit)])
         self.assertTrue(Membership.objects.filter(user=user, unit=unit, ended_at__isnull=True).exists())
@@ -643,7 +649,7 @@ class LegacyCompatibilityTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000022"])
         user, token = self.make_user(phone="13800000022")
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "张伟"}, token=token)
         self.assert_ok(resp, 201)
         self.assertEqual(resp.data["specific_part"], unit.specific_part)
 
@@ -652,7 +658,8 @@ class LegacyCompatibilityTests(RegistryImportTestBase):
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000023"])
         user, token = self.make_user(phone="13800000023")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "张伟"},
+                                token=token), 201)
         membership = Membership.objects.get(user=user, unit=unit)
         self.assert_ok(self.api("patch", f"/admin/registry/units/{unit.id}",
                                 {"unit_type": "RESIDENCE", "area": "88.00"}, token=self.admin_token))
@@ -783,7 +790,7 @@ class AutoBindTests(RegistryImportTestBase):
                         token=self.admin_token)
         self.assert_ok(resp)
         self.assertEqual(Membership.objects.filter(user=user).count(), 0)
-        certified = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        certified = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
         self.assert_ok(certified, 201)
         self.assertEqual(certified.data["role"], "HEAD")
 
@@ -829,36 +836,36 @@ class OptionLabelAndAppealTests(RegistryImportTestBase):
         self.assertIn(resp.status_code, (401, 403))
 
     def test_tc_int_161_phone_mismatch_points_to_appeal(self):
-        """TC-INT-161 / AC-104-01：清册无此手机号时提示申诉入口。"""
+        """TC-INT-161 / AC-104-01：清册无此手机号时提示申诉入口（ocap_owner_auth_v2：改为统一 OWNER_NOT_MATCHED）。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "王芳")
         user, token = self.make_user(phone="13900000009")
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        self.assert_error(resp, 422, "PHONE_NOT_IN_REGISTRY")
-        self.assertEqual(resp.data["message"], "手机号与清册不一致，可提交产权申诉")
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
+        self.assert_error(resp, 422, "OWNER_NOT_MATCHED")
+        self.assertEqual(resp.data["message"], "姓名与手机号未能通过清册核对，可上传产权证明提交申诉")
         self.assertTrue(resp.data["details"]["appeal_available"])
 
     def test_tc_int_162_certify_requires_phone(self):
-        """TC-INT-162 / AC-104-03：账号未绑定手机号时提示先绑定。"""
+        """TC-INT-162 / AC-104-03（ocap_owner_auth_v2：无手机号不再 409，统一 422 并可走申诉）。"""
         unit = self.make_registry_unit()
         user = User.objects.create(account_no=next_account_no(), phone=None)
         token = self.token_of(user)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        self.assert_error(resp, 409, "PHONE_REQUIRED")
-        self.assertEqual(resp.data["message"], "请先绑定手机号")
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
+        self.assert_error(resp, 422, "OWNER_NOT_MATCHED")
+        self.assertTrue(resp.data["details"]["appeal_available"])
 
     def test_tc_int_163_admin_adds_phone_then_certify(self):
         """TC-INT-163 / AC-104-04：管理员补录手机号后同一用户认证通过，无需申诉。"""
         unit = self.make_registry_unit()
         owner = self.add_owner(unit, "王芳")
         user, token = self.make_user(phone="13900000010")
-        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id}, token=token),
-                          422, "PHONE_NOT_IN_REGISTRY")
+        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token),
+                          422, "OWNER_NOT_MATCHED")
         self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/owners",
                                 {"owners": [{"id": owner.id, "name": "王芳",
                                              "phones": ["13900000010"]}]},
                                 token=self.admin_token))
         self.assertEqual(Membership.objects.filter(user=user).count(), 0)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
         self.assert_ok(resp, 201)
         self.assertEqual(resp.data["role"], "HEAD")

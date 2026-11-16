@@ -4,9 +4,12 @@ import re
 from typing import Iterable, Literal
 
 UNDERGROUND_BUILDING: str = "地下车位"  # 跨模块字面量的唯一定义处（ADR-099）
+SHOP_BUILDING: str = "商铺"  # MOD-112 / IFC-299：保留楼栋名唯一定义处（ADR-108）
+RESERVED_BUILDINGS: dict[str, int] = {UNDERGROUND_BUILDING: 1, SHOP_BUILDING: 2}  # 名称 -> 楼栋级层级号
 LEVEL_SUFFIXES: dict[str, str] = {"building": "栋", "unit_no": "单元", "floor": "层", "room": "号"}
 Level = Literal["building", "unit_no", "floor", "room"]
-# (层级, 数值, 文字段序列, 原始文本)；层级：-1 空；0 整数；1 其他文字；2 保留名
+# (层级, 数值, 文字段序列, 原始文本)；层级：-1 空；0 整数；
+# 楼栋级：1 地下车位；2 商铺；3 其他文字；其余层级：1 其他文字（ADR-108）
 NaturalKey = tuple[int, int, tuple[tuple[int, int, str], ...], str]
 
 _ARABIC_RE = re.compile(r"[0-9０-９]+")
@@ -66,20 +69,20 @@ def parse_integer_text(text: str | None, suffix: str = "") -> int | None:
 
 
 def natural_key(value: str | None, level: Level) -> NaturalKey:
-    """比较键（IFC-285）：空 < 整数（按数值）< 其他文字 < 保留名（仅楼栋"地下车位"）。"""
+    """比较键（IFC-299）：空 < 整数（按数值）< 其他文字；楼栋级为 整数 < 地下车位 < 商铺 < 其他文字。"""
     text = value.strip() if isinstance(value, str) else ""
     if not text:
         return (-1, 0, (), "")
     number = parse_integer_text(text, LEVEL_SUFFIXES[level])
     if number is not None:
         return (0, number, (), text)
-    if level == "building" and text == UNDERGROUND_BUILDING:
-        return (2, 0, (), text)
+    if level == "building" and text in RESERVED_BUILDINGS:
+        return (RESERVED_BUILDINGS[text], 0, (), text)
     segments = tuple(
         (0, int(part), "") if part[0].isdecimal() else (1, 0, part)
         for part in _SEGMENT_RE.findall(text)
     )
-    return (1, 0, segments, text)
+    return (3 if level == "building" else 1, 0, segments, text)
 
 
 def unit_sort_key(building: str, unit_no: str, floor: str, room: str,

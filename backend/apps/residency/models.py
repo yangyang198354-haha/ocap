@@ -39,6 +39,7 @@ class Appeal(models.Model):
     decided_by_admin_id = models.IntegerField(null=True, blank=True)
     reject_reason = models.CharField(max_length=500, null=True, blank=True)
     pending_slot = models.SmallIntegerField(null=True, blank=True, default=1)
+    owner_name = models.CharField(max_length=64, blank=True, default="")  # ADR-111：申诉的产权人名字，空串=未提供
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "unit", "pending_slot"], name="uniq_appeal_pending")]

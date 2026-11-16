@@ -65,12 +65,15 @@ class NaturalKeyOrderTests(SimpleTestCase):
         self.assertEqual(sorted(result), sorted(set(values)))
 
     def test_tc_unit_619_underground_building_last_only_for_building(self):
-        """AC-184-03 / AC-185-01：楼栋级"地下车位"排在所有编号楼栋之后（含非数字楼栋 'A区'）。"""
+        """AC-184-03 / AC-185-01（ocap_owner_auth_v2 ADR-108 口径变更）：楼栋级"地下车位"排在编号楼栋之后、
+        文字楼栋（如 'A区'）之前。"""
         self.assertEqual(sorted_values(["地下车位", "10", "1", "A区"], "building"),
-                         ["1", "10", "A区", UNDERGROUND_BUILDING])
-        # 仅 building 级保留：其他层级"地下车位"只是普通文字
+                         ["1", "10", UNDERGROUND_BUILDING, "A区"])
+        # 仅 building 级保留：其他层级"地下车位"只是普通文字（文字楼栋层级为 3，其他层级文字为 1）
         self.assertEqual(natural_key("地下车位", "floor")[0], 1)
-        self.assertEqual(natural_key("地下车位", "building")[0], 2)
+        self.assertEqual(natural_key("地下车位", "building")[0], 1)
+        self.assertEqual(natural_key("A区", "building")[0], 3)
+        self.assertLess(natural_key("A区", "floor"), natural_key("地下车位", "floor"))
 
     def test_tc_unit_620_empty_values_first_and_not_dropped(self):
         """AC-183-05：空值键层级最低；sorted_values 不改写不丢弃。"""

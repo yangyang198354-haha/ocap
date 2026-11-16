@@ -29,7 +29,8 @@ class AccountMergeJourneyTests(ApiTestBase):
         self.assert_ok(reg, 201)
         a_token = reg.data["token"]
         unit_a = self.make_unit(phones=[phone])
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit_a.id}, token=a_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit_a.id, "name": "业主甲"},
+                                token=a_token), 201)
         # W：仅微信登录（无手机号），在另一专有部分为同住人
         w = User.objects.create(account_no=next_account_no(), phone=None, nickname="微信W")
         unit_w = self.make_unit()

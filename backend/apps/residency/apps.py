@@ -24,9 +24,14 @@ class AppealAttachmentPolicy:
     def can_open(self, linked_id: str, principal) -> bool:
         from .models import Appeal
 
+        from apps.core.errors import ApiError
+
         appeal = Appeal.objects.filter(id=linked_id).first()
         if appeal is None or principal is None:
             return False
         if getattr(principal, "is_admin_principal", False):
             return True
-        return appeal.user_id == getattr(principal, "id", None)
+        if appeal.user_id == getattr(principal, "id", None):
+            return True
+        # ADR-112 / IFC-310：已登录的无关用户 → 403，响应体只含错误 JSON（REQ-NFUNC-034）
+        raise ApiError("FORBIDDEN", "无权查看该资料", 403)

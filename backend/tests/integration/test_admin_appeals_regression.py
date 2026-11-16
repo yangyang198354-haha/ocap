@@ -8,7 +8,8 @@ from apps.residency.models import Appeal
 from tests.support import ApiTestBase
 
 LIST_KEYS = {"count", "page", "page_size", "results"}
-ITEM_KEYS = {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason", "applicant", "proof"}
+ITEM_KEYS = {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason", "applicant", "proof",
+             "owner_name"}  # ocap_owner_auth_v2 IFC-308：新增 owner_name
 
 
 class AdminAppealListRegressionTests(ApiTestBase):
@@ -33,7 +34,7 @@ class AdminAppealListRegressionTests(ApiTestBase):
         self.assertEqual(item["status"], "PENDING")
         self.assertEqual(item["applicant"]["id"], user.id)
         self.assertEqual(item["applicant"]["account_no"], user.account_no)
-        self.assertEqual(set(item["applicant"]), {"id", "account_no", "phone"})
+        self.assertEqual(set(item["applicant"]), {"id", "account_no", "nickname", "phone", "has_phone"})
         self.assertNotEqual(item["applicant"]["phone"], user.phone, "手机号必须脱敏")
         self.assertEqual(item["proof"], [])
         self.assertIsNone(item["decided_at"])

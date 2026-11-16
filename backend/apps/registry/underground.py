@@ -231,11 +231,15 @@ def _counts_dict(counts: Counts) -> dict:
     return asdict(counts)
 
 
-def write_backup(path: Path, plan: RelocationPlan, rows: list[UnitRow], counts: Counts) -> BackupInfo:
-    """JSON Lines 备份：头 + 被改记录 + 末行 sha256；0600、O_EXCL、fsync、回读校验后才返回。"""
+def write_backup(path: Path, plan, rows: list[UnitRow], counts: Counts,
+                 *, format_name: str = BACKUP_FORMAT) -> BackupInfo:
+    """JSON Lines 备份：头 + 被改记录 + 末行 sha256；0600、O_EXCL、fsync、回读校验后才返回。
+
+    plan 为任何带 moves（元素含 unit_id）的计划（地下车位 RelocationPlan 或商铺 ShopPlan，IFC-301）。
+    """
     moved_ids = {m.unit_id for m in plan.moves}
     records = [r for r in rows if r.id in moved_ids]
-    lines = [json.dumps({"format": BACKUP_FORMAT, "created_at": timezone.now().isoformat(),
+    lines = [json.dumps({"format": format_name, "created_at": timezone.now().isoformat(),
                          "records": len(records), "counts": _counts_dict(counts)}, ensure_ascii=False)]
     lines.extend(json.dumps(asdict(r), ensure_ascii=False) for r in records)
     body = ("\n".join(lines) + "\n").encode("utf-8")
@@ -250,7 +254,7 @@ def write_backup(path: Path, plan: RelocationPlan, rows: list[UnitRow], counts: 
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
-        info = verify_backup(path)
+        info = verify_backup(path, format_name=format_name)
     except Exception:
         try:
             os.unlink(str(path))
@@ -262,7 +266,7 @@ def write_backup(path: Path, plan: RelocationPlan, rows: list[UnitRow], counts: 
     return info
 
 
-def _read_backup(path: Path) -> tuple[BackupInfo, list[UnitRow]]:
+def _read_backup(path: Path, *, format_name: str = BACKUP_FORMAT) -> tuple[BackupInfo, list[UnitRow]]:
     try:
         raw = Path(path).read_bytes()
     except OSError as exc:
@@ -280,7 +284,7 @@ def _read_backup(path: Path) -> tuple[BackupInfo, list[UnitRow]]:
         counts = Counts(**header["counts"])
     except (ValueError, TypeError, KeyError) as exc:
         raise BackupError("备份文件格式不正确") from exc
-    if header.get("format") != BACKUP_FORMAT:
+    if header.get("format") != format_name:
         raise BackupError("备份文件格式版本不受支持")
     digest = hashlib.sha256(body).hexdigest()
     if tail.get("sha256") != digest:
@@ -290,9 +294,9 @@ def _read_backup(path: Path) -> tuple[BackupInfo, list[UnitRow]]:
     return BackupInfo(Path(path), len(rows), counts, digest), rows
 
 
-def verify_backup(path: Path) -> BackupInfo:
+def verify_backup(path: Path, *, format_name: str = BACKUP_FORMAT) -> BackupInfo:
     """校验头部、行数与末行 sha256。"""
-    return _read_backup(path)[0]
+    return _read_backup(path, format_name=format_name)[0]
 
 
 def apply_relocation(plan: RelocationPlan, backup: BackupInfo, expected_changes: int) -> ApplyResult:

@@ -41,8 +41,8 @@ class PRBase(ApiTestBase):
         uploaded = self.upload("/attachments", {"file": SimpleUploadedFile(
             "p.png", PNG + uuid4().bytes, content_type="image/png"), "purpose": "APPEAL_PROOF"}, token=token)
         self.assert_ok(uploaded, 201)
-        resp = self.api("post", "/appeals", {"unit_id": unit.id, "proof_ids": [uploaded.data["id"]]},
-                        token=token)
+        resp = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "业主甲",
+                                             "proof_ids": [uploaded.data["id"]]}, token=token)
         self.assert_ok(resp, 201)
         return resp.data
 
@@ -828,12 +828,21 @@ class RuleLimitTests(PRBase):
         self.assert_ok(self.api("post", "/admin/income/sheets", {"records": [r]}, token=self.mtoken), 201)
 
     def test_tc_int_472_ac_174_01_term_start_before_today_rejected(self):
-        """TC-INT-472 / AC-174-01：任期开始日早于今天 → 400 且提示"任期开始日不得早于今天"。"""
+        """TC-INT-472 / AC-174-01（ocap_owner_auth_v2 口径变更，AC-205-01~03）：开始日早于今天不再因此被拒；
+        仅当按配置任期推算的结束日不晚于今天时 400 并提示结束日。"""
         owner, _, _ = self.make_owner()
+        self.assert_ok(self.api("put", "/admin/committee/config", {"cap_rep": 5, "term_months_rep": 12},
+                                token=self.admin_token))
+        # 配置任期 12 个月：开始日 = 今天 - 1 天 → 结束日仍晚于今天，授予成功（不再提示"任期开始日不得早于今天"）
         resp = self.api("post", "/admin/committee/seats",
                         {"user_id": owner.id, "position": "REPRESENTATIVE",
                          "term_start": str(date.today() - timedelta(days=1))}, token=self.admin_token)
-        self.assertEqual(self.assert_error(resp, 400, "INVALID_VALUE")["message"], "任期开始日不得早于今天")
+        self.assert_ok(resp, 201)
+        other, _, _ = self.make_owner()
+        too_old = self.api("post", "/admin/committee/seats",
+                           {"user_id": other.id, "position": "REPRESENTATIVE",
+                            "term_start": str(date.today() - timedelta(days=36500))}, token=self.admin_token)
+        self.assertIn("不能授予", self.assert_error(too_old, 400, "INVALID_VALUE")["message"])
 
     def test_tc_int_473_ac_174_02_174_03_date_rules(self):
         """TC-INT-473 / AC-174-02、AC-174-03：发生日期晚于今日被拒、今日成功；备用金核销日期 ≤ 今日被拒、明日成功。"""
@@ -864,7 +873,8 @@ class RuleLimitTests(PRBase):
         self.submit_appeal(token, unit)
         uploaded = self.upload("/attachments", {"file": SimpleUploadedFile(
             "p.png", PNG + b"2", content_type="image/png"), "purpose": "APPEAL_PROOF"}, token=token)
-        resp = self.api("post", "/appeals", {"unit_id": unit.id, "proof_ids": [uploaded.data["id"]]}, token=token)
+        resp = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "业主甲",
+                                             "proof_ids": [uploaded.data["id"]]}, token=token)
         self.assert_error(resp, 409, "APPEAL_PENDING")
         self.assertEqual(Appeal.objects.filter(user=user, unit=unit).count(), 1)
 

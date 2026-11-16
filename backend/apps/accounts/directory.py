@@ -4,6 +4,7 @@ from typing import Sequence, TypedDict
 from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 
+from apps.committee.effective import is_effective
 from apps.committee.models import Seat
 from apps.residency.models import Membership
 
@@ -20,7 +21,7 @@ class IdentityView(TypedDict):
 def identity_view(*, memberships: Sequence[Membership], seats: Sequence[Seat]) -> IdentityView:
     """最高身份：业委会职务 > 产权业主 > 同住人 > 游客（REQ-FUNC-136 / C-34：户主不作为身份文案，HEAD 与 OWNER 同为产权业主）。"""
     today = timezone.localdate()
-    active_seats = [s for s in seats if s.status == "ACTIVE" and s.term_end >= today]
+    active_seats = [s for s in seats if is_effective(s, today)]
     if active_seats:
         seat = max(active_seats, key=lambda s: (POSITION_RANK.get(s.position, 0), s.term_end, s.id or 0))
         return {"identity_code": seat.position, "identity_label": seat.get_position_display()}

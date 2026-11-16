@@ -39,20 +39,33 @@
       <p class="muted">逐级选择你的专有部分，再选择下面的操作。</p>
       <UnitCascader v-model="pickedUnitId" />
       <div class="row" style="margin-top: 10px">
+        <el-input v-model="certifyName" maxlength="64" placeholder="请输入姓名" style="width: 220px" />
+      </div>
+      <div class="row" style="margin-top: 10px">
         <el-button type="primary" :disabled="!pickedUnitId" @click="certify">认证产权</el-button>
         <el-button :disabled="!pickedUnitId" @click="applyResident">申请成为同住人</el-button>
       </div>
-      <p class="muted">清册登记手机号与当前手机号一致时可立即认证为产权业主；首位认证者为户主。若该户未登记你的手机号，请改用下方产权申诉。同住人须先有产权业主，由产权业主审批。</p>
+      <p class="muted">输入的姓名与当前手机号和清册登记的同一位业主一致时可立即认证为产权业主；首位认证者为户主。不一致或没有手机号时，请改用下方产权申诉（输入姓名并上传产权证明，无手机号也可申诉）。同住人须先有产权业主，由产权业主审批。</p>
     </div>
 
-    <div class="card">
+    <div id="appeal" class="card">
       <h3 class="title">认证申诉</h3>
-      <p class="muted">清册手机号与当前手机号不一致时，可上传产权证明提交申诉，由管理员审核。</p>
+      <p class="muted">姓名与手机号未能通过清册核对时，可填写产权人名字并上传 1~5 份产权证明（jpg/png/pdf，单个不超过 10MB）提交申诉，由管理员审核。</p>
       <div class="row" style="margin-top: 10px">
-        <el-upload :show-file-list="false" :http-request="uploadProof" accept="image/*">
+        <el-input v-model="appeal.ownerName" maxlength="64" placeholder="产权人名字" style="width: 220px" />
+      </div>
+      <div class="row" style="margin-top: 10px">
+        <el-upload
+          :show-file-list="false"
+          :http-request="uploadProof"
+          multiple
+          :limit="5"
+          accept=".jpg,.jpeg,.png,.pdf"
+        >
           <el-button>上传产权证明</el-button>
         </el-upload>
-        <span class="muted" v-if="appeal.attachmentId">已上传</span>
+        <span class="muted" v-if="appeal.attachmentIds.length">已上传 {{ appeal.attachmentIds.length }} 份（最多 5 份）</span>
+        <el-button v-if="appeal.attachmentIds.length" size="small" @click="appeal.attachmentIds = []">清空</el-button>
         <el-button type="primary" :disabled="!pickedUnitId" @click="submitAppeal">提交申诉</el-button>
       </div>
     </div>
@@ -96,7 +109,8 @@ import UnitCascader from './parts/UnitCascader.vue'
 
 const auth = useAuthStore()
 const pickedUnitId = ref(null)
-const appeal = reactive({ attachmentId: null })
+const certifyName = ref('')
+const appeal = reactive({ ownerName: '', attachmentIds: [] })
 const housing = reactive({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
 const toReview = ref([])
 const myApplications = ref([])
@@ -132,14 +146,19 @@ async function refresh() {
 }
 
 async function certify() {
+  const name = certifyName.value.trim()
+  if (!name) return ElMessage.warning('请输入姓名')
   try {
-    const result = await unitApi.certify(pickedUnitId.value)
+    const result = await unitApi.certify(pickedUnitId.value, name)
     ElMessage.success(`认证成功，身份：${ROLE_LABELS[result.role] || result.role}`)
     await auth.fetchMe()
     await refresh()
   } catch (e) {
-    if (e?.code === 'PHONE_NOT_IN_REGISTRY') {
-      ElMessage.warning('手机号与清册不一致，可提交产权申诉')
+    if (e?.code === 'OWNER_NOT_MATCHED') {
+      // 保留已选房屋与姓名，姓名默认带入申诉；不显示任何清册信息（AC-201-02）
+      appeal.ownerName = name
+      ElMessage.warning('姓名与手机号未能通过核对，请上传产权证明提交申诉')
+      document.getElementById('appeal')?.scrollIntoView?.()
       return
     }
     ElMessage.error(errorText(e))
@@ -147,9 +166,10 @@ async function certify() {
 }
 
 async function uploadProof({ file }) {
+  if (appeal.attachmentIds.length >= 5) return ElMessage.warning('最多上传 5 份产权证明')
   try {
     const uploaded = await attachmentApi.upload(file, 'APPEAL_PROOF')
-    appeal.attachmentId = uploaded.id
+    appeal.attachmentIds.push(uploaded.id)
     ElMessage.success('已上传')
   } catch (e) {
     ElMessage.error(errorText(e))
@@ -158,9 +178,16 @@ async function uploadProof({ file }) {
 
 async function submitAppeal() {
   try {
-    if (!appeal.attachmentId) return ElMessage.warning('请先上传产权证明')
-    await unitApi.createAppeal({ unit_id: pickedUnitId.value, proof_ids: [appeal.attachmentId] })
+    const ownerName = appeal.ownerName.trim()
+    if (!ownerName) return ElMessage.warning('请输入产权人名字')
+    if (!appeal.attachmentIds.length) return ElMessage.warning('请先上传产权证明')
+    await unitApi.createAppeal({
+      unit_id: pickedUnitId.value,
+      owner_name: ownerName,
+      proof_ids: [...appeal.attachmentIds]
+    })
     ElMessage.success('申诉已提交，等待管理员审核')
+    appeal.attachmentIds = []
     await loadLists()
   } catch (e) {
     ElMessage.error(errorText(e))

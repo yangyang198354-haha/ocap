@@ -34,7 +34,7 @@ class OwnerOnboardingJourneyTests(ApiTestBase):
         self.assert_ok(me)
         self.assertEqual(me.data["identities"]["labels"], ["游客"])
         unit = self.make_unit(phones=[phone])
-        cert = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        cert = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=token)
         self.assert_ok(cert, 201)
         self.assertEqual(cert.data["role"], "HEAD")
         me = self.api("get", "/me", token=token)
@@ -50,7 +50,8 @@ class ResidentJourneyTests(ApiTestBase):
         """US-025/026：同住人申请 → 产权业主审批 → 移除。"""
         unit = self.make_unit(phones=[next_phone()])
         owner, owner_token = self.make_user(phone=unit.phones.all()[0].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
         resident, resident_token = self.make_user()
         app = self.api("post", "/resident-applications", {"unit_id": unit.id}, token=resident_token)
         self.assert_ok(app, 201)
@@ -74,13 +75,13 @@ class AppealJourneyTests(ApiTestBase):
         """US-028/029：认证失败 → 申诉 → 管理员核准成为业主。"""
         user, token = self.make_user()
         unit = self.make_unit(phones=[next_phone()])
-        rejected = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        self.assert_error(rejected, 422, "PHONE_NOT_IN_REGISTRY")
+        rejected = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=token)
+        self.assert_error(rejected, 422, "OWNER_NOT_MATCHED")
         proof = SimpleUploadedFile("proof.png", b"\x89PNG\r\n\x1a\n" + b"3" * 32,
                                    content_type="image/png")
         uploaded = self.upload("/attachments", {"file": proof, "purpose": "APPEAL_PROOF"}, token=token)
         self.assert_ok(uploaded, 201)
-        appeal = self.api("post", "/appeals", {"unit_id": unit.id,
+        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "新产权人",
                                                "proof_ids": [uploaded.data["id"]]}, token=token)
         self.assert_ok(appeal, 201)
         _, admin_token = self.make_admin()

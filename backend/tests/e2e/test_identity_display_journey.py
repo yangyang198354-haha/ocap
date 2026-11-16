@@ -43,7 +43,7 @@ class IdentityDisplayJourneyTests(ApiTestBase):
         owner_phone = next_phone()
         unit = self.make_display_unit(phone=owner_phone, unit_type="APARTMENT", area=None)
         _, owner_token = self.make_user(phone=owner_phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id},
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "杨扬"},
                                 token=owner_token), 201)
         resident, resident_token = self.make_user()
         application = self.api("post", "/resident-applications", {"unit_id": unit.id},
@@ -63,7 +63,8 @@ class IdentityDisplayJourneyTests(ApiTestBase):
         phone = next_phone()
         unit = self.make_display_unit(phone=phone)
         user, token = self.make_user(phone=phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "杨扬"},
+                                token=token), 201)
         self.make_seat(user, "VICE_CHAIR")
         identities = self.api("get", "/me", token=token).data["identities"]
         self.assertEqual(identities["labels"], ["副主任"])

@@ -62,11 +62,13 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         self.assertEqual(me.data["identities"]["labels"], ["游客"])
 
         # 清册里仍是旧号：认证按清册比对被拒；管理员把清册改为新号后认证成功（AC-035-03）
-        refused = self.api("post", "/certifications", {"unit_id": unit.id}, token=again.data["token"])
-        self.assert_error(refused, 422, "PHONE_NOT_IN_REGISTRY")
+        refused = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                           token=again.data["token"])
+        self.assert_error(refused, 422, "OWNER_NOT_MATCHED")
         self.assert_ok(self.api("put", f"/admin/registry/units/{unit.id}/owners",
                                 {"owners": [{"name": "新业主", "phones": [new_phone]}]}, token=admin_token))
-        ok = self.api("post", "/certifications", {"unit_id": unit.id}, token=again.data["token"])
+        ok = self.api("post", "/certifications", {"unit_id": unit.id, "name": "新业主"},
+                      token=again.data["token"])
         self.assert_ok(ok, 201)
         self.assertEqual(ok.data["role"], "HEAD")
 

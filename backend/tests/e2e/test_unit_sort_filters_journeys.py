@@ -109,8 +109,9 @@ class OptionsAndHousingJourney(UnitSortFilterJourneyBase):
         # 认证：先车位、再 10 栋、最后 2 栋（认证时间与自然顺序相反）
         ten = RegistryUnit.objects.get(building="10")
         two = RegistryUnit.objects.get(building="2")
-        for unit_id in (parking_id, ten.id, two.id):
-            self.assert_ok(self.api("post", "/certifications", {"unit_id": unit_id}, token=token), 201)
+        for unit_id, owner_name in ((parking_id, "戊测试"), (ten.id, "乙测试"), (two.id, "丙测试")):
+            self.assert_ok(self.api("post", "/certifications", {"unit_id": unit_id, "name": owner_name},
+                                    token=token), 201)
         me = [u["unit_id"] for u in self.api("get", "/me", token=token).data["identities"]["units"]]
         housing = self.api("get", "/me/housing", token=token).data["units"]
         self.assertEqual(me, [two.id, ten.id, parking_id])
@@ -127,11 +128,11 @@ class OptionsAndHousingJourney(UnitSortFilterJourneyBase):
         self.cmd("relocate_underground_parking", "--apply", "--backup", str(self.dir / "b.jsonl"), "--expect-changes", "2")
         _, stranger = self.make_user()
         parking = RegistryUnit.objects.get(building="地下车位", floor="负一")
-        self.assert_error(self.api("post", "/certifications", {"unit_id": parking.id}, token=stranger),
-                          422, "PHONE_NOT_IN_REGISTRY")
+        self.assert_error(self.api("post", "/certifications", {"unit_id": parking.id, "name": "戊测试"},
+                                   token=stranger), 422, "OWNER_NOT_MATCHED")
         normal = RegistryUnit.objects.get(building="2")
-        self.assert_error(self.api("post", "/certifications", {"unit_id": normal.id}, token=stranger),
-                          422, "PHONE_NOT_IN_REGISTRY")
+        self.assert_error(self.api("post", "/certifications", {"unit_id": normal.id, "name": "丙测试"},
+                                   token=stranger), 422, "OWNER_NOT_MATCHED")
 
 
 class AdminFilterJourney(UnitSortFilterJourneyBase):
@@ -218,7 +219,8 @@ class ExportAndRelocationJourney(UnitSortFilterJourneyBase):
         self.assert_ok(self.import_rows(self.legacy_rows()))
         user, token = self.make_user(phone=self.phone)
         parking = RegistryUnit.objects.get(building="1", floor="负一")
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": parking.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": parking.id, "name": "戊测试"},
+                                token=token), 201)
         original = list(RegistryUnit.objects.order_by("id").values_list(
             "id", "building", "unit_no", "floor", "room", "specific_part", "unit_type", "area", "updated_at"))
         membership = Membership.objects.get(user=user, unit=parking)

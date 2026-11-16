@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
 
+from .effective import effective_q
 from .models import CommitteeConfig, Seat
 
 POSITION_RANK = {"CHAIR": 4, "VICE_CHAIR": 3, "MEMBER": 2, "REPRESENTATIVE": 1}
@@ -30,8 +31,7 @@ class CommitteeQuery:
     @staticmethod
     def active_seat(user_id: int) -> Seat | None:
         today = timezone.localdate()
-        return Seat.objects.filter(user_id=user_id, status="ACTIVE",
-                                   term_end__gte=today).order_by("-term_end").first()
+        return Seat.objects.filter(effective_q(today), user_id=user_id).order_by("-term_end").first()
 
     @staticmethod
     def is_member(user_id: int) -> bool:
@@ -51,15 +51,14 @@ class CommitteeQuery:
     @staticmethod
     def active_member_ids() -> list[int]:
         today = timezone.localdate()
-        return list(Seat.objects.filter(status="ACTIVE", term_end__gte=today,
-                                        position__in=["CHAIR", "VICE_CHAIR", "MEMBER"])
+        return list(Seat.objects.filter(effective_q(today), position__in=["CHAIR", "VICE_CHAIR", "MEMBER"])
                     .values_list("user_id", flat=True))
 
     @staticmethod
     def active_representative_ids() -> list[int]:
         today = timezone.localdate()
-        return list(Seat.objects.filter(status="ACTIVE", term_end__gte=today,
-                                        position="REPRESENTATIVE").values_list("user_id", flat=True))
+        return list(Seat.objects.filter(effective_q(today), position="REPRESENTATIVE")
+                    .values_list("user_id", flat=True))
 
     @staticmethod
     def identity_labels(user_id: int) -> list[str]:
@@ -83,8 +82,7 @@ class CommitteeQuery:
             return sum(getattr(config, field) or 0
                        for field in ("cap_chair", "cap_vice", "cap_member"))
         today = timezone.localdate()
-        return Seat.objects.filter(status="ACTIVE", term_end__gte=today,
-                                   position__in=["CHAIR", "VICE_CHAIR", "MEMBER"]).count()
+        return Seat.objects.filter(effective_q(today), position__in=["CHAIR", "VICE_CHAIR", "MEMBER"]).count()
 
 
 class CommitteeCommands:
@@ -101,6 +99,12 @@ class CommitteeCommands:
             from apps.core.errors import ApiError
 
             raise ApiError("CAP_NOT_CONFIGURED", "该身份人数上限未配置", 409)
+        term_end = add_months(term_start, term_months)
+        if term_end <= timezone.localdate():  # IFC-312：结束日须严格晚于今天（AC-205-02/03）
+            from apps.core.errors import ApiError
+
+            raise ApiError("INVALID_VALUE", f"按配置任期，该席位已于 {term_end:%Y-%m-%d} 结束，不能授予")
+        # 注意：下面两项计数有意含"未生效"席位（Q-OA-28=A），不使用 effective_q
         if Seat.objects.filter(user_id=user_id, status="ACTIVE").exists():
             from apps.core.errors import ApiError
 
@@ -113,7 +117,7 @@ class CommitteeCommands:
                 raise ApiError("CAP_REACHED", "该身份在任人数已达上限", 409)
             seat = Seat.objects.create(
                 user_id=user_id, position=position, term_start=term_start,
-                term_end=add_months(term_start, term_months), granted_by_admin_id=admin_id,
+                term_end=term_end, granted_by_admin_id=admin_id,
                 active_slot=1,
             )
         AuditService.record(actor=AuditActor("ADMIN", admin_id, f"管理员{admin_id}"),
@@ -130,6 +134,9 @@ class CommitteeCommands:
             from apps.core.errors import ApiError
 
             raise ApiError("TERM_NOT_CONFIGURED", "该身份任期未配置", 409)
+        today = timezone.localdate()
+        # IFC-312：旧席位未生效（开始日在将来）时新席位沿用旧开始日，不让变更提前生效
+        new_start = seat.term_start if seat.term_start > today else today
         with transaction.atomic():
             seat.status = "REPLACED"
             seat.active_slot = None
@@ -137,7 +144,7 @@ class CommitteeCommands:
             seat.end_reason = "CHANGED"
             seat.save()
             new_seat = CommitteeCommands.grant(user_id=seat.user_id, position=position,
-                                               term_start=timezone.localdate(), admin_id=admin_id)
+                                               term_start=new_start, admin_id=admin_id)
         AuditService.record(actor=AuditActor("ADMIN", admin_id, f"管理员{admin_id}"),
                             action="SEAT_CHANGED", object_type="seat", object_id=str(new_seat.id),
                             result="SUCCESS", detail={"from": seat.position, "to": position})

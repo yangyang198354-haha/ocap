@@ -317,19 +317,24 @@ class MutatingFlows(RemoteBase):
         # AC-152-03：其他用户列表中看不到他人的申请
         self.assertEqual(self.j(R.get("/resident-applications/mine", "e2e_guest")), [])
 
-    def test_337_ac_156_158_appeal_reject_approve_revoke(self):
-        """TC-E2E-337 / AC-156-01~04、AC-157-05、AC-158-02：e2e_applicant 申诉 U1 → 待审核 → 管理员驳回（原因可见）→ 再申诉 → 通过获得房屋关系 →
-        管理员撤销认证（审计由服务端记录）→ 恢复游客。他人列表为空。"""
+    def test_337_ac_156_158_appeal_reject_only_no_registry_write(self):
+        """TC-E2E-337 / AC-156-01~03、AC-199-01：e2e_applicant 申诉 U1（带 owner_name）→ 待审核 → 管理员列表可见产权人名字与资料 → 驳回（原因可见）→
+        再申诉 → 再驳回。**只走提交与驳回，不执行"通过"**：通过会向真实清册追加产权人，越出画像 P4-1（GR-C-001-F02）。
+        申诉通过路径（追加清册、撤销认证）标 NOT_TESTABLE（远程），由本地 TC-INT/TC-E2E 覆盖，见 e2e_test_report 人工验证清单。"""
         unit_id = FIX["u1"]["unit_id"]
-        applicant_id = R.ids["e2e_applicant"]
 
         def submit():
             proof = R.upload_png("e2e_applicant", "APPEAL_PROOF")
-            return self.j(R.post("/appeals", "e2e_applicant", json={"unit_id": unit_id, "proof_ids": [proof]}), 201)
+            return self.j(R.post("/appeals", "e2e_applicant", json={
+                "unit_id": unit_id, "owner_name": "e2e_申诉人", "proof_ids": [proof]}), 201)
 
         first = submit()
         row = self.j(R.get("/appeals/mine", "e2e_applicant"))[0]
         self.assertEqual((row["status"], row["decided_at"]), ("PENDING", None))
+        listing = self.j(R.get("/admin/appeals", "admin", params={"status": "PENDING", "page_size": 100}))
+        mine = [a for a in listing["results"] if a["id"] == first["id"]]
+        self.assertEqual(len(mine), 1)
+        self.assertEqual((mine[0]["owner_name"], len(mine[0]["proof"])), ("e2e_申诉人", 1))
         reason = R.unique("驳回")
         self.j(R.post(f"/admin/appeals/{first['id']}/decision", "admin", json={"decision": "REJECT", "reject_reason": reason}))
         row = self.j(R.get("/appeals/mine", "e2e_applicant"))[0]
@@ -337,14 +342,9 @@ class MutatingFlows(RemoteBase):
         self.assertTrue(row["decided_at"])
         self.assertEqual(self.j(R.get("/appeals/mine", "e2e_guest")), [])
         second = submit()
-        self.j(R.post(f"/admin/appeals/{second['id']}/decision", "admin", json={"decision": "APPROVE"}))
-        self.addCleanup(lambda: R.post("/admin/memberships/revoke", "admin",
-                                       json={"user_id": applicant_id, "unit_id": unit_id}))
-        self.assertEqual(self.j(R.get("/appeals/mine", "e2e_applicant"))[0]["status"], "APPROVED")
-        units = self.j(R.get("/me/housing", "e2e_applicant"))["units"]
-        self.assertEqual([u["unit_id"] for u in units], [unit_id])
-        self.assertIn(units[0]["role_label"], {"产权业主", "户主"})
-        self.j(R.post("/admin/memberships/revoke", "admin", json={"user_id": applicant_id, "unit_id": unit_id}))
+        self.j(R.post(f"/admin/appeals/{second['id']}/decision", "admin",
+                      json={"decision": "REJECT", "reject_reason": R.unique("再驳回")}))
+        self.assertEqual(self.j(R.get("/appeals/mine", "e2e_applicant"))[0]["status"], "REJECTED")
         after = self.j(R.get("/me/housing", "e2e_applicant"))
         self.assertEqual((after["summary"]["label"], after["units"]), ("游客", []))
 

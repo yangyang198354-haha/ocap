@@ -19,8 +19,11 @@
         <el-table-column label="职位" width="130">
           <template #default="{ row }">{{ positionLabel(row.position) }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="110">
-          <template #default="{ row }">{{ statusLabel('seat', row.status) }}</template>
+        <el-table-column label="状态" width="150">
+          <template #default="{ row }">
+            {{ statusLabel('seat', row.status) }}
+            <el-tag v-if="row.status === 'ACTIVE' && row.effective === false" size="small" type="warning">待生效</el-tag>
+          </template>
         </el-table-column>
         <el-table-column prop="term_start" label="任期开始" width="130" />
         <el-table-column prop="term_end" label="任期结束" width="130" />
@@ -45,7 +48,7 @@
         <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
       </el-select>
       <el-date-picker v-model="form.term_start" type="date" value-format="YYYY-MM-DD" placeholder="任期开始（默认今天）" style="margin-top: 8px; width: 100%" />
-      <p class="muted">任期结束日按“人数与任期”配置的任期月数自动计算。</p>
+      <p class="muted">任期结束日按“人数与任期”配置的任期月数推算，须晚于今天；开始日在将来的席位到开始日才生效。</p>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
         <el-button type="primary" @click="create">保存</el-button>

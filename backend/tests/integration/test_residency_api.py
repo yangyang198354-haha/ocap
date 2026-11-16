@@ -43,31 +43,32 @@ class RegistryAndCertificationTests(ApiTestBase):
         resp = self.api("put", f"/admin/registry/units/{unit.id}/owners",
                         {"owners": [{"name": "张三", "phones": [user.phone]}]}, token=admin_token)
         self.assert_ok(resp)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "张三"}, token=token)
         self.assert_ok(resp, 201)
         self.assertEqual(resp.data["role"], "HEAD")
 
     def test_certification_phone_mismatch_422(self):
         user, token = self.make_user()
         unit = self.make_unit(phones=[next_phone()])
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        body = self.assert_error(resp, 422, "PHONE_NOT_IN_REGISTRY")
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=token)
+        body = self.assert_error(resp, 422, "OWNER_NOT_MATCHED")
         self.assertTrue(body["details"]["appeal_available"])
 
     def test_second_owner_becomes_owner_and_duplicate_rejected(self):
         unit = self.make_unit(phones=[next_phone(), next_phone()])
         first, first_token = self.make_user(phone=unit.phones.all()[0].phone)
         second, second_token = self.make_user(phone=unit.phones.all()[1].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=first_token), 201)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=second_token)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=first_token), 201)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=second_token)
         self.assert_ok(resp, 201)
         self.assertEqual(resp.data["role"], "OWNER")
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=second_token)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=second_token)
         self.assert_error(resp, 409, "ALREADY_CERTIFIED")
 
     def test_unit_not_found(self):
         _, token = self.make_user()
-        resp = self.api("post", "/certifications", {"unit_id": 999999}, token=token)
+        resp = self.api("post", "/certifications", {"unit_id": 999999, "name": "业主甲"}, token=token)
         self.assert_error(resp, 404, "NOT_FOUND")
 
 
@@ -75,13 +76,13 @@ class AppealTests(ApiTestBase):
     def test_appeal_requires_proof_and_admin_approve_makes_owner(self):
         user, token = self.make_user()
         unit = self.make_unit(phones=[next_phone()])
-        resp = self.api("post", "/appeals", {"unit_id": unit.id}, token=token)
+        resp = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "新产权人"}, token=token)
         self.assert_error(resp, 400, "PROOF_REQUIRED")
         proof = SimpleUploadedFile("proof.png", b"\x89PNG\r\n\x1a\n" + b"1" * 32,
                                    content_type="image/png")
         uploaded = self.upload("/attachments", {"file": proof, "purpose": "APPEAL_PROOF"}, token=token)
         self.assert_ok(uploaded, 201)
-        resp = self.api("post", "/appeals", {"unit_id": unit.id,
+        resp = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "新产权人",
                                              "proof_ids": [uploaded.data["id"]]}, token=token)
         self.assert_ok(resp, 201)
         appeal_id = resp.data["id"]
@@ -98,7 +99,7 @@ class AppealTests(ApiTestBase):
         proof = SimpleUploadedFile("proof.png", b"\x89PNG\r\n\x1a\n" + b"2" * 32,
                                    content_type="image/png")
         uploaded = self.upload("/attachments", {"file": proof, "purpose": "APPEAL_PROOF"}, token=token)
-        appeal = self.api("post", "/appeals", {"unit_id": unit.id,
+        appeal = self.api("post", "/appeals", {"unit_id": unit.id, "owner_name": "新产权人",
                                                "proof_ids": [uploaded.data["id"]]}, token=token)
         _, admin_token = self.make_admin()
         resp = self.api("post", f"/admin/appeals/{appeal.data['id']}/decision",
@@ -114,7 +115,8 @@ class ResidentTests(ApiTestBase):
     def test_owner_approves_and_removes_resident(self):
         unit = self.make_unit(phones=[next_phone()])
         owner, owner_token = self.make_user(phone=unit.phones.all()[0].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
         resident, resident_token = self.make_user()
         resp = self.api("post", "/resident-applications", {"unit_id": unit.id}, token=resident_token)
         self.assert_ok(resp, 201)
@@ -134,7 +136,8 @@ class ResidentTests(ApiTestBase):
     def test_only_owner_can_decide(self):
         unit = self.make_unit(phones=[next_phone()])
         owner, owner_token = self.make_user(phone=unit.phones.all()[0].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
         _, stranger_token = self.make_user()
         resident, resident_token = self.make_user()
         app = self.api("post", "/resident-applications", {"unit_id": unit.id}, token=resident_token)
@@ -145,7 +148,8 @@ class ResidentTests(ApiTestBase):
     def test_resident_can_leave(self):
         unit = self.make_unit(phones=[next_phone()])
         owner, owner_token = self.make_user(phone=unit.phones.all()[0].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
         resident, resident_token = self.make_user()
         Membership.objects.create(user=resident, unit=unit, role="RESIDENT",
                                   source="APPLICATION", active_slot=1)
@@ -158,8 +162,10 @@ class MembershipRevokeTests(ApiTestBase):
         unit = self.make_unit(phones=[next_phone(), next_phone()])
         head, head_token = self.make_user(phone=unit.phones.all()[0].phone)
         owner, owner_token = self.make_user(phone=unit.phones.all()[1].phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=head_token), 201)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=head_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
         self.make_seat(head, "MEMBER")
         _, admin_token = self.make_admin()
         resp = self.api("post", "/admin/memberships/revoke",

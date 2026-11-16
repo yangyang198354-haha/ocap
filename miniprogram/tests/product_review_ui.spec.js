@@ -29,7 +29,9 @@ describe('小程序 我的房屋（同住人链路）', () => {
   it('TC-UNIT-551 / AC-150-04：逐级选房，页面没有任何文本输入框；选定后申请只提交 {unit_id} 并提示"申请已提交，等待产权业主审批"', async () => {
     respondWith({ ...base(), 'POST /resident-applications': { id: 9, status: 'PENDING' } })
     const { wrapper } = await mountPage(Units)
-    expect(wrapper.findAll('input, textarea')).toHaveLength(0)
+    // ocap_owner_auth_v2：认证须输入姓名、申诉须输入产权人名字，仅此两个文本框；仍无专有部分编号输入
+    expect(wrapper.findAll('input, textarea').map((el) => el.attributes('placeholder')))
+      .toEqual(['请输入姓名', '产权人名字'])
     expect(wrapper.text()).not.toMatch(/专有部分 ?ID|内部编号/)
     expect(wrapper.findComponent(UnitPicker).exists()).toBe(true)
     wrapper.findComponent(UnitPicker).vm.$emit('update:modelValue', 42)

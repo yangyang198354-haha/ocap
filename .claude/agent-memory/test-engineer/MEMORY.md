@@ -33,4 +33,7 @@
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
+- [P-TE-007] 守卫类用例（输出位置/权限位）要先把其余条件调成合规再断言被拒（用 override_settings 把 BASE_DIR/MEDIA_ROOT 指向 0700 临时目录），否则"位置守卫"去掉后仍因权限检查被拒而假通过；以变异（`if _inside(...)`→`if False`）确认能失败 — 自记 2026-11-16 · 证据 ocap_owner_auth_v2 test_owner_auth_v2_rules.py TC-UNIT-665、变异 6 失败
+- [P-TE-008] 断言管理命令"只写预期表"：CaptureQueriesContext 取全部 INSERT/UPDATE/DELETE 的表名集合并与允许集合比较（TC-INT-629），比只比对业务表快照更能抓到多余写入 — 自记 2026-11-16 · 证据 backend/tests/integration/test_owner_auth_v2_shops.py::test_tc_int_629
+- [P-TE-009] AC 里的场景在数据模型下不可达时（如"追加号码恰为他人账号手机号"而手机号唯一），不硬造用例，转为可观测不变量（他人认证数不变、不调用 AutoBindService）并在 test_plan 写明依据 — 自记 2026-11-16 · 证据 test_plan AC-203-07、TC-INT-685/686
 

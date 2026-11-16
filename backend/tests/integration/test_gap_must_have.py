@@ -275,7 +275,8 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         phone = next_phone()
         unit = self.make_unit(phones=[phone])
         user, token = self.make_user(phone=phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=token), 201)
         self._cancel(user, token)
         _clear_limits()
         code = self.request_code(phone, "REGISTER")
@@ -286,7 +287,8 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         membership = Membership.objects.get(user_id=reg.data["user"]["id"], unit=unit,
                                             ended_at__isnull=True)
         self.assertEqual(membership.source, "REGISTRY")
-        again = self.api("post", "/certifications", {"unit_id": unit.id}, token=reg.data["token"])
+        again = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                         token=reg.data["token"])
         self.assert_error(again, 409, "ALREADY_CERTIFIED")
 
     def test_register_with_active_phone_rejected(self):
@@ -311,7 +313,8 @@ class GuestTests(ApiTestBase):
         resp = self.api("post", "/resident-applications", {"unit_id": unit.id}, token=guest_token)
         self.assert_ok(resp, 201)
         cert_unit = self.make_unit(phones=[guest.phone])
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": cert_unit.id}, token=guest_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": cert_unit.id, "name": "业主甲"},
+                                token=guest_token), 201)
 
     def test_guest_cannot_do_owner_only_actions(self):
         """AC-025-03：游客审批同住人申请 / 移除同住人 / 读取待审列表 → 403。"""
@@ -398,7 +401,8 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
         phone = next_phone()
         unit = self.make_unit(phones=[phone])
         user, token = self.make_user(phone=phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=token), 201)
         _, admin_token = self.make_admin()
         return user, token, unit, admin_token
 
@@ -431,11 +435,12 @@ class RegistryPhoneChangeAfterCertificationTests(ApiTestBase):
         # 让原用户换成别的号码，由另一个账号持有原清册号码 P
         User.objects.filter(id=user.id).update(phone=next_phone())
         other, other_token = self.make_user(phone=old_phone)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=other_token)
-        body = self.assert_error(resp, 422, "PHONE_NOT_IN_REGISTRY")
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=other_token)
+        body = self.assert_error(resp, 422, "OWNER_NOT_MATCHED")
         self.assertTrue(body["details"]["appeal_available"])
         holder, holder_token = self.make_user(phone=new_phone)
-        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id}, token=holder_token), 201)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "新业主"},
+                                token=holder_token), 201)
 
     def test_non_admin_cannot_modify_registry_phones(self):
         """AC-035-04：普通用户 / 业委会成员修改清册手机号 → 403；未登录 → 401，清册不变。"""
@@ -885,9 +890,10 @@ class WebWechatScanTests(ApiTestBase):
         self.assertEqual(User.objects.count(), before)
 
     def test_wechat_user_without_phone_must_bind_phone_before_certification(self):
-        """AC-002-04：未验证手机号的微信用户做清册认证 → 409 PHONE_REQUIRED；其他登录后功能（/me）不受限。"""
+        """AC-002-04（ocap_owner_auth_v2 口径变更）：未验证手机号的微信用户做清册认证 → 422 OWNER_NOT_MATCHED
+        并可走申诉（不再 409 PHONE_REQUIRED）；其他登录后功能（/me）不受限。"""
         token = self._token_from(self._scan("scan-nophone")).data["token"]
         self.assert_ok(self.api("get", "/me", token=token))
         unit = self.make_unit(phones=[next_phone()])
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        self.assert_error(resp, 409, "PHONE_REQUIRED")
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"}, token=token)
+        self.assert_error(resp, 422, "OWNER_NOT_MATCHED")

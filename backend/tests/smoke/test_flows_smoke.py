@@ -76,10 +76,10 @@ class ApiSmokeTest(TestCase):
         token, user_id = self.register("13800000002")
         unit = self.make_unit("13800000002")
         self.auth(token)
-        resp = self.client.post("/api/v1/certifications", {"unit_id": unit.id}, format="json")
+        resp = self.client.post("/api/v1/certifications", {"unit_id": unit.id, "name": "业主甲"}, format="json")
         self.assertEqual(resp.status_code, 201, resp.content)
         self.assertEqual(resp.json()["role"], "HEAD")
-        again = self.client.post("/api/v1/certifications", {"unit_id": unit.id}, format="json")
+        again = self.client.post("/api/v1/certifications", {"unit_id": unit.id, "name": "业主甲"}, format="json")
         self.assertEqual(again.status_code, 409)
         self.assertEqual(again.json()["code"], "ALREADY_CERTIFIED")
 
@@ -87,9 +87,9 @@ class ApiSmokeTest(TestCase):
         token, _ = self.register("13800000003")
         unit = self.make_unit("13900000000")
         self.auth(token)
-        resp = self.client.post("/api/v1/certifications", {"unit_id": unit.id}, format="json")
+        resp = self.client.post("/api/v1/certifications", {"unit_id": unit.id, "name": "业主甲"}, format="json")
         self.assertEqual(resp.status_code, 422)
-        self.assertEqual(resp.json()["code"], "PHONE_NOT_IN_REGISTRY")
+        self.assertEqual(resp.json()["code"], "OWNER_NOT_MATCHED")
 
     def test_resolution_designated_flow(self):
         initiator = self.make_user("13800000101", "主任")

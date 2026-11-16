@@ -25,8 +25,8 @@ export const api = {
     http.post('/me/phone/change', { old_phone: oldPhone, new_phone: newPhone, old_code: oldCode, new_code: newCode }),
   // 返回 { level, skipped, has_empty, options }；level=room 时每项含 label/unit_type_label/area（IFC-152）
   options: (params) => http.get('/units/options', params),
-  certify: (unitId) => http.post('/certifications', { unit_id: unitId }),
-  // data: { unit_id, proof_ids: [附件 id] }，后端要求至少一份产权证明
+  certify: (unitId, name) => http.post('/certifications', { unit_id: unitId, name }),
+  // data: { unit_id, owner_name, proof_ids: [附件 id 1~5 个] }，后端要求产权人名字与至少一份产权证明
   createAppeal: (data) => http.post('/appeals', data),
   myAppeals: () => http.get('/appeals/mine'),
   // 同住人链路（REQ-FUNC-142~145）

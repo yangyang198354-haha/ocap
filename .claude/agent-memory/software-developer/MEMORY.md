@@ -34,4 +34,6 @@
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
 - [P-SD-009] 在 scratch 复制的 backend 里放临时测试文件做命令冒烟（含 xlsx 导出→read_rows 预检回读），不污染仓库测试目录 — 自记 2026-11-16 · 证据：ocap_unit_sort_filters GROUP_C 自验证
+- [P-SD-010] 本机仓库根若残留 git 忽略的 `registry_import_underground_parking.xlsx`，上批 test_registry_export_cmd 的 TC-INT-611 会失败；先在无该文件的 scratch 副本复跑区分环境产物，不要删（可能含个人信息） — 自记 2026-11-16 · 证据：ocap_owner_auth_v2 GROUP_C 自验证
+- [P-SD-011] 管理端 .vue 的 `<style>` 里 `border: 1px solid var(--line)` 简写会触发 admin_theme.spec 守护（只认单个 var()）；拆成 border-style/border-width/border-color — 自记 2026-11-16 · 证据：ProofThumbs.vue 修复后 admin_theme.spec 通过
 

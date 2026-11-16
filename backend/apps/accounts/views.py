@@ -8,6 +8,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.committee.effective import effective_q
 from apps.committee.models import Seat
 from apps.core.attachments import AttachmentService
 from apps.core.audit import AuditActor, AuditService
@@ -429,7 +430,7 @@ class AdminUserListView(APIView):
             ),
             Prefetch(
                 "seats",
-                queryset=Seat.objects.filter(status="ACTIVE", term_end__gte=timezone.localdate()),
+                queryset=Seat.objects.filter(effective_q(timezone.localdate())),
             ),
         )
         if q:

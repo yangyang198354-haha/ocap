@@ -80,7 +80,7 @@ class AppealIdentityJourneyTests(ApiTestBase):
             up = self.upload("/attachments", {"file": SimpleUploadedFile(
                 "p.png", PNG + uuid4().bytes, content_type="image/png"), "purpose": "APPEAL_PROOF"}, token=token)
             return self.assert_ok(self.api("post", "/appeals", {
-                "unit_id": unit.id, "proof_ids": [up.data["id"]]}, token=token), 201).data
+                "unit_id": unit.id, "owner_name": "张三", "proof_ids": [up.data["id"]]}, token=token), 201).data
 
         first = submit()
         pending = self.api("get", "/admin/appeals", {"status": "PENDING"}, token=admin_token).data
@@ -114,7 +114,7 @@ class CancelJourneyTests(ApiTestBase):
         self.assert_ok(self.api("post", "/resident-applications", {"unit_id": unit.id}, token=token), 201)
         up = self.upload("/attachments", {"file": SimpleUploadedFile("p.png", PNG, content_type="image/png"),
                                           "purpose": "APPEAL_PROOF"}, token=token)
-        appeal = self.assert_ok(self.api("post", "/appeals", {"unit_id": other_unit.id,
+        appeal = self.assert_ok(self.api("post", "/appeals", {"unit_id": other_unit.id, "owner_name": "业主甲",
                                                               "proof_ids": [up.data["id"]]}, token=token), 201).data
         self.assertEqual(self.api("get", "/me/housing", token=otoken).data["pending_review_count"], 1)
         code = self.request_me_code(token, "CANCEL")

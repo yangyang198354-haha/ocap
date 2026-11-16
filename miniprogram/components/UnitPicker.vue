@@ -5,7 +5,7 @@
       <view class="muted">楼栋：{{ picked.building || '请选择' }}</view>
     </picker>
     <picker v-if="show.unit" mode="selector" :range="unitLabels" @change="pickUnit">
-      <view class="muted">单元：{{ picked.unitNo || '请选择' }}</view>
+      <view class="muted">{{ levelLabel }}：{{ picked.unitNo || '请选择' }}</view>
     </picker>
     <picker v-if="show.floor" mode="selector" :range="floorLabels" @change="pickFloor">
       <view class="muted">楼层：{{ picked.floor || '请选择' }}</view>
@@ -30,6 +30,7 @@ const floorChoices = ref([])
 const rooms = ref([])
 const show = reactive({ unit: false, floor: false })
 const skipHint = ref('')
+const levelLabel = ref('单元') // IFC-300：商铺第二级由接口返回 level_label（"楼栋/门牌"），其余为"单元"
 const picked = reactive({ building: '', unitNo: '', floor: '', roomLabel: '', unitId: null })
 // 选项：[{ value, label }]；has_empty 时插入“未划分”项（IFC-152）
 const unitLabels = computed(() => unitChoices.value.map((c) => c.label))
@@ -90,6 +91,7 @@ function resetBelow(level) {
     show.unit = false
     show.floor = false
     skipHint.value = ''
+    levelLabel.value = '单元'
   }
   if (level === 'unit') {
     picked.floor = ''
@@ -108,6 +110,7 @@ async function apply(data, stage) {
   if (stage === 'unit') {
     if (data.level === 'unit_no') {
       show.unit = true
+      levelLabel.value = data.level_label || '单元'
       unitChoices.value = data.has_empty
         ? [{ value: '', label: '未划分单元' }, ...(data.options || [])]
         : (data.options || [])

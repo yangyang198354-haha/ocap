@@ -167,11 +167,14 @@ class ExportSuccessTests(ExportBase):
             self.assertNotIn(secret, out)
 
     def test_tc_int_611_no_file_written_into_repo_root_and_no_part_left(self):
-        """AC-187-06：测试输出只落在临时目录；成功后无 .part 残留；仓库根没有导出文件。"""
+        """AC-187-06：测试输出只落在临时目录；成功后无 .part 残留；本次运行没有在仓库根新增任何文件（比对运行前后文件集合，
+        不依赖仓库根既有状态：用户保留在仓库根的导出文件不会影响本用例，GR-C-001-F01）。"""
+        before = {p.name for p in REPO.iterdir()}
         self.run_cmd("--output", self.path())
+        after = {p.name for p in REPO.iterdir()}
         self.assertEqual(sorted(os.listdir(self.dir)), ["registry_import_underground_parking.csv"])
-        self.assertFalse((REPO / "registry_import_underground_parking.csv").exists())
-        self.assertFalse((REPO / "registry_import_underground_parking.xlsx").exists())
+        self.assertEqual(sorted(after - before), [], "本次导出在仓库根新增了文件")
+        self.assertEqual(sorted(before - after), [], "本次导出在仓库根移除了文件")
         self.assertEqual(os.stat(self.path()).st_mode & 0o777, 0o600)
 
 

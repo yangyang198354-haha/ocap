@@ -83,12 +83,12 @@ describe('utils/http + api', () => {
     expect(lastRequest()).toMatchObject({ path: '/auth/wechat/miniapp', data: { code: 'wxcode' } })
   })
 
-  it('TC-MP-008 申诉 POST /appeals 带 proof_ids；认证 POST /certifications { unit_id }', async () => {
+  it('TC-MP-008 申诉 POST /appeals 带 owner_name、proof_ids；认证 POST /certifications { unit_id, name }', async () => {
     respondWith({ 'POST /appeals': {}, 'POST /certifications': {} })
-    await api.createAppeal({ unit_id: 1, proof_ids: ['u'] })
-    expect(lastRequest().data).toEqual({ unit_id: 1, proof_ids: ['u'] })
-    await api.certify(9)
-    expect(lastRequest()).toMatchObject({ path: '/certifications', data: { unit_id: 9 } })
+    await api.createAppeal({ unit_id: 1, owner_name: '张三', proof_ids: ['u'] })
+    expect(lastRequest().data).toEqual({ unit_id: 1, owner_name: '张三', proof_ids: ['u'] })
+    await api.certify(9, '张三')
+    expect(lastRequest()).toMatchObject({ path: '/certifications', data: { unit_id: 9, name: '张三' } })
   })
 
   it('TC-MP-009 上传附件：uni.uploadFile 到 /api/v1/attachments，name=file，formData.purpose', async () => {

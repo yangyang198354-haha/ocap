@@ -126,14 +126,14 @@ class RegistrySortOptionsTests(ApiTestBase):
         owner_user, owner_token = self.make_user()
         owner = RegistryOwner.objects.create(unit=unit, name="测试车主")
         RegistryPhone.objects.create(unit=unit, owner=owner, phone=owner_user.phone)
-        resp = self.api("post", "/certifications", {"unit_id": unit.id}, token=owner_token)
+        resp = self.api("post", "/certifications", {"unit_id": unit.id, "name": "测试车主"}, token=owner_token)
         self.assert_ok(resp, 201)
         housing = self.api("get", "/me/housing", token=owner_token).data["units"]
         self.assertEqual([u["unit_id"] for u in housing], [unit.id])
         self.assertEqual(housing[0]["specific_part"], unit.specific_part)
         _, stranger_token = self.make_user()
-        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id}, token=stranger_token),
-                          422, "PHONE_NOT_IN_REGISTRY")
+        self.assert_error(self.api("post", "/certifications", {"unit_id": unit.id, "name": "测试车主"},
+                                   token=stranger_token), 422, "OWNER_NOT_MATCHED")
 
     def test_tc_int_561_switch_building_reloads_levels(self):
         """AC-186-03：先选地下车位再改选 2 栋 → 下一级按 2 栋重新加载，不含负层车位。"""

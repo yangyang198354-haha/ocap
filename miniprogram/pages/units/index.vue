@@ -35,14 +35,17 @@
     <view class="card">
       <view class="title">选择房屋</view>
       <UnitPicker v-model="pickedUnitId" />
+      <input v-model="certifyName" class="field mt-16" maxlength="64" placeholder="请输入姓名" />
       <button class="btn" style="margin-top: 20rpx" @click="certify">认证</button>
       <button style="margin-top: 16rpx" @click="applyResident">申请成为同住人</button>
-      <view class="muted">微信登录且未绑定手机号时，请先到“我的 → 绑定/更换手机号”完成绑定。同住人须先有产权业主，由产权业主审批。</view>
+      <view class="muted">输入的姓名与当前手机号和清册登记的同一位业主一致时可立即认证；不一致或没有手机号时，请在下方输入产权人名字并上传产权证明提交申诉。同住人须先有产权业主，由产权业主审批。</view>
     </view>
     <view class="card">
       <view class="title">认证申诉</view>
-      <view class="muted">清册手机号与当前手机号不一致时，上传产权证明提交申诉，由管理员审核。</view>
-      <button style="margin-top: 16rpx" @click="chooseProof">{{ proofId ? '已上传，重新选择' : '上传产权证明' }}</button>
+      <view class="muted">姓名与手机号未能通过清册核对时，填写产权人名字并上传 1~5 张产权证明图片提交申诉，由管理员审核。</view>
+      <input v-model="appealOwnerName" class="field mt-16" maxlength="64" placeholder="产权人名字" />
+      <button style="margin-top: 16rpx" @click="chooseProof">{{ proofIds.length ? `已上传 ${proofIds.length} 张，继续添加` : '上传产权证明' }}</button>
+      <button v-if="proofIds.length" size="mini" style="margin-top: 16rpx" @click="proofIds = []">清空</button>
       <button style="margin-top: 16rpx" @click="submitAppeal">提交申诉</button>
     </view>
     <view class="card">
@@ -80,7 +83,10 @@ import { useAuthStore } from '@/store/auth'
 
 const auth = useAuthStore()
 const pickedUnitId = ref(null)
-const proofId = ref('')
+const certifyName = ref('')
+const appealOwnerName = ref('')
+const proofIds = ref([])
+const MAX_PROOFS = 5
 const housing = reactive({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
 const toReview = ref([])
 const myApplications = ref([])
@@ -121,14 +127,18 @@ async function refresh() {
 
 async function certify() {
   if (!pickedUnitId.value) return toast('请先选择房号')
+  const name = certifyName.value.trim()
+  if (!name) return toast('请输入姓名')
   try {
-    const result = await api.certify(pickedUnitId.value)
+    const result = await api.certify(pickedUnitId.value, name)
     toast(`认证成功，身份：${ROLE_LABELS[result.role] || result.role}`)
     await auth.fetchMe()
     await refresh()
   } catch (e) {
-    if (e?.code === 'PHONE_NOT_IN_REGISTRY') {
-      return toast('手机号与清册不一致，可提交产权申诉')
+    if (e?.code === 'OWNER_NOT_MATCHED') {
+      // 保留已选房号与姓名，姓名带入申诉；提示不含任何清册信息
+      appealOwnerName.value = name
+      return toast('姓名与手机号未能通过核对，请上传产权证明提交申诉')
     }
     toast(e.message)
   }
@@ -178,13 +188,18 @@ async function leave(unit) {
   }
 }
 
+// 小程序申诉资料本批仅支持图片（OQ-06）；一次最多再选 5 - 已选数 张
 function chooseProof() {
+  const remaining = MAX_PROOFS - proofIds.value.length
+  if (remaining <= 0) return toast('最多上传 5 张产权证明')
   uni.chooseImage({
-    count: 1,
+    count: remaining,
     success: async ({ tempFilePaths }) => {
       try {
-        const uploaded = await api.upload(tempFilePaths[0], 'APPEAL_PROOF')
-        proofId.value = uploaded.id
+        for (const path of tempFilePaths.slice(0, remaining)) {
+          const uploaded = await api.upload(path, 'APPEAL_PROOF')
+          proofIds.value.push(uploaded.id)
+        }
         toast('已上传')
       } catch (e) {
         toast(e.message)
@@ -195,10 +210,13 @@ function chooseProof() {
 
 async function submitAppeal() {
   if (!pickedUnitId.value) return toast('请先选择房号')
-  if (!proofId.value) return toast('请先上传产权证明')
+  const ownerName = appealOwnerName.value.trim()
+  if (!ownerName) return toast('请输入产权人名字')
+  if (!proofIds.value.length) return toast('请先上传产权证明')
   try {
-    await api.createAppeal({ unit_id: pickedUnitId.value, proof_ids: [proofId.value] })
+    await api.createAppeal({ unit_id: pickedUnitId.value, owner_name: ownerName, proof_ids: [...proofIds.value] })
     toast('申诉已提交')
+    proofIds.value = []
     await loadLists()
   } catch (e) {
     toast(e.message)

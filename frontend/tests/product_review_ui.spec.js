@@ -101,6 +101,7 @@ describe('我的房屋 Units.vue', () => {
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper } = await mountPage(Units)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 7)
+    await wrapper.find('input[placeholder="请输入姓名"]').setValue('张三') // ocap_owner_auth_v2：认证须输入姓名
     await flush()
     for (const [role, label] of [['HEAD', '户主'], ['OWNER', '产权业主'], ['RESIDENT', '同住人']]) {
       http.post.mockResolvedValueOnce({ unit_id: 7, role })

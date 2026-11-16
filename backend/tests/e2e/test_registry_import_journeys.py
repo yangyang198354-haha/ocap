@@ -136,7 +136,8 @@ class RegistryImportJourneyTests(ApiTestBase):
         RegistryPhone.objects.create(unit=legacy, owner=legacy_owner, phone="13700000203")
         listing = self.api("get", "/admin/registry/units?unit_type=UNSET", token=self.admin_token)
         self.assertIn(legacy.id, [entry["id"] for entry in listing.data["results"]])
-        legacy_cert = self.api("post", "/certifications", {"unit_id": legacy.id}, token=legacy_token)
+        legacy_cert = self.api("post", "/certifications", {"unit_id": legacy.id, "name": "老业主"},
+                               token=legacy_token)
         self.assert_ok(legacy_cert, 201)
 
     def test_tc_e2e_103_owner_without_phone_appeal_then_admin_adds_phone(self):
@@ -145,8 +146,8 @@ class RegistryImportJourneyTests(ApiTestBase):
         unit = RegistryUnit.objects.get(room="101")
         _, token = self.make_user(phone="13900000301")
 
-        denied = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
-        self.assert_error(denied, 422, "PHONE_NOT_IN_REGISTRY")
+        denied = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
+        self.assert_error(denied, 422, "OWNER_NOT_MATCHED")
         self.assertTrue(denied.data["details"]["appeal_available"])
 
         admin_view = self.api("get", "/admin/registry/units?page_size=100", token=self.admin_token)
@@ -158,7 +159,7 @@ class RegistryImportJourneyTests(ApiTestBase):
         self.assert_ok(fixed)
         user = self.user_of(token)
         self.assertEqual(Membership.objects.filter(user=user).count(), 0)
-        certified = self.api("post", "/certifications", {"unit_id": unit.id}, token=token)
+        certified = self.api("post", "/certifications", {"unit_id": unit.id, "name": "王芳"}, token=token)
         self.assert_ok(certified, 201)
         self.assertEqual(certified.data["role"], "HEAD")
 

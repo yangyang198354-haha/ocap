@@ -14,7 +14,7 @@
       <div v-for="item in items" :key="item.id" class="list-item">
         <div class="row" style="justify-content: space-between">
           <div>
-            <strong>#{{ item.id }}</strong>
+            <strong>申诉编码 #{{ item.id }}</strong>
             <span class="muted" style="margin-left: 8px">{{ item.applicant?.account_no || item.applicant?.id }} → {{ item.unit?.specific_part || item.unit_id }}</span>
             <el-tag size="small" style="margin-left: 8px">{{ statusLabel('appeal', item.status) }}</el-tag>
           </div>
@@ -23,9 +23,16 @@
             <el-button size="small" type="danger" @click="decide(item.id, 'REJECT')">拒绝</el-button>
           </div>
         </div>
-        <div class="row" v-if="item.proof?.length">
-          <el-link v-for="p in item.proof" :key="p.id" @click="openProof(p)">{{ p.name }}</el-link>
+        <div class="row muted">
+          <span>账号：{{ item.applicant?.account_no }}</span>
+          <span>昵称：{{ item.applicant?.nickname || '未设置' }}</span>
+          <span>产权人名字：{{ item.owner_name ?? '未提供' }}</span>
+          <span>申诉时间：{{ formatDateTime(item.submitted_at) }}</span>
         </div>
+        <p class="muted" v-if="item.status === 'PENDING' && item.applicant && item.applicant.has_phone === false">
+          申诉人无手机号：通过后清册只写姓名、不写联系电话
+        </p>
+        <ProofThumbs v-if="item.proof?.length" :proofs="item.proof" />
         <p class="muted" v-if="item.reject_reason">拒绝原因：{{ item.reject_reason }}</p>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
@@ -38,9 +45,10 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
-import { errorText } from '@/shared/format'
+import { errorText, formatDateTime } from '@/shared/format'
 import { statusLabel } from '@/shared/labels'
 import { usePaging } from '@/shared/usePaging'
+import ProofThumbs from './parts/ProofThumbs.vue'
 
 const status = ref('PENDING')
 const filters = computed(() => (status.value ? { status: status.value } : {}))
@@ -72,16 +80,6 @@ async function gotoPage(n) {
   }
 }
 
-// 附件下载需要 Authorization 头，用 axios 取 blob 后在新窗口打开
-async function openProof(proof) {
-  try {
-    const blob = await admin.downloadAttachment(proof.id)
-    window.open(URL.createObjectURL(blob), '_blank')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
 async function decide(id, decision) {
   try {
     let rejectReason
@@ -89,8 +87,9 @@ async function decide(id, decision) {
       const { value } = await ElMessageBox.prompt('请输入拒绝原因（必填，≤500 字）', '拒绝申诉', { inputPattern: /\S+/, inputErrorMessage: '必填' })
       rejectReason = value
     }
-    await admin.decideAppeal(id, decision, rejectReason)
+    const result = await admin.decideAppeal(id, decision, rejectReason)
     ElMessage.success('已处理')
+    if (result?.registry_update?.notice) ElMessage.warning(result.registry_update.notice)
     load()
   } catch (e) {
     if (e !== 'cancel') ElMessage.error(errorText(e))

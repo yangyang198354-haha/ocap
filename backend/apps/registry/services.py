@@ -1,6 +1,8 @@
 """清册服务（MOD-033 / IFC-043、IFC-152、IFC-162）。"""
 from .models import RegistryPhone, RegistryUnit
-from .ordering import natural_key, sorted_values
+from .ordering import SHOP_BUILDING, natural_key, sorted_values
+
+SHOP_LEVEL_LABEL = "楼栋/门牌"
 
 
 class RegistryService:
@@ -45,8 +47,11 @@ class RegistryService:
             if not non_empty:
                 skipped.append(level)
                 continue
-            return {"level": level, "skipped": skipped, "has_empty": "" in values,
-                    "options": [{"value": v} for v in non_empty]}
+            result = {"level": level, "skipped": skipped, "has_empty": "" in values,
+                      "options": [{"value": v} for v in non_empty]}
+            if level == "unit_no" and building == SHOP_BUILDING:
+                result["level_label"] = SHOP_LEVEL_LABEL  # IFC-300：仅商铺第二级返回该可选键
+            return result
 
         options = []
         for unit in sorted(qs, key=lambda u: (natural_key(u.room, "room"), u.id)):

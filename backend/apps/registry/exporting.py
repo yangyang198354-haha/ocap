@@ -1,9 +1,12 @@
 # MOD-110 / implements IFC-296 / depends MOD-109（plan_relocation、load_rows）、registry.importing、import_spec、import_template
 """清册导出文件生成（AUTH-01）：全程只读；自检后原子落盘；不输出姓名、手机号（C-55、C-56）。"""
 import os
+import stat
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
+from django.conf import settings
 from django.db import transaction
 
 from .import_spec import (
@@ -12,7 +15,8 @@ from .import_spec import (
 )
 from .import_template import build_data_csv, build_data_xlsx
 from .importing import Deadline, plan_import, read_rows
-from .models import UNIT_TYPE_CHOICES, RegistryOwner, RegistryPhone, build_specific_part
+from .models import UNIT_TYPE_CHOICES, RegistryOwner, RegistryPhone, RegistryUnit, build_specific_part
+from .ordering import SHOP_BUILDING
 from .underground import TARGET_BUILDING, Conflict, load_rows, plan_relocation
 
 VERIFY_BUDGET_SECONDS = 600
@@ -166,6 +170,51 @@ def verify_export(content: bytes, file_name: str, bundle: ExportBundle) -> Verif
         imported=summary["imported"], updated=summary["updated"],
         owners_created=summary["owners_created"], phones_created=summary["phones_created"],
         expected_imported=bundle.relocated_units, roundtrip_mismatches=mismatches, ok=ok)
+
+
+class OutputLocationError(Exception):
+    """输出位置不满足守卫要求（IFC-303，MOD-113）。"""
+
+
+def pending_shop_units() -> int:
+    """只读：类型为商铺但楼栋不是"商铺"的记录数（尚未归类）。"""
+    return RegistryUnit.objects.filter(unit_type="SHOP").exclude(building=SHOP_BUILDING).count()
+
+
+def default_output_name(now: datetime, suffix: str = ".xlsx") -> str:
+    return f"registry_import_{now:%Y%m%d-%H%M%S}{suffix}"
+
+
+def _inside(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def check_output_location(path: Path) -> None:
+    """IFC-303：不得位于部署根、MEDIA_ROOT、STATIC_ROOT 内；父目录须属当前用户且权限为 700 或更严（C-59）。"""
+    target = Path(os.path.realpath(str(path)))
+    forbidden = [Path(os.path.realpath(str(settings.BASE_DIR.parent))),
+                 Path(os.path.realpath(str(settings.MEDIA_ROOT)))]
+    static_root = getattr(settings, "STATIC_ROOT", None)
+    if static_root:
+        forbidden.append(Path(os.path.realpath(str(static_root))))
+    for root in forbidden:
+        if _inside(target, root):
+            raise OutputLocationError(f"输出位置不得位于部署目录或站点目录内：{root}")
+    parent = target.parent
+    try:
+        info = os.stat(str(parent))
+    except OSError as exc:
+        raise OutputLocationError(f"无法检查输出目录：{exc.strerror}") from exc
+    if not hasattr(os, "getuid"):  # 非 POSIX 开发机无法表达 700，仅目标机（Linux）强制
+        return
+    if info.st_uid != os.getuid():
+        raise OutputLocationError("输出目录须属于当前运行用户")
+    if stat.S_IMODE(info.st_mode) & 0o077:
+        raise OutputLocationError("输出目录权限过宽，须为 700 或更严")
 
 
 def write_export_file(path: Path, content: bytes, overwrite: bool = False) -> None:

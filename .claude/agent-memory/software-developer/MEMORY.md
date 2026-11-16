@@ -32,6 +32,7 @@
 - [M-SD-030] “原值直出”同类扫描要同时覆盖 `{{ }}` 插值与 `<el-table-column prop=…>` 列；新建枚举映射表不要放进已登记标签文件、导出名不带 _LABELS 后缀，否则触发 labels.js 键集合守护 — conf 0.8 · 证据 product_review GR-C-003-F01（TC-UNIT-588）、GR-C-002-F01（TC-UNIT-561）、DEF-021/022 · 首见 2026-11-13 · 命中 3
 - [M-SD-031] 本机仓库根残留 git 忽略的导出文件会让依赖仓库根状态的用例（TC-INT-611）失败：先在干净副本复跑区分环境产物，不删用户文件；用例改为只断言“本次运行未在仓库根新增文件” — conf 0.8 · 证据 owner_auth_v2 GR-C-001-F01(MAJOR)、test_registry_export_cmd.py::test_tc_int_611、unit_sort_filters 自记 · 首见 2026-11-16 · 命中 2
 - [M-SD-032] 管理端 .vue 的 `<style>` 里 border 简写会触发 admin_theme.spec 守护，拆成 border-style/width/color — conf 0.6 · 证据 frontend/src/admin/parts/ProofThumbs.vue、owner_auth_v2 GROUP_C 自验证 · 首见 2026-11-16 · 命中 1
+- [M-SD-033] Django parse_date/parse_datetime 对格式不匹配返回 None，对“格式合法但日期不存在”抛 ValueError，对非字符串入参抛 TypeError；修一处后须 git grep 全部 parse_date/parse_datetime 调用点（本批 DEF-024 修后排查又找出 polls、resolutions 两处）— conf 0.8 · 证据 GR-C-001-F02、GR-C-002（DEF-025，全仓排查）、backend/apps/{committee,accounts,claims,polls,resolutions}/views.py · 首见 2026-11-16 · 命中 2
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实

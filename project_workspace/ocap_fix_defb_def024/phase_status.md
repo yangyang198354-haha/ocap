@@ -1,4 +1,4 @@
-<phase_status project="ocap_fix_defb_def024" mode="PARTIAL_FLOW" created="2026-11-16T22:19:54+08:00" updated="2026-11-16T22:47:05+08:00">
+<phase_status project="ocap_fix_defb_def024" mode="PARTIAL_FLOW" created="2026-11-16T22:19:54+08:00" updated="2026-11-16T22:56:11+08:00">
   <request time="2026-11-16T22:19:54+08:00"><![CDATA[处理DEF-B 和 DEF-024的问题]]></request>
   <request_context><![CDATA[DEF-B（ocap_product_review pm_escalation_GROUP_D_20261115T2134.md；ocap_owner_auth_v2 GR-E2-003）：backend/tests/remote/remote_cases.py:77、78、83、114 期望"户主"，产品按 C-46 显示"产权业主"（TC-E2E-321、324 远程失败）。属测试期望过期，修测试代码。
 DEF-024（ocap_owner_auth_v2 GR-D-001）：backend/apps/committee/views.py:69 term_start 为格式合法但日期不存在（如 2026-02-30）时 parse_date 抛 ValueError → 500；应返回 400 INVALID_VALUE。属产品缺陷。]]></request_context>
@@ -13,7 +13,7 @@ DEF-024（ocap_owner_auth_v2 GR-D-001）：backend/apps/committee/views.py:69 te
     <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS" retries="0" defect_loops="1">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="测试"/>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_fix_defb_def024/development/implementation_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_C"/>
@@ -24,6 +24,8 @@ DEF-024（ocap_owner_auth_v2 GR-D-001）：backend/apps/committee/views.py:69 te
     <artifact path="project_workspace/ocap_fix_defb_def024/testing/unit_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_fix_defb_def024/testing/integration_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_fix_defb_def024/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_fix_defb_def024/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_fix_defb_def024/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
   </artifacts>
   <legacy_baseline><![CDATA[DEF-B：project_workspace/ocap_product_review/pm_escalation_GROUP_D_20261115T2134.md（缺陷表）、project_workspace/ocap_owner_auth_v2/phase_status.md GR-E2-003；DEF-024：project_workspace/ocap_owner_auth_v2/phase_status.md GR-D-001-F01 与 testing/integration_test_report.md 缺陷段。用户 2026-11-16 指令"处理DEF-B 和 DEF-024的问题"视为对修复范围的确认。
 E1：project_workspace/ocap_owner_auth_v2/deployment/deployment_plan.md（1.0.0 APPROVED）阶段 A（后端）与阶段 E，用户 2026-11-16T22:47:05+08:00 确认沿用。]]></legacy_baseline>
@@ -32,6 +34,8 @@ E1：project_workspace/ocap_owner_auth_v2/deployment/deployment_plan.md（1.0.0 
   <invocation id="ocap_fix_defb_def024-GROUP_D-001" agent="test-engineer" result="SUCCESS" end="2026-11-16T22:31:25+08:00" start="2026-11-16T22:25:15+08:00"/>
   <invocation id="ocap_fix_defb_def024-GROUP_C-002" agent="software-developer" result="SUCCESS" end="2026-11-16T22:37:16+08:00" start="2026-11-16T22:31:25+08:00"/>
   <invocation id="ocap_fix_defb_def024-GROUP_D-002" agent="test-engineer" result="SUCCESS" end="2026-11-16T22:43:17+08:00" start="2026-11-16T22:37:16+08:00"/>
+  <invocation id="ocap_fix_defb_def024-GROUP_E2-001" agent="devops-engineer" result="SUCCESS" end="2026-11-16T22:54:46+08:00" start="2026-11-16T22:48:56+08:00"/>
+  <invocation id="ocap_fix_defb_def024-GROUP_Z-001" agent="kb-curator" result="SUCCESS" end="2026-11-16T22:56:11+08:00"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-C-001" invocation_id="ocap_fix_defb_def024-GROUP_C-001" decision="PASS_WITH_CONDITIONS" time="2026-11-16T22:25:15+08:00">
@@ -65,6 +69,14 @@ git grep parse_date( backend/apps -> 另有 accounts/views.py:249、claims/views
       <verification><![CDATA[(cd backend && manage.py test --settings=config.test_settings) -> Ran 957 tests in 79.958s / OK]]></verification>
       <condition>DEF-B 须部署后经授权远程执行 TC-E2E-321/324 确认。</condition>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_fix_defb_def024-GROUP_E2-001" decision="PASS" time="2026-11-16T22:54:46+08:00">
+      <reviewed_files><file path="project_workspace/ocap_fix_defb_def024/deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2" result="SATISFIED">DEPLOYED_SUCCESSFULLY；ANCHOR_TS=20261116225010；migrate --plan 为空；远程 Ran 22 OK (skipped=1)：TC-E2E-321/324 由失败转通过（DEF-B 关闭）。</criterion>
+      <verification><![CDATA[ssh 只读：ocap-backend active；目标机 committee/views.py sha256 e8a9cd5246353b61、polls/views.py 10610520394657ed = git show 1da2bb8
+e2e_fixture status：e2e 全 0；RegistryUnit 5742 / RegistryOwner 7862 / RegistryPhone 4301
+curl https://ai-freeark.xin/ocap/ -> 200]]></verification>
+      <finding id="GR-E2-001-F01" severity="MINOR">DEF-024/025 目标机 400 未经 HTTP 实测（护栏不允许写请求），由本地 TC-INT-720/721、730~739 覆盖；有效绑定数复核脚本字段错误未复核（只读、无副作用）。</finding>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-16T22:26:04+08:00" answered_by="用户"><![CDATA[用户原话："A，一起修"。DEF-025（accounts/views.py:249 birthday、claims/views.py:95 occurred_on、:125 expected_settle_on 对不存在日期 500）纳入本批。顺序：等 GROUP_D-001 结束 → GROUP_C 回流（REWORK）修 DEF-025 → GROUP_D 补 DEF-025 回归用例。]]></clarification>
@@ -83,5 +95,9 @@ git grep parse_date( backend/apps -> 另有 accounts/views.py:249、claims/views
     <event time="2026-11-16T22:37:16+08:00" type="INVOCATION" actor="pm-orchestrator">调用 test-engineer（GROUP_D-002，DEF-025 回归，REWORK_AUTHORIZED testing/*）</event>
     <event time="2026-11-16T22:43:17+08:00" type="GATE" actor="pm-orchestrator">GR-D-002 PASS；测试四件 1.0.0 APPROVED。等待用户：提交/推送、部署与远程验证授权。</event>
     <event time="2026-11-16T22:47:05+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮原话"Q1:A, Q2:A"：push main + 测试环境后端部署 + 远程 E2E（e2e_ 账号，测完清理）。</event>
+    <event time="2026-11-16T22:48:56+08:00" type="RUN" actor="pm-orchestrator">提交 1da2bb8 并推送（5b5e72d..1da2bb8）；CI run 43889399997 success。</event>
+    <event time="2026-11-16T22:48:56+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-001，后端部署 + 远程 E2E）</event>
+    <event time="2026-11-16T22:54:46+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS；DEF-B、DEF-024、DEF-025 全部关闭；delivery_report 写入，DELIVERED。</event>
+    <event time="2026-11-16T22:56:11+08:00" type="RUN" actor="pm-orchestrator">kb-curator：晋升 4（M-SD-033、M-TE-031/032、M-DE-033），命中更新 2，通用候选 0（M-SD-033 仅单项目）；.trae 与 generic 无改动。</event>
   </audit_log>
 </phase_status>

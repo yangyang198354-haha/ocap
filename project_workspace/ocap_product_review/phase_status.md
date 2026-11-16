@@ -294,7 +294,9 @@ systemctl is-active ocap-backend -> active；https://ai-freeark.xin/ocap/ -> 200
     <clarification time="2026-11-15T20:50:45+08:00" answered_by="用户"><![CDATA[用户原话："做1,3，4，5"（PM 上一条汇报第 1 项列明 UC-02 占 3 套住宅、UC-03 临时 2 委员+1 业主代表、UC-04 1990000 号段、UC-05 公开决议列表临时 25 条测试决议，确认后执行远程 E2E）→ 视为 UC-02~05 按推荐项同意；UC-06 保守（不改 claim.amount_max）、UC-07 不跑慢用例按计划默认。]]></clarification>
   </clarifications>
   <checkpoints/>
-  <escalations/>
+  <escalations>
+    <escalation id="ESC-GROUP_D-20261115T2134-CLOSE" time="2026-11-16T22:54:46+08:00" status="CLOSED"><![CDATA[上报 pm_escalation_GROUP_D_20261115T2134.md 关闭：DEF-A（/me 与 /me/housing 排序口径）由 ocap_unit_sort_filters US-192（提交 15ea79e）修复；DEF-B（远程用例期望"户主"）由 ocap_fix_defb_def024（提交 1da2bb8）修复，测试环境远程套件 Ran 22 OK (skipped=1)。依据用户 2026-11-16 指令"处理DEF-B 和 DEF-024的问题"。]]></escalation>
+  </escalations>
   <audit_log>
     <event time="2026-11-13T22:58:42+08:00" type="RUN" actor="pm-orchestrator">主会话模式：需求由用户直接陈述（判定规则 3）。已读 shared_protocol 全文、project_profile 1.4.0、generic/pm-orchestrator.md。</event>
     <event time="2026-11-13T22:58:42+08:00" type="RUN" actor="pm-orchestrator">按用户要求 git pull --ff-only（f54464e..afa1fe8）；画像按用户 Q3/Q4 答复升至 1.5.0（新增 P4-1、P8 一行、登记基线）。</event>
@@ -340,5 +342,6 @@ systemctl is-active ocap-backend -> active；https://ai-freeark.xin/ocap/ -> 200
     <event time="2026-11-15T20:50:45+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮"做1"，主会话模式；结果：采纳——仅测试环境、仅本次 GROUP_E2-003，范围 DEPLOY-009~011（夹具 setup、远程 HTTP E2E、cleanup），不重新部署代码。</event>
     <event time="2026-11-15T20:50:45+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（GROUP_E2-003），PRODUCTION_DEPLOY_CONFIRM=true，环境=测试，线上版本 3ffd868。</event>
     <event time="2026-11-15T21:34:25+08:00" type="GATE" actor="pm-orchestrator">GR-E2-002 FAIL（DEPLOYED_WITH_ISSUES，远程 E2E 19/22 通过，2 失败 1 跳过）；夹具已清理并经 PM 复核。defect_loops 已达上限 2，按 §H 上报用户。</event>
+    <event time="2026-11-16T22:54:46+08:00" type="RUN" actor="pm-orchestrator">上报 GROUP_D-20261115T2134 关闭（DEF-A、DEF-B 已修复并经测试环境远程验证）。</event>
   </audit_log>
 </phase_status>

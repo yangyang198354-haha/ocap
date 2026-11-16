@@ -10,7 +10,7 @@
 - [M-DE-008] 目标测试 MySQL 使用自签证书，mysqldump 需 `--skip-ssl`（Django 侧 `DB_SSL_DISABLED=1`） — conf 0.6 · 证据 registry DEPLOY-002 输出 DUMP_EXIT=0 · 首见 2026-11-10 · 命中 1
 - [M-DE-009] 外网 SSH 通道（VPS+frp）对连续新建连接间歇 `Connection closed`：用 ControlMaster 复用长连接，只对"建连"重试，已开始的非幂等命令先只读核对；远端多行脚本用 `ssh host bash -s -- "$TS" <<'EOF'` 传本地值，建连可用循环重试（间隔数秒、至多 8 次），连上后一次性完成全部只读命令（unit_sort_filters 第 4 次/第 6 次建连才成功）；避免单引号内 `$VAR` 在远端为空 — conf 1.0 · 证据 registry deployment_report.md:90（4 次断开）、unit_sort_filters GR-E2-001/002、content deployment_plan.md:56,80 · 首见 2026-11-11 · 命中 3
 - [M-DE-010] ssh ControlPath 放在长目录（如会话 scratchpad）会超 Unix socket 108 字节上限致建连全失败，套接字目录用 `mktemp -d /tmp/ocs.XXXX` — conf 0.6 · 证据 content deployment_report.md:38 · 首见 2026-11-11 · 命中 1
-- [M-DE-011] 快照含 venv/var/.env 时回滚「叠加解包」而不是 rm -rf 目录；快照用 --exclude 排除 venv、var、.env，既防膨胀也防回滚误删 — conf 0.6 · 证据 registry deployment_plan.md:110,355,437（R2-ROLLBACK-002） · 首见 2026-11-11 · 命中 1
+- [M-DE-011] 快照含 venv/var/.env 时回滚「叠加解包」而不是 rm -rf 目录；快照用 --exclude 排除 venv、var、.env，既防膨胀也防回滚误删 — conf 0.8 · 证据 registry deployment_plan.md:110,355,437（R2-ROLLBACK-002）；defb_def024 DEPLOY-001（快照 454 KB）· 首见 2026-11-11 · 命中 2
 - [M-DE-012] 增量重部署后端用 `git archive <commit>:backend` 打包（只含已提交跟踪文件）；前端在工作树构建，预检要求 frontend/ 无未跟踪文件 — conf 0.6 · 证据 registry deployment_plan.md R2-DEPLOY-002(:364-370)、R2-PRE-003(:331) · 首见 2026-11-11 · 命中 1
 - [M-DE-013] 目标机 web/ocap 属 root（1.0.0 以 sudo 写入），前端替换需 sudo rm/tar；部署前先只读 stat 属主，避免半删除状态（属主会变：unit_sort_filters 预检 PRE-A11 实测属 yangyang，sudo 写法仍兼容） — conf 0.8 · 证据 registry GR-E1-002-F01 · 首见 2026-11-11 · 命中 2
 - [M-DE-014] 计划中标 [INFERRED] 的目标机事实（Python 版本、wheel 可用性）在预检里实测 — conf 0.6 · 证据 content deployment_report.md PRE-105（cryptography 已预装） · 首见 2026-11-11 · 命中 1
@@ -32,6 +32,7 @@
 - [M-DE-030] 计划里写 API 路径要带 /api/v1/ 前缀并对照 config/urls.py 与各 app urls.py；本批计划省略前缀，执行时才补全 — conf 0.6 · 证据 owner_auth_v2 deployment_report 偏差 3、backend/config/urls.py · 首见 2026-11-16 · 命中 1
 - [M-DE-031] 目标机只读核对脚本用 Write 写本地文件，经 `ssh host '…manage.py shell' < 脚本` 经 stdin 喂入，只输出计数；备份 jsonl 首行是 header，逐条核对按含 id 的记录过滤 — conf 0.6 · 证据 owner_auth_v2 deployment_report DEPLOY-012、GR-E2-002 · 首见 2026-11-16 · 命中 1
 - [M-DE-032] 远程 E2E 护栏 WRITE_ALLOWLIST 不含 POST /certifications，认证负例无法远程验证；E1 计划阶段先核对护栏是否覆盖待验写路径，不覆盖则列人工项或回流扩展护栏（仅限 e2e_ 夹具房屋） — conf 0.6 · 证据 owner_auth_v2 GR-E2-003-F01、backend/tests/remote/remote_client.py · 首见 2026-11-16 · 命中 1
+- [M-DE-033] 只读计数脚本写前先查模型字段：Membership 无 status 字段，查“有效绑定数”报 FieldError；改用申诉总数与清册三项做基线 — conf 0.6 · 证据 ocap_fix_defb_def024 deployment_report 偏差 4、GR-E2-001-F01、backend/apps/residency/models.py:7 · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 

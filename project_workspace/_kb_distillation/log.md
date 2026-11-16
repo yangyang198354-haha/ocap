@@ -239,3 +239,9 @@
 | 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-002-1 | 晋升→M-DE-031 | committed |
 | 2026-11-16T22:10:59+08:00 | ocap_owner_auth_v2-GROUP_E2-003-1 | 晋升→M-DE-032 | committed |
 | 2026-11-16T22:10:59+08:00 | pm-evidence:owner_auth_v2 | M-PM-001 命中+3、M-PM-002 命中+1、M-TE-022 命中+1 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_C-001-1 | 合并→M-SD-033 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_C-002-1 | 晋升→M-SD-033 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_D-001-1 | 晋升→M-TE-031 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_D-002-1 | 晋升→M-TE-032；合并→M-TE-012 命中+1 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_E2-001-1 | 晋升→M-DE-033 | committed |
+| 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_E2-001-2 | 合并→M-DE-011 命中+1 | committed |

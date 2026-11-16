@@ -10,7 +10,7 @@
 - [M-TE-008] 共用分页/序列化辅助函数的调用约定变化后，对所有使用方的列表接口按角色冒烟遍历；回归用例放到未修复树确认能失败（5/6 失败，修复后 6/6） — conf 0.6 · 证据 DEF-001、backend/tests/integration/test_admin_appeals_regression.py、GR-D-002 · 首见 2026-11-09 · 命中 1
 - [M-TE-009] 导入类测试必须做"同文件预检 vs 正式导入"逐项数字比对，并构造同单元跨行类型冲突的整组失败用例 — conf 0.8 · 证据 registry GR-D-001、TC-INT-122/144/145 · 首见 2026-11-10 · 命中 1
 - [M-TE-011] 产品行为由"禁用按钮"改为"可点击并提示"后，旧 disabled 断言成过期用例；缺陷修复回流时 grep 反向断言（disabled / not.toBeCalled）并同步更新 — conf 0.8 · 证据 content DEF-016/TC-UNIT-404、GR-D-003 condition；registry GR-C-002-F01 同类 · 首见 2026-11-11 · 命中 2
-- [M-TE-012] 补"修复无专门测试"类缺陷的用例时，把新测试放进 `git archive HEAD` 导出的修复前树运行，确认失败（10/15 失败；DEF-013 用例修复前确定失败），才证明用例能抓住缺陷；改动未提交拿不到修复前树时，在 scratchpad 复制代码只回退被测几行/页面（node_modules 符号链接）做变异 — conf 1.0 · 证据 registry DEF-007~011、test_registry_import_query_bounds.py（DEF-013）、product_review TC-INT-539/541（test_product_review_rework1.py） · 首见 2026-11-11 · 命中 3 · 已晋升通用（用户确认 2026-11-16 → generic/test-engineer.md）
+- [M-TE-012] 补"修复无专门测试"类缺陷的用例时，把新测试放进 `git archive HEAD` 导出的修复前树运行，确认失败（10/15 失败；DEF-013 用例修复前确定失败），才证明用例能抓住缺陷；改动未提交拿不到修复前树时，在 scratchpad 复制代码只回退被测几行/页面（node_modules 符号链接）做变异 — conf 1.0 · 证据 registry DEF-007~011、test_registry_import_query_bounds.py（DEF-013）、product_review TC-INT-539/541（test_product_review_rework1.py） · 首见 2026-11-11 · 命中 4（+defb_def024 GR-D-001 TC-INT-720 修复前树 errors=2、GR-D-002 errors=7） · 已晋升通用（用户确认 2026-11-16 → generic/test-engineer.md）
 - [M-TE-013] 对递归结构（引用/列表嵌套）做序列化后处理（如去 URL 前缀）的接口，用例要含引用内、列表内的节点，只测顶层会漏 — conf 0.6 · 证据 DEF-014、test_content_wechat_and_gaps.py:438 TC-INT-388 · 首见 2026-11-11 · 命中 1
 - [M-TE-014] 性能类缺陷（慢查询、每批带全集）的回归用例不断言墙钟耗时，用 `connection.execute_wrapper` 记录每条 SQL 绑定参数个数与查询条数，机器无关 — conf 0.6 · 证据 backend/tests/integration/test_registry_import_query_bounds.py:6,64,109、DEF-013 · 首见 2026-11-11 · 命中 1
 - [M-TE-015] Tiptap/ProseMirror 可在 vitest+jsdom 真实挂载并跑命令；需垫 ClipboardEvent（pasteHTML）与 Range.getClientRects，撤销重做用 `vi.useFakeTimers({toFake:["Date"]})` 跨过历史分组间隔 — conf 0.6 · 证据 frontend/tests/content_editor.spec.js（22/23 通过） · 首见 2026-11-11 · 命中 1
@@ -30,6 +30,8 @@
 - [M-TE-028] 造导出/导入样例前先查既有规则：导入校验拒绝含“-”的楼层、build_specific_part 对中文楼层不补“层”；样例用被认可写法，被拒写法另写专测（用 -2 会令预检 rows_failed=1） — conf 0.6 · 证据 unit_sort_filters GR-D-001-F02（TC-INT-605/620） · 首见 2026-11-16 · 命中 1
 - [M-TE-029] 守卫类用例（输出位置、权限位）先把其余条件调合规（临时 0700 目录 + override_settings）再断言被拒，并用变异（`if _inside(...)`→`if False`）确认能失败，否则因另一检查而假通过 — conf 0.6 · 证据 backend/tests/unit/test_owner_auth_v2_rules.py::test_tc_unit_665、GR-D-001 · 首见 2026-11-16 · 命中 1
 - [M-TE-030] AC 场景在数据模型下不可达（如“追加号码恰为他人账号手机号”而手机号唯一）时，转为可观测不变量并在 test_plan 写明依据，不硬造用例 — conf 0.6 · 证据 test_owner_auth_v2_residency.py::test_tc_int_685/686、test_plan AC-203-07 · 首见 2026-11-16 · 命中 1
+- [M-TE-031] 席位授予类集成用例先配置 CommitteeConfig 名额上限与任期月数（参照 test_owner_auth_v2_seats.SeatBase.setUp），否则合法请求被 409 TERM_NOT_CONFIGURED 拒绝，易误判为产品缺陷 — conf 0.6 · 证据 GR-D-001 / TC-INT-721 首版 409 · 首见 2026-11-16 · 命中 1
+- [M-TE-032] 日期解析类校验缺陷的回归：每个端点至少一条负例（不存在日期、非法月份）与一条正例，并对接收原始 JSON 值的字段加非字符串入参（如 123）；在修复前树上确认负例失败、正例通过 — conf 0.6 · 证据 GR-D-002 / test_def025_nonexistent_dates.py:35（TC-INT-730）、5b5e72d 修复前树变异 errors=7 · 首见 2026-11-16 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）

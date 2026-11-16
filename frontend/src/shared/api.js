@@ -138,7 +138,9 @@ const admin = {
   createAdmin: (data) => adminHttp.post('/admin/admins', data),
   resetPassword: (id, password) => adminHttp.post(`/admin/admins/${id}/reset-password`, { password }),
   users: (params) => adminHttp.get('/admin/users', { params }),
+  // params 可含 q、unit_type、building、unit_no、room、owner_name、owner_phone（IFC-291）
   registryUnits: (params) => adminHttp.get('/admin/registry/units', { params }),
+  registryFilterOptions: () => adminHttp.get('/admin/registry/units/filter-options'),
   createRegistryUnit: (data) => adminHttp.post('/admin/registry/units', data),
   updateRegistryUnit: (id, data) => adminHttp.patch(`/admin/registry/units/${id}`, data),
   deleteRegistryUnit: (id) => adminHttp.delete(`/admin/registry/units/${id}`),

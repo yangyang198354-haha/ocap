@@ -29,6 +29,37 @@ def build_csv() -> bytes:
     return ("\ufeff" + buffer.getvalue()).encode("utf-8")
 
 
+def build_data_csv(rows: list[list[str]]) -> bytes:
+    """MOD-110 / IFC-298：数据文件（无示例行），UTF-8 带 BOM，表头 = IMPORT_COLUMNS。"""
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(IMPORT_COLUMNS)
+    writer.writerows(rows)
+    return ("﻿" + buffer.getvalue()).encode("utf-8")
+
+
+def build_data_xlsx(rows: list[list[str]]) -> bytes:
+    """MOD-110 / IFC-298：单个工作表"清册导入"，文本列整列设为 "@"，所有值按字符串写入。"""
+    from openpyxl import Workbook
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "清册导入"
+    sheet.append(IMPORT_COLUMNS)
+    for values in rows:
+        sheet.append(values)
+        for cell in sheet[sheet.max_row]:
+            cell.data_type = "s"  # 防止以 "=" 开头的文本被当作公式
+    for column in _TEXT_COLUMNS:
+        sheet.column_dimensions[column].number_format = "@"
+        for row_cells in sheet.iter_rows(min_row=2, min_col=_col_index(column), max_col=_col_index(column)):
+            for cell in row_cells:
+                cell.number_format = "@"
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
 def build_xlsx() -> bytes:
     from openpyxl import Workbook
 

@@ -7,6 +7,7 @@ from django.db.models import Count
 
 from apps.accounts.directory import ROLE_LABELS, IdentityView, identity_view
 from apps.committee.models import Seat
+from apps.registry.ordering import unit_sort_key
 
 from .models import Membership, ResidentApplication
 
@@ -59,7 +60,10 @@ def housing_view(user) -> HousingPayload:
         pending_by_unit = {row["unit_id"]: row["n"] for row in counts}
 
     units: list[HousingUnit] = []
-    for m in memberships:
+    # IFC-290：房屋行按数字自然顺序（与 /me 同口径）；summary/residents 仍用上面的原顺序
+    ordered = sorted(memberships, key=lambda m: (
+        unit_sort_key(m.unit.building, m.unit.unit_no, m.unit.floor, m.unit.room, m.unit_id), m.id))
+    for m in ordered:
         is_owner = m.role in OWNER_ROLES
         units.append({
             "unit_id": m.unit_id, "specific_part": m.unit.specific_part, "role": m.role,

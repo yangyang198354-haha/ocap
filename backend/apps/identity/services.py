@@ -13,6 +13,7 @@ from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError
 from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.user_refs import references
+from apps.registry.ordering import unit_sort_key
 from apps.residency.models import Membership
 from apps.residency.services import MembershipService, PendingRequestService
 
@@ -45,7 +46,9 @@ class IdentityService:
             current = picked.get(membership.unit_id)
             if current is None or ROLE_RANK.get(membership.role, 0) > ROLE_RANK.get(current.role, 0):
                 picked[membership.unit_id] = membership
-        ordered = sorted(picked.values(), key=lambda m: (m.unit.specific_part, m.unit_id))
+        # IFC-289：与 /me/housing 共用数字自然顺序（apps.registry.ordering）
+        ordered = sorted(picked.values(), key=lambda m: unit_sort_key(
+            m.unit.building, m.unit.unit_no, m.unit.floor, m.unit.room, m.unit_id))
         return [IdentityService._unit_view(m) for m in ordered]
 
     @staticmethod

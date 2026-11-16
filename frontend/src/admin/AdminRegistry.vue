@@ -4,20 +4,39 @@
       <div class="row" style="justify-content: space-between">
         <h3 class="title" style="margin: 0">业主清册</h3>
         <div class="row">
-          <el-input v-model="keyword" placeholder="专有部分标识搜索" style="width: 200px" @change="search" />
-          <el-select v-model="typeFilter" style="width: 130px" @change="search">
-            <el-option label="全部类型" value="" />
-            <el-option label="未登记类型" value="UNSET" />
-            <el-option v-for="item in UNIT_TYPES" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
           <el-button @click="showImport = true">批量导入</el-button>
           <el-button type="primary" @click="openCreate">新增</el-button>
         </div>
       </div>
+      <!-- IFC-293：过滤器（REQ-FUNC-180/181/183）；占位文字与空状态全部中文 -->
+      <div class="row" style="margin-top: 12px; flex-wrap: wrap">
+        <el-input v-model="keyword" clearable placeholder="专有部分标识搜索" style="width: 200px" @change="search" />
+        <el-select v-model="filters.building" filterable clearable placeholder="楼栋" no-data-text="暂无数据"
+                   style="width: 120px" @change="search">
+          <el-option v-for="item in buildingOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+        <el-select v-model="filters.unit_no" filterable clearable placeholder="单元" no-data-text="暂无数据"
+                   style="width: 120px" @change="search">
+          <el-option v-for="item in unitNoOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+        <el-input v-model="filters.room" clearable placeholder="户号" maxlength="32" style="width: 120px"
+                  @change="search" />
+        <el-select v-model="typeFilter" clearable placeholder="全部类型" no-data-text="暂无数据"
+                   style="width: 130px" @change="search">
+          <el-option label="全部类型" value="" />
+          <el-option label="未登记类型" value="UNSET" />
+          <el-option v-for="item in UNIT_TYPES" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+        <el-input v-model="filters.owner_name" clearable placeholder="产权业主姓名" maxlength="64"
+                  style="width: 150px" @change="search" />
+        <el-input v-model="filters.owner_phone" clearable placeholder="产权业主电话" maxlength="11"
+                  :formatter="digitsOnly" :parser="digitsOnly" style="width: 150px" @change="search" />
+        <el-button @click="resetFilters">重置</el-button>
+      </div>
     </div>
 
     <div class="card">
-      <el-table :data="items" size="small">
+      <el-table :data="items" size="small" empty-text="暂无数据">
         <el-table-column prop="specific_part" label="专有部分" min-width="150" />
         <el-table-column prop="building" label="楼栋" width="80" />
         <el-table-column prop="unit_no" label="单元" width="80" />
@@ -111,6 +130,9 @@ const pageSize = 20
 const total = ref(0)
 const keyword = ref('')
 const typeFilter = ref('')
+const filters = reactive({ building: '', unit_no: '', room: '', owner_name: '', owner_phone: '' })
+const buildingOptions = ref([])
+const unitNoOptions = ref([])
 const showCreate = ref(false)
 const showEdit = ref(false)
 const showImport = ref(false)
@@ -132,13 +154,39 @@ async function load() {
       page: page.value,
       page_size: pageSize,
       q: keyword.value || undefined,
-      unit_type: typeFilter.value || undefined
+      unit_type: typeFilter.value || undefined,
+      building: filters.building || undefined,
+      unit_no: filters.unit_no || undefined,
+      room: filters.room || undefined,
+      owner_name: filters.owner_name || undefined,
+      owner_phone: filters.owner_phone || undefined
     })
     items.value = data.results || data || []
     total.value = data.count ?? items.value.length
   } catch (e) {
     ElMessage.error(errorText(e))
   }
+}
+
+function digitsOnly(value) {
+  return String(value ?? '').replace(/\D/g, '')
+}
+
+async function loadFilterOptions() {
+  try {
+    const data = await admin.registryFilterOptions()
+    buildingOptions.value = data.buildings || []
+    unitNoOptions.value = data.unit_nos || []
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+function resetFilters() {
+  keyword.value = ''
+  typeFilter.value = ''
+  Object.assign(filters, { building: '', unit_no: '', room: '', owner_name: '', owner_phone: '' })
+  search()
 }
 
 function search() {
@@ -262,5 +310,8 @@ async function remove(row) {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadFilterOptions()
+})
 </script>

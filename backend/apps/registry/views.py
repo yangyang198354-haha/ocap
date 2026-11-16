@@ -1,8 +1,10 @@
 """清册视图（MOD-032 / IFC-152~159）。"""
+import re
 import time
 from decimal import Decimal
 
 from django.db import IntegrityError, transaction
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -26,6 +28,7 @@ from .import_template import build_csv, build_xlsx
 from .importing import Deadline, apply_plan, plan_import, read_rows
 from .models import UNIT_TYPE_CHOICES, RegistryOwner, RegistryPhone, RegistryUnit, build_specific_part
 from .serializers import RegistryUnitAdminSerializer
+from .ordering import sorted_values
 from .services import RegistryService
 
 UNIT_TYPE_CODES = {code for code, _ in UNIT_TYPE_CHOICES}
@@ -71,6 +74,44 @@ class UnitOptionsView(APIView):
         return Response(RegistryService.options(**levels))
 
 
+_FILTER_PHONE_RE = re.compile(r"[0-9]{1,11}")
+
+
+def _apply_unit_filters(qs, request):
+    """IFC-291：新增过滤参数，缺省或空串不限制；条件取交集；业主条件用 Exists，不产生重复行。"""
+    params = request.query_params
+    for key in ("building", "unit_no", "room"):
+        value = (params.get(key) or "").strip()
+        if not value:
+            continue
+        if len(value) > 32:
+            raise ApiError("INVALID_QUERY", f"{key} 过长（最多 32 字符）")
+        qs = qs.filter(**{key: value})
+    owner_name = (params.get("owner_name") or "").strip()
+    if owner_name:
+        if len(owner_name) > OWNER_NAME_LIMIT:
+            raise ApiError("INVALID_QUERY", "owner_name 过长（最多 64 字符）")
+        qs = qs.filter(Exists(RegistryOwner.objects.filter(unit=OuterRef("pk"), name__icontains=owner_name)))
+    owner_phone = (params.get("owner_phone") or "").strip()
+    if owner_phone:
+        if not _FILTER_PHONE_RE.fullmatch(owner_phone):
+            raise ApiError("INVALID_QUERY", "owner_phone 须为 1~11 位数字")
+        qs = qs.filter(Exists(RegistryPhone.objects.filter(unit=OuterRef("pk"), phone__contains=owner_phone)))
+    return qs
+
+
+class AdminUnitFilterOptionsView(APIView):
+    """IFC-292：楼栋、单元下拉取值（仅管理员；不含姓名与手机号）。"""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        units = RegistryUnit.objects
+        return Response({
+            "buildings": [v for v in sorted_values(units.values_list("building", flat=True), "building") if v],
+            "unit_nos": [v for v in sorted_values(units.values_list("unit_no", flat=True), "unit_no") if v],
+        })
+
+
 class AdminUnitListView(APIView):
     permission_classes = [IsAdmin]
 
@@ -89,6 +130,7 @@ class AdminUnitListView(APIView):
                 qs = qs.filter(unit_type=unit_type)
             else:
                 raise ApiError("INVALID_QUERY", "unit_type 取值不合法")
+        qs = _apply_unit_filters(qs, request)  # IFC-291：楼栋/单元/户号/业主姓名/业主电话
         return page_response(qs, request, RegistryUnitAdminSerializer)
 
     def post(self, request):

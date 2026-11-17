@@ -34,11 +34,9 @@
 - [M-SD-032] 管理端 .vue 的 `<style>` 里 border 简写会触发 admin_theme.spec 守护，拆成 border-style/width/color — conf 0.6 · 证据 frontend/src/admin/parts/ProofThumbs.vue、owner_auth_v2 GROUP_C 自验证 · 首见 2026-11-16 · 命中 1
 - [M-SD-033] Django parse_date/parse_datetime 对格式不匹配返回 None，对“格式合法但日期不存在”抛 ValueError，对非字符串入参抛 TypeError；修一处后须 git grep 全部 parse_date/parse_datetime 调用点（本批 DEF-024 修后排查又找出 polls、resolutions 两处）— conf 0.8 · 证据 GR-C-001-F02、GR-C-002（DEF-025，全仓排查）、backend/apps/{committee,accounts,claims,polls,resolutions}/views.py · 首见 2026-11-16 · 命中 2
 - [M-SD-034] 装饰性 SVG 不要用 `<text>`（进入 wrapper.text()，令"三风格页面文本一致"用例 TC-E2E-104 失败），改 foreignObject + CSS `content: attr(data-t)`；同一组件对应多条路由时 router 中只 import 一次，否则 qa_unit_theme 的 import 计数变化 — conf 0.6 · 证据 ocap_brand_layout GR-C-001（首跑 41 失败→39 均在影响清单）、frontend/src/router/index.js:8 · 首见 2026-11-17 · 命中 1
+- [M-SD-035] 删除被既有 spec 直接 import 的组件，会让整个 spec 文件显示 0 test（总数少一截，不算 failed）；统计失败时核对"运行数 + 隐藏数 = 基线"，并在 scratch 副本临时改 import 才能看到真实失败 — conf 0.6 · 证据 ocap_identity_property GROUP_C（373+65=438）、GR-C-001-F01（44 条 + 2 文件预期失败与复跑对上） · 首见 2026-11-17 · 命中 1
+- [M-SD-036] 冒烟/基线对照一律在 scratch 副本里做（后端：复制 backend 放临时测试文件；前端：tar 排除 node_modules 后符号链接，放临时 spec），不污染仓库测试目录；"不改测试代码"的批次尤其如此 — conf 0.8 · 证据 ocap_identity_property code_review_report.md:36-42（scratch 设置/临时库自验证）、GR-C-001；ocap_unit_sort_filters GROUP_C 自验证（原 P-SD-009） · 首见 2026-11-16 · 命中 2
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
-- [P-SD-009] 在 scratch 复制的 backend 里放临时测试文件做命令冒烟（含 xlsx 导出→read_rows 预检回读），不污染仓库测试目录 — 自记 2026-11-16 · 证据：ocap_unit_sort_filters GROUP_C 自验证
 - [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
-
-- [P-SD-012] 删除被既有 spec 直接 import 的组件会让整个 spec 文件显示 0 test（总数少一截，不算 failed）；统计失败时须核对"运行数 + 隐藏数 = 基线"，并在 scratch 副本临时改 import 才能看到真实失败 — 自记 2026-11-17 · 证据：ocap_identity_property GROUP_C（373+65=438）
-- [P-SD-013] "不改测试代码"的批次，用 scratch 副本（tar 排除 node_modules 后符号链接）加临时 spec/测试跑冒烟与基线对照，不污染仓库 — 自记 2026-11-17 · 证据：ocap_identity_property GROUP_C 自验证

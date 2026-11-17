@@ -1,4 +1,4 @@
-<phase_status project="ocap_identity_property" mode="INCREMENTAL" created="2026-11-17T15:45:56+08:00" updated="2026-11-17T22:35:33+08:00">
+<phase_status project="ocap_identity_property" mode="INCREMENTAL" created="2026-11-17T15:45:56+08:00" updated="2026-11-18T00:40:22+08:00">
   <request time="2026-11-17T15:45:56+08:00"><![CDATA[新的一批需求变更：1.用户登录web页面后，主页面有两个 认证房屋的卡片。一个字小了 绑定的房屋书。另外一个很大，有具体那几套，每套的类型，面积等等。 目前把这个大的面板的信息整合进右上角 “我的身份” 页面。并且把“我的身份” 改为“我的身份与房屋”。 左侧导航栏二级菜单“我的身份与房屋”与它是同一个页面。2. 待我审批的同住人申请页面，仅仅一个专有部分的产权业主才能看到，才有权审批。这个卡片放到“我的身份与房屋”页面的底部。3. 二级菜单“选择房屋”改为认证产权。在我的身份与房屋页面加一个按钮，认证产权，进入到这个页面。特别是没有绑定任何专有部分的时候，提醒用户去认证产权。4.选择房屋页面 的“请输入姓名“让人误导，不知道是输入产权人的名字，还是我作为同住人，作为同住人填自己的名字。 5. 如果我通过手机号注册进来，系统应该自动匹配这个绑定了的手机是否和业主清产某个专有部分业主的手机号码一致。系统可以地洞引导用户转入”认证产权“页面，预填好相关参数，询问他是不是某某部分的业主， 确认后自动绑定。 先整理这些需求。整理成用户故事。确认后开始开发]]></request>
   <profile version="1.6.0"/>
   <workspace_note>INCREMENTAL：主页两张房屋卡片整合进"我的身份与房屋"、同住人审批卡片下移并限产权业主、"选择房屋"改"认证产权"及入口与提醒、姓名输入框文案澄清、手机号匹配清册自动引导认证。用户要求先出需求与用户故事，确认后开发。</workspace_note>
@@ -18,7 +18,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="测试"><phase id="PHASE_11b" status="APPROVED"/></group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_identity_property/requirements/requirements_spec.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
@@ -38,6 +38,7 @@
     <artifact path="project_workspace/ocap_identity_property/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_identity_property/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_identity_property/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_identity_property/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -48,6 +49,8 @@
     <invocation id="ocap_identity_property-GROUP_C-002" agent="software-developer" start="2026-11-17T20:59:11+08:00" end="2026-11-17T21:23:55+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_identity_property-GROUP_D-001" agent="test-engineer" start="2026-11-17T21:23:55+08:00" end="2026-11-17T22:29:14+08:00" result="SUCCESS"/>
     <invocation id="ocap_identity_property-GROUP_E1-001" agent="devops-engineer" start="2026-11-17T22:29:14+08:00" end="2026-11-17T22:35:33+08:00" result="SUCCESS"/>
+    <invocation id="ocap_identity_property-GROUP_E2-001" agent="devops-engineer" start="2026-11-17T22:40:41+08:00" end="2026-11-17T22:57:24+08:00" result="SUCCESS"/>
+    <invocation id="ocap_identity_property-GROUP_Z-001" agent="kb-curator" start="2026-11-17T22:57:51+08:00" end="2026-11-17T23:00:06+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_identity_property-GROUP_A-001" decision="PASS_WITH_CONDITIONS" time="2026-11-17T15:53:45+08:00">
@@ -154,12 +157,24 @@ ls -l --time-style=full-iso：测试文件最新 22:10:58（frontend/tests/ident
       <finding id="GR-E1-001-F02" severity="MINOR">DEPLOY-010~012 P4-1 远程探测会临时占用 3 个空闲专有部分，需用户单独授权；远程无法验证真实匹配/确认</finding>
       <condition>E2 仅在用户本轮明确授权"测试"环境后执行；DEPLOY-010~012 需单独授权；部署前先提交（版本标识以 commit 为准）</condition>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_identity_property-GROUP_E2-001" decision="PASS" time="2026-11-17T22:57:24+08:00">
+      <reviewed_files><file path="project_workspace/ocap_identity_property/deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2 状态" result="SATISFIED">deployment_report.md:25 最终状态 DEPLOYED_SUCCESSFULLY；V-01~V-18 有实际输出，V-19/V-20 SKIPPED（用户未授权 DEPLOY-010~012）</criterion>
+      <criterion id="PM 只读核验" result="SATISFIED">公网首页 200 text/html，index.html SHA256 52825447…5a 与报告本地构建一致；/ocap/api/v1/me/registry-matches 未登录 401 JSON（新路由已上线）；深链 /ocap/me/identity 200；ssh 只读 systemctl is-active ocap-backend = active，失败单元 0</criterion>
+      <finding id="GR-E2-001-F01" severity="MINOR">目标机 backend/ 下既有 .env.bak_20261114_www 被打入快照（含 env 内容，仅在目标机本地）；建议用户确认是否删除。PM 未读取其内容</finding>
+      <verification><![CDATA[curl -s -o /dev/null -w "%{http_code} %{content_type}" https://ai-freeark.xin/ocap/  -> 200 text/html
+curl -s https://ai-freeark.xin/ocap/api/v1/me/registry-matches -> {"code":"UNAUTHORIZED","message":"请先登录"} [401]
+curl -s -o /dev/null -w "%{http_code}" https://ai-freeark.xin/ocap/me/identity -> 200
+curl -s https://ai-freeark.xin/ocap/ | sha256sum -> 52825447c5802111b44d62634031d700beb55cf2a0dc11d637ff54592cbdfa5a
+ssh -p 57279 yangyang@47.109.197.217 "systemctl is-active ocap-backend; systemctl --failed --no-legend | wc -l" -> active / 0]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-17T16:06:16+08:00" respondent="用户"><![CDATA[用户原话："Q1:A, Q2:A, Q3:A, Q4:A, Q5:C, Q6:A,Q7:B, Q8:A, Q9:A, Q10:A, Q11:A, Q12:C, Q13:A, Q14:A"。对应 Q-IP-01..14。与推荐不同：Q-IP-01=A（两个地址都保留并直接显示同一页面）、Q-IP-05=C（"申请成为同住人"移入"我的同住人申请"页）、Q-IP-12=C（仅手机号注册触发匹配）。Q-IP-10 未给出展示套数上限。PM 发现 Q-IP-12=C 与 Q-IP-09=A、Q-IP-03=A 组合后的影响（微信登录/小程序用户绑定手机号时不再静默绑定也不引导），追问用户（PM-F1、PM-F2）。]]></clarification>
     <clarification time="2026-11-17T18:04:50+08:00" respondent="用户"><![CDATA[用户原话："F1:B, F2:好"。F1=B：已注册用户（含微信登录/小程序用户）首次绑定手机号成功时也走同样的引导确认（等于 Q-IP-12 改为 A，覆盖上一条的 Q-IP-12=C）。F2：多套匹配全部列出，超过 10 套折叠为"展开更多"，不设硬上限。用户此前原话"确认后开始开发"，本答复视为需求确认，修订后进入 GROUP_B 起的流程；提交/推送/部署仍逐次确认。]]></clarification>
     <clarification time="2026-11-17T18:14:58+08:00" respondent="用户"><![CDATA[用户原话："Q1：A,Q2:按照推荐"。Q1=A：同意在会话 scratchpad 建 venv 安装后端依赖（排除 mysqlclient、alibabacloud_dysmsapi20170525）用于本机测试；Q2：Q-IP-15~18 全部按推荐 A（GR-A-002 condition 关闭）。]]></clarification>
     <clarification time="2026-11-17T22:38:30+08:00" respondent="用户"><![CDATA[用户原话："全部按照推荐"。Q1=A 提交为单个提交；Q2=A 推送并等 CI 结果后再部署；Q3=A 授权部署"测试"环境，不执行可选的 DEPLOY-010~012 远程探测；Q4=A"身份：户主"提示记为遗留问题，下批处理。]]></clarification>
+    <clarification time="2026-11-18T00:40:22+08:00" respondent="用户"><![CDATA[用户原话（2026-11-18）："上批要推送， 备份先不动"。收尾 Q1=A 提交并推送；Q2=B 目标机 .env.bak_20261114_www 暂不处理。MV-01~03 尚未回复。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -181,5 +196,10 @@ ls -l --time-style=full-iso：测试文件最新 22:10:58（frontend/tests/ident
     <event time="2026-11-17T22:29:14+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（ocap_identity_property-GROUP_E1-001，PHASE_10、PHASE_11a）</event>
     <event time="2026-11-17T22:35:33+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS；deployment 两文件升 1.0.0 APPROVED。等待用户决定提交/推送/E2 授权</event>
     <event time="2026-11-17T22:38:30+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮消息"全部按照推荐"明确选择 Q3=A：授权 E2 部署至"测试"环境（画像 P7，部署需用户确认=是），不含 DEPLOY-010~012；授权仅对本次 E2 调用有效。前置：先提交、推送并 CI 通过</event>
+    <event time="2026-11-17T22:40:41+08:00" type="INVOCATION" actor="pm-orchestrator">提交 b46f7bc（用户 Q1=A）、推送 main（Q2=A）；CI run 44105394399 success（Backend / Web frontend / Mini program 三 job 均 success）。调用 devops-engineer E2（ocap_identity_property-GROUP_E2-001），环境=测试，不含 DEPLOY-010~012</event>
+    <event time="2026-11-17T22:57:24+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS；deployment_report 升 1.0.0 APPROVED。测试环境部署完成（commit b46f7bc，回滚锚点 TS=20261117225235）</event>
+    <event time="2026-11-17T22:57:51+08:00" type="INVOCATION" actor="pm-orchestrator">写 delivery_report.md（DELIVERED_WITH_ISSUES）；调用 kb-curator（ocap_identity_property-GROUP_Z-001，PHASE_12）</event>
+    <event time="2026-11-17T23:00:06+08:00" type="INVOCATION" actor="pm-orchestrator">kb-curator SUCCESS：晋升 17 条（含 M-PM-007~009），M-PM-001 命中 25，通用候选 0，无 pending_patch。项目流程结束，最终状态 DELIVERED_WITH_ISSUES</event>
+    <event time="2026-11-18T00:40:22+08:00" type="INVOCATION" actor="pm-orchestrator">按用户答复提交并推送收尾文件（交付/部署报告、phase_status、蒸馏产物、agent 记忆、_kb_inbox）</event>
   </audit_log>
 </phase_status>

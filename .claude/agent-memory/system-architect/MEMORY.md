@@ -22,6 +22,8 @@
 - [M-SA-020] 页内分区改二级菜单：默认分区沿用旧路径、其余加子路径并用路由 `props:{section}`，旧书签与既有路径断言不变；同组件在兄弟路由间复用实例，宿主须 watch(section) — conf 0.6 · 证据 ADR-119、frontend/src/router/index.js:8,39-46（开发已按此落地，GR-C-003 通过） · 首见 2026-11-17 · 命中 1
 - [M-SA-021] 宽窄屏分流的路由守卫用 matchMedia 时，jsdom 无该 API，约定缺失按窄屏，否则既有"点击底栏我的→/me"类用例会变 — conf 0.6 · 证据 ADR-120、frontend/src/router/index.js:26 · 首见 2026-11-17 · 命中 1
 - [M-SA-022] 新增 SVG 配图等 .vue 不得写颜色字面量（theme.spec 守护），颜色经 scoped CSS 取 var(--accent)；UnitCascader 不回显初值 id，跨页预填房屋不可行，只能预填姓名 — conf 0.6 · 证据 frontend/src/portal/parts/UnitCascader.vue:40、ocap_ui_theme ADR-029 · 首见 2026-11-17 · 命中 1
+- [M-SA-023] 给 /me/housing 等被契约测试用 assertEqual 锁定字段集的接口加字段前，先 git grep 该集合（test_frontend_contract.py:582-585），并在 module_design 列出要改的断言；页面循环变量名（item/unit/r）会被 reads() 扫描，新组件用别的变量名 — conf 0.6 · 证据 ocap_identity_property ADR-131、git grep 核验 · 首见 2026-11-17 · 命中 1
+- [M-SA-024] "触发时机一次性、之后清册变化不得触发"的引导类需求，用"服务端状态行（触发点有匹配才建行）+ 匹配实时查询"，不存快照也不做无状态查询；代价是 PENDING 期间清册新增同号会出现（须列 ASSUMPTION） — conf 0.6 · 证据 ocap_identity_property ADR-128（architecture_design.md:45-54、:129） · 首见 2026-11-17 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SA-001] 取微信官方服务端接口文档时，用 `developers.weixin.qq.com/miniprogram/dev/server/API/<分类>/<api_xxx>.md`（带 .md）可拿到干净正文；`/framework/open-ability/*.html` 页面正文过长，WebFetch 只返回导航 — 自记 2026-11-07 · 证据 WebFetch 结果（不可核验）
@@ -34,5 +36,3 @@
 - [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
 - [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）
-
-- [P-SA-018] 给 /me/housing 等被契约测试用 assertEqual 锁定字段集的接口加字段前，先 git grep 该集合（test_frontend_contract.py:582-585），并在 module_design 列出要改的断言；页面循环变量名（item/unit/r）会被 reads() 扫描，新组件用别的变量名 — 自记 2026-11-17 · 证据 ocap_identity_property ADR-131（git grep 实测）

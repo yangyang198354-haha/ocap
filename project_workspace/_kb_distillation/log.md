@@ -264,3 +264,22 @@
 | 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-003-pm-1 | 晋升→M-PM-006 | committed |
 | 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-004-1 | 晋升→M-TE-035；合并→M-PM-006 命中+1 | committed |
 | 2026-11-17T14:40:17+08:00 | (gate) GR-A-001-F01 等 7 条漏读 | 合并→M-PM-001 命中 16→23 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_A-001-1 | 晋升→M-RA-025 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_A-001-2 | 晋升→M-RA-026 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_A-002-1 | 晋升→M-RA-027 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_B-001-1 | 晋升→M-SA-023 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_B-001-2 | 晋升→M-SA-024 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_C-002-1 | 晋升→M-SD-035 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_C-002-2 | 合并→M-SD-036 (P-SD-009+013) | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_D-001-1 | 晋升→M-TE-036 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_D-001-2 | 晋升→M-TE-037 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_D-001-3 | 晋升→M-TE-038 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_E1-001-1 | 晋升→M-DE-036（grep -c 半条与通用知识重复） | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_E1-001-2 | 合并→M-DE-036 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_E1-001-3 | 晋升→M-DE-038 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_E2-001-1 | 晋升→M-DE-037 | committed |
+| 2026-11-17T22:59:48+08:00 | ocap_identity_property-GROUP_E2-001-2 | 合并→M-DE-037 | committed |
+| 2026-11-17T22:59:48+08:00 | (gate) GR-E1-001-F01 PM 漏写构建命令 | 晋升→M-PM-007；合并→M-DE-034 命中 2 | committed |
+| 2026-11-17T22:59:48+08:00 | (gate) GR-C-001-F03/EXCEPTION | 晋升→M-PM-008 | committed |
+| 2026-11-17T22:59:48+08:00 | (gate) GR-C-001-F01/GR-D-001 | 晋升→M-PM-009 | committed |
+| 2026-11-17T22:59:48+08:00 | (gate) GR-A-001-F01、GR-B-001-F01 漏读 | 合并→M-PM-001 命中 23→25 | committed |

@@ -35,12 +35,11 @@
 - [M-TE-033] 依赖登录后用户对象的派生状态（角标、菜单）按真实链路造用例：登录响应只带简要用户对象，身份由页面随后 fetchMe 补全，再断言派生状态更新；预置完整 me 的自检会漏掉 — conf 0.6 · 证据 DEF-002/TC-INT-914、GR-D-001-F01、PortalLayout.vue:49 · 首见 2026-11-17 · 命中 1
 - [M-TE-034] 用对象字面量做 key→组件/配置查表的函数，加原型链键名（__proto__、constructor、toString）回退用例，obj[key] 会取到 Object.prototype 成员 — conf 0.6 · 证据 DEF-001/TC-INT-874、GR-D-001-F02、frontend/src/brand/art/index.js:10 · 首见 2026-11-17 · 命中 1
 - [M-TE-035] 前端页面拆成"宿主+子目录"后，静态读取页面源码的后端契约用例会失败（api.js 与后端零改动也一样）；改读"宿主+拆分目录全部文件"的拼接文本，目录为空直接失败，否定断言作用于拼接全文；前端重构也要跑后端全量 — conf 0.6 · 证据 GR-D-003、backend/tests/integration/test_frontend_contract.py:500 src_split · 首见 2026-11-17 · 命中 1
+- [M-TE-036] 带状态假服务端（vitest 前端 E2E）的列表接口返回数组副本 `[...S.list]`：返回同一引用后原地 push，Pinia 赋值因引用未变不触发更新，像产品缺陷实为夹具问题 — conf 0.6 · 证据 frontend/tests/identity_property_e2e.spec.js（TC-E2E-912 首版失败，改副本后通过）、GR-D-001 · 首见 2026-11-17 · 命中 1
+- [M-TE-037] 客户端守卫类断言（merged 时不跳转）喂互相矛盾的响应（merged=true 且 pending=true），否则回退守卫的变异测不出；变异验证首轮漏掉一条后才加强 — conf 0.6 · 证据 identity_property_match_panel.spec.js TC-WEB-932、miniprogram/tests/identity_property_pages.spec.js TC-MP-908、GR-D-001 · 首见 2026-11-17 · 命中 1
+- [M-TE-038] 页面新增名称含旧按钮名的按钮（"认证产权"含"认证"）后，旧用例 byText 的 includes 匹配会先命中新按钮；改写用文本恰等于的精确查找 — conf 0.6 · 证据 miniprogram/tests/owner_auth_v2.spec.js:33 certifyButton（TC-MP-504~506）、GR-D-001 · 首见 2026-11-17 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
-
-- [P-TE-007] 带状态假服务端（vitest 前端 E2E）的列表接口要返回数组副本 `[...S.list]`：返回同一引用且之后原地 push，Pinia 赋值因引用未变不触发更新，页面不刷新，像产品缺陷实为夹具问题 — 自记 2026-11-17 · 证据 frontend/tests/identity_property_e2e.spec.js（TC-E2E-912 首版失败，改副本后通过）
-- [P-TE-008] 客户端"守卫"类断言（merged 时不跳转）的用例，喂"互相矛盾"的响应（merged=true 且 pending=true），否则回退守卫的变异不会被抓住；变异验证首轮漏掉一条后才加强 — 自记 2026-11-17 · 证据 frontend/tests/identity_property_match_panel.spec.js TC-WEB-932、miniprogram/tests/identity_property_pages.spec.js TC-MP-908（scratchpad 变异复验 FAIL）
-- [P-TE-009] 页面新增名称含旧按钮名的按钮（"认证产权"含"认证"）后，旧用例 `byText('button','认证')` 的 includes 匹配会先命中新按钮；改写时用文本恰等于 `b.text()==='认证'` 的精确查找 — 自记 2026-11-17 · 证据 miniprogram/tests/owner_auth_v2.spec.js certifyButton（TC-MP-504~506）

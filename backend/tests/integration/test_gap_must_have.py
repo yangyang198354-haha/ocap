@@ -268,9 +268,10 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         self.assert_error(self.api("get", "/me", token=token), 401)
 
     def test_reregister_owner_auto_bound_by_registry(self):
-        """US-102：清册中登记的手机号再注册时由清册自动绑定（取代 AC-013-02 的"需重新认证"）。
+        """US-241 / AC-241-01（旧 US-102）：清册登记的手机号再注册时不再静默绑定，确认后由清册绑定。
 
-        自动绑定来源为清册；再次手动认证返回 409 ALREADY_CERTIFIED。
+        旧断言：reg.data["auto_bound"] 含该专有部分 → 新断言：auto_bound==[]、registry_match.pending，
+        confirm 后来源为清册；再次手动认证返回 409 ALREADY_CERTIFIED。
         """
         phone = next_phone()
         unit = self.make_unit(phones=[phone])
@@ -282,8 +283,11 @@ class ReRegisterAfterCancelTests(ApiTestBase):
         code = self.request_code(phone, "REGISTER")
         reg = self.api("post", "/auth/register", {"phone": phone, "code": code})
         self.assert_ok(reg, 201)
-        self.assertEqual([row["specific_part"] for row in reg.data["auto_bound"]],
-                         [unit.specific_part])
+        self.assertEqual(reg.data["auto_bound"], [])
+        self.assertTrue(reg.data["registry_match"]["pending"])
+        self.assertFalse(Membership.objects.filter(user_id=reg.data["user"]["id"], unit=unit).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]},
+                                token=reg.data["token"]))
         membership = Membership.objects.get(user_id=reg.data["user"]["id"], unit=unit,
                                             ended_at__isnull=True)
         self.assertEqual(membership.source, "REGISTRY")

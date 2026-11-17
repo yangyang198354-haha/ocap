@@ -27,8 +27,12 @@ const base = (over = {}) => ({
   'GET /me': ME, 'GET /me/housing': HOUSING, 'GET /resident-applications/to-review': [],
   'GET /resident-applications/mine': [], 'GET /appeals/mine': [], 'GET /units/options': { options: [] }, ...over
 })
+// 改写（ocap_identity_property GR-C-001-a，AC-238-01、AC-242-03）：姓名框占位由"请输入姓名"改为"请输入您本人的姓名（…）"；
+// 页面新增"认证产权"按钮，旧用例的 byText('button','认证') 会先命中它，故认证按钮改按"文本恰为认证"精确查找
+const NAME_PLACEHOLDER = '请输入您本人的姓名（须与业主清册登记的姓名一致）'
+const certifyButton = (wrapper) => wrapper.findAll('button').find((b) => b.text() === '认证')
 const inputs = (wrapper) => ({
-  name: wrapper.findAll('input').find((i) => i.attributes('placeholder') === '请输入姓名'),
+  name: wrapper.findAll('input').find((i) => i.attributes('placeholder') === NAME_PLACEHOLDER),
   owner: wrapper.findAll('input').find((i) => i.attributes('placeholder') === '产权人名字')
 })
 const certifyPosts = () => requests().filter((r) => r.method === 'POST' && r.path === '/certifications')
@@ -41,12 +45,12 @@ describe('小程序 我的房屋：姓名核对与申诉', () => {
   it('TC-MP-504 / AC-200-02：未选房号提示"请先选择房号"；姓名为空/纯空格提示"请输入姓名"；都不发认证请求', async () => {
     respond(base())
     const { wrapper } = await mountPage(Units)
-    await byText(wrapper, 'button', '认证').trigger('click')
+    await certifyButton(wrapper).trigger('click')
     await flushPromises()
     expect(toasts()).toContain('请先选择房号')
     await pickUnit(wrapper)
     await inputs(wrapper).name.setValue('   ')
-    await byText(wrapper, 'button', '认证').trigger('click')
+    await certifyButton(wrapper).trigger('click')
     await flushPromises()
     expect(toasts()).toContain('请输入姓名')
     expect(certifyPosts()).toHaveLength(0)
@@ -57,7 +61,7 @@ describe('小程序 我的房屋：姓名核对与申诉', () => {
     const { wrapper } = await mountPage(Units)
     await pickUnit(wrapper, 7)
     await inputs(wrapper).name.setValue('  张三 ')
-    await byText(wrapper, 'button', '认证').trigger('click')
+    await certifyButton(wrapper).trigger('click')
     await flushPromises()
     expect(certifyPosts()[0].data).toEqual({ unit_id: 7, name: '张三' })
     expect(toasts()).toContain('认证成功，身份：户主')
@@ -68,7 +72,7 @@ describe('小程序 我的房屋：姓名核对与申诉', () => {
     const { wrapper } = await mountPage(Units)
     await pickUnit(wrapper, 7)
     await inputs(wrapper).name.setValue('张三')
-    await byText(wrapper, 'button', '认证').trigger('click')
+    await certifyButton(wrapper).trigger('click')
     await flushPromises()
     expect(toasts()).toContain('姓名与手机号未能通过核对，请上传产权证明提交申诉')
     expect(toasts().join('|')).not.toMatch(/李某某|138/)

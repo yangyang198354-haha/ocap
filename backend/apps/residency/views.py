@@ -23,6 +23,7 @@ from apps.registry.services import RegistryService
 
 from .housing import housing_view
 from .models import Appeal, Membership, ResidentApplication
+from .phone_match import PhoneMatchService
 from .services import MembershipService
 
 MINE_LIMIT = 100  # IFC-263：我的申请/申诉只返回最近 100 条
@@ -44,6 +45,49 @@ class MyHousingView(APIView):
             "units": payload["units"],
             "pending_review_count": payload["pending_review_count"],
         })
+
+
+REGISTRY_CONFIRM_MAX = 500  # IFC-333：确认请求 unit_ids 上限（防滥用，非界面上限）
+
+
+class RegistryMatchesView(APIView):
+    """GET /me/registry-matches（IFC-332）：只作用于当前账号已验证手机号，无入参；不含清册姓名、手机号。"""
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        units = PhoneMatchService.pending_matches(request.user)
+        return Response({"pending": bool(units), "total": len(units),
+                         "units": [u.as_dict() for u in units]})
+
+
+class RegistryMatchesConfirmView(APIView):
+    """POST /me/registry-matches/confirm（IFC-333）：服务端以 units_by_phone(user.phone) 重算并做子集校验。"""
+    permission_classes = [IsMember]
+
+    def post(self, request):
+        decision = RateLimiter.hit(f"certify:{request.user.id}", limit=30, window_seconds=3600)
+        if not decision.allowed:
+            raise RateLimited(decision.retry_after)
+        raw = (request.data or {}).get("unit_ids")
+        if (not isinstance(raw, list) or not raw
+                or any(isinstance(v, bool) or not isinstance(v, int) for v in raw)):
+            raise ApiError("INVALID_VALUE", "缺少专有部分")
+        unit_ids = list(dict.fromkeys(raw))
+        if len(unit_ids) > REGISTRY_CONFIRM_MAX:
+            raise ApiError("INVALID_VALUE", "缺少专有部分")
+        items = PhoneMatchService.confirm(request.user, unit_ids)
+        succeeded = sum(1 for i in items if i.ok)
+        return Response({"succeeded": succeeded, "failed": len(items) - succeeded,
+                         "results": [i.as_dict() for i in items]})
+
+
+class RegistryMatchesDismissView(APIView):
+    """POST /me/registry-matches/dismiss（IFC-334）：幂等。"""
+    permission_classes = [IsMember]
+
+    def post(self, request):
+        PhoneMatchService.dismiss(request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CertificationView(APIView):

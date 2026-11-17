@@ -8,8 +8,8 @@ from apps.core.errors import ApiError
 from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.permissions import IsAdmin, IsMember
 from apps.core.serializers import page_response
-from apps.residency.auto_bind import AutoBindService
 from apps.residency.models import Membership
+from apps.residency.phone_match import PhoneMatchService
 
 from .services import IdentityService
 
@@ -42,10 +42,14 @@ class PhoneBindView(APIView):
         result = IdentityService.bind_phone(request.user, str(data.get("phone", "")),
                                             str(data.get("code", "")))
         response = _merge_response(kind, result)
-        # 合并成功后旧会话失效、不再自动绑定（Q4=A）；首次绑定才触发（IFC-161）。
-        response["auto_bound"] = (
-            [] if response["merged"] else [item.as_dict() for item in AutoBindService.bind_by_phone(request.user)]
-        )
+        # ADR-130：auto_bound 已弃用、恒为空（保留仅为兼容）；首次绑定（非合并）开启待确认状态，合并则不触发并使其失效
+        response["auto_bound"] = []
+        if response["merged"]:
+            PhoneMatchService.expire(request.user)
+            response["registry_match"] = {"pending": False, "count": 0}
+        else:
+            count = PhoneMatchService.open_prompt(request.user)
+            response["registry_match"] = {"pending": count > 0, "count": count}
         return Response(response)
 
 
@@ -59,6 +63,7 @@ class PhoneChangeView(APIView):
             request.user, str(data.get("old_phone", "")), str(data.get("new_phone", "")),
             str(data.get("old_code", "")), str(data.get("new_code", "")),
         )
+        PhoneMatchService.expire(request.user)  # 更换手机号不触发匹配，原待确认状态失效（AC-239-05）
         return Response(_merge_response(kind, result))
 
 

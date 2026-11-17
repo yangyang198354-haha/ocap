@@ -40,3 +40,5 @@
 - [P-SD-009] 在 scratch 复制的 backend 里放临时测试文件做命令冒烟（含 xlsx 导出→read_rows 预检回读），不污染仓库测试目录 — 自记 2026-11-16 · 证据：ocap_unit_sort_filters GROUP_C 自验证
 - [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
 
+- [P-SD-012] 删除被既有 spec 直接 import 的组件会让整个 spec 文件显示 0 test（总数少一截，不算 failed）；统计失败时须核对"运行数 + 隐藏数 = 基线"，并在 scratch 副本临时改 import 才能看到真实失败 — 自记 2026-11-17 · 证据：ocap_identity_property GROUP_C（373+65=438）
+- [P-SD-013] "不改测试代码"的批次，用 scratch 副本（tar 排除 node_modules 后符号链接）加临时 spec/测试跑冒烟与基线对照，不污染仓库 — 自记 2026-11-17 · 证据：ocap_identity_property GROUP_C 自验证

@@ -25,7 +25,7 @@ import UnitsPick from '@/portal/units/UnitsPick.vue'
 import UnitsReview from '@/portal/units/UnitsReview.vue'
 import UnitsApplications from '@/portal/units/UnitsApplications.vue'
 import UnitsMyAppeals from '@/portal/units/UnitsMyAppeals.vue'
-import MeIdentity from '@/portal/me/MeIdentity.vue'
+import UnitsIdentity from '@/portal/units/UnitsIdentity.vue' // 改写：MeIdentity.vue 已删除，身份卡由 UnitsIdentity 承载（ADR-132）
 import MeProfile from '@/portal/me/MeProfile.vue'
 import MeCancel from '@/portal/me/MeCancel.vue'
 import Login from '@/portal/Login.vue'
@@ -83,18 +83,23 @@ describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
 
   it('TC-UNIT-522 / AC-150-01：页面没有任何"专有部分 ID"或内部编号输入框；逐级选择组件存在', async () => {
     http.get.mockImplementation(table())
-    const { wrapper } = await mountPage(Units, { props: { section: 'pick' } }) // 原：整页；现：选择房屋分区
+    const { wrapper } = await mountPage(Units, { props: { section: 'pick' } }) // 原：整页；现：认证产权分区（旧名"选择房屋"）
     const placeholders = wrapper.findAll('input').map((i) => i.attributes('placeholder') || '')
     expect(placeholders.join('|')).not.toMatch(/ID|编号|专有部分/)
     expect(wrapper.text()).not.toContain('专有部分 ID')
     expect(wrapper.findComponent({ name: 'UnitCascader' }).exists()).toBe(true)
   })
 
-  it('TC-UNIT-523 / AC-150-01：选定房屋后点"申请成为同住人"只提交 {unit_id}，并提示"申请已提交，等待产权业主审批"', async () => {
+  it('TC-UNIT-523 / AC-243-01、AC-236-02（旧 AC-150-01）：选定房屋后点"申请成为同住人"只提交 {unit_id}，并提示"申请已提交，等待产权业主审批"；该按钮已从"认证产权"页迁至"我的同住人申请"页', async () => {
+    // 改写：旧在 UnitsPick 上点"申请成为同住人" → 新在 UnitsApplications 上点；UnitsPick 不再有该按钮
     http.get.mockImplementation(table())
     http.post.mockResolvedValue({ id: 5, status: 'PENDING' })
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
-    const { wrapper } = await mountPage(UnitsPick)
+    const pick = await mountPage(UnitsPick)
+    expect(buttonOf(pick.wrapper, '申请成为同住人')).toBeUndefined()
+    pick.wrapper.unmount()
+    document.body.innerHTML = ''
+    const { wrapper } = await mountPage(UnitsApplications)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 42)
     await flush()
     await buttonOf(wrapper, '申请成为同住人').trigger('click')
@@ -108,7 +113,8 @@ describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper } = await mountPage(UnitsPick)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 7)
-    await wrapper.find('input[placeholder="请输入姓名"]').setValue('张三') // ocap_owner_auth_v2：认证须输入姓名
+    // 改写（AC-238-01）：旧占位"请输入姓名" → 新占位"请输入您本人的姓名（须与业主清册登记的姓名一致）"
+    await wrapper.find('input[placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）"]').setValue('张三') // ocap_owner_auth_v2：认证须输入姓名
     await flush()
     for (const [role, label] of [['HEAD', '户主'], ['OWNER', '产权业主'], ['RESIDENT', '同住人']]) {
       http.post.mockResolvedValueOnce({ unit_id: 7, role })
@@ -199,10 +205,11 @@ describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
 // 拆分同步（MOD-122）：个人中心各区块为独立页 me/*，用例原意不变，仅改挂载对象。
 describe('个人中心 me/* 各页（原 Me.vue）', () => {
   const profile = { account_no: '1000000001', phone: '138****0000', nickname: '张三', gender: 0, birthday: null, email: null, avatar_url: '' }
-  const mountMe = async (over = {}, component = MeIdentity) => {
+  const mountMe = async (over = {}, component = UnitsIdentity) => {
     http.get.mockImplementation(routeTable({
       '/me': ME(null, [HEAD_UNIT], { code: 'HEAD', label: '户主' }), '/me/profile': profile,
-      '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [HEAD_UNIT], pending_review_count: 0 }, ...over
+      '/resident-applications/to-review': [], '/resident-applications/mine': [], '/appeals/mine': [],
+      '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [{ ...HEAD_UNIT, residents: [], pending_application_count: 0, unit_type_label: '住宅', area_display: '89.50 ㎡' }], pending_review_count: 0 }, ...over
     }))
     const mounted = await mountPage(component)
     useAuthStore(mounted.pinia).me = ME(null, [HEAD_UNIT], { code: 'HEAD', label: '户主' })
@@ -210,14 +217,18 @@ describe('个人中心 me/* 各页（原 Me.vue）', () => {
     return mounted
   }
 
-  it('TC-UNIT-530 / AC-157-01、AC-157-05：身份卡列出汇总身份与每套房屋（户主），全部中文且没有编辑身份的控件', async () => {
+  it('TC-UNIT-530 / AC-232-01、AC-157-01、AC-157-05：身份卡（现为"我的身份与房屋"页）列出汇总身份与每套房屋（名称、类型、面积、关系），全部中文且没有编辑身份的输入控件', async () => {
+    // 改写：旧 MeIdentity 身份卡"零按钮" → 新 UnitsIdentity：仍无 input/select 等编辑身份控件；按钮仅"认证产权"（AC-237-01），不含身份编辑
     const { wrapper } = await mountMe()
     const card = wrapper.findAll('.card').find((c) => c.text().includes('身份'))
     expect(card.text()).toContain('汇总身份：户主')
     expect(card.text()).toContain('1栋1单元3层301号')
+    expect(card.text()).toContain('住宅')
+    expect(card.text()).toContain('89.50 ㎡')
     expect(card.text()).toContain('户主')
     expect(card.text()).not.toMatch(/HEAD|OWNER|RESIDENT/)
-    expect(card.findAll('input,select,button')).toHaveLength(0)
+    expect(card.findAll('input,select')).toHaveLength(0)
+    expect(card.findAll('button').map((b) => b.text())).toEqual(['认证产权'])
   })
 
   it('TC-UNIT-531 / AC-165-03：更换头像处提示"jpg/png，不超过 2 MB"，选择器仅允许 jpg/png；超大或错误格式在上传前被拒', async () => {

@@ -20,8 +20,8 @@ from apps.core.permissions import IsAdmin, IsMember
 from apps.core.ratelimit import RateLimiter, client_ip
 from apps.core.serializers import page_response
 from apps.integrations.wechat import WeChatError, get_wechat_client
-from apps.residency.auto_bind import AutoBindService
 from apps.residency.models import Membership
+from apps.residency.phone_match import PhoneMatchService
 
 from .directory import real_name_q
 from .models import AdminAccount, User
@@ -114,7 +114,10 @@ class RegisterView(APIView):
         user = AccountService.register_by_phone(phone=phone, code=code, email=data.get("email"))
         token = AccountService.issue_token(user)
         result = auth_result(user, token, is_new=True)
-        result["auto_bound"] = [item.as_dict() for item in AutoBindService.bind_by_phone(user)]
+        # ADR-130：auto_bound 已弃用、恒为空（保留仅为兼容）；改为开启待确认状态，由用户在引导页确认后绑定
+        result["auto_bound"] = []
+        count = PhoneMatchService.open_prompt(user)
+        result["registry_match"] = {"pending": count > 0, "count": count}
         return Response(result, status=status.HTTP_201_CREATED)
 
 

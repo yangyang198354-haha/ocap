@@ -63,3 +63,13 @@ class ResidentApplication(models.Model):
             models.UniqueConstraint(fields=["applicant", "unit", "pending_slot"],
                                     name="uniq_resident_application_pending")
         ]
+
+
+class PhoneMatchPrompt(models.Model):
+    """MOD-132 / ADR-128：手机号匹配清册后的"待确认"状态；不存手机号、清册信息或单元快照。"""
+    STATUSES = [("PENDING", "待确认"), ("DISMISSED", "已选不是"), ("DONE", "已确认"), ("EXPIRED", "已失效")]
+
+    user = models.OneToOneField("accounts.User", on_delete=models.CASCADE, related_name="phone_match_prompt")
+    status = models.CharField(max_length=12, choices=STATUSES, default="PENDING")
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)

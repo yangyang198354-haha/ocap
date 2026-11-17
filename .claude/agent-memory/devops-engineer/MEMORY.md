@@ -37,4 +37,5 @@
 - [M-DE-035] 纯静态替换：先传目标机 /tmp 并校验 tar SHA256、文件数、index.html SHA256，再 rm + cp -a 压缩不一致窗口；快照同时落逐文件哈希清单，回滚后 sha256sum -c 只应出现 OK — conf 0.8 · 证据 ocap_brand_layout deployment_plan DEPLOY-003/004、ROLLBACK-004，E1 计划与 E2 执行两次独立出现 · 首见 2026-11-17 · 命中 2
 ## 用户偏好与禁止项
 ## 待验证
+- [P-DE-004] 含 `set -e` 的远端脚本里，期望计数为 0 的 `grep -c` 退出码为 1 会中断脚本，须加 `|| true`；带迁移的回滚顺序固定为停服务→`migrate <app> <上一迁移>`→还原代码→启动，迁移文件必须仍在磁盘上 — 自记 2026-11-17 · 证据 ocap_identity_property deployment_plan DEPLOY-001/ROLLBACK-005
 - [P-DE-003] 目标机 Freeark nginx 有含 woff2 的静态正则（sites-enabled/freeark:44），但 `^~ /ocap/` 前缀块优先，/ocap/ 下 woff2 由 ocap 站点给 font/woff2；PRE-14 可据此预测 V-08 — 自记 2026-11-17 · 证据 deployment_report PRE-14/V-08（目标机配置，git 不可核验，且行号易变）

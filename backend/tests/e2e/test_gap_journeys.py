@@ -18,7 +18,7 @@ from tests.support import ApiTestBase, next_phone
 
 class AccountIdentityLifecycleJourneyTests(ApiTestBase):
     def test_register_certify_change_phone_cancel_reregister_and_recertify(self):
-        """TC-E2E-014：注册（清册号码自动绑定户主）→ 换号 → 旧号不可登录/新号同账号 → 注销 → 同号再注册为全新游客
+        """TC-E2E-014：注册（清册号码引导确认后绑定户主）→ 换号 → 旧号不可登录/新号同账号 → 注销 → 同号再注册为全新游客
         → 清册号码已被管理员改为新号后重新认证。"""
         old_phone, new_phone = next_phone(), next_phone()
         unit = self.make_unit(phones=[old_phone])
@@ -28,8 +28,12 @@ class AccountIdentityLifecycleJourneyTests(ApiTestBase):
         reg = self.api("post", "/auth/register", {"phone": old_phone, "code": code})
         self.assert_ok(reg, 201)
         user_id, token = reg.data["user"]["id"], reg.data["token"]
-        # US-102：清册已登记该号码，注册即自动认证户主（原“注册后为游客”不再适用）
-        self.assertEqual([row["unit_id"] for row in reg.data["auto_bound"]], [unit.id])
+        # 旧断言：注册即 auto_bound==[unit.id]（US-102）→ 新断言（ADR-130、AC-241-01）：注册后 auto_bound==[]、
+        # registry_match.pending，用户确认后才认证户主
+        self.assertEqual(reg.data["auto_bound"], [])
+        self.assertEqual(reg.data["registry_match"], {"pending": True, "count": 1})
+        self.assertNotIn("产权业主", self.api("get", "/me", token=token).data["identities"]["labels"])
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]}, token=token))
         self.assertIn("产权业主", self.api("get", "/me", token=token).data["identities"]["labels"])
 
         # 换号：身份保留，旧号不能再登录，新号进入同一账号

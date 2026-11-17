@@ -682,17 +682,34 @@ class LegacyCompatibilityTests(RegistryImportTestBase):
 
 
 class AutoBindTests(RegistryImportTestBase):
+    """改写（ocap_identity_property GR-C-001-a）：旧行为"注册/绑定手机号即静默认证"已被 ADR-130 取消，
+    现为"注册/绑定后 auto_bound 恒空、registry_match.pending、确认后才有 Membership"。"""
+
     def setUp(self):
         super().setUp()
         set_wechat_client(FakeWeChatClient())
         self.addCleanup(set_wechat_client, None)
 
+    def confirm(self, token, unit_ids):
+        resp = self.api("post", "/me/registry-matches/confirm", {"unit_ids": list(unit_ids)}, token=token)
+        self.assert_ok(resp)
+        return resp
+
     def test_tc_int_151_register_auto_binds_head(self):
-        """TC-INT-151 / AC-102-01：清册手机号注册即认证为户主，来源清册。"""
+        """TC-INT-151 / AC-241-01、AC-240-01（旧 AC-102-01）：注册后不静默绑定；确认后才认证为户主，来源清册。
+        旧断言：注册响应 auto_bound 含该专有部分、Membership 已存在 → 新断言：auto_bound==[]、registry_match.pending、
+        注册后无 Membership，confirm 后 HEAD/REGISTRY。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000031"])
-        _, token, _ = self.register("13800000031")
+        code = self.request_code("13800000031", "REGISTER")
+        reg = self.api("post", "/auth/register", {"phone": "13800000031", "code": code})
+        self.assert_ok(reg, 201)
+        self.assertEqual(reg.data["auto_bound"], [])
+        self.assertEqual(reg.data["registry_match"], {"pending": True, "count": 1})
+        token = reg.data["token"]
         user = self.user_of(token)
+        self.assertFalse(Membership.objects.filter(user=user).exists())
+        self.assertEqual(self.confirm(token, [unit.id]).data["succeeded"], 1)
         membership = Membership.objects.get(user=user, unit=unit)
         self.assertEqual((membership.role, membership.source), ("HEAD", "REGISTRY"))
         me = self.api("get", "/me", token=token)
@@ -700,7 +717,7 @@ class AutoBindTests(RegistryImportTestBase):
         self.assertIn("产权业主", me.data["identities"]["labels"])
 
     def test_tc_int_152_register_binds_all_units(self):
-        """TC-INT-152 / AC-102-02：同一手机号登记 3 个专有部分，全部绑定且相互独立。"""
+        """TC-INT-152 / AC-239-10、AC-240-02：同一手机号登记 3 个专有部分，确认后全部绑定且相互独立（注册时不绑定）。"""
         phone = "13800000032"
         units = []
         for index in range(3):
@@ -709,13 +726,16 @@ class AutoBindTests(RegistryImportTestBase):
             units.append(unit)
         user, token, _ = self.register(phone)
         user = self.user_of(token)
+        # 旧断言：注册即 3 条 Membership → 新断言：注册后 0 条，confirm 全部 3 个 unit_id 后 3 条（均 HEAD）
+        self.assertEqual(Membership.objects.filter(user=user).count(), 0)
+        self.assertEqual(self.confirm(token, [u.id for u in units]).data["succeeded"], 3)
         self.assertEqual(Membership.objects.filter(user=user, ended_at__isnull=True).count(), 3)
         self.assertEqual(set(Membership.objects.filter(user=user).values_list("unit_id", flat=True)),
                          {unit.id for unit in units})
         self.assertEqual(Membership.objects.filter(user=user, role="HEAD").count(), 3)
 
     def test_tc_int_153_second_owner_keeps_single_head(self):
-        """TC-INT-153 / AC-102-03：已有户主时第二位业主为普通产权业主。"""
+        """TC-INT-153 / AC-240-05（旧 AC-102-03）：已有户主时第二位业主确认后为普通产权业主。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000033"])
         self.add_owner(unit, "李娜", ["13800000034"])
@@ -723,6 +743,10 @@ class AutoBindTests(RegistryImportTestBase):
         first = self.user_of(token_first)
         _, token_second, _ = self.register("13800000034")
         second = self.user_of(token_second)
+        # 旧断言：注册即绑定 → 新断言：各自 confirm，先确认者 HEAD、后确认者 OWNER
+        self.assertFalse(Membership.objects.filter(unit=unit).exists())
+        self.confirm(token_first, [unit.id])
+        self.confirm(token_second, [unit.id])
         self.assertEqual(Membership.objects.get(user=first, unit=unit).role, "HEAD")
         self.assertEqual(Membership.objects.get(user=second, unit=unit).role, "OWNER")
         self.assertEqual(Membership.objects.filter(unit=unit, head_slot=1, ended_at__isnull=True).count(), 1)
@@ -733,7 +757,7 @@ class AutoBindTests(RegistryImportTestBase):
         self.assertEqual(Membership.objects.filter(user=self.user_of(token)).count(), 0)
 
     def test_tc_int_155_wechat_bind_phone_auto_binds(self):
-        """TC-INT-155 / AC-102-06：微信用户首次绑定清册手机号后自动认证。"""
+        """TC-INT-155 / AC-239-05、AC-242-04（旧 AC-102-06）：微信用户首次绑定清册手机号后引导确认，确认后认证。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000036"])
         wx = self.api("post", "/auth/wechat/miniapp", {"code": "wx-registry-bind"})
@@ -743,12 +767,16 @@ class AutoBindTests(RegistryImportTestBase):
                          token=wx.data["token"])
         self.assert_ok(bound)
         self.assertFalse(bound.data["merged"])
-        self.assertEqual([item["unit_id"] for item in bound.data["auto_bound"]], [unit.id])
+        # 旧断言：auto_bound==[unit.id] 且已有 HEAD → 新断言：auto_bound==[]、registry_match.pending，confirm 后才有 HEAD
+        self.assertEqual(bound.data["auto_bound"], [])
+        self.assertEqual(bound.data["registry_match"], {"pending": True, "count": 1})
+        self.assertFalse(Membership.objects.filter(user_id=wx.data["user"]["id"], unit=unit).exists())
+        self.confirm(wx.data["token"], [unit.id])
         self.assertEqual(Membership.objects.filter(user_id=wx.data["user"]["id"], unit=unit,
                                                    role="HEAD").count(), 1)
 
     def test_tc_int_156_resident_upgraded(self):
-        """TC-INT-156 / AC-102-07：同住人在自动绑定后升级为产权业主。"""
+        """TC-INT-156 / AC-240-05（旧 AC-102-07）：同住人在确认后升级为产权业主。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000037"])
         wx = self.api("post", "/auth/wechat/miniapp", {"code": "wx-registry-resident"})
@@ -760,19 +788,27 @@ class AutoBindTests(RegistryImportTestBase):
         bound = self.api("post", "/me/phone/bind", {"phone": "13800000037", "code": code},
                          token=wx.data["token"])
         self.assert_ok(bound)
+        # 旧断言：绑定后同住人即升级 → 新断言：绑定后仍为 RESIDENT，confirm 后升级为 HEAD
+        self.assertEqual(Membership.objects.get(user_id=user_id, unit=unit, ended_at__isnull=True).role,
+                         "RESIDENT")
+        self.confirm(wx.data["token"], [unit.id])
         self.assertEqual(Membership.objects.get(user_id=user_id, unit=unit, ended_at__isnull=True).role,
                          "HEAD")
         self.assertEqual(Membership.objects.get(user_id=user_id, unit=unit, ended_at__isnull=False)
                          .end_reason, "UPGRADED")
 
     def test_tc_int_157_auto_bind_audit_and_no_pii(self):
-        """TC-INT-157 / AC-102-08：审计记录来源为清册自动绑定，提示与日志不含姓名与手机号明文。"""
+        """TC-INT-157 / AC-240-05（旧 AC-102-08）：确认后审计记录来源为清册自动绑定，提示与日志不含姓名与手机号明文。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "张伟", ["13800000038"])
         user, token, _ = self.register("13800000038")
+        # 旧断言：注册后即有审计 → 新断言：注册后无该审计，confirm 后有且含脱敏手机号
+        self.assertFalse(AuditLog.objects.filter(action="CERTIFY_BY_REGISTRY").exists())
+        self.confirm(token, [unit.id])
         log = AuditLog.objects.filter(action="CERTIFY_BY_REGISTRY").order_by("id").last()
         self.assertIsNotNone(log)
         self.assertEqual(log.detail["origin_label"], "清册自动绑定")
+        self.assertEqual(log.detail["phone_masked"], "138****0038")
         detail = str(log.detail)
         self.assertNotIn("张伟", detail)
         self.assertNotIn("13800000038", detail)
@@ -795,7 +831,7 @@ class AutoBindTests(RegistryImportTestBase):
         self.assertEqual(certified.data["role"], "HEAD")
 
     def test_tc_int_166_phone_bind_without_wechat_auto_binds(self):
-        """TC-INT-166 / AC-102-10：已注册未绑定手机号的用户首次绑定清册手机号后自动认证。"""
+        """TC-INT-166 / AC-239-05（旧 AC-102-10）：已注册未绑定手机号的用户首次绑定清册手机号后引导确认，确认后认证。"""
         unit = self.make_registry_unit()
         self.add_owner(unit, "钱七", ["13800000040"])
         user = User.objects.create(account_no=next_account_no(), phone=None, nickname="待绑定用户")
@@ -803,7 +839,12 @@ class AutoBindTests(RegistryImportTestBase):
         code = self.request_me_code(token, "BIND_PHONE", target="13800000040")
         bound = self.api("post", "/me/phone/bind", {"phone": "13800000040", "code": code}, token=token)
         self.assert_ok(bound)
-        self.assertEqual([item["unit_id"] for item in bound.data["auto_bound"]], [unit.id])
+        # 旧断言：auto_bound==[unit.id]、已有 HEAD 与审计 → 新断言：auto_bound==[]、pending，confirm 后才有 HEAD 与审计
+        self.assertEqual(bound.data["auto_bound"], [])
+        self.assertEqual(bound.data["registry_match"], {"pending": True, "count": 1})
+        self.assertEqual(Membership.objects.filter(user=user, unit=unit).count(), 0)
+        self.assertFalse(AuditLog.objects.filter(action="CERTIFY_BY_REGISTRY").exists())
+        self.confirm(token, [unit.id])
         self.assertEqual(Membership.objects.filter(user=user, unit=unit, role="HEAD").count(), 1)
         self.assertTrue(AuditLog.objects.filter(action="CERTIFY_BY_REGISTRY").exists())
 

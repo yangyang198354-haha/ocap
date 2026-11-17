@@ -7,6 +7,7 @@ from django.db.models import Count
 
 from apps.accounts.directory import ROLE_LABELS, IdentityView, identity_view
 from apps.committee.models import Seat
+from apps.registry import display
 from apps.registry.ordering import unit_sort_key
 
 from .models import Membership, ResidentApplication
@@ -26,6 +27,8 @@ class HousingUnit(TypedDict):
     specific_part: str
     role: str
     role_label: str
+    unit_type_label: str
+    area_display: str
     certified_at: datetime
     residents: list[HousingResident]
     pending_application_count: int
@@ -67,7 +70,9 @@ def housing_view(user) -> HousingPayload:
         is_owner = m.role in OWNER_ROLES
         units.append({
             "unit_id": m.unit_id, "specific_part": m.unit.specific_part, "role": m.role,
-            "role_label": ROLE_LABELS.get(m.role, "产权业主"), "certified_at": m.certified_at,
+            "role_label": ROLE_LABELS.get(m.role, "产权业主"),
+            "unit_type_label": display.unit_type_label(m.unit), "area_display": display.area_display(m.unit),
+            "certified_at": m.certified_at,
             "residents": residents_by_unit.get(m.unit_id, []) if is_owner else [],
             "pending_application_count": pending_by_unit.get(m.unit_id, 0) if is_owner else 0,
         })

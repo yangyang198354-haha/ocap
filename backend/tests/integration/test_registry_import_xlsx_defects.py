@@ -126,7 +126,9 @@ class XlsxImportTests(XlsxImportBase):
 
 class AutoBindDefectTests(RegistryImportTestBase):
     def test_tc_int_308_one_unit_bind_failure_keeps_others(self):
-        """TC-INT-308 / AC-102-02（DEF-009）：同号 3 个专有部分，1 个绑定抛异常，其余 2 个注册时仍绑定。"""
+        """TC-INT-308 / AC-240-04（DEF-009，旧 AC-102-02）：同号 3 个专有部分，确认时 1 个绑定抛异常，其余 2 个仍绑定。
+        旧断言：注册响应 auto_bound 含 2 套 → 新断言：注册后 auto_bound==[]；confirm 3 个 unit_id，
+        succeeded==2、failed==1，错误日志来自 apps.residency.auto_bind。"""
         phone = "13800000041"
         units = []
         for room in ("101", "102", "103"):
@@ -136,18 +138,24 @@ class AutoBindDefectTests(RegistryImportTestBase):
         bad = units[1].id
         real = MembershipService.certify_owner
 
-        def flaky(user_id, unit_id, source, origin=None):
+        def flaky(user_id, unit_id, source, origin=None, detail_extra=None):
             if unit_id == bad:
                 raise RuntimeError("模拟单元绑定失败")
-            return real(user_id, unit_id, source, origin=origin)
+            return real(user_id, unit_id, source, origin=origin, detail_extra=detail_extra)
 
+        code = self.request_code(phone, "REGISTER")
+        resp = self.api("post", "/auth/register", {"phone": phone, "code": code})
+        self.assertEqual(resp.status_code, 201, resp.content)
+        self.assertEqual(resp.data["auto_bound"], [])
+        self.assertEqual(resp.data["registry_match"], {"pending": True, "count": 3})
+        user = self.user_of(resp.data["token"])
+        self.assertFalse(Membership.objects.filter(user=user).exists())
         with mock.patch.object(MembershipService, "certify_owner", side_effect=flaky), \
                 self.assertLogs("apps.residency.auto_bind", level="ERROR"):
-            code = self.request_code(phone, "REGISTER")
-            resp = self.api("post", "/auth/register", {"phone": phone, "code": code})
-        self.assertEqual(resp.status_code, 201, resp.content)
-        self.assertEqual({item["unit_id"] for item in resp.data["auto_bound"]}, {units[0].id, units[2].id})
-        user = self.user_of(resp.data["token"])
+            confirmed = self.api("post", "/me/registry-matches/confirm",
+                                 {"unit_ids": [u.id for u in units]}, token=resp.data["token"])
+        self.assert_ok(confirmed)
+        self.assertEqual((confirmed.data["succeeded"], confirmed.data["failed"]), (2, 1))
         active = Membership.objects.filter(user=user, ended_at__isnull=True)
         self.assertEqual(set(active.values_list("unit_id", flat=True)), {units[0].id, units[2].id})
         self.assertEqual(active.filter(role="HEAD", source="REGISTRY").count(), 2)

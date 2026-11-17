@@ -178,23 +178,25 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     expect(side(wrapper).findAll('.side-item.is-active .side-label').map((e) => e.text())).toEqual(['决议'])
     expect(side(wrapper).findAll('.side-sub-item.is-active')).toHaveLength(0)
 
-    // 4 我的房屋：同时只展开一个（AC-216-03）；待我审批二级项带角标 2；通过一条后角标变 1（US-214、AC-214-02/03）
+    // 4 我的房屋：同时只展开一个（AC-216-03）；二级项 5 个（AC-236-01）；"我的身份与房屋"项带角标 2，页面底部嵌入待审批卡片；通过一条后角标变 1
+    // 改写：旧"点二级项'待我审批'进入 /units/review、其页只有一个标题块" → 新"点'我的身份与房屋'进入 /units，页面含身份卡 + 底部待审批卡"（ADR-133、AC-234-01、AC-235-01）
     await toggle(wrapper, '我的房屋').trigger('click')
     expect(toggle(wrapper, '决议').attributes('aria-expanded')).toBe('false')
-    expect(side(wrapper).findAll('.side-sub-item')).toHaveLength(6)
+    expect(side(wrapper).findAll('.side-sub-item')).toHaveLength(5)
+    expect(sub(wrapper, '待我审批')).toBeUndefined()
     // 注：刚登录时侧栏角标数据尚未取到，进入任一 /units* 页前不显示——该缺陷见 TC-INT-914（DEF-002），此处按"进入后"断言
-    await sub(wrapper, '待我审批').trigger('click')
-    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units/review'))
+    await sub(wrapper, '我的身份与房屋').trigger('click')
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units'))
     await settle()
-    expect(wrapper.find('h3.title').text()).toContain('待我审批的同住人申请')
-    expect(sub(wrapper, '待我审批').find('.side-badge').text()).toBe('2')
+    expect(wrapper.find('h3.title').text()).toContain('我的身份与房屋')
+    expect(sub(wrapper, '我的身份与房屋').find('.side-badge').text()).toBe('2')
     expect(wrapper.find('main').text()).toContain('小王 → 1栋1单元3层301号')
-    expect(wrapper.find('main').findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))).toEqual(['待我审批的同住人申请']) // 其余 5 块不在页面上（AC-214-02）
+    expect(wrapper.find('main').findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))).toEqual(['我的身份与房屋', '待我审批的同住人申请']) // 待审批卡片在最底部（AC-234-01）
     const approve = wrapper.findAll('button').find((b) => b.text() === '通过')
     await approve.trigger('click')
     await settle()
     expect(http.post).toHaveBeenCalledWith('/resident-applications/8/decision', { decision: 'APPROVE' })
-    expect(sub(wrapper, '待我审批').find('.side-badge').text()).toBe('1')
+    expect(sub(wrapper, '我的身份与房屋').find('.side-badge').text()).toBe('1')
 
     // 5 信息公开：无二级项一次点击直达（US-229、AC-229-01、AC-217-01）
     await side(wrapper).findAll('a.side-item').find((a) => a.text().includes('信息公开')).trigger('click')
@@ -207,7 +209,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     await wrapper.find('header.topbar button.user-menu-trigger').trigger('click')
     await settle()
     expect([...document.body.querySelectorAll('.el-dropdown-menu__item')].map((e) => e.textContent.trim())).toEqual(
-      ['界面风格', '我的身份', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销', '退出登录']
+      ['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销', '退出登录'] // 改写：第 2 项改名（AC-233-01）
     )
     dropdownItem('个人资料').click()
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/profile'))
@@ -230,9 +232,16 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     expect(html().getAttribute('data-theme')).toBe('terminal')
     expect(S.puts).toEqual(['terminal'])
 
-    // 8 旧地址兼容：/units#review → /units/review；/me（宽屏）→ /me/profile；未知地址 → /（AC-221-01/02、AC-210-04）
+    // 8 旧地址兼容：/units#review 与 /units/review → /units（同页，AC-235-03）；/me/identity 同页不跳转（AC-233-03）；/me（宽屏）→ /me/profile；未知地址 → /（AC-221-01、AC-210-04）
+    // 改写：旧 /units#review → /units/review（独立二级页）
     await go('/units#review')
-    expect(router.currentRoute.value.path).toBe('/units/review')
+    expect(router.currentRoute.value.path).toBe('/units')
+    await go('/units/review')
+    expect(router.currentRoute.value.path).toBe('/units')
+    expect(router.currentRoute.value.hash).toBe('#review')
+    await go('/me/identity')
+    expect(router.currentRoute.value.path).toBe('/me/identity')
+    expect(wrapper.find('main h3.title').text()).toContain('我的身份与房屋')
     await go('/me')
     expect(router.currentRoute.value.path).toBe('/me/profile')
     await go('/no/such/page')
@@ -270,9 +279,10 @@ describe('TC-E2E-802 用户端旅程：非业委会成员与窄屏', () => {
     expect(router.currentRoute.value.path).toBe('/claims')
     expect(wrapper.find('h3.title').text()).toBe('报销 / 备用金')
     expect(wrapper.findAll('button').find((b) => b.text().includes('新建申请'))).toBeUndefined()
-    // 3 窄屏二级切换条：我的房屋 6 项，点"我的申诉"只显示该项（US-230、AC-230-01）
+    // 3 窄屏二级切换条：我的房屋 5 项（改写：旧 6 项，AC-236-04），点"我的申诉"只显示该项（US-230、AC-230-01）
     await go('/units')
-    expect(wrapper.findAll('nav.sub-nav-bar .sub-nav-item')).toHaveLength(6)
+    expect(wrapper.findAll('nav.sub-nav-bar .sub-nav-item')).toHaveLength(5)
+    expect(wrapper.find('nav.sub-nav-bar').text()).not.toContain('选择房屋')
     await wrapper.findAll('nav.sub-nav-bar a').find((a) => a.text() === '我的申诉').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units/appeals'))
     await settle()

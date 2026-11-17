@@ -21,6 +21,10 @@ export const meApi = {
   me: () => get('/me'),
   // 我的房屋聚合（IFC-261）：汇总身份、各房屋身份、同住人名单、待审数量
   housing: () => get('/me/housing'),
+  // 手机号匹配清册后的引导确认（IFC-332/333/334）：请求不带手机号与姓名，服务端按本人已验证手机号重算
+  registryMatches: () => get('/me/registry-matches'),
+  confirmRegistryMatches: (unitIds) => post('/me/registry-matches/confirm', { unit_ids: unitIds }),
+  dismissRegistryMatches: () => post('/me/registry-matches/dismiss', {}),
   // 当前生效的规则限制（IFC-272）
   limits: () => get('/system/limits'),
   profile: () => get('/me/profile'),

@@ -1,13 +1,16 @@
 <template>
   <ThemeRoot>
   <view>
+    <RegistryMatchCard ref="matchCard" @resolved="onMatchResolved" />
     <view class="card">
       <view class="title">我的身份与房屋</view>
       <view class="muted">汇总身份：{{ housing.summary.label }}</view>
       <view v-if="!housing.units.length" class="muted">暂无已认证房屋</view>
+      <view v-if="!housing.units.length" class="muted">您还没有认证任何专有部分，请先认证产权</view>
       <view v-for="unit in housing.units" :key="unit.unit_id" class="list-item">
         <view class="row">
           <text>{{ unit.specific_part }}</text>
+          <text class="muted" style="margin-left: 12rpx">{{ unit.unit_type_label }} · {{ unit.area_display }}</text>
           <text class="muted" style="margin-left: 12rpx">{{ unit.role_label }}</text>
           <button v-if="unit.role === 'RESIDENT'" size="mini" style="margin-left: 12rpx" @click="leave(unit)">退出</button>
         </view>
@@ -19,26 +22,14 @@
           </view>
         </view>
       </view>
+      <button class="btn" style="margin-top: 16rpx" @click="goCertify">认证产权</button>
     </view>
-    <view class="card" id="review">
-      <view class="title">待我审批的同住人申请<text v-if="toReview.length" class="muted">（{{ toReview.length }}）</text></view>
-      <view v-if="!toReview.length" class="muted">暂无待审批的同住人申请</view>
-      <view v-for="item in toReview" :key="item.id" class="list-item">
-        <text>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ formatDateTime(item.created_at) }}</text>
-        <view class="row" style="margin-top: 8rpx">
-          <button size="mini" @click="decideResident(item.id, 'APPROVE')">通过</button>
-          <button size="mini" @click="decideResident(item.id, 'REJECT')">拒绝</button>
-        </view>
-      </view>
-    </view>
-    <view class="card">
-      <view class="title">选择房屋</view>
+    <view class="card" id="certify">
+      <view class="title">认证产权</view>
       <UnitPicker v-model="pickedUnitId" />
-      <input v-model="certifyName" class="field mt-16" maxlength="64" placeholder="请输入姓名" />
+      <input v-model="certifyName" class="field mt-16" maxlength="64" placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）" />
       <button class="btn" style="margin-top: 20rpx" @click="certify">认证</button>
-      <button style="margin-top: 16rpx" @click="applyResident">申请成为同住人</button>
-      <view class="muted">输入的姓名与当前手机号和清册登记的同一位业主一致时可立即认证；不一致或没有手机号时，请在下方输入产权人名字并上传产权证明提交申诉。同住人须先有产权业主，由产权业主审批。</view>
+      <view class="muted">您本人的姓名与当前手机号和清册登记的同一位业主一致时可立即认证；不一致或没有手机号时，请在下方输入产权人名字并上传产权证明提交申诉。如需申请成为同住人，请使用下方"我的同住人申请"。</view>
     </view>
     <view class="card">
       <view class="title">认证申诉</view>
@@ -50,6 +41,9 @@
     </view>
     <view class="card">
       <view class="title">我的同住人申请</view>
+      <view class="muted">申请成为同住人无需输入姓名，同住人须先有产权业主，由产权业主审批。</view>
+      <UnitPicker v-model="applyUnitId" />
+      <button style="margin-top: 16rpx" @click="applyResident">申请成为同住人</button>
       <view v-if="!myApplications.length" class="muted">暂无同住人申请</view>
       <view v-for="item in myApplications" :key="item.id" class="list-item">
         <text>{{ item.unit?.specific_part }}</text>
@@ -67,6 +61,18 @@
         <view v-if="item.status === 'REJECTED' && item.reject_reason" class="muted">驳回原因：{{ item.reject_reason }}</view>
       </view>
     </view>
+    <view v-if="ownsAnyUnit" class="card" id="review">
+      <view class="title">待我审批的同住人申请<text v-if="toReview.length" class="muted">（{{ toReview.length }}）</text></view>
+      <view v-if="!toReview.length" class="muted">暂无待审批的同住人申请</view>
+      <view v-for="item in toReview" :key="item.id" class="list-item">
+        <text>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</text>
+        <text class="muted" style="margin-left: 12rpx">{{ formatDateTime(item.created_at) }}</text>
+        <view class="row" style="margin-top: 8rpx">
+          <button size="mini" @click="decideResident(item.id, 'APPROVE')">通过</button>
+          <button size="mini" @click="decideResident(item.id, 'REJECT')">拒绝</button>
+        </view>
+      </view>
+    </view>
   </view>
   </ThemeRoot>
 </template>
@@ -74,7 +80,8 @@
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
 import UnitPicker from '@/components/UnitPicker.vue'
-import { reactive, ref } from 'vue'
+import RegistryMatchCard from '@/components/RegistryMatchCard.vue'
+import { computed, reactive, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 import { confirmDanger } from '@/utils/confirm'
@@ -83,6 +90,8 @@ import { useAuthStore } from '@/store/auth'
 
 const auth = useAuthStore()
 const pickedUnitId = ref(null)
+const applyUnitId = ref(null)
+const matchCard = ref(null)
 const certifyName = ref('')
 const appealOwnerName = ref('')
 const proofIds = ref([])
@@ -93,6 +102,17 @@ const myApplications = ref([])
 const myAppeals = ref([])
 
 const isOwner = (unit) => unit.role === 'HEAD' || unit.role === 'OWNER'
+// 仅产权业主显示"待我审批"卡片（仅用于展示；权限由后端 403 把关）
+const ownsAnyUnit = computed(() => housing.units.some((unit) => isOwner(unit)))
+
+function goCertify() {
+  uni.pageScrollTo?.({ selector: '#certify' })
+}
+
+async function onMatchResolved() {
+  await auth.fetchMe().catch(() => null)
+  await refresh()
+}
 
 function toast(title) {
   uni.showToast({ title, icon: 'none' })
@@ -145,9 +165,9 @@ async function certify() {
 }
 
 async function applyResident() {
-  if (!pickedUnitId.value) return toast('请先选择房号')
+  if (!applyUnitId.value) return toast('请先选择房号')
   try {
-    await api.createResidentApplication({ unit_id: pickedUnitId.value })
+    await api.createResidentApplication({ unit_id: applyUnitId.value })
     toast('申请已提交，等待产权业主审批')
     await loadLists()
   } catch (e) {

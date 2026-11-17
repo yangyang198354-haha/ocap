@@ -88,9 +88,10 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     expect(offenders).toEqual([])
   })
 
-  it('TC-INT-923 / REQ-NFUNC-040：api.js 导出的函数集合与契约基线一致（本批未新增/删除接口函数）', () => {
+  it('TC-INT-923 / REQ-NFUNC-044（旧 REQ-NFUNC-040）：api.js 导出的函数集合与契约基线一致（本批仅新增 meApi 的 3 个 registry-matches 函数）', () => {
     const names = Object.fromEntries(CLIENTS.map((c) => [c, Object.keys(EXPORTS[c] || {}).sort()]))
-    expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'housing', 'limits', 'me', 'profile', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'verifyEmail'])
+    // 改写：meApi 基线加入 confirmRegistryMatches / dismissRegistryMatches / registryMatches（IFC-343）
+    expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'verifyEmail'])
     expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview'])
     expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'resubmit', 'vote', 'withdraw'])
     expect(names.attachmentApi).toEqual(['download', 'upload'])
@@ -110,6 +111,9 @@ describe('请求 方法+路径 与后端路由对应', () => {
     ['member', () => api.meApi.setPassword({ password: 'a' }), 'PUT', '/me/password'],
     ['member', () => api.meApi.verifyEmail('123456', 'a@b.cn'), 'POST', '/me/email/verify'],
     ['member', () => api.meApi.cancelAccount('13900000000', '123456'), 'POST', '/me/cancel'],
+    ['member', () => api.meApi.registryMatches(), 'GET', '/me/registry-matches'],
+    ['member', () => api.meApi.confirmRegistryMatches([1, 2]), 'POST', '/me/registry-matches/confirm'],
+    ['member', () => api.meApi.dismissRegistryMatches(), 'POST', '/me/registry-matches/dismiss'],
     ['member', () => api.meApi.theme(), 'GET', '/me/theme'],
     ['member', () => api.meApi.setTheme('bento'), 'PUT', '/me/theme'],
     ['member', () => api.unitApi.options({}), 'GET', '/units/options'],

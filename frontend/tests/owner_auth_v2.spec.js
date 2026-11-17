@@ -28,7 +28,7 @@ const HEAD_UNIT = { unit_id: 1, specific_part: '1栋1单元3层301号', role: 'H
 const HOUSING = { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 }
 const unitsTable = (over = {}) => routeTable({
   '/me': { profile: { id: 1, nickname: '张三' }, identities: { is_guest: true, units: [], labels: [], summary: { code: 'GUEST', label: '游客' }, committee: null } },
-  '/me/housing': HOUSING, '/resident-applications/to-review': [], '/resident-applications/mine': [], '/appeals/mine': [],
+  '/me/housing': HOUSING, '/me/registry-matches': { pending: false, total: 0, units: [] }, '/resident-applications/to-review': [], '/resident-applications/mine': [], '/appeals/mine': [],
   '/units/options': { level: 'building', skipped: [], has_empty: false, options: [{ value: '1' }] }, ...over
 })
 
@@ -51,6 +51,8 @@ beforeEach(() => {
 })
 
 // ------------------------------------------------------------------ 我的房屋：姓名输入与转申诉（US-199~202）
+// 改写（ocap_identity_property GR-C-001-a，AC-238-01）：姓名框占位由"请输入姓名"改为"请输入您本人的姓名（须与业主清册登记的姓名一致）"，
+// 旧断言按旧占位取元素 → 新断言按新占位取元素；"请输入姓名"仍是姓名为空时的提示文案（AC-238-03），原断言不变。
 // 分区同步（ocap_brand_layout MOD-123）：原 Units.vue 整页拆为 UnitsPick（认证产权）与 UnitsAppeal（认证申诉，自带房屋选择），
 // 用例原意与断言不变，仅改挂载对象；TC-669 的"已选房屋保留"按 OQ-B03 改为"只带姓名、房屋需重选、未选房屋禁用提交"。
 describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', () => {
@@ -68,7 +70,7 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     const { wrapper } = await mountWithUnit(UnitsPick)
     await buttonOf(wrapper, '认证产权').trigger('click')
     await flush()
-    await wrapper.find('input[placeholder="请输入姓名"]').setValue('   ')
+    await wrapper.find('input[placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）"]').setValue('   ')
     await buttonOf(wrapper, '认证产权').trigger('click')
     await flush()
     expect(warn).toHaveBeenCalledWith('请输入姓名')
@@ -80,7 +82,7 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper } = await mountWithUnit(UnitsPick, 7)
     http.post.mockResolvedValue({ unit_id: 7, role: 'HEAD' })
-    await wrapper.find('input[placeholder="请输入姓名"]').setValue('  张三 ')
+    await wrapper.find('input[placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）"]').setValue('  张三 ')
     await buttonOf(wrapper, '认证产权').trigger('click')
     await flush()
     expect(http.post).toHaveBeenCalledWith('/certifications', { unit_id: 7, name: '张三' })
@@ -91,7 +93,7 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
     const { wrapper, router, pinia } = await mountWithUnit(UnitsPick, 7)
     http.post.mockRejectedValue({ code: 'OWNER_NOT_MATCHED', message: '清册该户业主为李某某 138****0001', details: { appeal_available: true } })
-    await wrapper.find('input[placeholder="请输入姓名"]').setValue('张三')
+    await wrapper.find('input[placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）"]').setValue('张三')
     await buttonOf(wrapper, '认证产权').trigger('click')
     await flush()
     expect(warn).toHaveBeenCalledWith('姓名与手机号未能通过核对，请上传产权证明提交申诉')

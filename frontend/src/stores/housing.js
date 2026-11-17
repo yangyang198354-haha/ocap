@@ -13,15 +13,24 @@ export const useHousingStore = defineStore('housing', {
     myApplications: [],
     myAppeals: [],
     reviewLoaded: false,
+    housingError: false,
     prefillOwnerName: ''
   }),
   getters: {
     // toReview 已加载 → 列表长度；否则取 /me/housing 的 pending_review_count
-    pendingReviewCount: (s) => (s.reviewLoaded ? s.toReview.length : Number(s.housing.pending_review_count) || 0)
+    pendingReviewCount: (s) => (s.reviewLoaded ? s.toReview.length : Number(s.housing.pending_review_count) || 0),
+    // 是否至少是一个专有部分的有效产权业主（决定身份页底部"待我审批"卡片是否显示，仅用于展示；权限由后端 403 把关）
+    ownsAnyUnit: (s) => s.housing.units.some((u) => u.role === 'HEAD' || u.role === 'OWNER')
   },
   actions: {
     async loadHousing() {
-      this.housing = { ...emptyHousing(), ...(await meApi.housing()) }
+      try {
+        this.housing = { ...emptyHousing(), ...(await meApi.housing()) }
+        this.housingError = false
+      } catch (e) {
+        this.housingError = true
+        throw e
+      }
     },
     async loadLists() {
       const [review, applications, appeals] = await Promise.all([

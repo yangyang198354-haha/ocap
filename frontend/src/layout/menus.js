@@ -4,11 +4,11 @@
 export const PORTAL_MENU = [
   { key: 'home', label: '主页', audience: 'all', match: ['/'], to: '/' },
   {
-    key: 'units', label: '我的房屋', audience: 'all', match: ['/units'],
+    key: 'units', label: '我的房屋', audience: 'all', match: ['/units', '/me/identity'],
     children: [
-      { key: 'units.identity', label: '我的身份与房屋', to: '/units' },
-      { key: 'units.review', label: '待我审批的同住人申请', to: '/units/review', badge: 'pendingReview' },
-      { key: 'units.pick', label: '选择房屋', to: '/units/pick' },
+      // /me/identity 与 /units 同页（ADR-132）；待审批卡片并入该页底部，角标随之挂在此项（ADR-133）
+      { key: 'units.identity', label: '我的身份与房屋', to: '/units', activeOn: ['/me/identity'], badge: 'pendingReview' },
+      { key: 'units.pick', label: '认证产权', to: '/units/pick' },
       { key: 'units.appeal', label: '认证申诉', to: '/units/appeal' },
       { key: 'units.applications', label: '我的同住人申请', to: '/units/applications' },
       { key: 'units.appeals', label: '我的申诉', to: '/units/appeals' }
@@ -38,7 +38,7 @@ export const PORTAL_MENU = [
 
 export const PORTAL_USER_MENU = [
   { key: 'me.style', label: '界面风格', to: '/me/style' },
-  { key: 'me.identity', label: '我的身份', to: '/me/identity' },
+  { key: 'me.identity', label: '我的身份与房屋', to: '/me/identity' },
   { key: 'me.profile', label: '个人资料', to: '/me/profile' },
   { key: 'me.phone', label: '手机号', to: '/me/phone' },
   { key: 'me.password', label: '设置密码', to: '/me/password' },
@@ -87,8 +87,8 @@ export const ADMIN_MENU = [
   }
 ]
 
-// 旧地址兼容（REQ-FUNC-215）：/units#review → /units/review
-export const LEGACY_UNITS_HASH = { '#review': '/units/review', '#appeal': '/units/appeal' }
+// 旧地址兼容（REQ-FUNC-215）：/units#appeal → /units/appeal；/units#review 本身即目的地（身份页底部卡片，ADR-133）
+export const LEGACY_UNITS_HASH = { '#appeal': '/units/appeal' }
 
 export function isPathMatch(path, pattern) {
   if (typeof path !== 'string' || typeof pattern !== 'string') return false

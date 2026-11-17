@@ -50,14 +50,16 @@ beforeEach(() => {
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('PortalUserMenu（US-212）', () => {
-  it('TC-INT-841 / AC-212-01、AC-212-02：昵称"小明"显示在触发器；展开后依次 8 项，"退出登录"最后', async () => {
+  it('TC-INT-841 / AC-233-01（旧 AC-212-01、AC-212-02）：昵称"小明"显示在触发器；展开后依次 8 项（第 2 项改名"我的身份与房屋"），"退出登录"最后', async () => {
     localStorage.setItem('ocap_token', 'tok')
     const { wrapper } = await mountMenu(PortalUserMenu, { me: ME('小明') })
     const trigger = wrapper.find('button.user-menu-trigger')
     expect(trigger.text()).toBe('小明')
     await trigger.trigger('click')
     await flush()
-    expect(itemTexts()).toEqual(['界面风格', '我的身份', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销', '退出登录'])
+    // 改写：旧第 2 项"我的身份" → "我的身份与房屋"；菜单中不再有文案恰为"我的身份"的项
+    expect(itemTexts()).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销', '退出登录'])
+    expect(itemTexts()).not.toContain('我的身份')
     expect(items()).toHaveLength(8)
     expect(items().at(-1).textContent).toContain('退出登录')
     wrapper.unmount()

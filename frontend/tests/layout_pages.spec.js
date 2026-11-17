@@ -24,7 +24,7 @@ import Resolutions from '@/portal/Resolutions.vue'
 import Claims from '@/portal/Claims.vue'
 import Me from '@/portal/Me.vue'
 import MeStyle from '@/portal/me/MeStyle.vue'
-import MeIdentity from '@/portal/me/MeIdentity.vue'
+import UnitsIdentity from '@/portal/units/UnitsIdentity.vue' // 改写：MeIdentity.vue 已删除（ADR-132），/me/identity 与 /units 同页显示 UnitsIdentity
 import MeProfile from '@/portal/me/MeProfile.vue'
 import MePhone from '@/portal/me/MePhone.vue'
 import MePassword from '@/portal/me/MePassword.vue'
@@ -138,13 +138,15 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-885 / AC-214-03、AC-230-04：产权业主有 2 条待审批——/units 下侧栏"待我审批的同住人申请"显示角标 2，窄屏切换条同项同值；首页链接 /units/review 的角标数据来自同一仓库', async () => {
+  it('TC-INT-885 / AC-235-01（旧 AC-214-03、AC-230-04）：产权业主有 2 条待审批——/units 下侧栏"我的身份与房屋"显示角标 2，窄屏切换条同项同值；首页链接 /units#review 的角标数据来自同一仓库', async () => {
+    // 改写：角标由已取消的"待我审批的同住人申请"项移到"我的身份与房屋"项
     const { wrapper, pinia } = await mountLayout('/units', { me: ME('MEMBER', [HEAD_UNIT]) })
     await flush()
     expect(useHousingStore(pinia).pendingReviewCount).toBe(2)
     const sideBadge = wrapper.find('aside.side .side-sub-item .side-badge')
     expect(sideBadge.text()).toBe('2')
-    expect(wrapper.find('aside.side .side-sub-item .side-badge').element.closest('a').textContent).toContain('待我审批的同住人申请')
+    expect(wrapper.find('aside.side .side-sub-item .side-badge').element.closest('a').textContent).toContain('我的身份与房屋')
+    expect(wrapper.find('aside.side').text()).not.toContain('待我审批的同住人申请')
     expect(wrapper.find('nav.sub-nav-bar .side-badge').text()).toBe('2')
     wrapper.unmount()
   })
@@ -152,7 +154,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
   // DEF-002：登录后 auth.me 先是登录响应里的 user 简要对象（无 identities，backend user_brief），PortalLayout.onMounted 因 me 非空不再 fetchMe，
   // 首页随后自己 fetchMe 补全身份，但侧栏角标只在挂载时和进入 /units* 路由时刷新——此时身份尚无房屋，角标被置 0；
   // 用户展开"我的房屋"看到的二级菜单没有角标，直到进入任一 /units* 页。AC-214-03 要求"存在待审批时查看二级菜单显示角标"。
-  it('TC-INT-914 / AC-214-03：刚登录（auth.me 为登录响应的简要对象）→ 首页补全身份后展开"我的房屋"，"待我审批的同住人申请"应显示角标 2（无需先进入 /units*）', async () => {
+  it('TC-INT-914 / AC-235-01（旧 AC-214-03）：刚登录（auth.me 为登录响应的简要对象）→ 首页补全身份后展开"我的房屋"，"我的身份与房屋"应显示角标 2（无需先进入 /units*）', async () => {
     http.get.mockImplementation(fakeGet({
       '/me': ME('MEMBER', [HEAD_UNIT]),
       '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [], pending_review_count: 2 }
@@ -172,6 +174,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     const badge = wrapper.find('aside.side .side-sub-item .side-badge')
     expect(badge.exists()).toBe(true)
     expect(badge.text()).toBe('2')
+    expect(badge.element.closest('a').textContent).toContain('我的身份与房屋')
     wrapper.unmount()
   })
 
@@ -206,7 +209,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-888 / AC-220-01、AC-230-01、AC-230-02：窄屏结构——布局始终渲染底栏 5 项（成员）、品牌文字 .brand、二级切换条（我的房屋 6 项、决议 3 项、报销 2 项、其他一级无切换条）；显隐由 CSS 控制', async () => {
+  it('TC-INT-888 / AC-220-01、AC-230-01、AC-230-02：窄屏结构——布局始终渲染底栏 5 项（成员）、品牌文字 .brand、二级切换条（我的房屋 5 项（旧 6 项，AC-236-04）、决议 3 项、报销 2 项、其他一级无切换条）；显隐由 CSS 控制', async () => {
     const barItems = async (p) => {
       const { wrapper, router } = await mountLayout(p)
       await flush()
@@ -218,7 +221,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
       return out
     }
     const units = await barItems('/units/appeals')
-    expect(units.items).toEqual(['我的身份与房屋', '待我审批的同住人申请', '选择房屋', '认证申诉', '我的同住人申请', '我的申诉'])
+    expect(units.items).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉'])
     expect(units.tabs).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(units.brand).toBe('Cyber@红枫岭')
     expect((await barItems('/resolutions/todo')).items).toEqual(['公开决议', '我发起的', '待我表决'])
@@ -226,21 +229,22 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     for (const p of ['/', '/polls', '/reports', '/info', '/tasks', '/income']) expect((await barItems(p)).items, p).toEqual([])
   }, 30000) // 同一用例内挂载布局 9 次，全量并发运行时需放宽默认 5s
 
-  it('TC-INT-889 / AC-229-03：首页快捷入口"信息公开"仍指向 /info（改版不使其失效）；待审批链接指向 /units/review', async () => {
+  it('TC-INT-889 / AC-229-03、AC-235-02：首页快捷入口"信息公开"仍指向 /info（改版不使其失效）；待审批链接改指向 /units#review（旧：/units/review）', async () => {
     const home = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/portal/Home.vue'), 'utf8')
     expect(home).toMatch(/label:\s*'信息公开',\s*to:\s*'\/info'/)
-    expect(home).toContain('<router-link to="/units/review" class="link">')
-    expect(home).not.toContain('/units#review')
+    expect(home).toContain('<router-link to="/units#review" class="link">')
+    expect(home).not.toContain('to="/units/review"')
+    expect(home).toMatch(/label:\s*'认证我的房屋',\s*to:\s*'\/units\/pick'/) // AC-237-05：快捷入口指向"认证产权"页
   })
 })
 
 // ------------------------------------------------------------------ 我的房屋分区（MOD-123）
 describe('我的房屋分区宿主 Units.vue（US-214）', () => {
   const TITLES = {
-    identity: '我的身份与房屋', review: '待我审批的同住人申请', pick: '选择房屋', appeal: '认证申诉', applications: '我的同住人申请', appeals: '我的申诉'
-  }
+    identity: '我的身份与房屋', pick: '认证产权', appeal: '认证申诉', applications: '我的同住人申请', appeals: '我的申诉'
+  } // 改写：旧 6 个分区（含 review 与"选择房屋"）→ 新 5 个分区（IFC-340、AC-236-02）
 
-  it('TC-INT-890 / AC-214-02：6 个分区各只显示自己的卡片，其余 5 块不在页面上；缺省分区为"我的身份与房屋"；未知分区回退缺省', async () => {
+  it('TC-INT-890 / AC-214-02、AC-234-04：5 个分区各只显示自己的卡片，其余不在页面上（游客的身份页无"待我审批"卡片）；缺省与未知分区（含已取消的 review）回退"我的身份与房屋"', async () => {
     http.get.mockImplementation(fakeGet({ '/me/housing': { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 }, '/units/options': { level: 'building', options: [] } }))
     for (const [section, title] of Object.entries(TITLES)) {
       document.body.innerHTML = ''
@@ -257,6 +261,10 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
     const bad = await mountPage(Units, { props: { section: 'nope' } })
     await flush()
     expect(bad.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的身份与房屋'])
+    document.body.innerHTML = ''
+    const gone = await mountPage(Units, { props: { section: 'review' } }) // 旧分区 review 已取消
+    await flush()
+    expect(gone.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的身份与房屋'])
   })
 
   it('TC-INT-891 / AC-214-02：同一实例在兄弟路由间切换分区（props 变化）——内容随之切换并重新挂载', async () => {
@@ -382,22 +390,26 @@ describe('个人中心各页（US-212/213/220）', () => {
   const profile = { account_no: '1000000001', phone: '138****0000', nickname: '张三', gender: 0, birthday: null, email: 'a@b.cn', avatar_url: '' }
   const base = () => fakeGet({
     '/me': ME(null, [HEAD_UNIT]), '/me/profile': profile, '/me/theme': { theme: null },
-    '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [HEAD_UNIT], pending_review_count: 0 }
+    // 真实 /me/housing 的每套均含 residents（IFC-337）；/me/identity 现挂 UnitsIdentity，需要完整夹具
+    '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [{ ...HEAD_UNIT, residents: [], pending_application_count: 0, unit_type_label: '住宅', area_display: '89.50 ㎡' }], pending_review_count: 0 }
   })
 
-  it('TC-INT-898 / AC-213-01：7 个个人中心页各只含自己的功能块（标题互不相同），"设置密码"页不含个人资料表单', async () => {
+  it('TC-INT-898 / AC-213-01、AC-233-02：7 个个人中心入口对应的页各只含自己的功能块（标题互不相同；旧第 2 页 MeIdentity 已删除，/me/identity 改为我的身份与房屋页，产权业主另含底部待审批卡片），"设置密码"页不含个人资料表单', async () => {
     http.get.mockImplementation(base())
-    const pages = [[MeStyle, '界面风格'], [MeIdentity, '身份'], [MeProfile, '个人资料'], [MePhone, '更换手机号'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销']]
+    // 改写：旧第 2 页 [MeIdentity, '身份'] → [UnitsIdentity, '我的身份与房屋']（产权业主页面底部多一张"待我审批的同住人申请"卡片，AC-234-01）
+    const pages = [[MeStyle, '界面风格'], [UnitsIdentity, '我的身份与房屋'], [MeProfile, '个人资料'], [MePhone, '更换手机号'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销']]
     const seen = []
     for (const [comp, title] of pages) {
       document.body.innerHTML = ''
       const { wrapper } = await mountPage(comp)
       await flush()
-      expect(wrapper.findAll('h3.title').map((h) => h.text()), title).toEqual([title])
+      const expected = comp === UnitsIdentity ? [title, '待我审批的同住人申请'] : [title]
+      expect(wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, '')), title).toEqual(expected)
       seen.push(wrapper.find('h3.title').text())
       wrapper.unmount()
     }
     expect(new Set(seen).size).toBe(7)
+    expect(seen).not.toContain('身份')
     document.body.innerHTML = ''
     const pwd = await mountPage(MePassword)
     expect(pwd.wrapper.find('input[placeholder="昵称"]').exists()).toBe(false)
@@ -485,7 +497,7 @@ describe('个人中心各页（US-212/213/220）', () => {
     const { wrapper, router } = await mountPage(Me)
     await flush()
     const links = wrapper.findAll('nav.me-overview a')
-    expect(links.map((a) => a.find('span').text())).toEqual(['界面风格', '我的身份', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
+    expect(links.map((a) => a.find('span').text())).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
     expect(links.map((a) => a.attributes('href'))).toEqual(['/me/style', '/me/identity', '/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel'])
     expect(wrapper.findAll('nav.me-overview > *')).toHaveLength(8)
     expect(wrapper.find('nav.me-overview button.me-logout').text()).toBe('退出登录')

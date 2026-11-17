@@ -1,6 +1,4 @@
 """身份聚合与账号合并（IFC-030~034 / REQ-FUNC-067）。"""
-from decimal import Decimal
-
 from django.db import transaction
 from django.utils import timezone
 
@@ -13,6 +11,7 @@ from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError
 from apps.core.masking import PHONE_RE, mask_phone
 from apps.core.user_refs import references
+from apps.registry import display
 from apps.registry.ordering import unit_sort_key
 from apps.residency.models import Membership
 from apps.residency.services import MembershipService, PendingRequestService
@@ -26,16 +25,16 @@ class IdentityService:
     @staticmethod
     def _unit_view(membership) -> dict:
         unit = membership.unit
-        area_text = str(unit.area.quantize(Decimal("0.01"))) if unit.area is not None else None
+        area_text = display.area_text(unit)
         return {
             "unit_id": membership.unit_id,
             "specific_part": unit.specific_part,
             "role": membership.role,
             "role_label": ROLE_LABELS.get(membership.role, "产权业主"),
             "unit_type": unit.unit_type,
-            "unit_type_label": unit.get_unit_type_display() if unit.unit_type else "未登记",
+            "unit_type_label": display.unit_type_label(unit),
             "area": area_text,
-            "area_display": f"{area_text} ㎡" if area_text else "未登记",
+            "area_display": display.area_display(unit),
         }
 
     @staticmethod

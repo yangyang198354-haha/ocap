@@ -35,17 +35,11 @@
       </view>
     </view>
 
-    <view class="card">
+    <view class="card" @click="go('/pages/units/index')">
       <view class="title">认证房屋</view>
-      <view class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套</view>
+      <view class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套（点击查看明细）</view>
       <view v-if="!auth.me" class="muted">{{ meError ? '加载失败，请重试' : '加载中…' }}</view>
-      <view v-else-if="!unitRows.length" class="muted">暂无已认证房屋</view>
-      <view v-for="unit in unitRows" :key="unit.unit_id" class="list-item">
-        <text>{{ unit.specific_part }}</text>
-        <view class="muted" style="margin-top: 8rpx">
-          {{ unit.unit_type_label || '未登记' }} · {{ unit.area_display || '未登记' }} · {{ unit.role_label || '产权业主' }}
-        </view>
-      </view>
+      <view v-else-if="!unitRows.length" class="muted">暂无已认证房屋，去认证产权</view>
     </view>
 
     <view class="home-quick">

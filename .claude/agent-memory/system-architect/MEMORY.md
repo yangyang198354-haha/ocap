@@ -35,3 +35,4 @@
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
 - [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）
 
+- [P-SA-018] 给 /me/housing 等被契约测试用 assertEqual 锁定字段集的接口加字段前，先 git grep 该集合（test_frontend_contract.py:582-585），并在 module_design 列出要改的断言；页面循环变量名（item/unit/r）会被 reads() 扫描，新组件用别的变量名 — 自记 2026-11-17 · 证据 ocap_identity_property ADR-131（git grep 实测）

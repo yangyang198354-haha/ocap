@@ -51,14 +51,9 @@ async function submit() {
     const result = await authApi.register(form.phone, form.code)
     auth.setAuth(result.token, result.user)
     await useThemeStore().reconcileAfterLogin()
-    const bound = result.auto_bound || []
-    if (bound.length) {
-      const parts = bound.map((item) => item.specific_part).join('、')
-      ElMessage.success(`注册成功，已根据你的手机号自动认证为 ${parts} 的产权业主`)
-    } else {
-      ElMessage.success('注册成功')
-    }
-    router.replace('/')
+    ElMessage.success('注册成功')
+    // 手机号匹配到清册专有部分：进入"认证产权"页由用户确认后绑定（REQ-FUNC-234/236）；否则进入主页
+    router.replace(result.registry_match?.pending ? '/units/pick' : '/')
   } catch (e) {
     ElMessage.error(errorText(e))
   } finally {

@@ -127,5 +127,8 @@ class XlsxTemplateJourneyTests(ScaleJourneyBase):
         self.assertEqual((unit.building, unit.unit_no, unit.room, unit.specific_part), ("1栋", "08", "0801", "1栋08单元8层0801号"))
 
         _, token, _ = self.register(phone)
+        # 旧断言：注册即绑定 → 新断言：注册后无 Membership，确认后 HEAD/REGISTRY（AC-239-01）
+        self.assertFalse(Membership.objects.filter(user=self.user_of(token), unit=unit).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]}, token=token))
         member = Membership.objects.get(user=self.user_of(token), unit=unit)
         self.assertEqual((member.role, member.source), ("HEAD", "REGISTRY"))

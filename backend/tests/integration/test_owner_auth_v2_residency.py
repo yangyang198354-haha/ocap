@@ -148,16 +148,22 @@ class CertificationNameTests(OwnerAuthBase):
         self.assert_error(self.certify(token, unit, "张三测"), 429, "CODE_RATE_LIMITED")
         self.assertFalse(Membership.objects.filter(unit=unit).exists())
 
-    def test_tc_int_658_registration_with_registry_phone_still_auto_binds_without_name(self):
-        """AC-200-09 / C-61：新用户用清册登记的手机号注册，验证码通过后仍按手机号自动绑定，无姓名输入；
-        清册业主姓名为空时同样绑定（自动绑定通路只凭手机号，未改）。"""
+    def test_tc_int_658_registration_with_registry_phone_needs_confirm_without_name(self):
+        """AC-241-01、AC-240-01 / C-71（旧 AC-200-09 / C-61，已改写）：新用户用清册登记的手机号注册，验证码通过后不再静默绑定
+        （旧断言：注册即有 Membership → 新断言：注册后无 Membership），确认后绑定且无需姓名；
+        清册业主姓名为空时同样可确认（确认通路只凭已验证手机号）。"""
         phone = next_phone()
         unit = self.unit_with_owners([("张三测", [phone])])
         user, token, _ = self.register(phone=phone)
+        self.assertFalse(Membership.objects.filter(user_id=user["id"], unit=unit).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]}, token=token))
         self.assertTrue(Membership.objects.filter(user_id=user["id"], unit=unit, ended_at__isnull=True).exists())
         blank_phone = next_phone()
         blank_unit = self.unit_with_owners([(None, [blank_phone])])
-        user2, _, _ = self.register(phone=blank_phone)
+        user2, token2, _ = self.register(phone=blank_phone)
+        self.assertFalse(Membership.objects.filter(user_id=user2["id"], unit=blank_unit).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [blank_unit.id]},
+                                token=token2))
         self.assertTrue(Membership.objects.filter(user_id=user2["id"], unit=blank_unit).exists())
 
     def test_tc_int_659_certification_validation_unchanged(self):

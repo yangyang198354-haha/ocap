@@ -65,10 +65,11 @@ async function done(result) {
     auth.setAuth(result.token, null)
     toast('账号已合并')
   } else {
-    const bound = result.auto_bound || []
-    toast(bound.length ? `已绑定并按清册自动认证 ${bound.length} 个专有部分` : '已完成')
+    toast('已完成')
   }
   await auth.fetchMe()
+  // 首次绑定手机号匹配到清册专有部分：进入"我的房屋"页由用户确认后绑定（REQ-FUNC-233/234/236）
+  if (!result.merged && result.registry_match?.pending) uni.navigateTo({ url: '/pages/units/index' })
 }
 
 async function bind() {

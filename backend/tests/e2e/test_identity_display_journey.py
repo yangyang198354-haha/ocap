@@ -25,6 +25,9 @@ class IdentityDisplayJourneyTests(ApiTestBase):
         reg = self.api("post", "/auth/register", {"phone": phone, "code": code})
         self.assert_ok(reg, 201)
         token = reg.data["token"]
+        # 旧断言：注册后身份即"产权业主" → 新断言：注册后为"游客"，confirm 后"产权业主"并可见单元详情（AC-241-01）
+        self.assertEqual(self.api("get", "/me", token=token).data["identities"]["labels"], ["游客"])
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]}, token=token))
         identities = self.api("get", "/me", token=token).data["identities"]
         self.assertEqual(identities["labels"], ["产权业主"])
         self.assertEqual(identities["units"], [{

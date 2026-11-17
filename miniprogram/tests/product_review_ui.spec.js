@@ -26,15 +26,17 @@ describe('小程序 我的房屋（同住人链路）', () => {
     'GET /resident-applications/mine': [], 'GET /appeals/mine': [], 'GET /units/options': { options: [] }, ...over
   })
 
-  it('TC-UNIT-551 / AC-150-04：逐级选房，页面没有任何文本输入框；选定后申请只提交 {unit_id} 并提示"申请已提交，等待产权业主审批"', async () => {
+  it('TC-UNIT-551 / AC-243-01、AC-242-06（旧 AC-150-04）：逐级选房，"我的同住人申请"发起区没有文本输入框；选定后申请只提交 {unit_id} 并提示"申请已提交，等待产权业主审批"', async () => {
     respondWith({ ...base(), 'POST /resident-applications': { id: 9, status: 'PENDING' } })
     const { wrapper } = await mountPage(Units)
     // ocap_owner_auth_v2：认证须输入姓名、申诉须输入产权人名字，仅此两个文本框；仍无专有部分编号输入
+    // 改写：旧占位 ['请输入姓名','产权人名字'] → 新 ['请输入您本人的姓名（…）','产权人名字']（AC-238-01）；
+    // 页面现有 2 个 UnitPicker：第 1 个属"认证产权"，第 2 个属"我的同住人申请"发起区，申请用第 2 个
     expect(wrapper.findAll('input, textarea').map((el) => el.attributes('placeholder')))
-      .toEqual(['请输入姓名', '产权人名字'])
+      .toEqual(['请输入您本人的姓名（须与业主清册登记的姓名一致）', '产权人名字'])
     expect(wrapper.text()).not.toMatch(/专有部分 ?ID|内部编号/)
-    expect(wrapper.findComponent(UnitPicker).exists()).toBe(true)
-    wrapper.findComponent(UnitPicker).vm.$emit('update:modelValue', 42)
+    expect(wrapper.findAllComponents(UnitPicker)).toHaveLength(2)
+    wrapper.findAllComponents(UnitPicker)[1].vm.$emit('update:modelValue', 42)
     await flushPromises()
     await byText(wrapper, 'button', '申请成为同住人').trigger('click')
     await flushPromises()

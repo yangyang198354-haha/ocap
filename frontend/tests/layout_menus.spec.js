@@ -35,11 +35,13 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     expect(visibleMenu(null, { isCommittee: true })).toEqual([])
   })
 
-  it('TC-UNIT-804 / AC-214-01、AC-215-01、AC-215-02：二级项数量——我的房屋 6、决议 3、报销 2；其余一级项无 children', () => {
+  it('TC-UNIT-804 / AC-236-01（旧 AC-214-01、AC-215-01、AC-215-02）：二级项数量——我的房屋 5、决议 3、报销 2；其余一级项无 children', () => {
     const byKey = Object.fromEntries(PORTAL_MENU.map((n) => [n.key, n]))
+    // 改写：旧 6 项（含"待我审批的同住人申请""选择房屋"）→ 新 5 项（IFC-339，AC-236-01、Q-IP-13=A）
     expect(byKey.units.children.map((c) => c.label)).toEqual(
-      ['我的身份与房屋', '待我审批的同住人申请', '选择房屋', '认证申诉', '我的同住人申请', '我的申诉']
+      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉']
     )
+    expect(byKey.units.children.some((c) => c.label === '选择房屋' || c.label === '待我审批的同住人申请')).toBe(false)
     expect(byKey.resolutions.children.map((c) => c.label)).toEqual(['公开决议', '我发起的', '待我表决'])
     expect(byKey.claims.children.map((c) => c.label)).toEqual(['我提交的', '待我审批'])
     const leaves = PORTAL_MENU.filter((n) => !n.children).map((n) => n.label)
@@ -47,8 +49,9 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     for (const n of PORTAL_MENU) expect(Boolean(n.to) !== Boolean(n.children), n.key).toBe(true) // to 与 children 二选一
   })
 
-  it('TC-UNIT-805 / AC-212-02、AC-213-01：个人中心 7 项按序，地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
-    expect(labels(PORTAL_USER_MENU)).toEqual(['界面风格', '我的身份', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
+  it('TC-UNIT-805 / AC-233-01（旧 AC-212-02、AC-213-01）：个人中心 7 项按序（第 2 项改名"我的身份与房屋"，地址不变），地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
+    // 改写：旧第 2 项文案"我的身份" → "我的身份与房屋"
+    expect(labels(PORTAL_USER_MENU)).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
     expect(PORTAL_USER_MENU.map((i) => i.to)).toEqual(
       ['/me/style', '/me/identity', '/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel']
     )
@@ -56,13 +59,16 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     expect(PORTAL_USER_MENU.some((i) => i.label === '退出登录')).toBe(false)
   })
 
-  it('TC-UNIT-806 / AC-214-03：仅"待我审批的同住人申请"带 pendingReview 角标键', () => {
+  it('TC-UNIT-806 / AC-235-01（旧 AC-214-03）：仅"我的身份与房屋"带 pendingReview 角标键', () => {
     const badged = PORTAL_MENU.flatMap((n) => n.children || []).filter((c) => c.badge)
-    expect(badged.map((c) => [c.label, c.badge])).toEqual([['待我审批的同住人申请', 'pendingReview']])
+    // 改写：角标由已取消的"待我审批的同住人申请"项迁到"我的身份与房屋"项（ADR-133、Q-IP-04=A）
+    expect(badged.map((c) => [c.label, c.badge])).toEqual([['我的身份与房屋', 'pendingReview']])
   })
 
-  it('TC-UNIT-807 / REQ-FUNC-215、AC-221-02：LEGACY_UNITS_HASH 把 #review / #appeal 映射到对应二级页', () => {
-    expect(LEGACY_UNITS_HASH).toEqual({ '#review': '/units/review', '#appeal': '/units/appeal' })
+  it('TC-UNIT-807 / AC-235-03（旧 REQ-FUNC-215、AC-221-02）：LEGACY_UNITS_HASH 只剩 #appeal → /units/appeal（#review 改由 /units#review 同页定位）', () => {
+    // 改写：旧 { '#review': '/units/review', '#appeal': ... } → 新仅 #appeal（IFC-339，ADR-133）
+    expect(LEGACY_UNITS_HASH).toEqual({ '#appeal': '/units/appeal' })
+    expect(Object.keys(LEGACY_UNITS_HASH)).not.toContain('#review')
     const units = PORTAL_MENU.find((n) => n.key === 'units')
     for (const target of Object.values(LEGACY_UNITS_HASH)) expect(units.children.some((c) => c.to === target), target).toBe(true)
   })

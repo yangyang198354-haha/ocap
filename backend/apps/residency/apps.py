@@ -9,12 +9,13 @@ class ResidencyConfig(AppConfig):
         from apps.core.attachments import register_attachment_policy
         from apps.core.user_refs import register_user_reference
 
-        from .models import Appeal, Membership, ResidentApplication
+        from .models import Appeal, Membership, PhoneMatchPrompt, ResidentApplication
         from .services import MembershipService
 
         register_attachment_policy("appeal", AppealAttachmentPolicy())
         register_user_reference(Membership, "user", on_conflict="custom",
                                 handler=MembershipService.merge_memberships)
+        register_user_reference(PhoneMatchPrompt, "user", on_conflict="delete_secondary")  # 待确认状态不并入主账号
         register_user_reference(Appeal, "user", on_conflict="move_all")
         register_user_reference(ResidentApplication, "applicant", on_conflict="move_all")
         register_user_reference(ResidentApplication, "decided_by", on_conflict="move_all")

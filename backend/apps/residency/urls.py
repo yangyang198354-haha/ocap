@@ -2,12 +2,16 @@ from django.urls import path
 
 from .views import (
     AdminAppealDecisionView, AdminAppealListView, AppealListCreateView, CertificationView,
-    MyHousingView, ResidentApplicationCreateView, ResidentApplicationDecisionView, ResidentApplicationMineView,
+    MyHousingView, RegistryMatchesConfirmView, RegistryMatchesDismissView, RegistryMatchesView,
+    ResidentApplicationCreateView, ResidentApplicationDecisionView, ResidentApplicationMineView,
     ResidentApplicationToReviewView, ResidentRemoveView, UnitLeaveView,
 )
 
 urlpatterns = [
     path("me/housing", MyHousingView.as_view()),
+    path("me/registry-matches", RegistryMatchesView.as_view()),
+    path("me/registry-matches/confirm", RegistryMatchesConfirmView.as_view()),
+    path("me/registry-matches/dismiss", RegistryMatchesDismissView.as_view()),
     path("certifications", CertificationView.as_view()),
     path("appeals", AppealListCreateView.as_view()),
     path("appeals/mine", AppealListCreateView.as_view()),

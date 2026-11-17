@@ -42,7 +42,8 @@ class PendingRequestService:
 
 class MembershipService:
     @staticmethod
-    def certify_owner(user_id: int, unit_id: int, source: str, origin: str | None = None) -> str:
+    def certify_owner(user_id: int, unit_id: int, source: str, origin: str | None = None,
+                      detail_extra: dict | None = None) -> str:
         with transaction.atomic():
             from apps.registry.models import RegistryUnit
 
@@ -64,6 +65,8 @@ class MembershipService:
             detail = {"role": role, "source": source}
             if origin == "REGISTRY_AUTO":
                 detail.update({"origin": origin, "origin_label": "清册自动绑定"})
+            if detail_extra:
+                detail.update(detail_extra)
             AuditService.record(
                 actor=AuditActor("MEMBER", user_id, f"用户{user_id}"), action="CERTIFY_BY_REGISTRY",
                 object_type="membership", object_id=f"{user_id}:{unit_id}", result="SUCCESS",

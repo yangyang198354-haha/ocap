@@ -8,7 +8,6 @@
 <script setup>
 import { computed } from 'vue'
 import UnitsIdentity from './units/UnitsIdentity.vue'
-import UnitsReview from './units/UnitsReview.vue'
 import UnitsPick from './units/UnitsPick.vue'
 import UnitsAppeal from './units/UnitsAppeal.vue'
 import UnitsApplications from './units/UnitsApplications.vue'
@@ -18,7 +17,6 @@ const props = defineProps({ section: { type: String, default: 'identity' } })
 
 const VIEWS = {
   identity: UnitsIdentity,
-  review: UnitsReview,
   pick: UnitsPick,
   appeal: UnitsAppeal,
   applications: UnitsApplications,

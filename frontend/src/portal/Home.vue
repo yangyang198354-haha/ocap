@@ -9,7 +9,7 @@
           <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
           <p class="muted home-meta">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</p>
           <p v-if="pendingReview > 0" class="home-meta">
-            <router-link to="/units/review" class="link">待审批同住人申请：{{ pendingReview }}</router-link>
+            <router-link to="/units#review" class="link">待审批同住人申请：{{ pendingReview }}</router-link>
           </p>
         </div>
         <div class="home-metrics">
@@ -30,26 +30,12 @@
         </div>
       </section>
 
-      <section v-for="(s, i) in stats" :key="s.label" class="card home-stat" :class="i % 2 ? 'is-even' : 'is-odd'">
+      <section v-for="(s, i) in stats" :key="s.label" class="card home-stat" :class="[i % 2 ? 'is-even' : 'is-odd', { 'is-link': s.to }]" @click="s.to && $router.push(s.to)">
         <div class="label">{{ s.label }}</div>
         <div class="stat-value mono">{{ s.value }}</div>
-        <div class="stat-note muted">{{ s.note }}</div>
-      </section>
-
-      <section class="card home-units" aria-label="认证房屋">
-        <div class="card-head">
-          <h3 class="title title-flat">认证房屋</h3>
-          <span class="muted">共 {{ auth.me ? unitRows.length : '—' }} 套</span>
-        </div>
-        <p v-if="!auth.me" class="muted">{{ meError ? '加载失败，请重试' : '加载中…' }}</p>
-        <el-empty v-else-if="!unitRows.length" :image-size="48" description="暂无已认证房屋" />
-        <div v-for="unit in unitRows" :key="unit.unit_id" class="home-unit">
-          <b>{{ unit.specific_part }}</b>
-          <div class="meta">
-            <span>{{ unit.unit_type_label || '未登记' }}</span>
-            <span class="mono">{{ unit.area_display || '未登记' }}</span>
-            <span class="tag">{{ unit.role_label || '产权业主' }}</span>
-          </div>
+        <div class="stat-note muted">
+          <router-link v-if="s.emptyTo" :to="s.emptyTo" class="link" @click.stop>去认证产权</router-link>
+          <template v-else>{{ s.note }}</template>
         </div>
       </section>
 
@@ -136,14 +122,14 @@ const countdown = computed(() => {
 })
 
 const stats = computed(() => [
-  { label: '认证房屋', value: auth.me ? unitRows.value.length : '—', note: '已绑定的房屋数' },
+  { label: '认证房屋', value: auth.me ? unitRows.value.length : '—', note: '已绑定的房屋数', to: '/units', emptyTo: auth.me && !unitRows.value.length ? '/units/pick' : null },
   { label: '审批待办', value: countText(tasks.value), note: '待我审批的事项' },
   { label: '进行中的投票', value: countText(openPolls.value), note: '可参与的投票 / 调查' },
   { label: '近期公开决议', value: resolutions.value.length, note: `其中 ${resolutions.value.filter((r) => r.status === 'APPROVED').length} 项已通过` }
 ])
 
 const quick = computed(() => [
-  { label: '认证我的房屋', to: '/units', icon: 'key', hint: '绑定业主身份' },
+  { label: '认证我的房屋', to: '/units/pick', icon: 'key', hint: '绑定业主身份' },
   { label: '查看决议', to: '/resolutions', icon: 'doc', hint: '公开 / 我发起 / 待表决' },
   { label: '参与投票', to: '/polls', icon: 'vote', hint: '投票与调查' },
   ...(auth.isCommittee ? [{ label: '待办', to: '/tasks', icon: 'task', hint: '审批事项' }] : []),

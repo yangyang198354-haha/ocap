@@ -41,7 +41,7 @@ class RegistryImportJourneyTests(ApiTestBase):
         return self.upload(IMPORT_URL, {"file": upload}, data=data, token=token or self.admin_token)
 
     def test_tc_e2e_101_import_multi_owner_then_register_and_select_parking(self):
-        """TC-E2E-101：管理员查看说明→下载模板→导入多业主与车位→业主注册自动绑定→用户端逐级选择车位。"""
+        """TC-E2E-101：管理员查看说明→下载模板→导入多业主与车位→业主注册后引导确认（AC-239-01、AC-240-01，旧：注册自动绑定）→用户端逐级选择车位。"""
         spec = self.api("get", "/admin/registry/import/spec", token=self.admin_token)
         self.assert_ok(spec)
         self.assertEqual(spec.data["max_rows"], 20000)
@@ -64,11 +64,19 @@ class RegistryImportJourneyTests(ApiTestBase):
                           commit.data["failed"]), (2, 4, 0))
 
         residential = RegistryUnit.objects.get(room="101")
+        # 旧断言：注册即 HEAD/OWNER → 新断言：注册后 registry_matches 列出该套且无 Membership，confirm 后才有
         _, first_token, _ = self.register("13700000101")
+        pending = self.api("get", "/me/registry-matches", token=first_token)
+        self.assertEqual([u["unit_id"] for u in pending.data["units"]], [residential.id])
+        self.assertFalse(Membership.objects.filter(user=self.user_of(first_token)).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [residential.id]},
+                                token=first_token))
         self.assertEqual(Membership.objects.get(user=self.user_of(first_token), unit=residential).role,
                          "HEAD")
         _, token, _ = self.register("13700000102")
         user = self.user_of(token)
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [residential.id]},
+                                token=token))
         self.assertEqual(Membership.objects.get(user=user, unit=residential).role, "OWNER")
         me = self.api("get", "/me", token=token)
         self.assertIn("产权业主", me.data["identities"]["labels"])
@@ -86,6 +94,8 @@ class RegistryImportJourneyTests(ApiTestBase):
 
         _, parking_token, _ = self.register("13700000103")
         parking = RegistryUnit.objects.get(room="A-101")
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [parking.id]},
+                                token=parking_token))
         parking_user = self.user_of(parking_token)
         self.assertEqual(Membership.objects.get(user=parking_user, unit=parking).role, "HEAD")
         me_parking = self.api("get", "/me", token=parking_token)
@@ -99,6 +109,9 @@ class RegistryImportJourneyTests(ApiTestBase):
 
         _, token, _ = self.register("13700000201")
         user = self.user_of(token)
+        # 旧断言：注册即 HEAD → 新断言：注册后无 Membership，confirm 后 HEAD（AC-241-01）
+        self.assertFalse(Membership.objects.filter(user=user, unit=unit).exists())
+        self.assert_ok(self.api("post", "/me/registry-matches/confirm", {"unit_ids": [unit.id]}, token=token))
         self.assertTrue(Membership.objects.filter(user=user, unit=unit, role="HEAD",
                                                   ended_at__isnull=True).exists())
 

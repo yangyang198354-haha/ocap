@@ -12,6 +12,10 @@ export const api = {
   me: () => http.get('/me'),
   // 我的房屋聚合（IFC-261）与当前规则限制（IFC-272）
   housing: () => http.get('/me/housing'),
+  // 手机号匹配清册后的引导确认（IFC-332/333/334）：请求不带手机号与姓名，服务端按本人已验证手机号重算
+  registryMatches: () => http.get('/me/registry-matches'),
+  confirmRegistryMatches: (unitIds) => http.post('/me/registry-matches/confirm', { unit_ids: unitIds }),
+  dismissRegistryMatches: () => http.post('/me/registry-matches/dismiss', {}),
   limits: () => http.get('/system/limits'),
   profile: () => http.get('/me/profile'),
   updateProfile: (data) => http.patch('/me/profile', data),

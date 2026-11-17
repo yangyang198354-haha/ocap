@@ -55,7 +55,11 @@ describe('SideNav 展开/收起（US-216）', () => {
   it('TC-INT-803 / AC-216-03：在"我的房屋"展开状态下点"决议"——同时只展开一个（决议展开，我的房屋收起）', async () => {
     const { wrapper } = await mountNav('/')
     await toggleOf(wrapper, '我的房屋').trigger('click')
-    expect(wrapper.findAll('.side-sub-item')).toHaveLength(6)
+    // 改写（AC-236-01）：旧 6 个二级项 → 新 5 个，且文案按新菜单
+    expect(wrapper.findAll('.side-sub-item')).toHaveLength(5)
+    expect(wrapper.findAll('.side-sub-item').map((a) => a.text().replace(/\d+$/, '').trim())).toEqual(
+      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉']
+    )
     await toggleOf(wrapper, '决议').trigger('click')
     expect(toggleOf(wrapper, '我的房屋').attributes('aria-expanded')).toBe('false')
     expect(toggleOf(wrapper, '决议').attributes('aria-expanded')).toBe('true')
@@ -135,12 +139,14 @@ describe('SideNav 一级项与高亮（US-210、217、229）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-810 / AC-214-03：badges.pendingReview=2 时仅"待我审批的同住人申请"二级项显示角标 2；为 0 或缺省不显示', async () => {
+  it('TC-INT-810 / AC-235-01（旧 AC-214-03）：badges.pendingReview=2 时仅"我的身份与房屋"二级项显示角标 2；为 0 或缺省不显示', async () => {
+    // 改写：旧断言角标在"待我审批的同住人申请"项 → 新断言角标在"我的身份与房屋"项（Q-IP-04=A）
     const { wrapper } = await mountNav('/units', { props: { badges: { pendingReview: 2 } } })
     const badges = wrapper.findAll('.side-badge')
     expect(badges).toHaveLength(1)
     expect(badges[0].text()).toBe('2')
-    expect(badges[0].element.closest('a').textContent).toContain('待我审批的同住人申请')
+    expect(badges[0].element.closest('a').textContent).toContain('我的身份与房屋')
+    expect(wrapper.text()).not.toContain('待我审批的同住人申请')
     await wrapper.setProps({ badges: { pendingReview: 0 } })
     expect(wrapper.findAll('.side-badge')).toHaveLength(0)
     await wrapper.setProps({ badges: {} })
@@ -219,12 +225,13 @@ describe('SubNavBar 窄屏二级切换条（US-230）', () => {
   }
   const units = PORTAL_MENU.find((n) => n.key === 'units').children
 
-  it('TC-INT-816 / AC-230-01：/units/appeals 切换条含 6 项且"我的申诉"高亮（aria-current=page）', async () => {
+  it('TC-INT-816 / AC-236-04（旧 AC-230-01）：/units/appeals 切换条含 5 项（"认证产权"，无"选择房屋"）且"我的申诉"高亮（aria-current=page）', async () => {
     const { wrapper } = await mountBar('/units/appeals', units, {})
     expect(wrapper.attributes('aria-label')).toBe('分区切换')
     expect(wrapper.findAll('a.sub-nav-item').map((a) => a.text())).toEqual(
-      ['我的身份与房屋', '待我审批的同住人申请', '选择房屋', '认证申诉', '我的同住人申请', '我的申诉']
+      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉']
     )
+    expect(wrapper.text()).not.toContain('选择房屋')
     const active = wrapper.findAll('.sub-nav-item.is-active')
     expect(active).toHaveLength(1)
     expect(active[0].text()).toBe('我的申诉')
@@ -247,9 +254,10 @@ describe('SubNavBar 窄屏二级切换条（US-230）', () => {
     bar.wrapper.unmount()
   })
 
-  it('TC-INT-818 / AC-230-04：待审批角标 2 显示在"待我审批的同住人申请"项且该项高亮；为 0 不显示', async () => {
-    const { wrapper } = await mountBar('/units/review', units, { pendingReview: 2 })
-    const item = wrapper.findAll('.sub-nav-item').find((a) => a.text().includes('待我审批'))
+  it('TC-INT-818 / AC-235-01（旧 AC-230-04）：待审批角标 2 显示在"我的身份与房屋"项且该项高亮；为 0 不显示', async () => {
+    // 改写：旧在 /units/review 的"待我审批"项 → 新在 /units 的"我的身份与房屋"项
+    const { wrapper } = await mountBar('/units', units, { pendingReview: 2 })
+    const item = wrapper.findAll('.sub-nav-item').find((a) => a.text().includes('我的身份与房屋'))
     expect(item.classes()).toContain('is-active')
     expect(item.find('.side-badge').text()).toBe('2')
     await wrapper.setProps({ badges: { pendingReview: 0 } })

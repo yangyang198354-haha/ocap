@@ -582,8 +582,10 @@ class ProductReviewFieldContractTests(ApiTestBase):
         res = unit["residents"][0]
         self.assertEqual(top, {"summary", "units", "pending_review_count"})
         self.assertEqual(set(data["summary"]), {"code", "label"})
+        # 旧字段集 + IFC-337 新增 unit_type_label、area_display（ocap_identity_property，AC-232-01）
         self.assertEqual(set(unit), {"unit_id", "specific_part", "role", "role_label", "certified_at",
-                                     "residents", "pending_application_count"})
+                                     "residents", "pending_application_count",
+                                     "unit_type_label", "area_display"})
         self.assertEqual(set(res), {"user_id", "nickname", "account_no", "joined_at"})
         web_units = src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
         web_me = src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me")

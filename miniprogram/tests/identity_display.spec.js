@@ -19,7 +19,9 @@ const ME = (labels, units = []) => ({
 })
 
 describe('小程序认证房屋（US-146 / US-148）', () => {
-  it('TC-MP-501 首页显示数量、名称、类型、面积与关系标签', async () => {
+  // 改写（ocap_identity_property GR-C-001-a，AC-242-01）：小程序首页不再逐套显示名称/类型/面积/关系，只保留数量并可点击进入"我的房屋"；
+  // 明细断言迁至"我的房屋"页（identity_property_pages.spec.js TC-MP-901）。
+  it('TC-MP-501 首页只显示认证房屋数量（可点击进入我的房屋），不再逐套显示名称、类型、面积', async () => {
     respondWith({
       'GET /me': ME(['产权业主'], [UNIT_A, UNIT_B]),
       'GET /approval/tasks': { results: [] },
@@ -29,13 +31,12 @@ describe('小程序认证房屋（US-146 / US-148）', () => {
     const { wrapper } = await mountPage(Index)
     const text = wrapper.text()
     expect(text).toContain('身份：产权业主')
+    // 旧断言：含 902/301 号、住宅、89.50 ㎡、同住人、未登记 → 新断言：只有"共 2 套"，明细全部不在首页
     expect(text).toContain('共 2 套')
-    expect(text).toContain('1栋1单元9层902号')
-    expect(text).toContain('住宅')
-    expect(text).toContain('89.50 ㎡')
-    expect(text).toContain('2栋1单元3层301号')
-    expect(text).toContain('同住人')
-    expect(text).toContain('未登记')
+    for (const detail of ['1栋1单元9层902号', '2栋1单元3层301号', '89.50 ㎡', '住宅', '公寓', '未登记']) expect(text).not.toContain(detail)
+    const card = wrapper.findAll('.card').find((c) => c.text().includes('点击查看明细'))
+    await card.trigger('click')
+    expect(uni.navigateTo).toHaveBeenCalledWith({ url: '/pages/units/index' })
   })
 
   it('TC-MP-502 游客：数量 0 与空状态', async () => {

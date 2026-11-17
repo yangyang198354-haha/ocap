@@ -41,3 +41,6 @@
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
 
+- [P-TE-007] 带状态假服务端（vitest 前端 E2E）的列表接口要返回数组副本 `[...S.list]`：返回同一引用且之后原地 push，Pinia 赋值因引用未变不触发更新，页面不刷新，像产品缺陷实为夹具问题 — 自记 2026-11-17 · 证据 frontend/tests/identity_property_e2e.spec.js（TC-E2E-912 首版失败，改副本后通过）
+- [P-TE-008] 客户端"守卫"类断言（merged 时不跳转）的用例，喂"互相矛盾"的响应（merged=true 且 pending=true），否则回退守卫的变异不会被抓住；变异验证首轮漏掉一条后才加强 — 自记 2026-11-17 · 证据 frontend/tests/identity_property_match_panel.spec.js TC-WEB-932、miniprogram/tests/identity_property_pages.spec.js TC-MP-908（scratchpad 变异复验 FAIL）
+- [P-TE-009] 页面新增名称含旧按钮名的按钮（"认证产权"含"认证"）后，旧用例 `byText('button','认证')` 的 includes 匹配会先命中新按钮；改写时用文本恰等于 `b.text()==='认证'` 的精确查找 — 自记 2026-11-17 · 证据 miniprogram/tests/owner_auth_v2.spec.js certifyButton（TC-MP-504~506）

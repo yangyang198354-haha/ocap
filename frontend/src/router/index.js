@@ -26,20 +26,22 @@ const routes = [
       // /me：宽屏进个人资料页，窄屏停在"我的"总览页（Q-BL-13/23；jsdom 无 matchMedia 时按窄屏）
       { path: 'me', component: () => import('@/portal/Me.vue'), beforeEnter: () => (isWideNow() ? { path: '/me/profile', replace: true } : true) },
       { path: 'me/style', component: () => import('@/portal/me/MeStyle.vue') },
-      { path: 'me/identity', component: () => import('@/portal/me/MeIdentity.vue') },
+      { path: 'me/identity', component: UnitsPage, props: { section: 'identity' } },
       { path: 'me/profile', component: () => import('@/portal/me/MeProfile.vue') },
       { path: 'me/phone', component: () => import('@/portal/me/MePhone.vue') },
       { path: 'me/password', component: () => import('@/portal/me/MePassword.vue') },
       { path: 'me/email', component: () => import('@/portal/me/MeEmail.vue') },
       { path: 'me/cancel', component: () => import('@/portal/me/MeCancel.vue') },
-      // 旧地址 /units#review、/units#appeal 重定向到对应二级页（REQ-FUNC-215）
+      // 旧地址 /units#appeal 重定向到对应二级页；/units#review 即身份页底部卡片（REQ-FUNC-215、ADR-133）
       {
         path: 'units',
         component: UnitsPage,
         props: { section: 'identity' },
         beforeEnter: (to) => (LEGACY_UNITS_HASH[to.hash] ? { path: LEGACY_UNITS_HASH[to.hash], replace: true } : true)
       },
-      ...['review', 'pick', 'appeal', 'applications', 'appeals'].map((section) => ({
+      // 旧地址 /units/review → 身份页并定位到底部卡片（非产权业主无该卡片，AC-235-03）
+      { path: 'units/review', redirect: { path: '/units', hash: '#review' } },
+      ...['pick', 'appeal', 'applications', 'appeals'].map((section) => ({
         path: `units/${section}`, component: UnitsPage, props: { section }
       })),
       { path: 'resolutions', component: ResolutionsPage, props: { section: 'public' } },

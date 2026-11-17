@@ -32,6 +32,7 @@
 
 <script setup>
 import { onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { meApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
@@ -39,6 +40,7 @@ import { errorText } from '@/shared/format'
 import { useProfile } from './useProfile'
 
 const auth = useAuthStore()
+const router = useRouter()
 const { profile, loadProfile } = useProfile()
 const bind = reactive({ phone: '', code: '' })
 const change = reactive({ oldPhone: '', newPhone: '', oldCode: '', newCode: '' })
@@ -63,16 +65,12 @@ async function afterPhoneChange(result) {
     auth.setAuth(result.token, null)
     ElMessage.success('账号已合并，已切换到主账号')
   } else {
-    const bound = result.auto_bound || []
-    if (bound.length) {
-      const parts = bound.map((item) => item.specific_part).join('、')
-      ElMessage.success(`手机号已绑定，已根据你的手机号自动认证为 ${parts} 的产权业主`)
-    } else {
-      ElMessage.success('手机号已更新')
-    }
+    ElMessage.success('手机号已更新')
   }
   await auth.fetchMe().catch(() => null)
   await loadProfile()
+  // 首次绑定手机号匹配到清册专有部分：进入"认证产权"页由用户确认（REQ-FUNC-233/234）
+  if (!result.merged && result.registry_match?.pending) router?.push('/units/pick')
 }
 
 async function bindPhone() {

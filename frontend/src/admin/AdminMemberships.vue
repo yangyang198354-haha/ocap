@@ -12,10 +12,10 @@
     <div class="card">
       <el-empty v-if="!items.length" description="暂无记录" />
       <el-table :data="items" size="small">
-        <el-table-column label="用户" width="160">
+        <el-table-column label="用户" min-width="160">
           <template #default="{ row }">{{ row.user?.nickname || row.user?.account_no }}（#{{ row.user?.id }}）</template>
         </el-table-column>
-        <el-table-column prop="specific_part" label="专有部分" width="160" />
+        <el-table-column prop="specific_part" label="专有部分" min-width="160" />
         <el-table-column label="身份" width="120">
           <template #default="{ row }">{{ ROLE_LABELS[row.role] || row.role }}</template>
         </el-table-column>

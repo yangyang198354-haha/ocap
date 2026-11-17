@@ -56,7 +56,8 @@ describe('注册用户目录展示', () => {
       throw new Error(`未预期的 GET ${url}`)
     })
 
-    const wrapper = mount(AdminUsers, { global: { plugins: [ElementPlus] }, attachTo: document.body })
+    // 分区同步：注册用户目录已迁为 /admin/users/registered 二级页，需传 section（原：同页内默认显示）
+    const wrapper = mount(AdminUsers, { props: { section: 'registered' }, global: { plugins: [ElementPlus] }, attachTo: document.body })
     await flushPromises()
     const text = wrapper.text().replace(/\s+/g, ' ')
 

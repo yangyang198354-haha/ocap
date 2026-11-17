@@ -13,7 +13,7 @@
     </div>
     <div class="card">
       <el-table :data="seats" size="small">
-        <el-table-column label="用户" width="180">
+        <el-table-column label="用户" min-width="180">
           <template #default="{ row }">{{ row.user?.nickname || row.user?.account_no }}（#{{ row.user?.id }}）</template>
         </el-table-column>
         <el-table-column label="职位" width="130">

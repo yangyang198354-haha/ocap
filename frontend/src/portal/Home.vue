@@ -9,7 +9,7 @@
           <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
           <p class="muted home-meta">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</p>
           <p v-if="pendingReview > 0" class="home-meta">
-            <router-link to="/units#review" class="link">待审批同住人申请：{{ pendingReview }}</router-link>
+            <router-link to="/units/review" class="link">待审批同住人申请：{{ pendingReview }}</router-link>
           </p>
         </div>
         <div class="home-metrics">

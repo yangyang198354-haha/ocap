@@ -5,3 +5,9 @@
 .theme-bento .vote-bar { background: #EEF0F6; }
 .theme-bento .vote-disagree { background: #FF5C8A; }
 .theme-bento .vote-abstain { background: #C9CDDA; opacity: 1; }
+/* 登录页配图：--hero 实底上的 Bento 方块拼贴 + 点阵 */
+.theme-bento .auth-art { background: var(--hero); }
+.theme-bento .auth-art .art-a { left: 40rpx; top: 40rpx; width: 230rpx; height: 130rpx; border-radius: 32rpx; background: var(--surface); }
+.theme-bento .auth-art .art-b { left: 290rpx; top: 110rpx; width: 150rpx; height: 130rpx; border-radius: 32rpx; background: var(--glass); }
+.theme-bento .auth-art .art-c { right: 40rpx; bottom: 36rpx; width: 220rpx; height: 90rpx; border-radius: 32rpx; background: var(--accent-bg); }
+.theme-bento .auth-art .art-d { right: 60rpx; top: 30rpx; width: 220rpx; height: 100rpx; opacity: .7; background-image: radial-gradient(var(--on-hero) 3rpx, transparent 4rpx); background-size: 24rpx 24rpx; }

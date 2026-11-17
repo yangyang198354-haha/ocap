@@ -5,11 +5,7 @@
         <h3 class="title" style="margin: 0">业委会决议</h3>
         <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起决议</el-button>
       </div>
-      <el-radio-group v-model="scope" style="margin-top: 12px" @change="resetAndLoad">
-        <el-radio-button value="public">公开决议</el-radio-button>
-        <el-radio-button value="mine">我发起的</el-radio-button>
-        <el-radio-button value="todo">待我表决</el-radio-button>
-      </el-radio-group>
+      <p class="section-title">{{ sectionTitle }}</p>
     </div>
 
     <div v-if="!items.length" class="card">
@@ -79,7 +75,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, meApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
@@ -89,8 +85,12 @@ import { datetime, errorText } from '@/shared/format'
 import { usePaging } from '@/shared/usePaging'
 import { voteShare } from '@/shared/voteShare'
 
+// 分区由路由 props 决定（MOD-124 / IFC-324）：public 公开决议 / mine 我发起的 / todo 待我表决
+const props = defineProps({ section: { type: String, default: 'public' } })
+const SECTION_TITLES = { public: '公开决议', mine: '我发起的', todo: '待我表决' }
 const auth = useAuthStore()
-const scope = ref('public')
+const scope = computed(() => (SECTION_TITLES[props.section] ? props.section : 'public'))
+const sectionTitle = computed(() => SECTION_TITLES[scope.value])
 const filters = computed(() => ({ scope: scope.value }))
 const { items, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
   fetch: ({ scope: s, ...params }) => resolutionApi.list(s, params), filters
@@ -154,6 +154,9 @@ async function create() {
     ElMessage.error(errorText(e))
   }
 }
+
+// 兄弟路由复用同一实例，分区变化时重新加载
+watch(scope, resetAndLoad)
 
 onMounted(async () => {
   await auth.fetchMe().catch(() => null)

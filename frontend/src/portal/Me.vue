@@ -1,289 +1,39 @@
+<!-- MOD-122：窄屏"我的"总览页（Q-BL-23=A）；宽屏访问 /me 重定向到个人资料页（Q-BL-13=A） -->
 <template>
   <div class="page">
     <div class="card">
-      <h3 class="title">界面风格</h3>
-      <ThemePicker />
-    </div>
-
-    <div class="card">
-      <h3 class="title">身份</h3>
-      <p>汇总身份：<el-tag>{{ auth.identitySummary.label }}</el-tag></p>
-      <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
-      <p v-for="unit in housing.units" :key="unit.unit_id" class="row">
-        <span>{{ unit.specific_part }}</span>
-        <el-tag size="small" type="info">{{ unit.role_label }}</el-tag>
-      </p>
-    </div>
-
-    <div class="card">
-      <h3 class="title">常用入口</h3>
-      <div class="row">
-        <el-button @click="router.push('/units')">我的房屋</el-button>
-        <el-button v-if="auth.isCommittee" @click="router.push('/tasks')">待办</el-button>
-        <el-button v-if="auth.isCommittee" @click="router.push('/income')">收入表</el-button>
-        <el-button @click="router.push('/reports')">财务报表</el-button>
-        <el-button @click="logoutNow">退出登录</el-button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="title">个人资料</h3>
-      <div class="row">
-        <el-input v-model="profile.nickname" placeholder="昵称" style="max-width: 240px" />
-        <el-select v-model="profile.gender" placeholder="性别" clearable style="width: 120px">
-          <el-option label="未知" :value="0" /><el-option label="男" :value="1" /><el-option label="女" :value="2" />
-        </el-select>
-        <el-date-picker v-model="profile.birthday" type="date" value-format="YYYY-MM-DD" placeholder="生日（选填）" style="max-width: 180px" />
-        <el-button type="primary" @click="saveProfile">保存</el-button>
-      </div>
-      <p class="muted" style="margin-top: 10px">手机号：{{ profile.phone || '未绑定' }}；邮箱：{{ profile.email || '未填写' }}</p>
-      <div class="row">
-        <AuthImage :src="profile.avatar_url" alt="暂无头像" :size="64" />
-        <el-upload :show-file-list="false" :http-request="uploadAvatar" :before-upload="checkAvatar" accept=".jpg,.jpeg,.png">
-          <el-button>更换头像</el-button>
-        </el-upload>
-        <span class="muted">jpg/png，不超过 2 MB</span>
-      </div>
-    </div>
-
-    <div class="card" v-if="!profile.phone">
-      <h3 class="title">绑定手机号</h3>
-      <p class="muted">仅微信登录的账号需要先绑定手机号才能做业主认证、注销等操作。若该手机号已注册，两个账号将合并（以该手机号原账号为主）。</p>
-      <div class="row">
-        <el-input v-model="bind.phone" placeholder="手机号" maxlength="11" style="max-width: 180px" />
-        <el-button @click="sendBindCode">发送验证码</el-button>
-        <el-input v-model="bind.code" placeholder="验证码" maxlength="6" style="max-width: 140px" />
-        <el-button type="primary" @click="bindPhone">绑定</el-button>
-      </div>
-    </div>
-
-    <div class="card" v-else>
-      <h3 class="title">更换手机号</h3>
-      <p class="muted">需要原手机号和新手机号各自的验证码。新手机号若已属于其他账号，两个账号将合并（以新手机号原账号为主，身份取高）。</p>
-      <div class="row">
-        <el-input v-model="change.oldPhone" placeholder="原手机号" maxlength="11" style="max-width: 160px" />
-        <el-button @click="sendChangeCode(change.oldPhone)">发送原号验证码</el-button>
-        <el-input v-model="change.oldCode" placeholder="原号验证码" maxlength="6" style="max-width: 140px" />
-      </div>
-      <div class="row" style="margin-top: 8px">
-        <el-input v-model="change.newPhone" placeholder="新手机号" maxlength="11" style="max-width: 160px" />
-        <el-button @click="sendChangeCode(change.newPhone)">发送新号验证码</el-button>
-        <el-input v-model="change.newCode" placeholder="新号验证码" maxlength="6" style="max-width: 140px" />
-        <el-button type="primary" @click="changePhone">更换</el-button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="title">设置密码</h3>
-      <el-input v-model="pwd.current" type="password" placeholder="当前密码（首次设置可留空）" show-password />
-      <el-input v-model="pwd.password" type="password" placeholder="新密码（8~64 位，含字母和数字）" show-password style="margin-top: 8px" />
-      <el-input v-model="pwd.confirm" type="password" placeholder="再次输入新密码" show-password style="margin-top: 8px" />
-      <el-button type="primary" style="margin-top: 10px" @click="savePassword">保存密码</el-button>
-    </div>
-
-    <div class="card">
-      <h3 class="title">邮箱验证</h3>
-      <div class="row">
-        <el-input v-model="email" placeholder="邮箱" style="max-width: 260px" />
-        <el-button @click="saveEmail">保存邮箱</el-button>
-      </div>
-      <div class="row" style="margin-top: 8px">
-        <el-button @click="sendEmailCode">发送验证码到当前邮箱</el-button>
-        <el-input v-model="emailCode" placeholder="验证码" maxlength="6" style="max-width: 140px" />
-        <el-button @click="verifyEmail">验证</el-button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="title">账号注销</h3>
-      <p class="muted">注销后账号将不可登录，历史记录保留。需输入已绑定的手机号和验证码；未绑定手机号请先绑定。</p>
-      <div class="row">
-        <el-input v-model="cancel.phone" placeholder="已绑定的手机号" maxlength="11" style="max-width: 160px" />
-        <el-button @click="sendCancelCode">发送注销验证码</el-button>
-        <el-input v-model="cancel.code" placeholder="验证码" maxlength="6" style="max-width: 140px" />
-        <el-button type="danger" @click="cancelAccount">确认注销</el-button>
-      </div>
+      <h3 class="title">我的</h3>
+      <nav class="me-overview" aria-label="个人中心">
+        <router-link v-for="item in PORTAL_USER_MENU" :key="item.key" :to="item.to" class="me-overview-item">
+          <span>{{ item.label }}</span>
+          <span class="muted" aria-hidden="true">›</span>
+        </router-link>
+        <button type="button" class="me-overview-item me-logout" @click="logoutNow">退出登录</button>
+      </nav>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { attachmentApi, meApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
-import { errorText } from '@/shared/format'
-import { confirmDanger } from '@/shared/confirm'
-import ThemePicker from '@/theme/ThemePicker.vue'
-import AuthImage from './parts/AuthImage.vue'
+import { useHousingStore } from '@/stores/housing'
+import { PORTAL_USER_MENU } from '@/layout/menus'
+import { useIsWide } from '@/layout/useBreakpoint'
 
 const router = useRouter()
 const auth = useAuthStore()
-const profile = reactive({ nickname: '', gender: 0, birthday: null, phone: '', email: '', avatar_url: '' })
-const housing = reactive({ units: [] })
-const AVATAR_MAX_BYTES = 2 * 1024 * 1024
-const pwd = reactive({ current: '', password: '', confirm: '' })
-const bind = reactive({ phone: '', code: '' })
-const change = reactive({ oldPhone: '', newPhone: '', oldCode: '', newCode: '' })
-const cancel = reactive({ phone: '', code: '' })
-const email = ref('')
-const emailCode = ref('')
+const isWide = useIsWide()
+
+// 窗口由窄变宽时进入个人资料页（AC-220-05）
+watch(isWide, (wide) => {
+  if (wide) router.replace('/me/profile')
+})
 
 async function logoutNow() {
   await auth.logout()
+  useHousingStore().$reset()
   router.replace('/login')
-}
-
-async function loadProfile() {
-  try {
-    Object.assign(profile, await meApi.profile())
-    email.value = ''
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function loadHousing() {
-  try {
-    Object.assign(housing, await meApi.housing())
-  } catch (e) {
-    housing.units = []
-  }
-}
-
-onMounted(() => {
-  loadProfile()
-  loadHousing()
-})
-
-async function saveProfile() {
-  try {
-    Object.assign(profile, await meApi.updateProfile({
-      nickname: profile.nickname, gender: profile.gender, birthday: profile.birthday || null
-    }))
-    ElMessage.success('已保存')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-// 上传前预校验类型与大小（服务端校验仍为最终防线，C-18）
-function checkAvatar(file) {
-  const okType = ['image/jpeg', 'image/png'].includes(file.type) || /\.(jpe?g|png)$/i.test(file.name || '')
-  if (!okType) {
-    ElMessage.error('头像仅支持 jpg/png 格式')
-    return false
-  }
-  if (file.size > AVATAR_MAX_BYTES) {
-    ElMessage.error('头像不能超过 2 MB')
-    return false
-  }
-  return true
-}
-
-async function uploadAvatar({ file }) {
-  try {
-    const uploaded = await attachmentApi.upload(file, 'AVATAR')
-    await meApi.updateProfile({ avatar_attachment_id: uploaded.id })
-    await loadProfile()
-    ElMessage.success('头像已更新')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function sendCode(purpose, target, tip = '验证码已发送') {
-  try {
-    await meApi.sendCode(purpose, target)
-    ElMessage.success(tip)
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-const sendBindCode = () => sendCode('BIND_PHONE', bind.phone)
-const sendChangeCode = (phone) => sendCode('CHANGE_PHONE', phone)
-const sendCancelCode = () => sendCode('CANCEL')
-
-// 合并成功时旧令牌已失效，换用返回的新令牌（IFC-071/072）
-async function afterPhoneChange(result) {
-  if (result.merged && result.token) {
-    auth.setAuth(result.token, null)
-    ElMessage.success('账号已合并，已切换到主账号')
-  } else {
-    const bound = result.auto_bound || []
-    if (bound.length) {
-      const parts = bound.map((item) => item.specific_part).join('、')
-      ElMessage.success(`手机号已绑定，已根据你的手机号自动认证为 ${parts} 的产权业主`)
-    } else {
-      ElMessage.success('手机号已更新')
-    }
-  }
-  await auth.fetchMe().catch(() => null)
-  await loadProfile()
-}
-
-async function bindPhone() {
-  try {
-    await afterPhoneChange(await meApi.bindPhone(bind.phone, bind.code))
-    Object.assign(bind, { phone: '', code: '' })
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function changePhone() {
-  try {
-    await afterPhoneChange(await meApi.changePhone(change.oldPhone, change.newPhone, change.oldCode, change.newCode))
-    Object.assign(change, { oldPhone: '', newPhone: '', oldCode: '', newCode: '' })
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function savePassword() {
-  const body = { password: pwd.password, password_confirm: pwd.confirm }
-  if (pwd.current) body.current_password = pwd.current
-  try {
-    await meApi.setPassword(body)
-    ElMessage.success('密码已保存')
-    Object.assign(pwd, { current: '', password: '', confirm: '' })
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function saveEmail() {
-  try {
-    Object.assign(profile, await meApi.updateProfile({ email: email.value || null }))
-    ElMessage.success('邮箱已保存，请验证')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-const sendEmailCode = () => sendCode('EMAIL_VERIFY')
-
-async function verifyEmail() {
-  try {
-    await meApi.verifyEmail(emailCode.value)
-    ElMessage.success('邮箱已验证')
-    loadProfile()
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-}
-
-async function cancelAccount() {
-  if (!(await confirmDanger('cancelAccount'))) return
-  try {
-    await meApi.cancelAccount(cancel.phone, cancel.code)
-    await auth.logout()
-    ElMessage.success('账号已注销')
-    router.replace('/login')
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
 }
 </script>

@@ -10,15 +10,24 @@ html[data-theme="terminal"] .card::before {
   content: ""; position: absolute; top: -1px; left: -1px; width: 14px; height: 14px;
   border-top: 2px solid var(--accent); border-left: 2px solid var(--accent);
 }
-html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .topnav a,
+html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
+html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
 html[data-theme="terminal"] .tabbar a, html[data-theme="terminal"] .el-button, html[data-theme="terminal"] .label,
 html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .field-label {
   font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em;
 }
 html[data-theme="terminal"] .tag { border: 1px solid currentColor; border-radius: 2px; }
 html[data-theme="terminal"] .tag-dot { border-radius: 0; }
-html[data-theme="terminal"] .topnav a.is-active { border-bottom: 2px solid var(--accent); border-radius: 0; background: transparent; }
-html[data-theme="terminal"] .topnav a.is-active::before { content: "> "; white-space: pre; }
+/* 左侧导航：等宽大写，当前项荧光描边 + "> " 前缀（除颜色外的可辨认方式） */
+html[data-theme="terminal"] .side-item, html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item { border-radius: 0; }
+html[data-theme="terminal"] .side-item.is-active, html[data-theme="terminal"] .side-sub-item.is-active, html[data-theme="terminal"] .sub-nav-item.is-active {
+  background: transparent; outline: 1px solid var(--accent); outline-offset: -1px; border-left-color: var(--accent);
+}
+html[data-theme="terminal"] .side-item.is-active::before, html[data-theme="terminal"] .side-sub-item.is-active::before { content: "> "; white-space: pre; }
+html[data-theme="terminal"] .user-menu-trigger { border-radius: 2px; }
+html[data-theme="terminal"] .auth-brand { font-family: var(--mono); letter-spacing: .04em; }
+html[data-theme="terminal"] .auth-brand::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
+html[data-theme="terminal"][data-perf="low"] .auth-brand::after { animation: none; }
 html[data-theme="terminal"] .chip, html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .home-q { border-radius: 2px; }
 html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: transparent; }
 

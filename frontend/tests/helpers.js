@@ -4,8 +4,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import ElementPlus from 'element-plus'
 
-export async function mountPage(component, { path = '/' } = {}) {
-  const pinia = createPinia()
+// props：布局拆分后的分区页（section）等需要向被测组件传 props（向后兼容，缺省不传）
+export async function mountPage(component, { path = '/', props = {}, pinia: sharedPinia = null } = {}) {
+  // pinia：跨页面保持同一仓库（如认证页转申诉页的预填姓名）
+  const pinia = sharedPinia || createPinia()
   setActivePinia(pinia)
   const router = createRouter({
     history: createMemoryHistory(),
@@ -18,6 +20,7 @@ export async function mountPage(component, { path = '/' } = {}) {
   router.push(path)
   await router.isReady()
   const wrapper = mount(component, {
+    props,
     global: { plugins: [pinia, router, ElementPlus] },
     attachTo: document.body
   })

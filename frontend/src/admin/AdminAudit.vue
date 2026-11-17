@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="card">
+    <div v-if="!isLogs" class="card">
       <h3 class="title">系统配置</h3>
       <div class="row">
         <span>审计日志保留期限（月，≥6）</span>
@@ -8,7 +8,7 @@
         <el-button type="primary" @click="saveRetention">保存</el-button>
       </div>
     </div>
-    <div class="card">
+    <div v-if="isLogs" class="card">
       <h3 class="title">审计日志</h3>
       <div class="row">
         <el-input v-model="filters.action" placeholder="动作" style="max-width: 180px" @change="load" />
@@ -21,8 +21,8 @@
         <el-table-column label="主体" width="90">
           <template #default="{ row }">{{ textOf(AUDIT_ACTOR_TEXT, row.actor_type) }}</template>
         </el-table-column>
-        <el-table-column prop="action" label="动作" width="170" />
-        <el-table-column prop="object_type" label="对象" width="120" />
+        <el-table-column prop="action" label="动作" min-width="170" />
+        <el-table-column prop="object_type" label="对象" min-width="120" />
         <el-table-column prop="object_id" label="对象 ID" width="110" />
         <el-table-column label="结果" width="90">
           <template #default="{ row }">{{ textOf(AUDIT_RESULT_TEXT, row.result) }}</template>
@@ -38,13 +38,16 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import { datetime, errorText } from '@/shared/format'
 import { textOf } from '@/shared/labels'
 import { AUDIT_ACTOR_TEXT, AUDIT_RESULT_TEXT } from '@/shared/adminText'
 
+// 分区由路由 props 决定（MOD-126 / IFC-324）：config 系统配置 / logs 审计日志
+const props = defineProps({ section: { type: String, default: 'config' } })
+const isLogs = computed(() => props.section === 'logs')
 const retention = ref(24)
 const logs = ref([])
 const page = ref(1)
@@ -90,8 +93,12 @@ async function saveRetention() {
   }
 }
 
-onMounted(() => {
-  loadConfig()
-  load()
-})
+// 兄弟路由复用同一实例：切换分区时只请求该分区所需数据
+function enterSection() {
+  if (isLogs.value) load()
+  else loadConfig()
+}
+
+watch(() => props.section, enterSection)
+onMounted(enterSection)
 </script>

@@ -80,7 +80,8 @@ describe('回流 2 另修的页面：中文与时间格式（REQ-FUNC-158）', (
         { id: 3, occurred_at: ISO2, actor_type: 'SYSTEM', action: 'JOB_RUN', object_type: 'job', object_id: '1', result: 'FAILURE' }] },
       '/admin/system-config/audit.retention_months': { value: 24 }
     }))
-    const { wrapper } = await mountPage(AdminAudit)
+    // 分区同步：审计日志表在 /admin/audit/logs 二级页，传 section: 'logs'（原：与系统配置同页）
+    const { wrapper } = await mountPage(AdminAudit, { props: { section: 'logs' } })
     await flush()
     const rows = cellsOf(wrapper)
     expect(rows).toHaveLength(3)

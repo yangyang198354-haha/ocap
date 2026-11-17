@@ -37,4 +37,6 @@
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
+- [P-TE-007] 依赖登录后用户对象的派生状态（角标、菜单）要按真实链路造用例：登录响应只带简要用户对象，身份由页面随后 fetchMe 补全，再断言派生状态更新；预置完整 me 的自检会漏掉 — 自记 2026-11-17 · 证据 ocap_brand_layout TC-INT-914（DEF-002）
+- [P-TE-008] 用对象字面量做 key→组件/配置查表的函数，加原型链键名（__proto__、constructor、toString）回退用例，obj[key] 会取到 Object.prototype 成员 — 自记 2026-11-17 · 证据 ocap_brand_layout TC-INT-874（DEF-001，frontend/src/brand/art/index.js）
 

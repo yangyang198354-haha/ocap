@@ -58,13 +58,13 @@ beforeEach(async () => {
 })
 
 describe('TC-E2E-103 新增测试风格 D（AC-080-01/02/03）', () => {
-  it('个人中心列表由 3 变 4，含“测试风格 D”；选择后全站应用该风格；业务页面源码零改动（无 testd 字样）', async () => {
+  it('个人中心「界面风格」页（/me/style）列表由 3 变 4，含“测试风格 D”；选择后全站应用该风格；业务页面源码零改动（无 testd 字样）', async () => {
     expect(globalThis.__QA_D_ERRORS__).toEqual([])
     expect(globalThis.__QA_D_CSS__).toContain('html[data-theme="testd"]')
     const pinia = createPinia()
     setActivePinia(pinia)
     const wrapper = mount(App, { global: { plugins: [pinia, router, ElementPlus] }, attachTo: document.body })
-    await router.push('/me')
+    await router.push('/me/style')
     await flushPromises()
     await flushPromises()
     const names = wrapper.findAll('[role=radio] .theme-name').map((n) => n.text())

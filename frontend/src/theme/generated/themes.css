@@ -271,6 +271,14 @@ html[data-theme="neon"] .type-card.is-selected { border-color: rgba(169,150,255,
 html[data-theme="neon"] .drop-zone .el-upload-dragger { border-style: dashed; border-color: rgba(169,150,255,.4); }
 html[data-theme="neon"] .claim-step.is-done .claim-step-node { background: var(--accent-bg); border-color: transparent; }
 html[data-theme="neon"] .claim-step.is-current .claim-step-node { border-color: var(--accent-2); color: var(--accent-2); box-shadow: 0 0 16px rgba(34,211,238,.5); }
+/* 左侧导航 / 用户菜单 / 登录页：玻璃侧栏（不透明纯色，兼容 data-perf=low）+ 发光指示条 */
+html[data-theme="neon"] .side { border-right-color: rgba(169,150,255,.28); box-shadow: 0 0 24px rgba(124,92,255,.18); }
+html[data-theme="neon"] .side-item.is-active, html[data-theme="neon"] .side-sub-item.is-active, html[data-theme="neon"] .sub-nav-item.is-active {
+  border-left-color: var(--accent-2); box-shadow: 0 0 16px rgba(34,211,238,.3);
+}
+html[data-theme="neon"] .user-menu-trigger { border-color: rgba(169,150,255,.35); }
+html[data-theme="neon"] .user-menu-trigger:hover { box-shadow: 0 0 16px rgba(124,92,255,.35); }
+html[data-theme="neon"] .auth-brand { text-shadow: 0 0 18px rgba(124,92,255,.55); }
 /* 低端设备：关闭装饰动画（玻璃模糊降级见通用规则） */
 html[data-theme="neon"][data-perf="low"] body::before, html[data-theme="neon"][data-perf="low"] .home-hero::after { animation: none; }
 
@@ -404,9 +412,13 @@ html[data-theme="bento"] body {
     var(--bg);
   background-attachment: fixed;
 }
-html[data-theme="bento"] .topnav { background: var(--surface); border-radius: 999px; padding: 4px; box-shadow: 0 1px 2px rgba(17,18,26,.06); }
-html[data-theme="bento"] .topnav a { border-radius: 999px; }
-html[data-theme="bento"] .topnav a.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+/* 左侧导航 / 窄屏切换条：白底侧栏，当前项沿用黑色高亮胶囊（保留 3px 左侧指示条作为非颜色提示） */
+html[data-theme="bento"] .side { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
+html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }
+html[data-theme="bento"] .side-item.is-active, html[data-theme="bento"] .side-sub-item.is-active,
+html[data-theme="bento"] .sub-nav-item.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+html[data-theme="bento"] .user-menu-trigger { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
+html[data-theme="bento"] .auth-brand { letter-spacing: -.02em; }
 html[data-theme="bento"] .card { border-color: rgba(17,18,26,.04); }
 html[data-theme="bento"] .chip { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); color: var(--on-hero); }
 html[data-theme="bento"] .home-hero::after {
@@ -460,39 +472,17 @@ html[data-theme="bento"][data-surface="admin"] .admin-bar {
   color: var(--on-hero);
   border-bottom: 0;
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .brand { color: var(--on-hero); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav {
-  background: rgba(17,18,26,.22);
-  border-radius: var(--radius-lg);
+html[data-theme="bento"][data-surface="admin"] .admin-bar .user-menu-trigger,
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-menu-btn {
+  background: transparent;
   box-shadow: none;
-  padding: 4px;
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a { color: var(--on-hero); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a:hover { background: rgba(17,18,26,.22); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a.is-active {
-  background: var(--surface);
-  color: var(--accent-text);
-  font-weight: 650;
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger {
   color: var(--on-hero);
   border-color: var(--on-hero);
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger:hover {
+html[data-theme="bento"][data-surface="admin"] .admin-bar .user-menu-trigger:hover,
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-menu-btn:hover {
   background: rgba(17,18,26,.22);
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button {
-  --el-button-bg-color: transparent;
-  --el-button-hover-bg-color: transparent;
-  --el-button-active-bg-color: transparent;
-  --el-button-text-color: var(--on-hero);
-  --el-button-hover-text-color: var(--on-hero);
-  --el-button-active-text-color: var(--on-hero);
-  --el-button-border-color: var(--on-hero);
-  --el-button-hover-border-color: var(--on-hero);
-  --el-button-active-border-color: var(--on-hero);
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button:hover { background: rgba(17,18,26,.22); }
 html[data-theme="bento"][data-surface="admin"] .admin-bar :focus-visible { outline-color: var(--on-hero); }
 
 html[data-theme="terminal"] {
@@ -628,15 +618,24 @@ html[data-theme="terminal"] .card::before {
   content: ""; position: absolute; top: -1px; left: -1px; width: 14px; height: 14px;
   border-top: 2px solid var(--accent); border-left: 2px solid var(--accent);
 }
-html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .topnav a,
+html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
+html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
 html[data-theme="terminal"] .tabbar a, html[data-theme="terminal"] .el-button, html[data-theme="terminal"] .label,
 html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .field-label {
   font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em;
 }
 html[data-theme="terminal"] .tag { border: 1px solid currentColor; border-radius: 2px; }
 html[data-theme="terminal"] .tag-dot { border-radius: 0; }
-html[data-theme="terminal"] .topnav a.is-active { border-bottom: 2px solid var(--accent); border-radius: 0; background: transparent; }
-html[data-theme="terminal"] .topnav a.is-active::before { content: "> "; white-space: pre; }
+/* 左侧导航：等宽大写，当前项荧光描边 + "> " 前缀（除颜色外的可辨认方式） */
+html[data-theme="terminal"] .side-item, html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item { border-radius: 0; }
+html[data-theme="terminal"] .side-item.is-active, html[data-theme="terminal"] .side-sub-item.is-active, html[data-theme="terminal"] .sub-nav-item.is-active {
+  background: transparent; outline: 1px solid var(--accent); outline-offset: -1px; border-left-color: var(--accent);
+}
+html[data-theme="terminal"] .side-item.is-active::before, html[data-theme="terminal"] .side-sub-item.is-active::before { content: "> "; white-space: pre; }
+html[data-theme="terminal"] .user-menu-trigger { border-radius: 2px; }
+html[data-theme="terminal"] .auth-brand { font-family: var(--mono); letter-spacing: .04em; }
+html[data-theme="terminal"] .auth-brand::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
+html[data-theme="terminal"][data-perf="low"] .auth-brand::after { animation: none; }
 html[data-theme="terminal"] .chip, html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .home-q { border-radius: 2px; }
 html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: transparent; }
 

@@ -1,7 +1,6 @@
 <template>
-  <div class="page" style="max-width: 420px; padding-top: 60px">
-    <div class="card">
-      <h2 class="title">业主委员会 · 登录</h2>
+  <AuthShell surface="portal" subtitle="登录">
+    <div class="card auth-form-card">
       <el-tabs v-model="tab">
         <el-tab-pane label="验证码" name="code">
           <el-input v-model="form.phone" placeholder="手机号" maxlength="11" />
@@ -33,7 +32,7 @@
       </div>
       <p class="muted" style="margin-bottom: 0">小程序用户请在微信小程序内使用微信一键登录。</p>
     </div>
-  </div>
+  </AuthShell>
 </template>
 
 <script setup>
@@ -44,6 +43,7 @@ import { authApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
 import { useThemeStore } from '@/theme/store'
+import AuthShell from '@/brand/AuthShell.vue'
 
 const router = useRouter()
 const route = useRoute()

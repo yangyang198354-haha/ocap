@@ -9,10 +9,7 @@
         </div>
       </div>
       <p class="muted">报销凭发票；备用金为预借现金，办完后核销，实际支出再凭票报销；核销按差额调整支出，多退少补。</p>
-      <el-radio-group v-model="scope" style="margin-top: 8px" @change="resetAndLoad">
-        <el-radio-button value="mine">我提交的</el-radio-button>
-        <el-radio-button value="todo">待我审批</el-radio-button>
-      </el-radio-group>
+      <p class="section-title">{{ scope === 'todo' ? '待我审批' : '我提交的' }}</p>
     </div>
     <div class="card">
       <el-empty v-if="!items.length" description="暂无申请" />
@@ -163,7 +160,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, claimApi, meApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
@@ -174,8 +171,10 @@ import { errorText, moneyText } from '@/shared/format'
 import { confirmDanger } from '@/shared/confirm'
 import { usePaging } from '@/shared/usePaging'
 
+// 分区由路由 props 决定（MOD-124 / IFC-324）：mine 我提交的 / todo 待我审批
+const props = defineProps({ section: { type: String, default: 'mine' } })
 const auth = useAuthStore()
-const scope = ref('mine')
+const scope = computed(() => (props.section === 'todo' ? 'todo' : 'mine'))
 const filters = computed(() => ({ scope: scope.value }))
 const { items, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
   fetch: (params) => claimApi.list(params), filters
@@ -341,6 +340,9 @@ async function withdraw(id) {
     ElMessage.error(errorText(e))
   }
 }
+
+// 兄弟路由复用同一实例，分区变化时重新加载
+watch(scope, resetAndLoad)
 
 onMounted(async () => {
   await auth.fetchMe().catch(() => null)

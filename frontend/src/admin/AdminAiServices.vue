@@ -1,8 +1,8 @@
 <template>
   <div class="page">
-    <h2>AI 服务配置</h2>
-    <el-tabs>
-      <el-tab-pane label="模型与生成服务">
+    <h2>AI 服务配置 · {{ isPrompts ? '提示词模板' : '模型与生成服务' }}</h2>
+    <div>
+      <div v-if="!isPrompts">
         <el-card v-for="item in services" :key="item.service_type" style="margin-bottom: 12px">
           <div class="row" style="justify-content: space-between">
             <strong>{{ item.label }}</strong>
@@ -25,8 +25,8 @@
             <el-button size="small" type="primary" @click="save(item)">保存</el-button>
           </div>
         </el-card>
-      </el-tab-pane>
-      <el-tab-pane label="提示词模板">
+      </div>
+      <div v-else>
         <div class="row" style="margin-bottom: 12px">
           <el-input v-model="newPrompt.name" placeholder="名称" style="width: 200px" />
           <el-input v-model="newPrompt.prompt" placeholder="提示词" style="width: 420px" />
@@ -42,23 +42,30 @@
             </template>
           </el-table-column>
         </el-table>
-      </el-tab-pane>
-    </el-tabs>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
 
+// 分区由路由 props 决定（MOD-126 / IFC-324）：models 模型与生成服务 / prompts 提示词模板
+const props = defineProps({ section: { type: String, default: 'models' } })
+const isPrompts = computed(() => props.section === 'prompts')
 const services = ref([])
 const prompts = ref([])
 const newPrompt = reactive({ name: '', prompt: '' })
 
+// 只请求当前分区所需数据（兄弟路由复用同一实例）
 async function load() {
-  services.value = (await admin.contentServices()).map((item) => ({ ...item, _secrets: {} }))
-  prompts.value = await admin.promptTemplates()
+  if (isPrompts.value) {
+    prompts.value = await admin.promptTemplates()
+  } else {
+    services.value = (await admin.contentServices()).map((item) => ({ ...item, _secrets: {} }))
+  }
 }
 async function save(item) {
   const payload = { params: item.params }
@@ -102,5 +109,6 @@ async function deletePrompt(row) {
   await admin.deletePromptTemplate(row.id)
   prompts.value = await admin.promptTemplates()
 }
+watch(() => props.section, load)
 onMounted(load)
 </script>

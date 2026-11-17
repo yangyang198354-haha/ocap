@@ -1,49 +1,52 @@
 <template>
-  <div class="admin-shell">
-    <header class="admin-bar">
-      <div class="page row topbar-inner">
-        <span class="brand">业主委员会 · 管理后台</span>
-        <nav class="row topnav admin-nav">
-          <router-link v-for="item in navItems" :key="item.to" :to="item.to" active-class="is-active">
-            {{ item.label }}
-          </router-link>
-          <AdminThemeSwitcher />
-          <el-button size="small" @click="logout">退出</el-button>
-        </nav>
-      </div>
-    </header>
-    <router-view />
+  <div class="admin-shell shell">
+    <aside class="side admin-side">
+      <router-link to="/admin" class="side-brand">
+        <BrandMark :size="28" />
+        <span class="side-brand-name brand-font">{{ ADMIN_BRAND_TITLE }}</span>
+      </router-link>
+      <SideNav :menu="ADMIN_MENU" aria-label="管理端导航" />
+    </aside>
+    <div class="shell-main">
+      <header class="admin-bar">
+        <div class="admin-bar-inner">
+          <button type="button" class="admin-menu-btn" aria-label="打开导航" @click="drawerOpen = true">
+            <svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true">
+              <path d="M1 1h16M1 7h16M1 13h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <AdminUserMenu />
+        </div>
+      </header>
+      <main class="layout-main">
+        <router-view />
+      </main>
+    </div>
+    <el-drawer v-model="drawerOpen" direction="ltr" :with-header="false" size="min(280px, 85vw)" class="admin-drawer">
+      <router-link to="/admin" class="side-brand">
+        <BrandMark :size="28" />
+        <span class="side-brand-name brand-font">{{ ADMIN_BRAND_TITLE }}</span>
+      </router-link>
+      <SideNav :menu="ADMIN_MENU" aria-label="管理端导航（抽屉）" />
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { setToken } from '@/shared/http'
-import AdminThemeSwitcher from '@/theme/AdminThemeSwitcher.vue'
-import { useAdminThemeStore } from '@/theme/adminStore'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { ADMIN_BRAND_TITLE } from '@/brand/brand'
+import BrandMark from '@/brand/BrandMark.vue'
+import SideNav from '@/layout/SideNav.vue'
+import { ADMIN_MENU } from '@/layout/menus'
+import { useIsWide } from '@/layout/useBreakpoint'
+import AdminUserMenu from './AdminUserMenu.vue'
 
-const router = useRouter()
+const route = useRoute()
+const drawerOpen = ref(false)
+const isWide = useIsWide()
 
-const navItems = [
-  { label: '业主清册', to: '/admin/registry' },
-  { label: '申诉', to: '/admin/appeals' },
-  { label: '房屋关系', to: '/admin/memberships' },
-  { label: '业委会席位', to: '/admin/seats' },
-  { label: '审批流程', to: '/admin/flows' },
-  { label: '财务', to: '/admin/finance' },
-  { label: '账号', to: '/admin/users' },
-  { label: '信息公开', to: '/admin/content/posts' },
-  { label: '版式模板', to: '/admin/content/styles' },
-  { label: '素材库', to: '/admin/content/media' },
-  { label: 'AI 服务', to: '/admin/content/services' },
-  { label: '平台账户', to: '/admin/content/platforms' },
-  { label: '内容参数', to: '/admin/content/settings' },
-  { label: '审计/配置', to: '/admin/audit' }
-]
-
-function logout() {
-  setToken('', true)
-  useAdminThemeStore().resetSession()
-  router.replace('/admin/login')
-}
+// 点击二级项后自动关闭抽屉（AC-231-03）；窗口变宽时关闭（AC-231-04）
+watch(() => route.fullPath, () => { drawerOpen.value = false })
+watch(isWide, (wide) => { if (wide) drawerOpen.value = false })
 </script>

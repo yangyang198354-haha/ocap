@@ -37,4 +37,6 @@
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
 - [P-SD-009] 在 scratch 复制的 backend 里放临时测试文件做命令冒烟（含 xlsx 导出→read_rows 预检回读），不污染仓库测试目录 — 自记 2026-11-16 · 证据：ocap_unit_sort_filters GROUP_C 自验证
+- [P-SD-010] 装饰性 SVG 不要用 `<text>`（会进入 wrapper.text()，令"三风格页面文本一致"的既有用例 TC-E2E-104 失败），改 foreignObject + CSS `content: attr(data-t)`；同一组件对应多条路由时在 router 里只 import 一次，否则 `qa_unit_theme` 的 `import('@/portal/X.vue')` 计数变化 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 首跑 41 失败→修后 39（均在测试影响清单内）
+- [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
 

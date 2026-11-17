@@ -7,9 +7,13 @@ html[data-theme="bento"] body {
     var(--bg);
   background-attachment: fixed;
 }
-html[data-theme="bento"] .topnav { background: var(--surface); border-radius: 999px; padding: 4px; box-shadow: 0 1px 2px rgba(17,18,26,.06); }
-html[data-theme="bento"] .topnav a { border-radius: 999px; }
-html[data-theme="bento"] .topnav a.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+/* 左侧导航 / 窄屏切换条：白底侧栏，当前项沿用黑色高亮胶囊（保留 3px 左侧指示条作为非颜色提示） */
+html[data-theme="bento"] .side { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
+html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }
+html[data-theme="bento"] .side-item.is-active, html[data-theme="bento"] .side-sub-item.is-active,
+html[data-theme="bento"] .sub-nav-item.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+html[data-theme="bento"] .user-menu-trigger { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
+html[data-theme="bento"] .auth-brand { letter-spacing: -.02em; }
 html[data-theme="bento"] .card { border-color: rgba(17,18,26,.04); }
 html[data-theme="bento"] .chip { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); color: var(--on-hero); }
 html[data-theme="bento"] .home-hero::after {
@@ -63,37 +67,15 @@ html[data-theme="bento"][data-surface="admin"] .admin-bar {
   color: var(--on-hero);
   border-bottom: 0;
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .brand { color: var(--on-hero); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav {
-  background: rgba(17,18,26,.22);
-  border-radius: var(--radius-lg);
+html[data-theme="bento"][data-surface="admin"] .admin-bar .user-menu-trigger,
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-menu-btn {
+  background: transparent;
   box-shadow: none;
-  padding: 4px;
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a { color: var(--on-hero); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a:hover { background: rgba(17,18,26,.22); }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .topnav a.is-active {
-  background: var(--surface);
-  color: var(--accent-text);
-  font-weight: 650;
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger {
   color: var(--on-hero);
   border-color: var(--on-hero);
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-theme-trigger:hover {
+html[data-theme="bento"][data-surface="admin"] .admin-bar .user-menu-trigger:hover,
+html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-menu-btn:hover {
   background: rgba(17,18,26,.22);
 }
-html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button {
-  --el-button-bg-color: transparent;
-  --el-button-hover-bg-color: transparent;
-  --el-button-active-bg-color: transparent;
-  --el-button-text-color: var(--on-hero);
-  --el-button-hover-text-color: var(--on-hero);
-  --el-button-active-text-color: var(--on-hero);
-  --el-button-border-color: var(--on-hero);
-  --el-button-hover-border-color: var(--on-hero);
-  --el-button-active-border-color: var(--on-hero);
-}
-html[data-theme="bento"][data-surface="admin"] .admin-bar .el-button:hover { background: rgba(17,18,26,.22); }
 html[data-theme="bento"][data-surface="admin"] .admin-bar :focus-visible { outline-color: var(--on-hero); }

@@ -53,25 +53,28 @@ describe('口径 1~4：作用域、渐变顶栏与零回归（AC-142-01~04）', 
     }
   })
 
-  it('管理端顶栏使用渐变与 onHero 文字，高亮为白胶囊 + 强调色文字，悬停规则在高亮之前', () => {
+  it('管理端顶栏使用渐变与 onHero 文字；侧栏品牌/当前项高亮改由 .side-item.is-active 承担，悬停规则在高亮之前（0.4 布局同步：原顶栏 .brand/.topnav 改为侧栏）', () => {
     const bar = adminBlock(`${PREFIX} .admin-bar`)
     expect(bar).toMatch(/background:\s*var\(--hero\)/)
     expect(bar).toMatch(/color:\s*var\(--on-hero\)/)
-    const brand = adminBlock(`${PREFIX} .admin-bar .brand`)
-    expect(brand).toMatch(/color:\s*var\(--on-hero\)/)
-    const active = adminBlock(`${PREFIX} .admin-bar .topnav a.is-active`)
-    expect(active).toMatch(/background:\s*var\(--surface\)/)
-    expect(active).toMatch(/color:\s*var\(--accent-text\)/)
-    expect(active).not.toMatch(/#11121A|#fff/i)
-    expect(bentoWeb.indexOf(`${PREFIX} .admin-bar .topnav a:hover`))
-      .toBeLessThan(bentoWeb.indexOf(`${PREFIX} .admin-bar .topnav a.is-active`))
+    // 原：.admin-bar .brand 取 on-hero；新：顶栏内的用户菜单触发器取 on-hero，透明底
+    const triggerRule = generated.split('}').find((rule) => rule.includes(`${PREFIX} .admin-bar .user-menu-trigger,`))
+    const trigger = triggerRule && triggerRule.slice(triggerRule.indexOf('{') + 1)
+    expect(trigger).toMatch(/color:\s*var\(--on-hero\)/)
+    expect(trigger).toMatch(/background:\s*transparent/)
+    // 原：.admin-bar .topnav a.is-active 为表面色胶囊 + 强调色文字；新：侧栏当前项（黑色胶囊，与用户端 B 同款）不得缺失
+    expect(bentoWeb).toMatch(/\.side-item\.is-active[\s\S]{0,200}?\{\s*background:\s*#11121A;\s*color:\s*#fff;/)
+    // 原：hover 规则位于 is-active 规则之前；新：触发器 hover 规则存在且位于 focus-visible 规则之前
+    expect(bentoWeb.indexOf(`${PREFIX} .admin-bar .user-menu-trigger:hover`)).toBeGreaterThan(0)
+    expect(bentoWeb.indexOf(`${PREFIX} .admin-bar .user-menu-trigger:hover`))
+      .toBeLessThan(bentoWeb.indexOf(`${PREFIX} .admin-bar :focus-visible`))
   })
 
-  it('用户端 B 风格的黑色高亮胶囊与胶囊容器原样保留', () => {
-    expect(bentoWeb).toContain(
-      'html[data-theme="bento"] .topnav a.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }'
-    )
-    expect(bentoWeb).toContain('html[data-theme="bento"] .topnav { background: var(--surface); border-radius: 999px;')
+  it('用户端 B 风格的黑色高亮胶囊原样保留（选择器由 .topnav 迁为侧栏 .side-item，.tabbar 保留）', () => {
+    expect(bentoWeb).toContain('html[data-theme="bento"] .side-item.is-active')
+    expect(bentoWeb).toContain('html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }')
+    expect(bentoWeb).toContain('html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }')
+    expect(bentoWeb).not.toContain('.topnav')
   })
 
   it('管理端主按钮在生成物中取强调色', () => {
@@ -148,7 +151,7 @@ describe('口径 5~7：对比度与叠加层（AC-142-05、REQ-NFUNC-21）', () 
 })
 
 describe('口径 8~9：布局结构与构建校验（AC-139-01、AC-142-04）', () => {
-  it('AdminLayout 渲染品牌、14 个导航链接（含“版式模板”，REQ-FUNC-153）、当前页高亮与顶栏切换入口', async () => {
+  it('AdminLayout 渲染侧栏品牌、9 个一级导航（含“内容管理”下的版式模板二级项，REQ-FUNC-153）、当前页高亮与右上角用户菜单（原：顶栏 14 个链接与切换入口）', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -160,10 +163,15 @@ describe('口径 8~9：布局结构与构建校验（AC-139-01、AC-142-04）', 
     await router.isReady()
     const wrapper = mount(AdminLayout, { global: { plugins: [createPinia(), router, ElementPlus] } })
     await flushPromises()
-    expect(wrapper.find('.admin-bar .brand').exists()).toBe(true)
-    expect(wrapper.findAll('.admin-bar .topnav a')).toHaveLength(14)
-    expect(wrapper.find('.admin-bar .admin-theme-trigger').exists()).toBe(true)
-    expect(wrapper.find('.admin-bar .topnav a.is-active').text()).toBe('业主清册')
+    expect(wrapper.find('.admin-side .side-brand').text()).toBe('Cyber@红枫岭 · 管理后台')
+    expect(wrapper.find('.admin-bar .brand').exists()).toBe(false)
+    expect(wrapper.findAll('.admin-side .side-nav .side-item')).toHaveLength(9)
+    expect(wrapper.findAll('.admin-bar .topnav')).toHaveLength(0)
+    expect(wrapper.find('.admin-bar .user-menu-trigger').exists()).toBe(true)
+    expect(wrapper.find('.admin-side .side-item.is-active').text()).toBe('业主清册')
+    // 版式模板（REQ-FUNC-153）现为“内容管理”的二级项：展开后可见
+    await wrapper.findAll('.admin-side .side-group-toggle').find((b) => b.text().includes('内容管理')).trigger('click')
+    expect(wrapper.find('.admin-side .side-sub').text()).toContain('版式模板')
     wrapper.unmount()
   })
 

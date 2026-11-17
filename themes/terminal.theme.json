@@ -49,6 +49,12 @@
     { "fg": "onAccent", "bg": "#C6FF3D", "min": 16.7, "label": "按钮黑字 / 荧光绿" },
     { "fg": "success", "bg": "#1B2410", "min": 4.5, "label": "成功标签" },
     { "fg": "warning", "bg": "#2B2208", "min": 4.5, "label": "警示标签" },
-    { "fg": "danger", "bg": "#2E1111", "min": 4.5, "label": "危险标签" }
+    { "fg": "danger", "bg": "#2E1111", "min": 4.5, "label": "危险标签" },
+    { "fg": "muted", "bg": "#111113", "min": 6.66, "label": "侧栏次要文字 / 侧栏底" },
+    { "fg": "accentText", "bg": "#1C1C1F", "min": 14.38, "label": "侧栏当前项文字 / 当前项底" },
+    { "fg": "text", "bg": "#111113", "min": 16.8, "label": "管理端顶栏用户菜单文字 / 顶栏底" },
+    { "fg": "text", "bg": "#0A0A0B", "min": 17.6, "label": "登录页品牌标题 / 页面底" },
+    { "fg": "muted", "bg": "#0A0A0B", "min": 6.99, "label": "登录页副标题 / 页面底" },
+    { "fg": "onHero", "bg": "#111113", "min": 16.8, "label": "Hero 文字 / Hero 底" }
   ]
 }

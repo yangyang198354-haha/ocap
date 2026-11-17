@@ -1,7 +1,18 @@
 <template>
   <ThemeRoot>
+  <view class="auth-page">
+  <view class="auth-art" aria-hidden="true">
+    <view class="art-a"></view>
+    <view class="art-b"></view>
+    <view class="art-c"></view>
+    <view class="art-d"></view>
+  </view>
+  <view class="auth-brand">
+    <view class="brand-mark"></view>
+    <text class="auth-brand-name">Cyber@红枫岭</text>
+    <text class="auth-brand-sub">登录</text>
+  </view>
   <view class="card">
-    <view class="title">业主委员会 · 登录</view>
     <view class="row" style="margin-bottom: 16rpx">
       <button size="mini" :type="mode === 'code' ? 'primary' : 'default'" @click="mode = 'code'">验证码登录</button>
       <button size="mini" :type="mode === 'password' ? 'primary' : 'default'" @click="mode = 'password'">密码登录</button>
@@ -21,6 +32,7 @@
     </template>
     <button style="margin-top: 16rpx" @click="loginWechat">微信一键登录</button>
     <view class="muted" style="margin-top: 16rpx">未注册的手机号不会自动创建账号，请先在 Web 端注册，或使用微信一键登录。</view>
+  </view>
   </view>
   </ThemeRoot>
 </template>
@@ -96,3 +108,13 @@ function loginWechat() {
   })
 }
 </script>
+
+<style>
+/* MOD-129：品牌头与配图结构；颜色全部取风格变量，三版视觉在 themes/<key>.mp.css */
+.auth-art { position: relative; height: 280rpx; margin: 24rpx 24rpx 0; overflow: hidden; border-radius: var(--radius-lg); background: var(--surface); }
+.auth-art view { position: absolute; }
+.auth-brand { display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 0; }
+.brand-mark { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: var(--accent); box-shadow: inset 0 0 0 12rpx var(--surface); }
+.auth-brand-name { font-size: 48rpx; font-weight: 700; color: var(--text); }
+.auth-brand-sub { font-size: 28rpx; color: var(--muted); }
+</style>

@@ -53,6 +53,10 @@
     { "fg": "onHero", "bg": "#7C3AED", "min": 5.6, "label": "管理端顶栏白字 / 渐变中段" },
     { "fg": "success", "bg": "#E7F6EF", "min": 4.9, "label": "成功标签" },
     { "fg": "warning", "bg": "#FEF3E2", "min": 4.5, "label": "警示标签" },
-    { "fg": "danger", "bg": "#FDE8EC", "min": 5.3, "label": "危险标签" }
+    { "fg": "danger", "bg": "#FDE8EC", "min": 5.3, "label": "危险标签" },
+    { "fg": "muted", "bg": "#FFFFFF", "min": 5.94, "label": "侧栏次要文字 / 侧栏底" },
+    { "fg": "onAccent", "bg": "#11121A", "min": 18.6, "label": "侧栏当前项文字 / 当前项底（黑色胶囊）" },
+    { "fg": "text", "bg": "#F3F4FA", "min": 17.0, "label": "登录页品牌标题 / 页面底" },
+    { "fg": "muted", "bg": "#F3F4FA", "min": 5.41, "label": "登录页副标题 / 页面底" }
   ]
 }

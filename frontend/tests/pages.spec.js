@@ -14,7 +14,9 @@ import { mountPage, routeTable } from './helpers.js'
 import Home from '@/portal/Home.vue'
 import Claims from '@/portal/Claims.vue'
 import PollDetail from '@/portal/PollDetail.vue'
-import Me from '@/portal/Me.vue'
+import MePhone from '@/portal/me/MePhone.vue'
+import MePassword from '@/portal/me/MePassword.vue'
+import MeCancel from '@/portal/me/MeCancel.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const { http } = mocked
@@ -234,7 +236,8 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
       '/me': ME(['户主'])
     }))
     http.post.mockResolvedValue({ merged: true, token: 'MERGED-TOKEN', user: { id: 2 } })
-    const { wrapper } = await mountPage(Me)
+    // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
+    const { wrapper } = await mountPage(MePhone)
     const titles = wrapper.findAll('h3').map((h) => h.text())
     expect(titles).toContain('更换手机号')
     expect(titles).not.toContain('绑定手机号')
@@ -257,7 +260,8 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
       '/me': ME(['游客'])
     }))
     http.post.mockResolvedValue({ merged: false, phone: '139****0000' })
-    const { wrapper } = await mountPage(Me)
+    // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
+    const { wrapper } = await mountPage(MePhone)
     const titles = wrapper.findAll('h3').map((h) => h.text())
     expect(titles).toContain('绑定手机号')
     expect(titles).not.toContain('更换手机号')
@@ -276,12 +280,14 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     }))
     http.put.mockResolvedValue({})
     http.post.mockResolvedValue({})
-    const { wrapper } = await mountPage(Me)
-    Object.assign(wrapper.vm.pwd, { current: '', password: 'Ocap2026pass', confirm: 'Ocap2026pass' })
-    await wrapper.vm.savePassword()
+    // 拆分同步：改密迁为 /me/password（MePassword），注销迁为 /me/cancel（MeCancel），两页各自挂载
+    const pw = await mountPage(MePassword)
+    Object.assign(pw.wrapper.vm.pwd, { current: '', password: 'Ocap2026pass', confirm: 'Ocap2026pass' })
+    await pw.wrapper.vm.savePassword()
     expect(http.put).toHaveBeenCalledWith('/me/password', { password: 'Ocap2026pass', password_confirm: 'Ocap2026pass' })
-    Object.assign(wrapper.vm.cancel, { phone: '13800000000', code: '654321' })
-    await wrapper.vm.cancelAccount()
+    const cc = await mountPage(MeCancel)
+    Object.assign(cc.wrapper.vm.cancel, { phone: '13800000000', code: '654321' })
+    await cc.wrapper.vm.cancelAccount()
     expect(http.post).toHaveBeenCalledWith('/me/cancel', { phone: '13800000000', code: '654321' })
   })
 })

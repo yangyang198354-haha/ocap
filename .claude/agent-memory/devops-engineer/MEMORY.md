@@ -36,3 +36,5 @@
 ## 用户偏好与禁止项
 ## 待验证
 
+- [P-DE-001] 前端构建命令必须带 `VITE_API_BASE=/ocap/api/v1`：缺省时 `http.js` 把接口前缀写成 `/api/v1`，产物里 `grep -c "/ocap/api/v1" dist/assets/index-*.js` 为 0，部署后接口全 404；invocation 的构建命令曾漏写，预检要核对该计数 — 自记 2026-11-17 · 证据 ocap_brand_layout deployment_plan PRE-06、frontend/src/shared/http.js:8
+- [P-DE-002] 纯静态替换用「目标机 /tmp 暂存并校验文件数与 index.html SHA256 → 再 rm + cp -a」把不一致窗口压到最短；快照时同时落逐文件哈希清单，回滚后 sha256sum -c 只应出现 OK — 自记 2026-11-17 · 证据 ocap_brand_layout deployment_plan DEPLOY-003/004、ROLLBACK-004

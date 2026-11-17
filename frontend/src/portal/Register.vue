@@ -1,7 +1,6 @@
 <template>
-  <div class="page" style="max-width: 420px; padding-top: 60px">
-    <div class="card">
-      <h2 class="title">手机号注册</h2>
+  <AuthShell surface="portal" subtitle="手机号注册">
+    <div class="card auth-form-card">
       <el-input v-model="form.phone" placeholder="手机号" maxlength="11" />
       <div class="row" style="margin-top: 10px">
         <el-input v-model="form.code" placeholder="验证码" maxlength="6" style="flex: 1" />
@@ -13,7 +12,7 @@
         <span class="muted">注册后可通过业主清册认证为产权业主</span>
       </div>
     </div>
-  </div>
+  </AuthShell>
 </template>
 
 <script setup>
@@ -24,6 +23,7 @@ import { authApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
 import { useThemeStore } from '@/theme/store'
+import AuthShell from '@/brand/AuthShell.vue'
 
 const router = useRouter()
 const auth = useAuthStore()

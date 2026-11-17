@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="card">
+    <div v-if="!isLimit" class="card">
       <h3 class="title">财务（报销 / 备用金）</h3>
       <p class="muted">
         管理员可查看全部报销、备用金与核销申请。收入表录入/审批与财务报表生成属于业委会成员权限，
@@ -16,7 +16,7 @@
         </el-select>
       </div>
     </div>
-    <div class="card amount-limit-card">
+    <div v-if="isLimit" class="card amount-limit-card">
       <h3 class="title">金额上限</h3>
       <p class="muted">报销、备用金与收入表共用的单笔金额上限（元，正数、最多两位小数）；修改后对此后的新提交立即生效，已提交的记录不受影响。</p>
       <div class="row">
@@ -24,7 +24,7 @@
         <el-button type="primary" @click="saveAmountMax">保存</el-button>
       </div>
     </div>
-    <div class="card">
+    <div v-if="!isLimit" class="card">
       <el-table :data="claims" size="small">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column label="类型" width="130">
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
@@ -51,6 +51,9 @@ import { textOf } from '@/shared/labels'
 import { CLAIM_STATUS_TEXT, CLAIM_TYPE_TEXT } from '@/shared/adminText'
 import { usePaging } from '@/shared/usePaging'
 
+// 分区由路由 props 决定（MOD-126 / IFC-324）：claims 报销/备用金记录 / limit 金额上限
+const props = defineProps({ section: { type: String, default: 'claims' } })
+const isLimit = computed(() => props.section === 'limit')
 const type = ref('')
 const status = ref('')
 const amountMax = ref('')
@@ -104,8 +107,12 @@ async function saveAmountMax() {
   }
 }
 
-onMounted(() => {
-  load()
-  loadConfig()
-})
+// 兄弟路由复用同一实例：切换分区时只请求该分区所需数据
+function enterSection() {
+  if (isLimit.value) loadConfig()
+  else load()
+}
+
+watch(() => props.section, enterSection)
+onMounted(enterSection)
 </script>

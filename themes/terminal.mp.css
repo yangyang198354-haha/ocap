@@ -6,3 +6,10 @@
 .theme-terminal .stat-value { font-family: var(--mono); }
 .theme-terminal .vote-disagree { background: var(--accent-2); }
 .theme-terminal .vote-bar { border-radius: 0; }
+/* 登录页配图：扫描线 + 终端边框发光 + 静态方块光标 + 等宽字符块 */
+.theme-terminal .auth-art { border-radius: 4px; background: var(--bg); }
+.theme-terminal .auth-art .art-a { left: 0; right: 0; top: 0; bottom: 0; opacity: .1; background: repeating-linear-gradient(0deg, var(--accent) 0 1px, transparent 1px 4px); }
+.theme-terminal .auth-art .art-b { left: 40rpx; right: 40rpx; top: 40rpx; bottom: 40rpx; border: 2rpx solid var(--accent); box-shadow: 0 0 16rpx var(--accent); }
+.theme-terminal .auth-art .art-c { left: 80rpx; bottom: 76rpx; width: 20rpx; height: 36rpx; background: var(--accent); }
+.theme-terminal .auth-art .art-d { left: 80rpx; top: 76rpx; color: var(--accent); font-family: var(--mono); font-size: 28rpx; }
+.theme-terminal .auth-art .art-d::before { content: "> 01 10 11 _"; }

@@ -32,3 +32,6 @@
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
 - [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）
 
+- [P-SA-018] 页内分区改二级菜单时，默认分区沿用旧路径、其余加子路径并用路由 `props:{section}`，旧书签与既有路径断言不变；同组件在兄弟路由间复用实例，宿主须 watch(section) — 自记 2026-11-17 · 证据 ocap_brand_layout ADR-119（设计推演，待开发验证）
+- [P-SA-019] 宽窄屏分流的路由守卫用 matchMedia 时，jsdom 无该 API，约定缺失按窄屏，否则既有"点击底栏我的→路径为 /me"类用例会被改变 — 自记 2026-11-17 · 证据 frontend/tests/qa_e2e_pages.spec.js:132 与 ADR-120（设计推演）
+- [P-SA-020] 新增 SVG 配图等 .vue 不得写十六进制/rgb 颜色字面量（theme.spec 守护），颜色经 scoped CSS 取 var(--accent) 等；`UnitCascader` 不回显初值 id，跨页预填房屋不可行，只能预填姓名 — 自记 2026-11-17 · 证据 frontend/src/portal/parts/UnitCascader.vue:29,39-40、ocap_ui_theme ADR-029

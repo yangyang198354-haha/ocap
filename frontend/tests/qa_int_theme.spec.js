@@ -17,7 +17,8 @@ import { ElMessage } from 'element-plus'
 import { mountPage, routeTable } from './helpers.js'
 import router from '@/router'
 import Login from '@/portal/Login.vue'
-import Me from '@/portal/Me.vue'
+import MeStyle from '@/portal/me/MeStyle.vue'
+import MeProfile from '@/portal/me/MeProfile.vue'
 import PortalLayout from '@/portal/PortalLayout.vue'
 import { useThemeStore } from '@/theme/store'
 import { useAuthStore } from '@/stores/auth'
@@ -167,17 +168,20 @@ describe('TC-INT-102 登录后对账（AC-075-01、AC-077-02、AC-086-01、AC-09
   })
 })
 
-describe('TC-INT-103 个人中心风格区块（AC-074-01、AC-076-01/02/03、AC-086-02）', () => {
+// 拆分同步（MOD-122）：风格区块已是独立页 /me/style（MeStyle）；原"风格区块是独立区块、个人资料区块仍在"改为"风格页只含风格区块，个人资料在另一页 MeProfile 仍在"
+describe('TC-INT-103 个人中心风格页（AC-074-01、AC-076-01/02/03、AC-086-02）', () => {
   const routes = routeTable({ '/me': ME, '/me/profile': { nickname: '张三' } })
   beforeEach(() => {
     http.get.mockImplementation(async (u, a) => (u === '/me/theme' ? { theme: null } : routes(u, a)))
   })
-  it('风格区块是独立区块，列出 3 项，默认“极光 Bento”选中；来回切换不限次数', async () => {
-    const { wrapper } = await mountPage(Me, { path: '/me' }).catch(() => ({}))
+  it('风格区块是独立页面，列出 3 项，默认“极光 Bento”选中；来回切换不限次数', async () => {
+    const { wrapper } = await mountPage(MeStyle, { path: '/me/style' }).catch(() => ({}))
     expect(wrapper).toBeTruthy()
     const titles = wrapper.findAll('h3.title').map((h) => h.text())
-    expect(titles[0]).toBe('界面风格')
-    expect(titles.length).toBeGreaterThan(1)
+    expect(titles).toEqual(['界面风格']) // 原：风格区块在个人中心首位且同页还有其他区块；现：独立页只含风格区块
+    const profilePage = await mountPage(MeProfile, { path: '/me/profile' })
+    expect(profilePage.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
+    expect(profilePage.wrapper.find('[role=radio]').exists()).toBe(false)
     const opts = wrapper.findAll('[role=radio]')
     expect(opts.map((o) => o.find('.theme-name').text())).toEqual(['霓虹玻璃', '极光 Bento', '赛博终端'])
     expect(wrapper.find('[data-theme-key=bento]').attributes('aria-checked')).toBe('true')
@@ -191,16 +195,16 @@ describe('TC-INT-103 个人中心风格区块（AC-074-01、AC-076-01/02/03、AC
     expect(http.put).toHaveBeenCalledTimes(4)
     expect(http.put).toHaveBeenLastCalledWith('/me/theme', { theme: 'bento' })
   })
-  it('保存失败：弹出含“保存失败”的提示，选中回到保存前；个人资料区块仍在', async () => {
+  it('保存失败：弹出含“保存失败”的提示，选中回到保存前；个人资料页仍可正常挂载', async () => {
     const spy = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
-    const { wrapper } = await mountPage(Me, { path: '/me' })
+    const { wrapper } = await mountPage(MeStyle, { path: '/me/style' })
     http.put.mockRejectedValueOnce(new Error('offline'))
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await flushPromises()
     expect(spy.mock.calls[0][0]).toContain('保存失败')
     expect(wrapper.find('[data-theme-key=bento]').attributes('aria-checked')).toBe('true')
     expect(html().getAttribute('data-theme')).toBe('bento')
-    expect(wrapper.findAll('h3.title').length).toBeGreaterThan(1)
+    expect((await mountPage(MeProfile, { path: '/me/profile' })).wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
     spy.mockRestore()
   })
 })
@@ -223,6 +227,7 @@ describe('TC-INT-104 退出登录保留设备记忆（AC-079-02/03）', () => {
   })
 })
 
+// 布局同步（MOD-121）：顶部导航 .topnav 改为左侧导航 .side-nav（一级项 .side-item），底部标签栏不变
 describe('TC-INT-105 布局：导航高亮与底部 5 标签（AC-084-01、AC-085-01/02）', () => {
   async function layoutAt(p, me = ME) {
     localStorage.setItem('ocap_token', 'tok')
@@ -242,9 +247,9 @@ describe('TC-INT-105 布局：导航高亮与底部 5 标签（AC-084-01、AC-08
     await flushPromises()
     return { wrapper, r }
   }
-  it('决议列表与详情页：顶部导航仅“决议”高亮；切到投票后高亮项变为“投票”，任一时刻数量 = 1', async () => {
+  it('决议列表与详情页：左侧导航一级项仅“决议”高亮；切到投票后高亮项变为“投票”，任一时刻数量 = 1', async () => {
     const { wrapper, r } = await layoutAt('/resolutions')
-    const active = () => wrapper.findAll('.topnav a.is-active').map((a) => a.text())
+    const active = () => wrapper.findAll('.side-nav .side-item.is-active .side-label').map((a) => a.text())
     expect(active()).toEqual(['决议'])
     await r.push('/resolutions/7')
     await flushPromises()
@@ -254,11 +259,12 @@ describe('TC-INT-105 布局：导航高亮与底部 5 标签（AC-084-01、AC-08
     expect(active()).toEqual(['投票/调查'])
     expect(wrapper.findAll('.tabbar a.is-active')).toHaveLength(1)
   })
-  it('布局始终渲染底部标签栏 5 项（宽屏由 CSS 隐藏），顶部导航保留', async () => {
+  it('布局始终渲染底部标签栏 5 项（宽屏由 CSS 隐藏），左侧导航保留且不再有顶部横排导航', async () => {
     const { wrapper } = await layoutAt('/', {
       ...ME, identities: { ...ME.identities, committee: { position: 'MEMBER', term_end: '2027-01-01' } }
     })
     expect(wrapper.findAll('.tabbar a').map((a) => a.text())).toEqual(['首页', '决议', '投票', '报销', '我的'])
-    expect(wrapper.find('.topnav').exists()).toBe(true)
+    expect(wrapper.find('.side-nav').exists()).toBe(true)
+    expect(wrapper.find('.topnav').exists()).toBe(false)
   })
 })

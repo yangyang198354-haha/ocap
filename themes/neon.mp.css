@@ -3,3 +3,9 @@
 .theme-neon .btn { background: var(--accent-bg); box-shadow: 0 10rpx 30rpx rgba(124,92,255,.4); }
 .theme-neon .home-q:nth-child(2n) { border-color: rgba(34,211,238,.35); }
 .theme-neon .vote-agree { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+/* 登录页配图：网格线条 + 发光圆环 + 玻璃方块（半透明纯色，不用 backdrop-filter）+ 光点 */
+.theme-neon .auth-art { background: var(--bg); border: 1px solid rgba(169,150,255,.35); }
+.theme-neon .auth-art .art-a { left: 0; right: 0; bottom: 0; height: 56%; opacity: .4; background-image: linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px); background-size: 48rpx 48rpx; }
+.theme-neon .auth-art .art-b { right: 80rpx; top: 40rpx; width: 150rpx; height: 150rpx; border: 4rpx solid var(--accent-2); border-radius: 50%; box-shadow: 0 0 24rpx var(--accent-2); }
+.theme-neon .auth-art .art-c { left: 90rpx; top: 56rpx; width: 120rpx; height: 120rpx; border: 2rpx solid var(--accent); border-radius: 24rpx; background: var(--glass); }
+.theme-neon .auth-art .art-d { left: 52%; top: 48rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--accent-2); box-shadow: -130rpx 90rpx 0 var(--accent), 100rpx 120rpx 0 var(--accent-2); }

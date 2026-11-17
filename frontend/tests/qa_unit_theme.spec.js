@@ -256,12 +256,16 @@ describe('TC-UNIT-107 状态标签 圆点 + 文字 + 语义色（AC-087-01）', 
 
 describe('TC-UNIT-108 风格入口范围（AC-075-02、AC-079-03、AC-080-04、AC-082-03）', () => {
   const vue = (dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith('.vue')).map((f) => `${dir}/${f}`)
-  it('只有个人中心 Me.vue 引用 ThemePicker；管理端使用顶栏切换器（AC-139-01）', () => {
-    const users = [...vue('frontend/src/portal')]
+  it('只有个人中心“界面风格”页 portal/me/MeStyle.vue 引用 ThemePicker；管理端风格并入右上角菜单 AdminUserMenu（AC-139-01，原：顶栏切换器 AdminThemeSwitcher）', () => {
+    const users = [...vue('frontend/src/portal'), ...vue('frontend/src/portal/me'), ...vue('frontend/src/portal/units')]
       .filter((f) => /ThemePicker|界面风格/.test(read(f)))
-    expect(users).toEqual(['frontend/src/portal/Me.vue'])
-    expect(read('frontend/src/admin/AdminLayout.vue')).toContain('AdminThemeSwitcher')
-    expect(read('frontend/src/theme/AdminThemeSwitcher.vue')).toContain('admin-theme-trigger')
+    expect(users).toEqual(['frontend/src/portal/me/MeStyle.vue'])
+    expect(read('frontend/src/admin/AdminLayout.vue')).toContain('AdminUserMenu')
+    expect(fs.existsSync(path.join(ROOT, 'frontend/src/theme/AdminThemeSwitcher.vue'))).toBe(false)
+    const menu = read('frontend/src/admin/AdminUserMenu.vue')
+    expect(menu).toContain('useAdminThemeStore')
+    expect(menu).toContain('admin-theme-trigger')
+    expect(menu).toContain('store.list')
   })
   it('管理端无“全站默认风格”“新增风格”等设置入口（文案与接口均无）', () => {
     for (const f of vue('frontend/src/admin')) expect(read(f), f).not.toMatch(/默认风格|新增风格|风格设置/)

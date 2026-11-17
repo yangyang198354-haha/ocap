@@ -21,7 +21,13 @@ vi.mock('element-plus', async (importOriginal) => {
 import { mountPage, routeTable } from './helpers.js'
 import { useAuthStore } from '@/stores/auth'
 import Units from '@/portal/Units.vue'
-import Me from '@/portal/Me.vue'
+import UnitsPick from '@/portal/units/UnitsPick.vue'
+import UnitsReview from '@/portal/units/UnitsReview.vue'
+import UnitsApplications from '@/portal/units/UnitsApplications.vue'
+import UnitsMyAppeals from '@/portal/units/UnitsMyAppeals.vue'
+import MeIdentity from '@/portal/me/MeIdentity.vue'
+import MeProfile from '@/portal/me/MeProfile.vue'
+import MeCancel from '@/portal/me/MeCancel.vue'
 import Login from '@/portal/Login.vue'
 import Polls from '@/portal/Polls.vue'
 import Resolutions from '@/portal/Resolutions.vue'
@@ -62,7 +68,8 @@ beforeEach(() => {
 })
 
 // ------------------------------------------------------------------ 我的房屋（同住人链路）
-describe('我的房屋 Units.vue', () => {
+// 分区同步（ocap_brand_layout MOD-123）：Units.vue 为分区宿主，默认 identity；其余分区经 section 或直接挂载 units/* 组件。
+describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
   const housing = (extra = {}) => ({
     summary: { code: 'HEAD', label: '户主' },
     units: [{ ...HEAD_UNIT, residents: [{ user_id: 9, nickname: '李四', account_no: '1000000009', joined_at: '2026-02-03T09:05:00+08:00' }], pending_application_count: 0 }],
@@ -76,7 +83,7 @@ describe('我的房屋 Units.vue', () => {
 
   it('TC-UNIT-522 / AC-150-01：页面没有任何"专有部分 ID"或内部编号输入框；逐级选择组件存在', async () => {
     http.get.mockImplementation(table())
-    const { wrapper } = await mountPage(Units)
+    const { wrapper } = await mountPage(Units, { props: { section: 'pick' } }) // 原：整页；现：选择房屋分区
     const placeholders = wrapper.findAll('input').map((i) => i.attributes('placeholder') || '')
     expect(placeholders.join('|')).not.toMatch(/ID|编号|专有部分/)
     expect(wrapper.text()).not.toContain('专有部分 ID')
@@ -87,7 +94,7 @@ describe('我的房屋 Units.vue', () => {
     http.get.mockImplementation(table())
     http.post.mockResolvedValue({ id: 5, status: 'PENDING' })
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
-    const { wrapper } = await mountPage(Units)
+    const { wrapper } = await mountPage(UnitsPick)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 42)
     await flush()
     await buttonOf(wrapper, '申请成为同住人').trigger('click')
@@ -99,7 +106,7 @@ describe('我的房屋 Units.vue', () => {
   it('TC-UNIT-524 / AC-167-01、§8 推断 1：认证成功提示为中文身份（户主 / 产权业主），不出现 HEAD / OWNER', async () => {
     http.get.mockImplementation(table())
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
-    const { wrapper } = await mountPage(Units)
+    const { wrapper } = await mountPage(UnitsPick)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 7)
     await wrapper.find('input[placeholder="请输入姓名"]').setValue('张三') // ocap_owner_auth_v2：认证须输入姓名
     await flush()
@@ -150,8 +157,10 @@ describe('我的房屋 Units.vue', () => {
       ],
       '/appeals/mine': [{ id: 3, unit: { unit_id: 2, specific_part: 'B' }, status: 'REJECTED', submitted_at: '2026-11-10T08:00:00+08:00', decided_at: '2026-11-11T09:05:00+08:00', reject_reason: '材料不清，请重传' }]
     }))
-    const { wrapper } = await mountPage(Units)
-    const text = wrapper.text()
+    // 原：整页同屏；现：我的同住人申请、我的申诉各为独立分区，两页文本合并后断言（断言不变）
+    const apps = await mountPage(UnitsApplications)
+    const appeals = await mountPage(UnitsMyAppeals)
+    const text = `${apps.wrapper.text()}\n${appeals.wrapper.text()}`
     expect(text).toContain('待审批')
     expect(text).toContain('已拒绝')
     expect(text).toContain('2026-11-13 20:30')
@@ -162,7 +171,7 @@ describe('我的房屋 Units.vue', () => {
     expect(text).not.toContain('暂无同住人申请')
     document.body.innerHTML = ''
     http.get.mockImplementation(table())
-    const empty = (await mountPage(Units)).wrapper.text()
+    const empty = `${(await mountPage(UnitsApplications)).wrapper.text()}\n${(await mountPage(UnitsMyAppeals)).wrapper.text()}`
     expect(empty).toContain('暂无同住人申请')
     expect(empty).toContain('暂无申诉')
   })
@@ -179,7 +188,7 @@ describe('我的房屋 Units.vue', () => {
       '/resident-applications/to-review': [{ id: 8, unit: { unit_id: 1, specific_part: 'A房' }, status: 'PENDING', created_at: '2026-11-13T20:30:00+08:00', decided_at: null,
         applicant: { id: 3, account_no: '1000000003', nickname: '小王', phone: '139****0001' } }]
     }))
-    const text = (await mountPage(Units)).wrapper.text()
+    const text = (await mountPage(UnitsReview)).wrapper.text() // 原：整页；现：待我审批分区
     expect(text).toContain('小王 → A房')
     expect(text).toContain('2026-11-13 20:30')
     expect(text).not.toMatch(/1\d{10}/)
@@ -187,14 +196,15 @@ describe('我的房屋 Units.vue', () => {
 })
 
 // ------------------------------------------------------------------ 个人中心
-describe('个人中心 Me.vue', () => {
+// 拆分同步（MOD-122）：个人中心各区块为独立页 me/*，用例原意不变，仅改挂载对象。
+describe('个人中心 me/* 各页（原 Me.vue）', () => {
   const profile = { account_no: '1000000001', phone: '138****0000', nickname: '张三', gender: 0, birthday: null, email: null, avatar_url: '' }
-  const mountMe = async (over = {}) => {
+  const mountMe = async (over = {}, component = MeIdentity) => {
     http.get.mockImplementation(routeTable({
       '/me': ME(null, [HEAD_UNIT], { code: 'HEAD', label: '户主' }), '/me/profile': profile,
       '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [HEAD_UNIT], pending_review_count: 0 }, ...over
     }))
-    const mounted = await mountPage(Me)
+    const mounted = await mountPage(component)
     useAuthStore(mounted.pinia).me = ME(null, [HEAD_UNIT], { code: 'HEAD', label: '户主' })
     await flush()
     return mounted
@@ -212,7 +222,7 @@ describe('个人中心 Me.vue', () => {
 
   it('TC-UNIT-531 / AC-165-03：更换头像处提示"jpg/png，不超过 2 MB"，选择器仅允许 jpg/png；超大或错误格式在上传前被拒', async () => {
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
-    const { wrapper } = await mountMe()
+    const { wrapper } = await mountMe({}, MeProfile)
     expect(wrapper.text()).toContain('jpg/png，不超过 2 MB')
     expect(wrapper.find('input[type="file"]').attributes('accept')).toBe('.jpg,.jpeg,.png')
     const upload = wrapper.findComponent({ name: 'ElUpload' })
@@ -225,7 +235,7 @@ describe('个人中心 Me.vue', () => {
   })
 
   it('TC-UNIT-532 / AC-165-01：保存生日提交 YYYY-MM-DD；留空提交 null（选填）', async () => {
-    const { wrapper } = await mountMe({ '/me/profile': { ...profile, birthday: '1990-05-06' } })
+    const { wrapper } = await mountMe({ '/me/profile': { ...profile, birthday: '1990-05-06' } }, MeProfile)
     http.patch.mockResolvedValue({ ...profile, birthday: '1990-05-06' })
     await buttonOf(wrapper, '保存').trigger('click')
     await flush()
@@ -241,14 +251,14 @@ describe('个人中心 Me.vue', () => {
       '/me/housing': { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 },
       '/attachments/abc-123/download': new Blob(['x'], { type: 'image/png' })
     }))
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(MeProfile)
     await flush()
     expect(http.get.mock.calls.some((c) => c[0] === '/attachments/abc-123/download' && c[1]?.responseType === 'blob')).toBe(true)
     expect(wrapper.find('img[src="blob:avatar-1"]').exists()).toBe(true)
   })
 
   it('TC-UNIT-534 / AC-158-04：注销账号——取消确认不发验证码校验请求；确认后才调用 /me/cancel', async () => {
-    const { wrapper } = await mountMe()
+    const { wrapper } = await mountMe({}, MeCancel)
     http.post.mockResolvedValue(null)
     const inputs = wrapper.findAll('input')
     const phoneInput = inputs.find((i) => i.attributes('placeholder') === '已绑定的手机号')
@@ -277,16 +287,17 @@ describe('登录页、导航与内容详情', () => {
     expect(passwordPaneText).not.toContain('邮箱')
   })
 
-  it('TC-UNIT-577 / AC-154-04、AC-166-01：顶部导航——非成员无"报销/备用金""收入表""待办"；委员三者可见', async () => {
+  it('TC-UNIT-577 / AC-154-04、AC-166-01：左侧导航（原：顶部导航）——非成员无"报销/备用金""收入表""待办"；委员三者可见；"个人中心"移入右上角菜单，不在导航内', async () => {
     const nav = async (position) => {
       document.body.innerHTML = ''
       http.get.mockImplementation(routeTable({ '/me': ME(position) }))
       const { wrapper } = await mountPage(PortalLayout)
       await flush()
-      return wrapper.find('nav.topnav').text()
+      return wrapper.find('nav.side-nav').text()
     }
     const plain = await nav(null)
-    for (const t of ['我的房屋', '决议', '投票/调查', '财务报表', '个人中心']) expect(plain).toContain(t)
+    for (const t of ['我的房屋', '决议', '投票/调查', '财务报表']) expect(plain).toContain(t)
+    expect(plain).not.toContain('个人中心')
     for (const t of ['报销/备用金', '收入表', '待办']) expect(plain).not.toContain(t)
     const member = await nav('MEMBER')
     for (const t of ['报销/备用金', '收入表', '待办']) expect(member).toContain(t)
@@ -346,9 +357,9 @@ describe('投票与决议列表', () => {
 
 // ------------------------------------------------------------------ 管理端
 describe('管理端页面', () => {
-  const mountAdmin = async (component, table) => {
+  const mountAdmin = async (component, table, props = {}) => {
     adminHttp.get.mockImplementation(routeTable(table))
-    const { wrapper } = await mountPage(component)
+    const { wrapper } = await mountPage(component, { props })
     await flush()
     return wrapper
   }
@@ -432,25 +443,29 @@ describe('管理端页面', () => {
     expect(wrapper.text()).toContain('在任')
     expect(wrapper.text()).not.toMatch(/ACTIVE|EXPIRED|\btrue\b|\bfalse\b/)
     document.body.innerHTML = ''
-    wrapper = await mountAdmin(AdminUsers, {
-      '/admin/admins': [{ id: 1, username: 'root', is_active: true }, { id: 2, username: 'x', is_active: false }],
-      '/admin/users': { count: 2, results: [
-        { id: 1, account_no: '1', phone: '138****0001', nickname: '甲', status: 'ACTIVE', identity_label: '户主', certified_units: 1, real_names: [], last_login_at: null },
-        { id: 2, account_no: '2', phone: null, nickname: '乙', status: 'DISABLED', identity_label: '游客', certified_units: 0, real_names: [], last_login_at: null }] }
-    })
-    const text = wrapper.text()
+    // 分区同步：管理员账号（启用 = 是/否）与注册用户（状态 = 启用/停用、共 N 条）分属 /admin/users 与 /admin/users/registered，分别挂载后合并断言
+    const adminRows = [{ id: 1, username: 'root', is_active: true }, { id: 2, username: 'x', is_active: false }]
+    const userRows = { count: 2, results: [
+      { id: 1, account_no: '1', phone: '138****0001', nickname: '甲', status: 'ACTIVE', identity_label: '户主', certified_units: 1, real_names: [], last_login_at: null },
+      { id: 2, account_no: '2', phone: null, nickname: '乙', status: 'DISABLED', identity_label: '游客', certified_units: 0, real_names: [], last_login_at: null }] }
+    wrapper = await mountAdmin(AdminUsers, { '/admin/admins': adminRows, '/admin/users': userRows })
+    const adminText = wrapper.text()
+    document.body.innerHTML = ''
+    wrapper = await mountAdmin(AdminUsers, { '/admin/admins': adminRows, '/admin/users': userRows }, { section: 'registered' })
+    const regText = wrapper.text()
+    const text = `${adminText}\n${regText}`
     expect(text).toContain('启用')
     expect(text).toContain('停用')
-    expect(text).toContain('是')
-    expect(text).toContain('否')
+    expect(adminText).toContain('是')
+    expect(adminText).toContain('否')
     expect(text).not.toMatch(/ACTIVE|DISABLED|\btrue\b|\bfalse\b/)
-    expect(text).toContain('共 2 条')
+    expect(regText).toContain('共 2 条')
   })
 
   it('TC-UNIT-544 / AC-160-02：账号页带关键词翻到第 2 页，请求仍携带同一关键词与 page=2', async () => {
     const wrapper = await mountAdmin(AdminUsers, {
       '/admin/admins': [], '/admin/users': { count: 45, results: [{ id: 1, account_no: '1', phone: null, nickname: 'e2e_x', status: 'ACTIVE', identity_label: '游客', certified_units: 0, real_names: [], last_login_at: null }] }
-    })
+    }, { section: 'registered' }) // 分区同步：注册用户列表在 registered 分区
     const input = wrapper.find('input[placeholder^="昵称"]')
     await input.setValue('e2e_')
     await input.trigger('change')
@@ -506,7 +521,7 @@ describe('管理端页面', () => {
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
     const wrapper = await mountAdmin(AdminFinance, {
       '/admin/claims': { count: 0, results: [] }, '/admin/system-config': { 'audit.retention_months': 24, 'claim.amount_max': '1000000.00' }
-    })
+    }, { section: 'limit' }) // 分区同步：金额上限卡在 /admin/finance/limit 分区
     const input = wrapper.find('input[placeholder*="上限"]').exists() ? wrapper.find('input[placeholder*="上限"]') : wrapper.findAll('input').find((i) => i.element.value.includes('1000000'))
     expect(input.element.value).toContain('1000000')
     adminHttp.put.mockRejectedValueOnce(Object.assign(new Error('上限须为正数且最多两位小数'), { code: 'INVALID_VALUE' }))
@@ -561,7 +576,9 @@ describe('确认弹窗覆盖与界面文案守护（静态）', () => {
   it('TC-UNIT-548 / AC-158-01、AC-158-03、AC-158-04：11 个确认键都在页面中被使用，且每处调用都是"确认失败即 return"的写法', () => {
     const keys = ['revokeMembership', 'revokeSeat', 'deleteUnit', 'deleteFlow', 'voidIncome', 'withdrawResolution',
       'withdrawClaim', 'withdrawIncome', 'removeResident', 'leaveUnit', 'cancelAccount']
-    const all = vueFiles.map((f) => fs.readFileSync(f, 'utf8')).join('\n')
+    // 同步：新拆分页的文件头 HTML 注释会提到 confirmDanger('…')（MeCancel.vue:1），统计"调用"前先剥离注释，守护对象仍是真实调用
+    const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '').replace(/^\s*\/\/.*$/gm, '')
+    const all = vueFiles.map((f) => stripComments(fs.readFileSync(f, 'utf8'))).join('\n')
     for (const key of keys) {
       const uses = [...all.matchAll(new RegExp(`confirmDanger\\('${key}'`, 'g'))]
       expect(uses.length, key).toBeGreaterThan(0)
@@ -573,7 +590,10 @@ describe('确认弹窗覆盖与界面文案守护（静态）', () => {
   })
 
   it('TC-UNIT-549 / AC-150-01、AC-159-02：页面源码中不再有"专有部分 ID"或"用户 ID"的手输控件', () => {
-    for (const rel of ['portal/Units.vue', 'admin/AdminSeats.vue', 'admin/AdminFlows.vue']) {
+    // 扫描范围加入拆分后的新文件（Units.vue 的内容已迁至 portal/units/*）
+    const rels = ['portal/Units.vue', 'admin/AdminSeats.vue', 'admin/AdminFlows.vue',
+      ...fs.readdirSync(path.join(ROOT, 'frontend/src/portal/units')).map((f) => `portal/units/${f}`)]
+    for (const rel of rels) {
       const src = fs.readFileSync(path.join(ROOT, 'frontend/src', rel), 'utf8')
       expect(src, rel).not.toMatch(/placeholder="[^"]*(专有部分 ?ID|用户 ?ID|审批人用户)/)
       expect(src, rel).not.toMatch(/split\(/)

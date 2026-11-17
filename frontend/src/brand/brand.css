@@ -1,0 +1,10 @@
+/* MOD-119：品牌字体（ADR-123，用户选型 A：得意黑子集，改名 OcapBrand，见 fonts/README.md）。
+ * 字体只含 ASCII 与品牌文字子集；子集外字符、或文件加载失败时回退到 var(--font) 系统字体（AC-209-03）。
+ * 注意：OFL 保留字体名，font-family 只能写 OcapBrand。 */
+@font-face {
+  font-family: "OcapBrand";
+  src: url('./fonts/OcapBrand-subset.woff2') format('woff2');
+  font-display: swap;
+}
+:root { --brand-font: "OcapBrand", var(--font); }
+.brand-font { font-family: var(--brand-font); }

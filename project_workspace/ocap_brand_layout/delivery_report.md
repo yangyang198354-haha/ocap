@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>pm-orchestrator</author_agent>
-  <timestamp>2026-11-17T14:37:30+08:00</timestamp>
+  <timestamp>2026-11-17T15:00:12+08:00</timestamp>
   <project_name>ocap_brand_layout</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files><file>phase_status.md</file><file>testing/e2e_test_report.md</file><file>deployment/deployment_report.md</file></input_files>
   <phase>PHASE_01,PHASE_02,PHASE_03,PHASE_04,PHASE_05,PHASE_06,PHASE_07,PHASE_08,PHASE_09,PHASE_10,PHASE_11a,PHASE_11b</phase>
   <status>APPROVED</status>
@@ -14,7 +14,7 @@
 - 需求：产品更名 Cyber@红枫岭（Web/管理端/小程序登录页与网页标题，配图与字体设计）；Web 用户端与管理端改为左侧导航 + 二级菜单 + 右上角用户菜单；Web 多分辨率自适应。
 - 模式：INCREMENTAL；画像版本 1.5.0。
 - 时间：2026-11-16T23:19:39+08:00 → 2026-11-17T14:37:30+08:00。
-- 最终状态：**DELIVERED_WITH_ISSUES**（5 项人工验证待用户完成，其中 critical path 4 项）。
+- 最终状态：**DELIVERED**（2026-11-17T15:00:12+08:00 用户确认 MV-01~05 五项人工验证全部通过；CI run 44032717170 全绿。下方"遗留问题"均为已处理项或既有环境问题，不影响本批交付）。
 
 ## 阶段执行摘要
 | GROUP | 阶段 | 代理 | 状态 | 门控 | 重试 | 回流 | 完成时间 |
@@ -34,7 +34,7 @@
 | 小程序 vitest | 16 文件 119/119（基线 104 + 新写 15） | 零新增失败 | ✅ |
 | E2E critical path（可自动化部分） | 100% | 1.00 | ✅（另 4 项待人工） |
 | 代码评审未解决 CRITICAL | 0 | 0 | ✅ |
-| CI（提交 1133794） | run 44026380990：后端 6 条失败（已由本次测试同步修复，待新提交 CI 结果） | 全绿 | 见"遗留问题" |
+| CI（提交 365a6b5） | run 44032717170：Backend / Web frontend / Mini program 全部 success | 全绿 | ✅ |
 
 ## 交付物清单
 | 文件 | 生成代理 | 最终版本 | 状态 |
@@ -53,7 +53,7 @@
 |---|---|---|---|
 | PM 在 GR-D-002 以"后端零改动"放行后端测试未运行，导致 1133794 的 CI 后端 6 条失败 | GR-D-003（SELF_CORRECTION） | MAJOR | 已修测试并本机 957 OK；以新提交 CI 结果为准 |
 | 小程序 `build:mp-weixin` 本机基线即失败（uni 编译器缺失/manifest 路径），小程序未在工具中构建 | GR-C-001-F04 | MINOR | 用户在微信开发者工具构建预览（MV-03） |
-| 画像 P4 测试基线过期（前端 181→281/438、小程序 75→104/119；后端 561→957，原 1 条既有失败已不复现） | GR-C-001-F03 | MINOR | 经用户同意后修订画像 P4 |
+| 画像 P4 测试基线过期 | GR-C-001-F03 | MINOR | 已处理：用户 Q2=A，画像 1.6.0 已更新 |
 | PM 调用中构建命令漏写 `VITE_API_BASE=/ocap/api/v1` | GR-E1-001-F01 | MINOR | 已由部署计划纠正；以后以计划/skill 命令为准 |
 | 子代理反复部分读取必读文件（M-PM-001 再现） | GR-A/B/C/D 多处 MINOR | MINOR | 继续点名下发 |
 | 刚登录链路的角标仅由 TC-INT-914 守护，TC-E2E-801 在进入 /units* 后断言 | GR-D-002-F03 | MINOR | 后续可补 E2E 断言 |
@@ -61,7 +61,7 @@
 OVERRIDDEN 记录：无。PM 代答待确认：无（所有澄清均由用户本人答复）。
 
 ## 待人工验证（e2e_test_report.md "人工验证清单"）
-critical path 中 **4 条**待人工验证（MV-01、MV-02、MV-04、MV-05），另有非 critical path 1 条（MV-03）：
+**已完成**：用户 2026-11-17T15:00:12+08:00 确认以下 5 项全部无问题（critical path 4 条 + 非 critical path 1 条）：
 - MV-01 四档视口 1366×768 / 1920×1080 / 2560×1440 / 3840×2160：无横向滚动、内容区占用 ≥ 90%、1366 下一级菜单无需滚动
 - MV-02 1366 宽下管理端业主清册、席位、注册用户表格
 - MV-03 小程序三套登录页（微信开发者工具或真机）
@@ -69,8 +69,7 @@ critical path 中 **4 条**待人工验证（MV-01、MV-02、MV-04、MV-05），
 - MV-05 品牌字体渲染与加载失败回退（Content-Type 已由 E2 V-08 核对为 font/woff2）
 
 ## 开放 conditions
-- GR-D-004：提交推送后核对 CI 三个 job 全部 success。
-- MV-01~05 完成前，状态保持 DELIVERED_WITH_ISSUES。
+无（GR-D-004 CI 条件已由 run 44032717170 关闭；MV-01~05 用户已确认）。
 
 ## 部署
 - 计划：deployment/deployment_plan.md 1.0.0。

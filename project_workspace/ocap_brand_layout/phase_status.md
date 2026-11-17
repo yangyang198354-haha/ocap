@@ -1,6 +1,6 @@
-<phase_status project="ocap_brand_layout" mode="INCREMENTAL" created="2026-11-16T23:19:39+08:00" updated="2026-11-17T14:38:27+08:00">
+<phase_status project="ocap_brand_layout" mode="INCREMENTAL" created="2026-11-16T23:19:39+08:00" updated="2026-11-17T15:00:12+08:00">
   <request time="2026-11-16T23:19:39+08:00"><![CDATA[现在有一批新的变更：1. web应用 和小程序的名字叫做 Cyber@红枫岭,小程序登录注册页，web 登录注册页，网页头标题都改一下。字体，配图，login 对应设计一下。 2. 用户登录 web后页面的布局需要整体调整一下。（业主委员会）主页， 我ode房屋，决议，投票/调查， 报销/备用金， 收入表、财务表、待办 这些功能页，都在左侧导航栏。 个人中心 收在右上角。显示为自己点昵称，鼠标点上去有下拉菜单，分别是个人中心里面各个tab 卡片的功能。退出登录也在这个菜单中。点击菜单分别进入各个页面。不要像现在所有tab卡都在个人中心里面。 3. 同样的原则， 我的房屋，决议，投票/调查等等页面都在左侧导航栏，每个页面的tab 卡都是导航栏的二级菜单。不要像现在一样全部铺开。 二级菜单默认隐藏，点击一级菜单再展开。4. web 页面要适配各种尺寸的屏幕，比如1K屏，2k屏或者4k屏幕。可以自适应，不要让小屏幕看起来没有空间显示。也不要让大屏两侧有大量空白空间。 先整理我的需求和用户故事，确认后开始开发。]]></request>
-  <profile version="1.5.0"/>
+  <profile version="1.6.0"/>
   <workspace_note>INCREMENTAL：品牌更名（Web+小程序登录注册页与标题）、Web 登录后布局改为左侧导航+右上角用户菜单、页内 tab 改为导航二级菜单、Web 多分辨率自适应。用户要求先出需求与用户故事，确认后再开发。</workspace_note>
   <groups>
     <group id="GROUP_A" agent="requirement-analyst" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
@@ -59,10 +59,12 @@
     <artifact path="project_workspace/ocap_brand_layout/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_brand_layout/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_brand_layout/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
-    <artifact path="project_workspace/ocap_brand_layout/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
+    <artifact path="project_workspace/ocap_brand_layout/delivery_report.md" version="1.0.0" status="SUPERSEDED" group="PM"/>
+    <artifact path="project_workspace/ocap_brand_layout/delivery_report.md" version="2.0.0" status="APPROVED" group="PM"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
+    <invocation id="ocap_brand_layout-GROUP_Z-001" agent="kb-curator" end="2026-11-17T14:40:39+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_D-004" agent="test-engineer" start="2026-11-17T14:19:00+08:00" end="2026-11-17T14:37:30+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_E2-001" agent="devops-engineer" start="2026-11-17T13:46:07+08:00" end="2026-11-17T14:00:09+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_E1-001" agent="devops-engineer" start="2026-11-17T09:14:02+08:00" end="2026-11-17T09:24:54+08:00" result="SUCCESS"/>
@@ -230,6 +232,7 @@ PM 汇报编号 → 规格编号：Q1→Q-BL-01=B（管理端改名且改为左�
     <clarification time="2026-11-17T00:10:03+08:00" respondent="用户"><![CDATA[OQ-B01 字体选型。用户原话："A，同意装 fonttools 并下载"。即采用得意黑 Smiley Sans；同意 PM 在会话临时目录 venv 安装 fonttools、从官方 GitHub 下载字体并子集化。]]></clarification>
     <clarification time="2026-11-17T13:41:02+08:00" respondent="用户"><![CDATA[用户原话："continue. Q1: A， Q2：A Q3 A"。Q1=A 现在提交（单个提交）；Q2=A 推送；Q3=A 授权部署测试环境。]]></clarification>
     <clarification time="2026-11-17T14:19:00+08:00" respondent="用户"><![CDATA[用户原话："Q1：A， Q2：A"。Q1=A 在会话 scratchpad 建 venv 装后端依赖（排除 mysqlclient、alibabacloud_dysmsapi20170525）本机跑后端测试；Q2=A 修好后提交并推送。]]></clarification>
+    <clarification time="2026-11-17T15:00:12+08:00" respondent="用户"><![CDATA[用户原话："Q1 A，Q2 A。 Q3 的5项没有问题"。Q1=A 提交并推送蒸馏改动；Q2=A 更新画像 P4 基线；Q3：MV-01~05 人工验证全部通过。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -268,5 +271,8 @@ PM 汇报编号 → 规格编号：Q1→Q-BL-01=B（管理端改名且改为左�
   <event time="2026-11-17T14:19:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 test-engineer（ocap_brand_layout-GROUP_D-004，GR-D-003 重试 2/2）。</event>
     <event time="2026-11-17T14:37:30+08:00" type="GATE" actor="pm-orchestrator">GR-D-004 PASS_WITH_CONDITIONS → GROUP_D APPROVED（测试文档 2.0.0）。</event>
     <event time="2026-11-17T14:38:27+08:00" type="RUN" actor="pm-orchestrator">写 delivery_report.md 1.0.0（DELIVERED_WITH_ISSUES）；按用户 Q2=A 提交并推送测试同步与文档。</event>
+    <event time="2026-11-17T14:39:58+08:00" type="RUN" actor="pm-orchestrator">提交 365a6b5 已推送（1133794..365a6b5）；CI run 44032717170 三个 job（Backend、Web frontend、Mini program）全部 success，GR-D-004 condition 关闭。调用 kb-curator（GROUP_Z-001）。</event>
+    <event time="2026-11-17T14:40:39+08:00" type="INVOCATION" actor="pm-orchestrator">kb-curator 完成：晋升 14 条、M-PM-001 命中 16→23、保留 2、淘汰 0、通用候选 0；报告 _kb_distillation/distill_20261117T1440.md。改动未提交，待用户确认。</event>
+    <event time="2026-11-17T15:00:12+08:00" type="RUN" actor="pm-orchestrator">画像 1.5.0→1.6.0（P4 基线，用户 Q2=A）；用户确认 MV-01~05 通过 → delivery_report 2.0.0 最终状态 DELIVERED；按 Q1=A 提交并推送。</event>
   </audit_log>
 </phase_status>

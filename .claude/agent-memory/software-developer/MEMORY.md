@@ -33,10 +33,10 @@
 - [M-SD-031] 本机仓库根残留 git 忽略的导出文件会让依赖仓库根状态的用例（TC-INT-611）失败：先在干净副本复跑区分环境产物，不删用户文件；用例改为只断言“本次运行未在仓库根新增文件” — conf 0.8 · 证据 owner_auth_v2 GR-C-001-F01(MAJOR)、test_registry_export_cmd.py::test_tc_int_611、unit_sort_filters 自记 · 首见 2026-11-16 · 命中 2
 - [M-SD-032] 管理端 .vue 的 `<style>` 里 border 简写会触发 admin_theme.spec 守护，拆成 border-style/width/color — conf 0.6 · 证据 frontend/src/admin/parts/ProofThumbs.vue、owner_auth_v2 GROUP_C 自验证 · 首见 2026-11-16 · 命中 1
 - [M-SD-033] Django parse_date/parse_datetime 对格式不匹配返回 None，对“格式合法但日期不存在”抛 ValueError，对非字符串入参抛 TypeError；修一处后须 git grep 全部 parse_date/parse_datetime 调用点（本批 DEF-024 修后排查又找出 polls、resolutions 两处）— conf 0.8 · 证据 GR-C-001-F02、GR-C-002（DEF-025，全仓排查）、backend/apps/{committee,accounts,claims,polls,resolutions}/views.py · 首见 2026-11-16 · 命中 2
+- [M-SD-034] 装饰性 SVG 不要用 `<text>`（进入 wrapper.text()，令"三风格页面文本一致"用例 TC-E2E-104 失败），改 foreignObject + CSS `content: attr(data-t)`；同一组件对应多条路由时 router 中只 import 一次，否则 qa_unit_theme 的 import 计数变化 — conf 0.6 · 证据 ocap_brand_layout GR-C-001（首跑 41 失败→39 均在影响清单）、frontend/src/router/index.js:8 · 首见 2026-11-17 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
 - [P-SD-009] 在 scratch 复制的 backend 里放临时测试文件做命令冒烟（含 xlsx 导出→read_rows 预检回读），不污染仓库测试目录 — 自记 2026-11-16 · 证据：ocap_unit_sort_filters GROUP_C 自验证
-- [P-SD-010] 装饰性 SVG 不要用 `<text>`（会进入 wrapper.text()，令"三风格页面文本一致"的既有用例 TC-E2E-104 失败），改 foreignObject + CSS `content: attr(data-t)`；同一组件对应多条路由时在 router 里只 import 一次，否则 `qa_unit_theme` 的 `import('@/portal/X.vue')` 计数变化 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 首跑 41 失败→修后 39（均在测试影响清单内）
 - [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
 

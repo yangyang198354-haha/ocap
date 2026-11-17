@@ -12,9 +12,9 @@
 
 <file_header>
   <author_agent>pm-orchestrator</author_agent>
-  <timestamp>2026-11-13T22:58:00+08:00</timestamp>
+  <timestamp>2026-11-17T14:59:57+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.5.0</version>
+  <version>1.6.0</version>
   <status>APPROVED</status>
 </file_header>
 
@@ -66,10 +66,10 @@
 | 小程序测试 | `miniprogram/` | `npx vitest run --passWithNoTests` | 安装依赖需 `--legacy-peer-deps`，不要提交本地生成的 package-lock.json |
 - Python / Django 版本：requirements 要求 Django 5.2.x；测试机实测 5.2.19 [TARGET]；CI 用 Python 3.13 [REPO ci.yml]。**不得用 Django 6.x 生成或校验迁移**，c275c46 的 0003 迁移就是在 6.0.6 下生成的（CR-023）。
 - 本机（Claude 主会话云主机）系统 Python 3.12 没有 Django。测试用 PM 会话临时目录里的 venv，依赖只装 `backend/requirements.txt` 中除 `mysqlclient`、`alibabacloud_dysmsapi20170525` 以外的包。不改全局环境，安装前须经用户同意。
-- 已知既有失败 / 基线：后端 120/120 通过（2026-11-08 实测）；前端与小程序没有用例
 - 缺依赖时的处理：如实标 BLOCKED，不自行安装
 - 外部服务：测试只经 `apps/integrations/fakes.py`，不得调用真实的微信、阿里云、邮件服务
-- 已知既有失败（2026-11-13 实测，HEAD afa1fe8，Python 3.12 + Django 5.2.19）：后端 561 条中 1 条失败 `tests.integration.test_registry_import_xlsx_defects.XlsxImportTests.test_tc_int_311_downloaded_template_imports_back`（期望 4 行、实际 6 行）；前端 vitest 181/181、小程序 75/75 通过
+- 已知既有失败 / 基线（2026-11-17 实测，HEAD 365a6b5，本机 Python 3.12 + Django 5.2.19；CI run 44032717170 全绿）：后端 957/957 通过（unit 203 / integration 687 / e2e 61 / smoke 6；CI 环境 skipped=1）；前端 vitest 37 文件 438/438；小程序 vitest 16 文件 119/119。2026-11-13 登记的 test_tc_int_311 既有失败已不复现
+- 后端 `backend/tests/integration/test_frontend_contract.py`、`test_owner_auth_v2_contract.py` 会静态读取前端页面源码：只改前端时也须跑后端全量（ocap_brand_layout GR-D-003）
 
 ### P4-1 测试环境 HTTP 端到端测试（仅部署后，USER 2026-11-13 Q3=A、Q4=A）
 - 只经公开入口 `https://ai-freeark.xin/ocap/` 发 HTTP 请求；不直连测试机数据库，不经 SSH 执行测试
@@ -167,3 +167,6 @@
 ## 修订清单（1.4.0 → 1.5.0，PM 2026-11-13T22:58:00+08:00）
 1. P4：登记 2026-11-13 基线（后端 1 条既有失败）；新增 P4-1 测试环境 HTTP 端到端测试许可与边界（用户 2026-11-13 Q3=A、Q4=A）。
 2. P8：新增越出 P4-1 范围的禁用项。
+
+## 修订清单（1.5.0 → 1.6.0，PM 2026-11-17T14:59:57+08:00）
+1. P4：测试基线更新为 2026-11-17 实测（后端 957/957、前端 438/438、小程序 119/119），删除 2026-11-08 与 2026-11-13 的过期基线（test_tc_int_311 已不复现）；补充"后端契约测试读取前端源码、只改前端也须跑后端"。用户 2026-11-17 Q2=A 同意。

@@ -245,3 +245,22 @@
 | 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_D-002-1 | 晋升→M-TE-032；合并→M-TE-012 命中+1 | committed |
 | 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_E2-001-1 | 晋升→M-DE-033 | committed |
 | 2026-11-16T22:56:00+08:00 | ocap_fix_defb_def024-GROUP_E2-001-2 | 合并→M-DE-011 命中+1 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_A-001-1 | 晋升→M-RA-021（合并 P-RA-010） | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_A-002-1 | 晋升→M-RA-022（合并 P-RA-011） | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_A-002-2 | 晋升→M-RA-023（合并 P-RA-012） | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_A-002-3 | 晋升→M-RA-024（合并 P-RA-013） | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_B-001-1 | 晋升→M-SA-020 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_B-001-2 | 晋升→M-SA-021 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_B-001-3 | 晋升→M-SA-022 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_C-001-1 | 晋升→M-SD-034 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_C-001-2 | 合并→M-SD-034 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_C-001-3 | 保留→P-SD-011 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-002-1 | 晋升→M-TE-033 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-002-2 | 晋升→M-TE-034 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_E1-001-1 | 晋升→M-DE-034 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_E1-001-2 | 晋升→M-DE-035 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_E2-001-1 | 保留→P-DE-003 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_E2-001-2 | 合并→M-DE-035 命中+1 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-003-pm-1 | 晋升→M-PM-006 | committed |
+| 2026-11-17T14:40:17+08:00 | ocap_brand_layout-GROUP_D-004-1 | 晋升→M-TE-035；合并→M-PM-006 命中+1 | committed |
+| 2026-11-17T14:40:17+08:00 | (gate) GR-A-001-F01 等 7 条漏读 | 合并→M-PM-001 命中 16→23 | committed |

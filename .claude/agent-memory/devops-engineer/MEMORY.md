@@ -33,8 +33,8 @@
 - [M-DE-031] 目标机只读核对脚本用 Write 写本地文件，经 `ssh host '…manage.py shell' < 脚本` 经 stdin 喂入，只输出计数；备份 jsonl 首行是 header，逐条核对按含 id 的记录过滤 — conf 0.6 · 证据 owner_auth_v2 deployment_report DEPLOY-012、GR-E2-002 · 首见 2026-11-16 · 命中 1
 - [M-DE-032] 远程 E2E 护栏 WRITE_ALLOWLIST 不含 POST /certifications，认证负例无法远程验证；E1 计划阶段先核对护栏是否覆盖待验写路径，不覆盖则列人工项或回流扩展护栏（仅限 e2e_ 夹具房屋） — conf 0.6 · 证据 owner_auth_v2 GR-E2-003-F01、backend/tests/remote/remote_client.py · 首见 2026-11-16 · 命中 1
 - [M-DE-033] 只读计数脚本写前先查模型字段：Membership 无 status 字段，查“有效绑定数”报 FieldError；改用申诉总数与清册三项做基线 — conf 0.6 · 证据 ocap_fix_defb_def024 deployment_report 偏差 4、GR-E2-001-F01、backend/apps/residency/models.py:7 · 首见 2026-11-16 · 命中 1
+- [M-DE-034] 前端构建必须带 `VITE_API_BASE=/ocap/api/v1`，缺省时 http.js 前缀为 `/api/v1`，部署后接口全 404；预检 `grep -c "/ocap/api/v1" dist/assets/index-*.js` 须非 0；invocation 的构建命令曾漏写，以部署计划/CI 为准 — conf 0.6 · 证据 GR-E1-001-F01、frontend/src/shared/http.js:8、.github/workflows/ci.yml:80 · 首见 2026-11-17 · 命中 1
+- [M-DE-035] 纯静态替换：先传目标机 /tmp 并校验 tar SHA256、文件数、index.html SHA256，再 rm + cp -a 压缩不一致窗口；快照同时落逐文件哈希清单，回滚后 sha256sum -c 只应出现 OK — conf 0.8 · 证据 ocap_brand_layout deployment_plan DEPLOY-003/004、ROLLBACK-004，E1 计划与 E2 执行两次独立出现 · 首见 2026-11-17 · 命中 2
 ## 用户偏好与禁止项
 ## 待验证
-
-- [P-DE-001] 前端构建命令必须带 `VITE_API_BASE=/ocap/api/v1`：缺省时 `http.js` 把接口前缀写成 `/api/v1`，产物里 `grep -c "/ocap/api/v1" dist/assets/index-*.js` 为 0，部署后接口全 404；invocation 的构建命令曾漏写，预检要核对该计数 — 自记 2026-11-17 · 证据 ocap_brand_layout deployment_plan PRE-06、frontend/src/shared/http.js:8
-- [P-DE-002] 纯静态替换用「目标机 /tmp 暂存并校验文件数与 index.html SHA256 → 再 rm + cp -a」把不一致窗口压到最短；快照时同时落逐文件哈希清单，回滚后 sha256sum -c 只应出现 OK — 自记 2026-11-17 · 证据 ocap_brand_layout deployment_plan DEPLOY-003/004、ROLLBACK-004
+- [P-DE-003] 目标机 Freeark nginx 有含 woff2 的静态正则（sites-enabled/freeark:44），但 `^~ /ocap/` 前缀块优先，/ocap/ 下 woff2 由 ocap 站点给 font/woff2；PRE-14 可据此预测 V-08 — 自记 2026-11-17 · 证据 deployment_report PRE-14/V-08（目标机配置，git 不可核验，且行号易变）

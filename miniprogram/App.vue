@@ -25,6 +25,8 @@ page { background: var(--bg); color: var(--text); font-size: 28rpx; }
 .tag.is-danger { color: var(--danger); background: var(--danger-bg); }
 .chip { display: inline-block; font-size: 22rpx; padding: 4rpx 20rpx; border-radius: 999px; border: 1px solid var(--line); background: var(--glass); }
 .home-hero { position: relative; overflow: hidden; min-height: 300rpx; background: var(--hero); color: var(--on-hero); }
+/* Hero 内指标条：--glass 在浅色风格下接近白色，与 --on-hero 白字叠成“白条”，这里改用低透明白底 + 前景色 */
+.home-hero .chip { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.32); color: var(--on-hero); }
 .home-hero-scan { display: none; }
 .home-hero-main { position: relative; }
 .home-greeting { font-size: 44rpx; font-weight: 700; margin: 8rpx 0; }

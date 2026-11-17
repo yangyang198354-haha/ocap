@@ -16,5 +16,6 @@ watch(() => theme.current, (key) => theme.applyNative(key))
 </script>
 
 <style>
-.theme-root { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); }
+/* padding-top 阻断首个子元素的 margin 折叠：折叠后卡片外边距会跑到 .theme-root 背景之外，露出 page 默认底色（浅色横条） */
+.theme-root { min-height: 100vh; padding-top: 1rpx; box-sizing: border-box; background: var(--bg); color: var(--text); font-family: var(--font); }
 </style>

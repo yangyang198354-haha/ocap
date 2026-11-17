@@ -1,4 +1,4 @@
-<phase_status project="ocap_brand_layout" mode="INCREMENTAL" created="2026-11-16T23:19:39+08:00" updated="2026-11-17T09:24:54+08:00">
+<phase_status project="ocap_brand_layout" mode="INCREMENTAL" created="2026-11-16T23:19:39+08:00" updated="2026-11-17T14:38:27+08:00">
   <request time="2026-11-16T23:19:39+08:00"><![CDATA[现在有一批新的变更：1. web应用 和小程序的名字叫做 Cyber@红枫岭,小程序登录注册页，web 登录注册页，网页头标题都改一下。字体，配图，login 对应设计一下。 2. 用户登录 web后页面的布局需要整体调整一下。（业主委员会）主页， 我ode房屋，决议，投票/调查， 报销/备用金， 收入表、财务表、待办 这些功能页，都在左侧导航栏。 个人中心 收在右上角。显示为自己点昵称，鼠标点上去有下拉菜单，分别是个人中心里面各个tab 卡片的功能。退出登录也在这个菜单中。点击菜单分别进入各个页面。不要像现在所有tab卡都在个人中心里面。 3. 同样的原则， 我的房屋，决议，投票/调查等等页面都在左侧导航栏，每个页面的tab 卡都是导航栏的二级菜单。不要像现在一样全部铺开。 二级菜单默认隐藏，点击一级菜单再展开。4. web 页面要适配各种尺寸的屏幕，比如1K屏，2k屏或者4k屏幕。可以自适应，不要让小屏幕看起来没有空间显示。也不要让大屏两侧有大量空白空间。 先整理我的需求和用户故事，确认后开始开发。]]></request>
   <profile version="1.5.0"/>
   <workspace_note>INCREMENTAL：品牌更名（Web+小程序登录注册页与标题）、Web 登录后布局改为左侧导航+右上角用户菜单、页内 tab 改为导航二级菜单、Web 多分辨率自适应。用户要求先出需求与用户故事，确认后再开发。</workspace_note>
@@ -12,13 +12,13 @@
     <group id="GROUP_C" agent="software-developer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_05" status="APPROVED"/><phase id="PHASE_06" status="APPROVED"/>
     </group>
-    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="1" defect_loops="1">
+    <group id="GROUP_D" agent="test-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="2" defect_loops="1">
       <phase id="PHASE_07" status="APPROVED"/><phase id="PHASE_08" status="APPROVED"/><phase id="PHASE_09" status="APPROVED"/>
     </group>
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="测试"><phase id="PHASE_11b" status="APPROVED"/></group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_brand_layout/requirements/requirements_spec.md" version="0.1.0" status="SUPERSEDED" group="GROUP_A"/>
@@ -41,18 +41,30 @@
     <artifact path="project_workspace/ocap_brand_layout/development/code_review_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_brand_layout/development/code_review_report.md" version="2.0.0" status="APPROVED" group="GROUP_C"/>
     <artifact path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="0.1.0" status="SUPERSEDED" group="GROUP_D"/>
-    <artifact path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="1.0.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="1.1.0" status="SUPERSEDED" group="GROUP_D"/>
+    <artifact path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="2.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_brand_layout/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_brand_layout/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_brand_layout/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_brand_layout/delivery_report.md" version="1.0.0" status="APPROVED" group="PM"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
+    <invocation id="ocap_brand_layout-GROUP_D-004" agent="test-engineer" start="2026-11-17T14:19:00+08:00" end="2026-11-17T14:37:30+08:00" result="SUCCESS"/>
+    <invocation id="ocap_brand_layout-GROUP_E2-001" agent="devops-engineer" start="2026-11-17T13:46:07+08:00" end="2026-11-17T14:00:09+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_E1-001" agent="devops-engineer" start="2026-11-17T09:14:02+08:00" end="2026-11-17T09:24:54+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_D-003" agent="test-engineer" start="2026-11-17T08:59:16+08:00" end="2026-11-17T09:14:02+08:00" result="SUCCESS"/>
     <invocation id="ocap_brand_layout-GROUP_C-003" agent="software-developer" start="2026-11-17T08:47:12+08:00" end="2026-11-17T08:59:16+08:00" result="SUCCESS"/>
@@ -181,6 +193,34 @@ git diff --stat HEAD -- backend frontend/src/shared/api.js miniprogram/utils/api
       <finding id="GR-E1-001-F03" severity="MINOR">tech_stack 与 unit/integration 报告未读（agent 自述），产出无误。</finding>
       <condition>E2 须用户当轮明确授权（环境=测试）；建议部署前由主会话按用户确认提交本批改动。</condition>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_brand_layout-GROUP_E2-001" decision="PASS" time="2026-11-17T14:00:09+08:00">
+      <reviewed_files><file path="project_workspace/ocap_brand_layout/deployment/deployment_report.md" version="0.1.0"/></reviewed_files>
+      <criterion id="J-E2 状态" result="SATISFIED">deployment_report.md:24 DEPLOYED_SUCCESSFULLY；PRE 15/15、DEPLOY 5/5、V-01~V-14 14/14 均有实际输出；回滚锚点 TS=20261117135725。</criterion>
+      <criterion id="J-E2 PM 只读复核" result="SATISFIED">见 verification，与报告 V-06/V-03/V-08/V-10/V-11 一致。</criterion>
+      <verification><![CDATA[curl https://ai-freeark.xin/ocap/ -> <title>Cyber@红枫岭</title>；sha256 b451dab9…65c6（= 本地 dist/index.html）
+curl /ocap/assets/OcapBrand-subset-c41YCxaj.woff2 -> 200 font/woff2 12044
+curl /ocap/me/profile、/ocap/units/review、/ocap/admin/finance/limit -> 200 text/html
+curl /ocap/api/v1/me（无令牌）-> 401]]></verification>
+    </gate_review>
+    <gate_review id="GR-D-003" invocation_id="ocap_brand_layout-GROUP_D-003" decision="FAIL" time="2026-11-17T14:00:50+08:00">
+      <reviewed_files><file path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="1.0.0"/></reviewed_files>
+      <criterion id="J-D 契约（更正 GR-D-002）" result="NOT_SATISFIED"><![CDATA[CI run 44026380990（HEAD 1133794）Backend job failure：Ran 957 tests, FAILED (failures=6, skipped=1)。失败：test_frontend_contract.FieldContractTests.test_phone_bind_change_contract；ProductReviewFieldContractTests.test_tc_int_487/488/490；test_owner_auth_v2_contract.AppealContractTests.test_tc_int_713、LevelLabelAndSeatContractTests.test_tc_int_719。根因：这些后端契约测试静态读取 frontend/src/portal/Units.vue、Me.vue 源码，页面已拆分至 portal/units/*、portal/me/*，断言字符串不在宿主文件中。上一 CI（3df752b）success，属本批新增失败。产品行为无误（字段在拆分文件中，前端 layout_contract 6/6 通过、线上验证通过）。]]></criterion>
+      <finding id="GR-D-003-F01" severity="MAJOR">后端契约测试需同步扫描拆分后的文件（测试代码，归 GROUP_D）；GR-D-002 以"后端零改动、api.js 未改"为由放行后端未运行是 PM 判断错误——后端测试读取前端页面源码。</finding>
+      <feedback_to_agent>同步上述 6 条后端契约测试的文件扫描范围（不降低断言），需能运行后端测试（待用户同意 scratchpad venv 或经 CI 验证）。</feedback_to_agent>
+    </gate_review>
+    <gate_review id="GR-D-004" invocation_id="ocap_brand_layout-GROUP_D-004" decision="PASS_WITH_CONDITIONS" time="2026-11-17T14:37:30+08:00">
+      <reviewed_files><file path="project_workspace/ocap_brand_layout/testing/test_plan.md" version="1.1.0"/><file path="project_workspace/ocap_brand_layout/testing/unit_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_brand_layout/testing/integration_test_report.md" version="1.1.0"/><file path="project_workspace/ocap_brand_layout/testing/e2e_test_report.md" version="1.1.0"/></reviewed_files>
+      <criterion id="J-D 复跑一致" result="SATISFIED">后端 957 OK、前端 438/438、小程序 119/119，与报告 1514/1514 一致。</criterion>
+      <criterion id="J-D 断言未放宽" result="SATISFIED">git diff backend/tests：仅把读取源由宿主文件改为 src_split()/web_units_bundle()（宿主+拆分目录拼接，拆分目录为空即断言失败）；assertIn/assertRegex/assertIsNotNone 断言内容不变。</criterion>
+      <criterion id="J-D 冻结" result="SATISFIED">find -newer test_plan.md 于 backend、frontend、miniprogram 无结果。</criterion>
+      <criterion id="J-D 后端层" result="SATISFIED">更正 GR-D-002：后端已实跑（unit 203 / integration 687 / e2e 61 / smoke 6）。</criterion>
+      <verification><![CDATA[(cd backend && venv_backend/bin/python manage.py test --settings=config.test_settings) -> Ran 957 tests in 77.891s / OK
+(cd frontend && npx vitest run --passWithNoTests) -> Test Files 37 passed (37); Tests 438 passed (438)
+(cd miniprogram && npx vitest run --passWithNoTests) -> Test Files 16 passed (16); Tests 119 passed (119)]]></verification>
+      <finding id="GR-D-004-F01" severity="MAJOR">MV-01~05 人工验证待用户（critical path 4 条）。</finding>
+      <finding id="GR-D-004-F02" severity="MINOR">本机后端无 skipped，CI 基线 skipped=1（环境差异，无失败）。</finding>
+      <condition>提交推送后核对 CI 三个 job 全部 success。</condition>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-16T23:38:14+08:00" respondent="用户"><![CDATA[用户原话：Q1:B,Q2:A, Q3:C,Q4:A, 赛博要体现科技感， Q5：B， Q6：C， Q7：A， Q8：B，Q9：A， Q10：A， Q11， A， Q12：认可
@@ -189,6 +229,7 @@ PM 汇报编号 → 规格编号：Q1→Q-BL-01=B（管理端改名且改为左�
     <clarification time="2026-11-16T23:52:56+08:00" respondent="用户"><![CDATA[用户原话："全部按推荐，那9项也确认"。即 Q-BL-22~32 全部取推荐项（22=B 末位、23=A、24=A、25=A、26=B、27=A、28=A、29=A、30=A、31=A、32=A）；Q-BL-07、08、11、12、13、14、15、17、18 由用户明确确认（不再是"未提异议"）。]]></clarification>
     <clarification time="2026-11-17T00:10:03+08:00" respondent="用户"><![CDATA[OQ-B01 字体选型。用户原话："A，同意装 fonttools 并下载"。即采用得意黑 Smiley Sans；同意 PM 在会话临时目录 venv 安装 fonttools、从官方 GitHub 下载字体并子集化。]]></clarification>
     <clarification time="2026-11-17T13:41:02+08:00" respondent="用户"><![CDATA[用户原话："continue. Q1: A， Q2：A Q3 A"。Q1=A 现在提交（单个提交）；Q2=A 推送；Q3=A 授权部署测试环境。]]></clarification>
+    <clarification time="2026-11-17T14:19:00+08:00" respondent="用户"><![CDATA[用户原话："Q1：A， Q2：A"。Q1=A 在会话 scratchpad 建 venv 装后端依赖（排除 mysqlclient、alibabacloud_dysmsapi20170525）本机跑后端测试；Q2=A 修好后提交并推送。]]></clarification>
   </clarifications>
   <checkpoints/>
   <escalations/>
@@ -219,5 +260,13 @@ PM 汇报编号 → 规格编号：Q1→Q-BL-01=B（管理端改名且改为左�
     <event time="2026-11-17T09:24:54+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS_WITH_CONDITIONS → GROUP_E1 APPROVED（部署文档 1.0.0）。GROUP_E2 保持 NOT_AUTHORIZED，询问用户。</event>
   <event time="2026-11-17T09:24:54+08:00" type="SELF_CORRECTION" actor="pm-orchestrator">PM 调用中构建命令漏写 VITE_API_BASE（GR-E1-001-F01），已由 devops 计划纠正；后续调用以部署计划命令为准。</event>
     <event time="2026-11-17T13:41:02+08:00" type="DEPLOY_AUTH" actor="pm-orchestrator">用户本轮选择 Q3=A（授权部署，环境=测试），主会话模式有效，仅限本次 GROUP_E2-001 调用。</event>
+    <event time="2026-11-17T13:46:07+08:00" type="RUN" actor="pm-orchestrator">经用户 Q1=A/Q2=A：主会话提交 1133794 并推送 origin main（3df752b..1133794；ci.yml 仅测试构建，不部署）。</event>
+  <event time="2026-11-17T13:46:07+08:00" type="INVOCATION" actor="pm-orchestrator">调用 devops-engineer（ocap_brand_layout-GROUP_E2-001，环境=测试，基于提交 1133794）。</event>
+    <event time="2026-11-17T14:00:09+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 PASS → GROUP_E2 APPROVED（测试环境部署成功）。</event>
+    <event time="2026-11-17T14:00:50+08:00" type="SELF_CORRECTION" actor="pm-orchestrator">GR-D-002 契约项判断有误：以后端零改动放行后端测试未运行，但 backend/tests 契约用例读取前端页面源码；CI 44026380990 后端 6 条新增失败。已追加 GR-D-003 FAIL，GROUP_D→REJECTED。测试环境部署内容（前端）功能不受影响，不回滚。</event>
+    <event time="2026-11-17T14:19:00+08:00" type="RUN" actor="pm-orchestrator"><![CDATA[经用户同意建 scratchpad/venv_backend（Python 3.12，Django 5.2.19）。HEAD 1133794 本地后端：Ran 957 tests, FAILED (failures=6)，6 条与 CI 一致。]]></event>
+  <event time="2026-11-17T14:19:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 test-engineer（ocap_brand_layout-GROUP_D-004，GR-D-003 重试 2/2）。</event>
+    <event time="2026-11-17T14:37:30+08:00" type="GATE" actor="pm-orchestrator">GR-D-004 PASS_WITH_CONDITIONS → GROUP_D APPROVED（测试文档 2.0.0）。</event>
+    <event time="2026-11-17T14:38:27+08:00" type="RUN" actor="pm-orchestrator">写 delivery_report.md 1.0.0（DELIVERED_WITH_ISSUES）；按用户 Q2=A 提交并推送测试同步与文档。</event>
   </audit_log>
 </phase_status>

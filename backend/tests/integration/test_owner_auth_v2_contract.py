@@ -51,6 +51,13 @@ EXPECTED_MINI_CALLS = {
 }
 
 
+def web_units_bundle() -> str:
+    """Web 我的房屋页拆分后（MOD-123）：宿主 Units.vue + portal/units/*.vue 全部拆分文件的源码拼接。"""
+    parts = sorted((REPO / "frontend/src/portal/units").glob("*.vue"))
+    assert parts, "frontend/src/portal/units 下没有拆分文件"
+    return "\n".join(p.read_text(encoding="utf-8") for p in [WEB["units"], *parts])
+
+
 def text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -114,8 +121,9 @@ class ClientCallContractTests(ApiTestBase):
 
 class AppealContractTests(ApiTestBase):
     def appeal_keys_from(self, path: Path, pattern: str) -> set[str]:
-        found = re.search(pattern, text(path), re.S)
-        self.assertIsNotNone(found, f"{path.relative_to(REPO)} 中未找到 createAppeal 调用")
+        source = web_units_bundle() if path == WEB["units"] else text(path)
+        found = re.search(pattern, source, re.S)
+        self.assertIsNotNone(found, f"{path.relative_to(REPO)}（含拆分文件）中未找到 createAppeal 调用")
         return object_keys(" ".join(found.group(1).split()))
 
     def test_tc_int_713_both_clients_send_owner_name_unit_id_proof_ids(self):
@@ -217,7 +225,7 @@ class LevelLabelAndSeatContractTests(ApiTestBase):
     def test_tc_int_719_old_error_codes_not_referenced_by_clients(self):
         """契约：两端页面不再依赖已删除的认证错误码 PHONE_REQUIRED / PHONE_NOT_IN_REGISTRY；转申诉依据 OWNER_NOT_MATCHED。"""
         for path in (WEB["units"], MINI["units"]):
-            source = text(path)
+            source = web_units_bundle() if path == WEB["units"] else text(path)
             self.assertIn("OWNER_NOT_MATCHED", source, path.name)
             self.assertNotIn("PHONE_NOT_IN_REGISTRY", source, path.name)
             self.assertNotIn("PHONE_REQUIRED", source, path.name)

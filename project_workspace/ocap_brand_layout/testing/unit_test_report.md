@@ -1,27 +1,29 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-17T09:09:00+08:00</timestamp>
+  <timestamp>2026-11-17T14:30:24+08:00</timestamp>
   <project_name>ocap_brand_layout</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files><file>testing/test_plan.md</file><file>development/implementation_plan.md（2.0.0）</file><file>architecture/module_design.md（1.0.0）</file></input_files>
   <phase>PHASE_07</phase>
   <status>APPROVED</status>
 </file_header>
 
-# 单元测试报告：品牌更名 + 左侧导航布局（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑）
+# 单元测试报告：品牌更名 + 左侧导航布局（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑；1.1.0：GR-D-003 更正，补后端层）
 
 ## 摘要
 
-- 执行时间：2026-11-17T08:59:54+08:00 起（缺陷 DEF-001/002 修复后重跑；前端 11 文件 62.6s，小程序 41.8s）；环境：Node + vitest（jsdom），无外网，HTTP 全部 mock；后端零改动不运行。
+- 执行时间：2026-11-17T08:59:54+08:00 起（缺陷 DEF-001/002 修复后重跑；前端 11 文件 62.6s，小程序 41.8s）；环境：Node + vitest（jsdom），无外网，HTTP 全部 mock；后端层 1.1.0 起实跑（GR-D-003 更正，见下）。
 - 命令（工作目录见括号）：
   - `(cd frontend && npx vitest run --passWithNoTests tests/layout_menus.spec.js tests/admin_session.spec.js tests/brand.spec.js tests/layout_css.spec.js tests/admin_theme.spec.js tests/admin_users.spec.js tests/qa_unit_theme.spec.js tests/product_review_ui.spec.js tests/product_review_rework2.spec.js tests/owner_auth_v2.spec.js tests/pages.spec.js)`
   - `(cd miniprogram && npx vitest run --passWithNoTests)`
 - UNIT 层范围：新写 UNIT 用例 68 条（前端 53 + 小程序 15）+ 相关既有用例（前端 124 条：已同步的 11 个文件中的既有用例；小程序 104 条全量既有）。
-- total = pass + fail + skip + blocked + not_testable = 296 + 0 + 0 + 0 + 0 = 296（前端 177 + 小程序 119；其中新写 68、既有 228）。
-- 通过率 = pass/(pass+fail+blocked) = 296/296 = 100%；新写用例 68/68 通过。
-- 判定模式 baseline：相对基线零新增失败（既有 228 条全部通过）且新写全部通过。**本层门控：PASSED**。
+- **GR-D-003 更正（1.1.0）**：1.0.0 称"后端零改动不运行"有误——后端测试静态读取前端页面源码，页面拆分（portal/Units.vue、Me.vue → portal/units/*、portal/me/*）使 6 条后端契约用例失败（INT 层，见集成报告）。本层补后端 `tests.unit` 实跑。
+- 后端命令：`(cd backend && <PM venv>/bin/python manage.py test tests.unit --settings=config.test_settings)`，2026-11-17T14:21 起，Ran 203 tests，OK（全部既有用例，本层新写 0 条）。
+- total = pass + fail + skip + blocked + not_testable = 499 + 0 + 0 + 0 + 0 = 499（前端 177 + 小程序 119 + 后端 203；其中新写 68、既有 431）。
+- 通过率 = pass/(pass+fail+blocked) = 499/499 = 100%；新写用例 68/68 通过。
+- 判定模式 baseline：相对基线零新增失败（既有 431 条全部通过）且新写全部通过。**本层门控：PASSED**。
 - 不可测：本层无 NOT_TESTABLE 用例（视口/字体/WXSS 项见 e2e_test_report 人工验证清单）。
-- 后端：`git diff --stat HEAD -- backend frontend/src/shared/api.js miniprogram/utils/api.js` 输出 0 行（零改动，本次 09:07 复核）；本机无 Django（画像 P4），后端用例**未运行**，不标 PASS，不计入以上数字。
+- 后端：1.0.0 称"本机无 Django 未运行"已更正——使用 PM 经用户同意在会话 scratchpad 建好的 venv 实跑，未安装/修改任何依赖。
 - 本层与 0.1.0 计数一致（296/296）：DEF-001 修复所在的 `art/index.js` 由 INT 层 TC-INT-874 守护，DEF-002 所在的 `PortalLayout.vue` 由 INT 层 TC-INT-914 守护；本层 UNIT 用例未受修复影响，重跑 0 失败。测试文件零改动（冻结，见 test_plan 0.2.0 修订说明）。
 
 ## 执行输出
@@ -33,7 +35,9 @@
 (miniprogram, 全量)   Test Files  16 passed (16)
                            Tests  119 passed (119)
                       exit=0
-（以上为 2026-11-17 08:59:54 / 09:00:58 的最后一次执行输出）
+(backend tests.unit)  Ran 203 tests in 1.541s
+                      OK
+（前端/小程序为 08:59:54 / 09:00:58 的输出，其测试文件在 1.0.0 之后零改动，全量回归 14:24/14:28 复跑 438/438、119/119 一致；后端为 1.1.0 于 14:21 的最后一次执行输出）
 ```
 
 按文件（前端）：layout_menus 21、admin_session 7、brand 10、layout_css 15（以上新写 53）；admin_theme 11、admin_users 2、qa_unit_theme 32、product_review_ui 31、product_review_rework2 12、owner_auth_v2 22、pages 14（既有，已同步，计 124）。小程序：brand_login 15（新写）+ 15 个既有文件 104。
@@ -67,8 +71,8 @@
 
 ## 与基线对比（baseline 模式）
 
-- 基线：前端 281/281（26 文件）、小程序 104/104（15 文件）。
-- 本层既有用例失败清单：无（0 条）。新增失败：0。小程序既有 104 条全部通过。
+- 基线：前端 281/281（26 文件）、小程序 104/104（15 文件）、后端 CI 3df752b `Ran 957, OK`（unit 层 203 条本次 203/203 通过）。
+- 本层既有用例失败清单：无（0 条）。新增失败：0。小程序既有 104 条、后端 unit 203 条全部通过。
 
 ## 失败汇总（需路由给开发）
 

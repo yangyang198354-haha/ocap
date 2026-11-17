@@ -362,7 +362,7 @@ class FieldContractTests(ApiTestBase):
         self.assert_ok(resp)
         self.assertFalse(resp.data["merged"])
         self.assertIn("phone", resp.data)
-        self.assertIn("password_confirm", self._src("frontend/src/portal/Me.vue"))
+        self.assertIn("password_confirm", src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me"))
         pwd = self.api("put", "/me/password", {"password": "Ocap2026pass", "password_confirm": "Ocap2026pass"},
                        token=token)
         self.assert_ok(pwd, 204)
@@ -447,7 +447,7 @@ class RegistryImportContractTests(ApiTestBase):
         dialog = self._src("frontend/src/admin/RegistryImportDialog.vue")
         helper = self._src("frontend/src/admin/registryImport.js")
         # MOD-082 / MOD-085：逐级选房逻辑自 Units 页抽出到选择器组件，页面与组件合并后检查字段名
-        web_units = (self._src("frontend/src/portal/Units.vue")
+        web_units = (src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
                      + self._src("frontend/src/portal/parts/UnitCascader.vue"))
         mini_units = (self._src("miniprogram/pages/units/index.vue")
                       + self._src("miniprogram/components/UnitPicker.vue"))
@@ -495,6 +495,14 @@ def reads(source: str, roots: list[str]) -> set[str]:
 
 def src(rel: str) -> str:
     return (REPO / rel).read_text(encoding="utf-8")
+
+
+def src_split(host: str, split_dir: str) -> str:
+    """宿主页 + 其拆分目录下全部 *.vue / *.js 的源码拼接（页面拆分后契约断言须覆盖全部拆分文件；
+    正向断言在并集上成立即可，否定断言对并集成立 = 对每个文件成立）。拆分目录为空视为错误。"""
+    parts = sorted([*(REPO / split_dir).glob("*.vue"), *(REPO / split_dir).glob("*.js")])
+    assert parts, f"{split_dir} 下没有拆分文件"
+    return src(host) + "\n" + "\n".join(p.read_text(encoding="utf-8") for p in parts)
 
 
 class ProductReviewFieldContractTests(ApiTestBase):
@@ -546,7 +554,8 @@ class ProductReviewFieldContractTests(ApiTestBase):
     def test_tc_int_487_request_field_names_match_backend(self):
         """TC-INT-487 / AC-178-02：前端提交的请求字段名与后端接受的一致（unit_id / decision / approver_ids / user_id / value / client）。"""
         web_api, mini_api = src("frontend/src/shared/api.js"), src("miniprogram/utils/api.js")
-        self.assertRegex(src("frontend/src/portal/Units.vue"), r"createResidentApplication\(\s*\{\s*unit_id")
+        self.assertRegex(src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units"),
+                         r"createResidentApplication\(\s*\{\s*unit_id")
         self.assertRegex(mini_api, r"decideResidentApplication:[^\n]*\{\s*decision")
         self.assertRegex(web_api, r"decideResidentApplication[^\n]*\{\s*decision")
         self.assertRegex(mini_api, r"createResidentApplication:[^\n]*\bdata\b")
@@ -576,8 +585,9 @@ class ProductReviewFieldContractTests(ApiTestBase):
         self.assertEqual(set(unit), {"unit_id", "specific_part", "role", "role_label", "certified_at",
                                      "residents", "pending_application_count"})
         self.assertEqual(set(res), {"user_id", "nickname", "account_no", "joined_at"})
-        web_units, web_me, web_home = (src("frontend/src/portal/Units.vue"), src("frontend/src/portal/Me.vue"),
-                                       src("frontend/src/portal/Home.vue"))
+        web_units = src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
+        web_me = src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me")
+        web_home = src("frontend/src/portal/Home.vue")
         mini_units, mini_me = src("miniprogram/pages/units/index.vue"), src("miniprogram/pages/me/index.vue")
         for label, text in (("Web Units", web_units), ("Mini units", mini_units)):
             self.assertLessEqual(reads(text, ["housing"]), top | {"summary", "units"}, label)
@@ -620,7 +630,7 @@ class ProductReviewFieldContractTests(ApiTestBase):
         self.assertEqual(set(review[0]["applicant"]), {"id", "account_no", "nickname", "phone"})
         self.assertEqual(set(apps[0]["unit"]), {"unit_id", "specific_part"})
         allowed = set(apps[0]) | set(appeals[0]) | set(review[0])
-        for label, text in (("Web Units", src("frontend/src/portal/Units.vue")),
+        for label, text in (("Web Units", src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")),
                             ("Mini units", src("miniprogram/pages/units/index.vue"))):
             self.assertLessEqual(reads(text, ["item"]), allowed, label)
             self.assertLessEqual(reads(text, ["item.applicant"]), set(review[0]["applicant"]), label)

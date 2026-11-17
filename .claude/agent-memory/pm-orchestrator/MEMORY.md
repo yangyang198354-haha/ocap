@@ -9,3 +9,4 @@
 - [Requirements first](feedback_requirements_first.md) — 需求分批、阶段逐一放行；提交与部署需当轮确认
 - [Push triggers deploy](feedback_push_triggers_deploy.md) — 推送前读画像 P7/P8 与 workflow；push 触发生产部署时须单独授权
 ## 待验证
+- [P-PM-001] "后端零改动"不能作为跳过后端测试的理由：backend/tests 的契约用例（test_frontend_contract.py、test_owner_auth_v2_contract.py）静态读取前端页面源码，前端拆分/改名页面会让后端 CI 失败；前端改动的 C/D 门控也须跑后端测试或等 CI 结果 — 自记 2026-11-17 · 证据 ocap_brand_layout GR-D-003、CI run 44026380990

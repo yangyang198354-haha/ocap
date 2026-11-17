@@ -1,14 +1,14 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-17T09:10:00+08:00</timestamp>
+  <timestamp>2026-11-17T14:30:24+08:00</timestamp>
   <project_name>ocap_brand_layout</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files><file>testing/test_plan.md</file><file>testing/integration_test_report.md</file><file>development/implementation_plan.md（2.0.0）</file></input_files>
   <phase>PHASE_09</phase>
   <status>APPROVED</status>
 </file_header>
 
-# E2E 测试报告：品牌更名 + 左侧导航布局（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑）
+# E2E 测试报告：品牌更名 + 左侧导航布局（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑；1.1.0：GR-D-003 更正，补后端层）
 
 ## 摘要
 
@@ -17,30 +17,36 @@ critical path 口径：替代（jsdom 整 App 旅程：真实 App + 真实路由
 - 执行时间：2026-11-17T09:02:50+08:00 起（E2E 层）；09:03:22 起全量回归。环境：Node + vitest（jsdom），无外网，HTTP 全部 mock。
 - 命令：`(cd frontend && npx vitest run --passWithNoTests tests/layout_e2e.spec.js tests/qa_e2e_extend.spec.js tests/qa_e2e_theme.spec.js tests/qa_e2e_pages.spec.js)`
 - **本层门控：PASSED**（INT 层门控 PASSED 后执行；相对基线零新增失败，新写 E2E 用例 3/3 通过）。
-- 本层 metrics：total = pass + fail + skip + blocked + not_testable = 11 + 0 + 0 + 0 + 5 = 16（执行 11 条：新写 TC-E2E-801~803 共 3 条 + 既有已同步 qa_e2e_* 8 条；5 条为人工验证项 MV-01~05，NOT_TESTABLE，不计入通过率分母）。通过率 = pass/(pass+fail+blocked) = 11/11 = 100%。
+- 本层 metrics：total = pass + fail + skip + blocked + not_testable = 72 + 0 + 0 + 0 + 5 = 77（执行 72 条：前端新写 TC-E2E-801~803 共 3 条 + 既有已同步 qa_e2e_* 8 条 + 后端 `tests.e2e` 既有 61 条；5 条为人工验证项 MV-01~05，NOT_TESTABLE，不计入通过率分母）。通过率 = pass/(pass+fail+blocked) = 72/72 = 100%。后端 e2e 命令 `(cd backend && <PM venv>/bin/python manage.py test tests.e2e --settings=config.test_settings)`：`Ran 61 tests in 22.848s  OK`（14:21）。
 - critical path 通过率 = 3/3 = 100%（TC-E2E-801~803）；加替代用例 US-208 的 TC-UNIT-881~895（小程序 brand_login 15/15）共 18/18 = 100%。
 - critical path 覆盖率 = 有 E2E 级用例的 Must Have 故事 / Must Have 故事总数：可自动化范围 20/20 = 100%（19 个有 jsdom 旅程用例：US-207、209~216、220、222~227、229、230、231；US-208 以小程序最高层用例替代）；含待人工的口径 20/22 = 90.9%，缺口 US-218、US-219 只能真实视口度量，NOT_TESTABLE，已列人工清单 MV-01/02，计"待人工验证"，不计入通过率分母。
 - critical path 中待人工验证条数 = 4（MV-01、MV-02、MV-04、MV-05，均对应 Must Have 故事）；非 critical path 待人工 1 条（MV-03，US-228 Should Have）。只要这些未完成，最终状态至多 DELIVERED_WITH_ISSUES。
 - 已知局限：TC-E2E-801 步骤 4 仍按"进入 /units* 后"断言角标（`layout_e2e.spec.js:185` 的注释写于 DEF-002 修复前，测试冻结未改）；该旅程本身不再证明/反证 DEF-002，修复由 TC-INT-914（真实登录链路）守护并已 PASS。
 - 缺陷：DEF-001、DEF-002 均已修复并回归通过，当前无未解决缺陷。
+- **GR-D-003 更正**：1.0.0 称"后端零改动不运行"属误判；后端契约用例读取前端页面源码，页面拆分使 6 条失败（根因与"原意 → 新写法"见 integration_test_report 1.1.0）。已修复（仅测试代码：`test_frontend_contract.py`、`test_owner_auth_v2_contract.py`）并实跑后端全量 957 条通过；产品代码零改动，无新 DEF。
 
 ## 全量回归
 
-命令与计数（修复后实跑，最后一次执行，冻结后无测试文件改动）：
+命令与计数（1.1.0 最后一次执行；后端测试文件最后修改 14:21:26，此后无改动）：
 
 ```
-(cd frontend && npx vitest run --passWithNoTests)      [09:03:22]
+(cd backend && <PM venv>/bin/python manage.py test --settings=config.test_settings)   [14:21 起]
+ Ran 957 tests in 72.082s
+ OK
+ 分层：unit 203 OK / integration 687 OK / e2e 61 OK / smoke 6 OK（合计 957）
+(cd frontend && npx vitest run --passWithNoTests)      [14:24:15 起]
  Test Files  37 passed (37)
       Tests  438 passed (438)
-(cd miniprogram && npx vitest run --passWithNoTests)   [09:06:46]
+(cd miniprogram && npx vitest run --passWithNoTests)   [14:28:03 起]
  Test Files  16 passed (16)
       Tests  119 passed (119)
 ```
 
+- 后端：957 条，与基线 CI 3df752b 的 957 条数量一致；修复前同环境复现 `FAILED (failures=6)`（与 CI 44026380990 一致），修复后 0 失败。本机输出为 `OK`，未带 skipped 提示（CI 基线为 skipped=1；差异不影响判定，无失败）。
 - 前端 438 = 基线 281 + 新写 157，全部通过；小程序 119 = 基线 104 + 新写 15，全部通过。
-- 总计 557：total = pass + fail + skip + blocked + not_testable = 557 + 0 + 0 + 0 + 0 = 557（不含人工验证项 MV-01~05）。
-- **相对基线新增失败 = 0 条**（与 PM 在 GR-C-003 的实跑一致：前端 37 文件 438/438，小程序 16 文件 119/119）。0.1.0 的 2 条失败（TC-INT-874、TC-INT-914）已转绿。
-- 后端：**未运行**，不标 PASS，不计入计数。证据：`git diff --stat HEAD -- backend frontend/src/shared/api.js miniprogram/utils/api.js` 输出 0 行（零改动）；本机无 Django（画像 P4）。
+- 总计 1514：total = pass + fail + skip + blocked + not_testable = 1514 + 0 + 0 + 0 + 0 = 1514（后端 957 + 前端 438 + 小程序 119；不含人工验证项 MV-01~05）。
+- **相对基线新增失败 = 0 条**（后端相对 CI 3df752b 零新增，前端/小程序与 PM GR-C-003 实跑一致）。0.1.0 的 2 条失败（TC-INT-874、TC-INT-914）已转绿；GR-D-003 的 6 条后端失败已转绿。
+- 后端 venv 为 PM 经用户同意在会话 scratchpad 建立，本次只使用，未安装或改动依赖。
 
 ## 用户旅程
 

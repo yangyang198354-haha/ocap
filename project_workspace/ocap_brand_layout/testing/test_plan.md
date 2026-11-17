@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>test-engineer</author_agent>
-  <timestamp>2026-11-17T09:07:39+08:00</timestamp>
+  <timestamp>2026-11-17T14:30:24+08:00</timestamp>
   <project_name>ocap_brand_layout</project_name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <input_files>
     <file>requirements/requirements_spec.md（1.0.0）</file>
     <file>requirements/user_stories.md（1.0.0）</file>
@@ -15,14 +15,14 @@
   <status>APPROVED</status>
 </file_header>
 
-# 测试计划：品牌更名 Cyber@红枫岭 + Web 左侧导航布局 + 多分辨率自适应（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑）
+# 测试计划：品牌更名 Cyber@红枫岭 + Web 左侧导航布局 + 多分辨率自适应（INCREMENTAL，GROUP_D-003，缺陷回流 1/2 后重跑；1.1.0：GR-D-003 更正，补后端层）
 
 ## 测试策略
 
 - **被测改动**：纯前端（Web 用户端/管理端、小程序登录页与标题、风格生成物）；后端、`frontend/src/shared/api.js`、`miniprogram/utils/api.js` 零改动。
 - **范围 in**：MOD-119~130 的产品行为（jsdom 可测部分）；MOD-131 新建 12 个 spec；39 条既有用例的同步（逐条"原意 → 新写法"见下节）。
 - **范围 out**：
-  - 后端零改动、不运行。原因：本机无 Django（画像 P4），且 `git diff --stat HEAD -- backend` 输出为空（0 行，本次实跑），`api.js` 两份同样 0 行。后端用例既不标 PASS 也不计入分母，不属于本次门控对象。
+  - （1.1.0 更正）后端产品代码零改动，但后端测试读取前端页面源码，故**后端全量用例纳入各层并实跑**（PM venv，见各报告）。1.0.0 的"后端不运行"属误判（GR-D-003-F01），已作废。
   - 真实视口度量、字体渲染、WXSS 真机表现：jsdom 不能度量，全部列入 e2e_test_report"人工验证清单"（NOT_TESTABLE）。
   - 不连接测试环境（本批无写入；浏览器人工验证由用户/运维在部署后完成）。
 - **环境**：Node/vitest（`frontend/`：jsdom + @vue/test-utils + Element Plus + Pinia；`miniprogram/`：vitest + uni 桩）。无外网、无真实 API；HTTP 层全部 `vi.mock`。无 hil/sim 硬件概念（P11-1 = 无），运行方式列统一记 `-`。
@@ -33,6 +33,14 @@
 - **判定模式**：INCREMENTAL baseline——每层相对基线零新增失败且新写用例全部通过，才进入下一层；critical_path = 1.00。
 - **基线（改动前实跑，invocation 给定）**：前端 281/281（26 文件）、小程序 104/104（15 文件）。改动后 GROUP_C 的 39 条失败由本组同步（已全部转绿，见各报告）。本次新写用例：前端 157（UNIT 53 / INT 101 / E2E 3）+ 小程序 15（UNIT）= 172。
 - **门控**：见各层报告。0.1.0 时 INT 层有 2 条新写用例因产品缺陷失败（DEF-001、DEF-002）而门控 FAILED（GR-D-001）；GROUP_C-003 修复后（`art/index.js:10`、`PortalLayout.vue:49`），本次（0.2.0）按层重跑：UNIT PASSED → INT PASSED → E2E PASSED，全量回归 0 新增失败。
+
+## 1.1.0 修订说明（GR-D-003 更正，重试 2/2）
+
+- 后端 6 条契约用例（`test_frontend_contract.py`：test_phone_bind_change_contract、TC-INT-487/488/490；`test_owner_auth_v2_contract.py`：TC-INT-713、719）因页面拆分（Units.vue/Me.vue → portal/units/*、portal/me/*）失败，已把扫描范围改为"宿主 + 拆分文件"，断言一条未放宽；逐条"原意 → 新写法"见 integration_test_report 1.1.0。另预防性同步 `test_frontend_contract.py` 逐级选房字段检查一处。
+- 已扫描 backend/tests 对 frontend/src、miniprogram 的全部路径引用：无指向已删除/不存在文件者（含 AdminThemeSwitcher.vue）。
+- 本次新写用例 0 条（仅同步 6+1 处既有后端用例，TC 编号沿用）；后端 957/957 OK，前端 438/438，小程序 119/119；UNIT/INT/E2E 各层门控均 PASSED，全量回归 0 新增失败。
+- 故事覆盖核对表不变（后端同步用例对应 US-157/151/152/178/199 等 owner_auth_v2、product_review 既有故事，非本批 Must Have 范围）。
+- "契约测试"一节中"后端不运行"的说法随之作废：既有后端契约测试已实跑通过。
 
 ## 0.2.0 修订说明（缺陷回流 1/2 后重跑）
 
@@ -180,7 +188,7 @@
 
 - `frontend/tests/layout_contract.spec.js`（TC-INT-921~926，INT）：解析新页面/仓库/菜单对 `api.js` 的调用，逐个对应到 `api.js` 既有导出函数、方法+路径、令牌类别（用户端/管理端），再用静态解析把路径对应到后端 `urls.py` 路由；断言 `api.js` 导出集合与基线一致（未新增/删除接口）。
 - `git diff --stat HEAD -- frontend/src/shared/api.js miniprogram/utils/api.js backend` 输出 0 行（零改动证据）。
-- 既有后端契约测试 `backend/tests/integration/test_frontend_contract.py`：后端不运行（原因见范围 out），由于 `api.js` 零改动且 `layout_contract` 在前端侧已覆盖路径/方法解析，仍在报告中如实写"未执行"，不标 PASS。
+- 【1.1.0 更正：已实跑，957/957 OK】既有后端契约测试 `backend/tests/integration/test_frontend_contract.py`：原称后端不运行（原因见范围 out），由于 `api.js` 零改动且 `layout_contract` 在前端侧已覆盖路径/方法解析，仍在报告中如实写"未执行"，不标 PASS。
 - 前端既有 `api.spec.js`、小程序既有 `api.spec.js` 在全量回归中通过。
 
 ## 测试数据需求

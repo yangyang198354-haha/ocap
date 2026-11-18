@@ -31,16 +31,19 @@
 
     <el-dialog v-model="showCreate" title="新建审批流程" width="520px">
       <el-input v-model="form.name" placeholder="流程名称" />
-      <el-select v-model="form.scope" style="width: 100%; margin-top: 8px">
+      <el-select v-model="form.scope" style="width: 100%; margin-top: 8px" @change="onScopeChange">
         <el-option label="决议" value="RESOLUTION" />
         <el-option label="财务（报销/备用金）" value="EXPENSE" />
         <el-option label="收入表" value="INCOME" />
       </el-select>
-      <el-select v-model="form.mode" style="width: 100%; margin-top: 8px">
+      <el-select v-model="form.mode" style="width: 100%; margin-top: 8px" @change="onModeChange">
         <el-option label="指定负责人审批" value="DESIGNATED" />
-        <el-option label="半数人员同意" value="HALF_MAJORITY" />
+        <el-option v-if="form.scope === 'RESOLUTION'" label="半数人员同意" value="HALF_MAJORITY" />
       </el-select>
-      <div style="margin-top: 8px">
+      <div v-if="isHalfMajority" style="margin-top: 8px">
+        <p class="muted">半数同意决议由全体业委会成员投票判定，无需设置审批人。</p>
+      </div>
+      <div v-else style="margin-top: 8px">
         <p class="muted">审批人（须是现任业委会成员，可多选）：</p>
         <p v-for="a in approvers" :key="a.id" class="row">
           <b>{{ a.nickname || a.account_no }}</b><el-tag size="small" type="info">{{ a.identity_label }}</el-tag>
@@ -57,7 +60,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
@@ -71,6 +74,17 @@ const { items: flows, total, page, pageSize, reload, goto } = usePaging({ fetch:
 const showCreate = ref(false)
 const approvers = ref([])
 const form = reactive({ name: '', scope: 'RESOLUTION', mode: 'DESIGNATED' })
+const isHalfMajority = computed(() => form.mode === 'HALF_MAJORITY')
+
+// 切到半数同意：清空已选审批人（半数同意不设审批人）
+function onModeChange() {
+  if (isHalfMajority.value) approvers.value = []
+}
+
+// 非决议范围不支持半数同意：切走时回退为指定负责人
+function onScopeChange() {
+  if (form.scope !== 'RESOLUTION' && form.mode === 'HALF_MAJORITY') form.mode = 'DESIGNATED'
+}
 
 function addApprover(user) {
   if (user && !approvers.value.some((a) => a.id === user.id)) approvers.value.push(user)
@@ -97,7 +111,7 @@ async function gotoPage(n) {
 }
 
 async function create() {
-  const approver_ids = approvers.value.map((a) => a.id)
+  const approver_ids = isHalfMajority.value ? [] : approvers.value.map((a) => a.id)
   try {
     await admin.createFlow({ ...form, approver_ids })
     showCreate.value = false

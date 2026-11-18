@@ -450,6 +450,32 @@ describe('管理端页面', () => {
     expect(adminHttp.delete).toHaveBeenCalledWith('/admin/approval/flows/9')
   })
 
+  it('修复问题二：新建审批流程选"半数人员同意"时隐藏审批人设置，保存不提交 approver_ids', async () => {
+    const wrapper = await mountAdmin(AdminFlows, { '/admin/approval/flows': { count: 0, results: [] } })
+    await buttonOf(wrapper, '新建流程').trigger('click')
+    await flush()
+    // 默认指定负责人：可见 UserPicker，可添加审批人
+    expect(wrapper.findComponent(UserPicker).exists()).toBe(true)
+    wrapper.findComponent(UserPicker).vm.$emit('change', { id: 7, nickname: '委员甲', identity_label: '委员' })
+    await flush()
+    expect(document.body.textContent).toContain('委员甲')
+    // 切到半数同意：清空并隐藏审批人设置，显示说明
+    const selects = wrapper.findAllComponents({ name: 'ElSelect' })
+    const modeSelect = selects[selects.length - 1]
+    modeSelect.vm.$emit('update:modelValue', 'HALF_MAJORITY')
+    modeSelect.vm.$emit('change', 'HALF_MAJORITY')
+    await flush()
+    expect(wrapper.findComponent(UserPicker).exists()).toBe(false)
+    expect(document.body.textContent).toContain('无需设置审批人')
+    // 保存：approver_ids 为空
+    adminHttp.post.mockResolvedValue({})
+    const save = [...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === '保存')
+    save.click()
+    await flush()
+    expect(adminHttp.post).toHaveBeenCalledWith('/admin/approval/flows',
+      expect.objectContaining({ mode: 'HALF_MAJORITY', approver_ids: [] }))
+  })
+
   it('TC-UNIT-543 / AC-167-03：席位页与账号页的状态、启用列显示中文，布尔显示"是/否"，页面文字无 ACTIVE / true / false', async () => {
     let wrapper = await mountAdmin(AdminSeats, {
       '/admin/committee/seats': { count: 2, results: [

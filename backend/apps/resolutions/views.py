@@ -18,28 +18,51 @@ from apps.core.errors import ApiError
 from apps.core.permissions import IsChairOrVice, IsMember
 from apps.core.serializers import page_response
 
+from django.db.models import Q
+
 from .models import Resolution, Vote
-from .services import ResolutionService
+from .services import ResolutionService, VoteStats, is_publicly_visible
 
 
-def resolution_view(row: Resolution, *, with_content: bool = True) -> dict:
+class _Expected:
+    """应参与人数口径缓存：与 judge_if_due 同函数同口径（IFC-358），整页最多算一次。"""
+
+    def __init__(self) -> None:
+        self._value: int | None = None
+
+    def current(self) -> int:
+        if self._value is None:
+            self._value = CommitteeQuery.denominator_for_half_majority(SystemConfig.get("vote.denominator_mode"))
+        return self._value
+
+
+def resolution_view(row: Resolution, *, with_content: bool = True, stats: VoteStats | None = None,
+                    expected: _Expected | None = None) -> dict:
+    initiator = row.initiator
     data = {
         "id": row.id, "title": row.title, "status": row.status, "approval_mode": row.approval_mode,
-        "vote_deadline": row.vote_deadline, "initiator": {"id": row.initiator_id,
-                                                          "labels": row.initiator_labels},
+        "vote_deadline": row.vote_deadline,
+        "initiator": {"id": row.initiator_id, "labels": row.initiator_labels,
+                      "display_name": initiator.nickname or initiator.account_no},
         "revision": row.revision, "decided_at": row.decided_at, "result": row.result,
         "created_at": row.created_at, "attachments": linked_attachment_list("resolution", row.id),
+        "participation": None,
     }
     if with_content:
         data["content"] = row.content
     if row.approval_mode == "HALF_MAJORITY":
-        votes = list(row.votes.filter(revision=row.revision))
-        data["votes"] = [{"voter_id": v.voter_id, "choice": v.choice, "voted_at": v.voted_at} for v in votes]
-        data["vote_counts"] = {
-            "agree": sum(1 for v in votes if v.choice == "AGREE"),
-            "disagree": sum(1 for v in votes if v.choice == "DISAGREE"),
-            "abstain": sum(1 for v in votes if v.choice == "ABSTAIN"),
-        }
+        # ADR-141：不再输出 votes（谁投了什么）；只输出聚合票数与参与进度
+        stats = stats or ResolutionService.vote_stats([row])[row.id]
+        expected = expected or _Expected()
+        data["vote_counts"] = {"agree": stats["agree"], "disagree": stats["disagree"],
+                               "abstain": stats["abstain"]}
+        if row.status == "PENDING":
+            total = expected.current()
+        else:
+            total = (row.result or {}).get("denominator")
+            if not isinstance(total, int):
+                total = expected.current()
+        data["participation"] = {"voted": stats["voted"], "expected": total}
     return data
 
 
@@ -61,7 +84,9 @@ class ResolutionListCreateView(APIView):
             qs = qs.filter(status="PENDING")
             return Response(_todo_list(qs, request.user))
         elif scope == "public":
-            qs = qs.filter(status__in=["APPROVED", "REJECTED"])
+            # IFC-358：已结束，或表决进行中的半数同意决议（Q-B18-08=A）
+            qs = qs.filter(Q(status__in=["APPROVED", "REJECTED"])
+                           | Q(status="PENDING", approval_mode="HALF_MAJORITY"))
         return page_response(qs, request, ResolutionListSerializer)
 
     def post(self, request):
@@ -88,12 +113,15 @@ class ResolutionListCreateView(APIView):
 
 class ResolutionListSerializer:
     def __init__(self, rows, many=False, context=None):
-        rows = rows if many else [rows]
-        self.data = [resolution_view(r, with_content=False) for r in rows]
+        rows = list(rows) if many else [rows]
+        stats = ResolutionService.vote_stats(rows)  # 整页一次查询，分母整页最多算一次
+        expected = _Expected()
+        self.data = [resolution_view(r, with_content=False, stats=stats[r.id], expected=expected)
+                     for r in rows]
 
 
 def _todo_list(qs, user) -> list[dict]:
-    result = []
+    rows = []
     for row in qs:
         instance = ApprovalEngine.pending_instance("resolution", row.id)
         if instance is None:
@@ -102,23 +130,46 @@ def _todo_list(qs, user) -> list[dict]:
             if CommitteeQuery.is_member(user.id) and not row.votes.filter(
                 revision=row.revision, voter=user
             ).exists():
-                result.append(resolution_view(row, with_content=False))
+                rows.append(row)
         elif user.id in (instance.flow_snapshot.get("approver_ids") or []):
-            result.append(resolution_view(row, with_content=False))
-    return result
+            rows.append(row)
+    return ResolutionListSerializer(rows, many=True).data
 
 
 class ResolutionDetailView(APIView):
     permission_classes = [IsMember]
 
     def get(self, request, resolution_id: int):
+        row = Resolution.objects.select_related("initiator").filter(id=resolution_id).first()
+        if row is None:
+            raise ApiError("NOT_FOUND", "决议不存在", 404)
+        _ensure_can_view(row, request.user)
+        return Response(resolution_view(row))
+
+
+def _ensure_can_view(row: Resolution, user) -> None:
+    """详情与参与人共用的可见性：公开范围内，或发起人，或在任委员（IFC-358/359）。"""
+    if is_publicly_visible(row):
+        return
+    if row.initiator_id != user.id and not CommitteeQuery.is_member(user.id):
+        raise ApiError("FORBIDDEN", "无权查看", 403)
+
+
+class ResolutionParticipantsView(APIView):
+    """GET /resolutions/{id}/participants（IFC-359）：只返回昵称、头像、参与时间；无选项、手机号、真实姓名。"""
+    permission_classes = [IsMember]
+
+    def get(self, request, resolution_id: int):
         row = Resolution.objects.filter(id=resolution_id).first()
         if row is None:
             raise ApiError("NOT_FOUND", "决议不存在", 404)
-        if row.status not in {"APPROVED", "REJECTED"}:
-            if row.initiator_id != request.user.id and not CommitteeQuery.is_member(request.user.id):
-                raise ApiError("FORBIDDEN", "无权查看", 403)
-        return Response(resolution_view(row))
+        _ensure_can_view(row, request.user)
+        if row.approval_mode != "HALF_MAJORITY":
+            return Response({"mode": row.approval_mode, "count": 0, "results": []})
+        votes = (row.votes.filter(revision=row.revision).select_related("voter").order_by("voted_at", "id"))
+        results = [{"display_name": v.voter.nickname or v.voter.account_no, "avatar_url": v.voter.avatar_url,
+                    "voted_at": v.voted_at} for v in votes]
+        return Response({"mode": row.approval_mode, "count": len(results), "results": results})
 
 
 class ResolutionWithdrawView(APIView):

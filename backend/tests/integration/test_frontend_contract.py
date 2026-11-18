@@ -560,7 +560,9 @@ class ProductReviewFieldContractTests(ApiTestBase):
         self.assertRegex(web_api, r"decideResidentApplication[^\n]*\{\s*decision")
         self.assertRegex(mini_api, r"createResidentApplication:[^\n]*\bdata\b")
         self.assertIn("approver_ids", src("frontend/src/admin/AdminFlows.vue"))
-        self.assertIn("user_id", src("frontend/src/admin/AdminSeats.vue"))
+        # TC-INT-487 / AC-256-01（ocap_batch_1118 B1）：旧断言 user_id → 新断言 registry_owner_id（席位授予对象由注册用户改为清册业主）
+        self.assertIn("registry_owner_id", src("frontend/src/admin/AdminSeats.vue"))
+        self.assertNotIn("user_id", src("frontend/src/admin/AdminSeats.vue"))
         self.assertRegex(web_api, r"updateSystemConfig[^\n]*\{\s*value")
         self.assertRegex(mini_api, r"loginByCode:[^\n]*client:\s*'miniapp'")
         self.assertRegex(mini_api, r"loginByPassword:[\s\S]{0,160}?client:\s*'miniapp'")
@@ -580,12 +582,13 @@ class ProductReviewFieldContractTests(ApiTestBase):
         top = set(data)
         unit = data["units"][0]
         res = unit["residents"][0]
-        self.assertEqual(top, {"summary", "units", "pending_review_count"})
+        # B2（ocap_batch_1118，AC-247-01/AC-248-01）：旧集合 + real_names（顶层）
+        self.assertEqual(top, {"summary", "units", "pending_review_count", "real_names"})
         self.assertEqual(set(data["summary"]), {"code", "label"})
         # 旧字段集 + IFC-337 新增 unit_type_label、area_display（ocap_identity_property，AC-232-01）
         self.assertEqual(set(unit), {"unit_id", "specific_part", "role", "role_label", "certified_at",
                                      "residents", "pending_application_count",
-                                     "unit_type_label", "area_display"})
+                                     "unit_type_label", "area_display", "co_owners"})
         self.assertEqual(set(res), {"user_id", "nickname", "account_no", "joined_at"})
         web_units = src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
         web_me = src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me")

@@ -237,6 +237,33 @@ a { color: var(--accent-text); text-decoration: none; }
   .res-grid { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
 }
 
+/* 整卡可点（MOD-149 / ADR-144）：标题链接用 ::after 拉伸为整卡点击区；卡片内独立可点元素需 position:relative; z-index:1 */
+.res-card, .poll-item { position: relative; }
+.res-title::after, .poll-link::after { content: ""; position: absolute; inset: 0; z-index: 0; }
+.res-card a:not(.res-title), .res-card button, .poll-item a:not(.poll-link), .poll-item button { position: relative; z-index: 1; }
+.res-card:focus-within, .poll-item:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.res-title:focus-visible, .poll-link:focus-visible { outline: none; }
+.res-state { display: flex; align-items: center; gap: 6px; flex: none; }
+.res-progress-tag, .res-ended-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+}
+.res-progress-tag { color: var(--accent-text); border-color: var(--accent); }
+
+/* 卡片与导航动效（MOD-149/150，REQ-NFUNC-047）：全部包在 no-preference 内，"减少动效"下无任何新增动画；时长 ≤ 360ms */
+@media (prefers-reduced-motion: no-preference) {
+  .res-card, .poll-item { transition: transform .18s ease, box-shadow .18s ease; }
+  .res-card:hover, .poll-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .res-card:active, .poll-item:active { transform: scale(.985); }
+  .side-sub-item, .sub-nav-item { position: relative; transition: background-color .16s ease, color .16s ease; }
+  .side-sub-item::after, .sub-nav-item::after {
+    content: ""; position: absolute; left: 0; top: 20%; bottom: 20%; width: 3px; background: var(--accent);
+    border-radius: 2px; transform: scaleY(0); transform-origin: center; transition: transform .16s ease;
+  }
+  .side-sub-item.is-active::after, .sub-nav-item.is-active::after { transform: scaleY(1); }
+  .side-sub-item { animation: side-sub-in .16s ease both; animation-delay: calc(var(--i, 0) * 40ms); }
+  @keyframes side-sub-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+}
+
 /* 报销表单 */
 .claim-form-wrap { display: grid; gap: 16px; grid-template-columns: 1fr; }
 .field-block { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }

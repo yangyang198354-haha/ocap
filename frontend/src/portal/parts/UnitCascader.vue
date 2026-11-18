@@ -2,17 +2,29 @@
 <template>
   <div class="unit-cascader">
     <div class="row">
-      <el-select v-model="picked.building" placeholder="楼栋" @change="onBuildingChange">
-        <el-option v-for="b in buildingOptions" :key="b.value" :label="b.value" :value="b.value" />
+      <el-select
+        v-model="picked.building" placeholder="楼栋" filterable no-data-text="无匹配项"
+        :filter-method="onFilter('building')" @visible-change="onVisible('building', $event)" @change="onBuildingChange"
+      >
+        <el-option v-for="b in shown.building" :key="b.value" :label="b.value" :value="b.value" />
       </el-select>
-      <el-select v-if="visibility.unit" v-model="picked.unit_no" :placeholder="levelLabel" @change="onUnitChange">
-        <el-option v-for="u in unitOptions" :key="u.value" :label="u.label || u.value" :value="u.value" />
+      <el-select
+        v-if="visibility.unit" v-model="picked.unit_no" :placeholder="levelLabel" filterable no-data-text="无匹配项"
+        :filter-method="onFilter('unit')" @visible-change="onVisible('unit', $event)" @change="onUnitChange"
+      >
+        <el-option v-for="u in shown.unit" :key="u.value" :label="u.label || u.value" :value="u.value" />
       </el-select>
-      <el-select v-if="visibility.floor" v-model="picked.floor" placeholder="楼层" @change="onFloorChange">
-        <el-option v-for="f in floorOptions" :key="f.value" :label="f.label || f.value" :value="f.value" />
+      <el-select
+        v-if="visibility.floor" v-model="picked.floor" placeholder="楼层" filterable no-data-text="无匹配项"
+        :filter-method="onFilter('floor')" @visible-change="onVisible('floor', $event)" @change="onFloorChange"
+      >
+        <el-option v-for="f in shown.floor" :key="f.value" :label="f.label || f.value" :value="f.value" />
       </el-select>
-      <el-select v-if="visibility.room" v-model="pickedUnitId" placeholder="户号" @change="onRoomChange">
-        <el-option v-for="r in roomOptions" :key="r.unit_id" :label="r.label || r.value" :value="r.unit_id" />
+      <el-select
+        v-if="visibility.room" v-model="pickedUnitId" placeholder="户号" filterable no-data-text="无匹配项"
+        :filter-method="onFilter('room')" @visible-change="onVisible('room', $event)" @change="onRoomChange"
+      >
+        <el-option v-for="r in shown.room" :key="r.unit_id" :label="r.label || r.value" :value="r.unit_id" />
       </el-select>
     </div>
     <p v-for="tip in skippedTips" :key="tip" class="muted">{{ tip }}</p>
@@ -25,8 +37,10 @@ import { computed, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { unitApi } from '@/shared/api'
 import { errorText } from '@/shared/format'
+import { rankOptions } from '@/shared/unitSearch'
 
-const props = defineProps({ modelValue: { type: Number, default: null } })
+// fetcher：选项取数函数（缺省成员端 unitApi.options；管理端传 admin.unitOptions，IFC-364）
+const props = defineProps({ modelValue: { type: Number, default: null }, fetcher: { type: Function, default: null } })
 const emit = defineEmits(['update:modelValue', 'change'])
 
 const buildingOptions = ref([])
@@ -39,6 +53,21 @@ const visibility = reactive({ unit: false, floor: false, room: false })
 const picked = reactive({ building: null, unit_no: null, floor: null })
 const pickedUnitId = ref(props.modelValue)
 
+// 下拉输入检索（REQ-FUNC-241）：只过滤当前下拉的已加载候选，不改变逐级关系与已选结果
+const queries = reactive({ building: '', unit: '', floor: '', room: '' })
+const shown = computed(() => ({
+  building: rankOptions(buildingOptions.value, queries.building),
+  unit: rankOptions(unitOptions.value, queries.unit),
+  floor: rankOptions(floorOptions.value, queries.floor),
+  room: rankOptions(roomOptions.value, queries.room)
+}))
+const onFilter = (level) => (query) => {
+  queries[level] = query || ''
+}
+const onVisible = (level, visible) => {
+  if (!visible) queries[level] = '' // 关闭下拉后恢复全部选项，保证已选项可显示
+}
+
 const selectedUnit = computed(() => roomOptions.value.find((item) => item.unit_id === pickedUnitId.value) || null)
 const selectedUnitText = computed(() => {
   if (!selectedUnit.value) return ''
@@ -49,7 +78,7 @@ const selectedUnitText = computed(() => {
 
 async function loadOptions(params) {
   try {
-    return await unitApi.options(params)
+    return await (props.fetcher || unitApi.options)(params)
   } catch (e) {
     ElMessage.error(errorText(e))
     return {}

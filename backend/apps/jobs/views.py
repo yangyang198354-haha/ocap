@@ -46,7 +46,7 @@ class ExpireMembershipsView(_JobView):
 
 class ExpireCommitteeSeatsView(_JobView):
     def post(self, request):
-        today = timezone.now().date()
+        today = timezone.localdate()  # 使用 Asia/Shanghai 本地日期，避免 UTC 日期在 00:00–08:00 偏一天
         expired = CommitteeCommands.expire_due(today)
         return Response({"expired": expired})
 

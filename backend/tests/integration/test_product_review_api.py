@@ -65,7 +65,7 @@ class HousingTests(ApiTestBase):
         guest, gtoken = self.make_user()
         data = self.assert_ok(self.api("get", "/me/housing", token=gtoken)).data
         self.assertEqual(data, {"summary": {"code": "GUEST", "label": "游客"}, "units": [],
-                                "pending_review_count": 0})
+                                "pending_review_count": 0, "real_names": []})  # B6：游客 real_names 为 []（AC-247-03）
         self.assert_error(self.api("get", "/me/housing"), 401)
         _, admin_token = self.make_admin()
         self.assert_error(self.api("get", "/me/housing", token=admin_token), 403)

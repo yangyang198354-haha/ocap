@@ -60,7 +60,11 @@ describe('宽度与自适应变量（REQ-FUNC-212/213，AC-218-01/03、AC-219-02
 describe('断点：只用既有 768px 一对（C-70）', () => {
   it('TC-UNIT-865 / C-70：style.css 的 @media 条件只含 (max-width: 767.98px) 与 (min-width: 768px)', () => {
     const conds = new Set(mediaConditions(read('frontend/src/shared/style.css')))
-    expect([...conds].sort()).toEqual(['(max-width: 767.98px)', '(min-width: 768px)'])
+    // F3（ocap_batch_1118，ADR-144、AC-252-05/AC-253-04）：断点仍只有 768px 一对；另放行唯一一个非断点条件 prefers-reduced-motion: no-preference
+    const widthConds = [...conds].filter((c) => /width/.test(c)).sort()
+    expect(widthConds).toEqual(['(max-width: 767.98px)', '(min-width: 768px)'])
+    expect([...conds].filter((c) => !/width/.test(c)).sort()).toEqual(['(prefers-reduced-motion: no-preference)'])
+    expect([...conds].sort()).toEqual(['(max-width: 767.98px)', '(min-width: 768px)', '(prefers-reduced-motion: no-preference)'])
   })
 
   it('TC-UNIT-866 / C-70：themes/*.web.css、*.mp.css 与生成物的 @media 条件只含 767.98px / 768px / prefers-reduced-motion，没有新断点', () => {

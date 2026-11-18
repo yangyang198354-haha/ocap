@@ -23,8 +23,9 @@ class Command(BaseCommand):
         try:
             summary["polls_closed"] = PollService.close_due(now)
             summary["resolutions_judged"] = ResolutionService.judge_all_due(now)
-            summary["seats_expired"] = CommitteeCommands.expire_due(now.date())
-            summary["reports_generated"] = len(LedgerService.generate_due(now.date()))
+            today = timezone.localdate(now)  # 本地日期（Asia/Shanghai），与 jobs/views.py 同口径
+            summary["seats_expired"] = CommitteeCommands.expire_due(today)
+            summary["reports_generated"] = len(LedgerService.generate_due(today))
             summary["tokens_purged"] = AuthToken.objects.filter(
                 last_active_at__lt=now - timedelta(days=30)).delete()[0]
             summary["codes_purged"] = VerificationCode.objects.filter(

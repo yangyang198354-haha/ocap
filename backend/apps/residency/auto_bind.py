@@ -22,12 +22,16 @@ class AutoBound:
         return {"unit_id": self.unit_id, "specific_part": self.specific_part, "role": self.role}
 
 
-def certify_one(user, unit, origin: str, detail_extra: dict | None = None) -> tuple[str | None, str | None]:
-    """逐套认证（共享 savepoint 写法，DEF-009）：返回 (role, None) 或 (None, 错误码)；不向外抛异常。"""
+def certify_one(user, unit, origin: str, detail_extra: dict | None = None,
+                verified_owner_id: int | None = None) -> tuple[str | None, str | None]:
+    """逐套认证（共享 savepoint 写法，DEF-009）：返回 (role, None) 或 (None, 错误码)；不向外抛异常。
+    verified_owner_id（IFC-354）：手机号匹配确认时透传，缺省行为不变。"""
     extra = {"detail_extra": detail_extra} if detail_extra else {}  # 旧调用形态（无该参数）保持不变
     try:
         with transaction.atomic():
             role = MembershipService.certify_owner(user.id, unit.id, "REGISTRY", origin=origin, **extra)
+            if verified_owner_id is not None:  # 认证成功后同事务记录核对的清册业主并尝试绑定席位（不抛异常）
+                MembershipService.record_verified_owner(user.id, unit.id, verified_owner_id, via="PHONE_MATCH")
     except ApiError as exc:
         if exc.code != "ALREADY_CERTIFIED":
             logger.warning("清册绑定失败 user=%s unit=%s code=%s", user.id, unit.id, exc.code)

@@ -17,16 +17,21 @@ def normalize_owner_name(text: str | None) -> str:
     return text.replace("　", " ").strip()
 
 
-def owner_matches(unit_id: int, name: str, phone: str | None) -> bool:
-    """用户姓名与手机号是否对应该专有部分清册中的同一位业主；比较在 Python 内进行（ADR-113）。"""
+def matched_owner(unit_id: int, name: str, phone: str | None) -> RegistryOwner | None:
+    """IFC-355：与 owner_matches 同一判定，返回命中的清册业主行（比较在 Python 内进行，ADR-113）。"""
     wanted = normalize_owner_name(name)
     if not wanted or not phone:
-        return False
+        return None
     row = (RegistryPhone.objects.filter(unit_id=unit_id, phone=phone)
            .select_related("owner").order_by("id").first())
     if row is None or not row.owner.name:
-        return False
-    return normalize_owner_name(row.owner.name) == wanted
+        return None
+    return row.owner if normalize_owner_name(row.owner.name) == wanted else None
+
+
+def owner_matches(unit_id: int, name: str, phone: str | None) -> bool:
+    """用户姓名与手机号是否对应该专有部分清册中的同一位业主。"""
+    return matched_owner(unit_id, name, phone) is not None
 
 
 @dataclass(frozen=True)

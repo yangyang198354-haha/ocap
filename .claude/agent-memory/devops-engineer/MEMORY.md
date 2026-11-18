@@ -41,3 +41,5 @@
 ## 用户偏好与禁止项
 ## 待验证
 - [P-DE-003] 目标机 Freeark nginx 有含 woff2 的静态正则（sites-enabled/freeark:44），但 `^~ /ocap/` 前缀块优先，/ocap/ 下 woff2 由 ocap 站点给 font/woff2；PRE-14 可据此预测 V-08 — 自记 2026-11-17 · 证据 deployment_report PRE-14/V-08（目标机配置，git 不可核验，且行号易变）
+- [P-DE-004] 部署窗口内，加载同一份后端代码的 systemd 辅助单元（如 ocap-run-due-jobs.timer、ocap-content-worker.service）也要先停后启，PRE 里 `systemctl is-active` 记录哪些在跑；timer 恢复后等一次触发看 Result=success，不手动执行任务 — 自记 2026-11-18 · 证据 ocap_batch_1118 deployment_plan DEPLOY-004/007、V-09（E1 设计，待 E2 实测）
+- [P-DE-005] nginx 配置改动的回滚里，"恢复备份"必须先于 reload：reload 步骤对应的 ROLLBACK 要自带恢复动作（幂等），文件修改步骤的 ROLLBACK 退化为校验或"未 reload 时的恢复"；改前用 `sed -n 行号p` 核对原值、改后 `diff 备份` 必须恰为单行差异 — 自记 2026-11-18 · 证据 ocap_batch_1118 deployment_plan DEPLOY-009/010、ROLLBACK-009/010

@@ -88,7 +88,7 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     expect(http.post).toHaveBeenCalledWith('/certifications', { unit_id: 7, name: '张三' })
   })
 
-  it('TC-UNIT-669 / AC-201-01/02、AC-199-04：OWNER_NOT_MATCHED → 提示转申诉页，只带姓名（房屋需重选，OQ-B03），姓名带入"产权人名字"，未选房屋时禁用提交，不弹错误、不显示服务端文案里的清册信息', async () => {
+  it('TC-UNIT-669 / AC-201-01/02、AC-199-04、AC-245-01：OWNER_NOT_MATCHED → 提示转申诉页，只带姓名（房屋需重选，OQ-B03），姓名带入"产权人名字"，不弹错误、不显示服务端文案里的清册信息；旧断言"未选房屋禁用提交"→新断言（Q-B18-29=A）按钮始终可点，未选房屋点击提示"请选择到具体户"且不发 POST /appeals', async () => {
     const warn = vi.spyOn(ElMessage, 'warning').mockImplementation(() => {})
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
     const { wrapper, router, pinia } = await mountWithUnit(UnitsPick, 7)
@@ -102,17 +102,21 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     expect(useHousingStore(pinia).prefillOwnerName).toBe('张三')
     expect(wrapper.text()).not.toContain('李某某')
     expect(JSON.stringify(warn.mock.calls)).not.toContain('138')
-    // 跳转后的申诉页：姓名已带入，仓库预填被消费，房屋需重新选择 → 提交申诉禁用，选房后可用
+    // 跳转后的申诉页：姓名已带入，仓库预填被消费，房屋需重新选择
     const next = await mountPage(UnitsAppeal, { pinia })
     expect(next.wrapper.find('input[placeholder="产权人名字"]').element.value).toBe('张三')
     expect(useHousingStore(pinia).prefillOwnerName).toBe('')
-    expect(buttonOf(next.wrapper, '提交申诉').attributes('disabled')).toBeDefined()
-    next.wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 7)
-    await flush()
+    // 新行为：按钮不再禁用；未选房屋点击 → 提示且不发请求
     expect(buttonOf(next.wrapper, '提交申诉').attributes('disabled')).toBeUndefined()
+    http.post.mockClear()
+    warn.mockClear()
+    await buttonOf(next.wrapper, '提交申诉').trigger('click')
+    await flush()
+    expect(warn).toHaveBeenLastCalledWith('请选择到具体户')
+    expect(http.post.mock.calls.filter((c) => c[0] === '/appeals')).toHaveLength(0)
   })
 
-  it('TC-UNIT-670 / AC-199-02、AC-201-04：申诉——产权人名字为空提示"请输入产权人名字"；有名字但未上传资料提示"请先上传产权证明"；都不发 POST /appeals', async () => {
+  it('TC-UNIT-670 / AC-199-02、AC-201-04、AC-245-02/03：申诉——产权人名字为空提示"请输入产权人名字"；有名字但未选文件，旧提示"请先上传产权证明"→新提示"请至少选择 1 份产权证明"；都不发 POST /appeals', async () => {
     const warn = vi.spyOn(ElMessage, 'warning').mockImplementation(() => {})
     const { wrapper } = await mountWithUnit(UnitsAppeal, 7)
     await buttonOf(wrapper, '提交申诉').trigger('click')
@@ -121,43 +125,57 @@ describe('Units 分区页 姓名核对与申诉（UnitsPick / UnitsAppeal）', (
     await wrapper.find('input[placeholder="产权人名字"]').setValue('王五')
     await buttonOf(wrapper, '提交申诉').trigger('click')
     await flush()
-    expect(warn).toHaveBeenLastCalledWith('请先上传产权证明')
+    expect(warn).toHaveBeenLastCalledWith('请至少选择 1 份产权证明')
     expect(http.post.mock.calls.filter((c) => c[0] === '/appeals')).toHaveLength(0)
+    expect(http.post.mock.calls.filter((c) => c[0] === '/attachments')).toHaveLength(0)
   })
 
-  const upload = async (wrapper, name) => {
-    const handler = wrapper.findComponent({ name: 'ElUpload' }).props('httpRequest')
-    await handler({ file: new File(['x'], name, { type: 'image/png' }) })
+  // 新口径（MOD-146）：选择文件只触发 el-upload 的 on-change，页面内暂存，不向服务器发任何请求
+  const pick = async (wrapper, name, opts = {}) => {
+    const onChange = wrapper.findComponent({ name: 'ElUpload' }).props('onChange')
+    const file = new File(['x'], name, { type: opts.type || 'image/png' })
+    if (opts.size) Object.defineProperty(file, 'size', { value: opts.size })
+    onChange({ raw: file, status: 'ready', name })
     await flush()
+    return file
   }
 
-  it('TC-UNIT-671 / AC-199-01、AC-201-01：多附件——上传 2 份后提交 POST /appeals {unit_id, owner_name, proof_ids:[a1,a2]}；提交后清空已选附件', async () => {
+  it('TC-UNIT-671 / AC-199-01、AC-201-01、AC-244-01/02：多附件——旧：上传 2 份后 POST /appeals {proof_ids}；新：选 2 份只暂存（POST /attachments 调用数 0、无"已上传"），提交为一次 POST /appeals(FormData: unit_id、owner_name、files×2)，成功后暂存清空', async () => {
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper } = await mountWithUnit(UnitsAppeal, 7)
-    let n = 0
-    http.post.mockImplementation(async (url) => (url === '/attachments' ? { id: `a${++n}` } : { id: 99, status: 'PENDING' }))
-    await upload(wrapper, 'p1.png')
-    await upload(wrapper, 'p2.pdf')
-    expect(wrapper.text()).toContain('已上传 2 份')
+    http.post.mockImplementation(async () => ({ id: 99, status: 'PENDING' }))
+    await pick(wrapper, 'p1.png')
+    await pick(wrapper, 'p2.pdf', { type: 'application/pdf' })
+    expect(wrapper.text()).toContain('已选 2 份')
+    expect(wrapper.text()).not.toContain('已上传')
+    expect(wrapper.text()).toContain('p1.png')
+    expect(wrapper.text()).toContain('移除')
+    expect(http.post.mock.calls.filter((c) => c[0] === '/attachments')).toHaveLength(0)
+    expect(http.post).not.toHaveBeenCalled()
     await wrapper.find('input[placeholder="产权人名字"]').setValue(' 王五 ')
     await buttonOf(wrapper, '提交申诉').trigger('click')
     await flush()
-    expect(http.post).toHaveBeenCalledWith('/appeals', { unit_id: 7, owner_name: '王五', proof_ids: ['a1', 'a2'] })
-    expect(wrapper.text()).not.toContain('已上传 2 份')
-    const uploads = http.post.mock.calls.filter((c) => c[0] === '/attachments')
-    expect(uploads.map((c) => c[1].get('purpose'))).toEqual(['APPEAL_PROOF', 'APPEAL_PROOF'])
+    const posts = http.post.mock.calls.filter((c) => c[0] === '/appeals')
+    expect(posts).toHaveLength(1)
+    const form = posts[0][1]
+    expect(form).toBeInstanceOf(FormData)
+    expect([...new Set([...form.keys()])].sort()).toEqual(['files', 'owner_name', 'unit_id'])
+    expect(form.get('unit_id')).toBe('7')
+    expect(form.get('owner_name')).toBe('王五')
+    expect(form.getAll('files').map((f) => f.name)).toEqual(['p1.png', 'p2.pdf'])
+    expect(http.post.mock.calls.filter((c) => c[0] === '/attachments')).toHaveLength(0)
+    expect(wrapper.text()).toContain('已选 0 份')
   })
 
-  it('TC-UNIT-672 / AC-198-03、C-62：最多 5 份——第 6 份被拦并提示"最多上传 5 份产权证明"，不再发上传请求', async () => {
+  it('TC-UNIT-672 / AC-198-03、C-62、AC-245-04：最多 5 份——旧提示"最多上传 5 份产权证明"→新提示"最多 5 份"；第 6 份不入暂存，选择阶段不发任何上传请求', async () => {
     const warn = vi.spyOn(ElMessage, 'warning').mockImplementation(() => {})
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper } = await mountWithUnit(UnitsAppeal, 7)
-    let n = 0
-    http.post.mockImplementation(async () => ({ id: `a${++n}` }))
-    for (let i = 0; i < 6; i += 1) await upload(wrapper, `p${i}.png`)
-    expect(http.post.mock.calls.filter((c) => c[0] === '/attachments')).toHaveLength(5)
-    expect(warn).toHaveBeenCalledWith('最多上传 5 份产权证明')
-    expect(wrapper.text()).toContain('已上传 5 份')
+    http.post.mockImplementation(async () => ({ id: 1 }))
+    for (let i = 0; i < 6; i += 1) await pick(wrapper, `p${i}.png`)
+    expect(http.post).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledWith('最多 5 份')
+    expect(wrapper.text()).toContain('已选 5 份')
   })
 
   it('TC-UNIT-673 / AC-199-03、IFC-313：提示文案不再要求先绑定手机号，改为无手机号也可申诉（文案由"下方产权申诉"改为"认证申诉"二级页）', async () => {

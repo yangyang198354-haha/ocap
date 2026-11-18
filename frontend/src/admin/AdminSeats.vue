@@ -10,11 +10,23 @@
         任期（月）：主任 {{ config.term_months_chair ?? '-' }}、副主任 {{ config.term_months_vice ?? '-' }}、委员 {{ config.term_months_member ?? '-' }}、业主代表 {{ config.term_months_rep ?? '-' }}。
       </p>
       <el-button size="small" @click="showConfig = true">修改人数与任期</el-button>
+      <!-- IFC-356 / Q-B18-33=A：仅提示、不禁用任何按钮 -->
+      <p v-if="hint && hint.pending_bind > 0" class="muted seat-hint">
+        当前待绑定 {{ hint.pending_bind }} 人，半数同意决议至少需 {{ hint.need_agree }} 票同意
+      </p>
+      <p v-if="hint && hint.pending_bind > 0 && hint.can_pass === false" class="error-text seat-hint">
+        当前半数同意决议无法通过
+      </p>
     </div>
     <div class="card">
       <el-table :data="seats" size="small">
-        <el-table-column label="用户" min-width="180">
-          <template #default="{ row }">{{ row.user?.nickname || row.user?.account_no }}（#{{ row.user?.id }}）</template>
+        <el-table-column label="持有人" min-width="180">
+          <template #default="{ row }">
+            <template v-if="row.user">{{ row.user.nickname || row.user.account_no }}（#{{ row.user.id }}）</template>
+            <template v-else>{{ row.holder?.unit_text }} · {{ row.holder?.owner_name }}</template>
+            <el-tag v-if="row.bind_state === 'PENDING_BIND'" size="small" type="warning">待绑定</el-tag>
+            <el-tag v-if="row.bind_state === 'CONFLICT'" size="small" type="danger">待处理冲突</el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="职位" width="130">
           <template #default="{ row }">{{ positionLabel(row.position) }}</template>
@@ -43,7 +55,7 @@
     </div>
 
     <el-dialog v-model="showCreate" title="赋予席位" width="480px">
-      <UserPicker v-model="form.user_id" placeholder="搜索用户（须是有效产权业主）" />
+      <SeatHolderPicker v-model="form.registry_owner_id" />
       <el-select v-model="form.position" style="width: 100%; margin-top: 8px">
         <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
       </el-select>
@@ -78,7 +90,7 @@ import { errorText } from '@/shared/format'
 import { confirmDanger } from '@/shared/confirm'
 import { statusLabel } from '@/shared/labels'
 import { usePaging } from '@/shared/usePaging'
-import UserPicker from './parts/UserPicker.vue'
+import SeatHolderPicker from './parts/SeatHolderPicker.vue'
 
 const positions = [
   { value: 'CHAIR', label: '主任' },
@@ -103,12 +115,14 @@ const config = reactive({})
 const changeTo = reactive({})
 const showCreate = ref(false)
 const showConfig = ref(false)
-const form = reactive({ user_id: null, position: 'MEMBER', term_start: '' })
+const form = reactive({ registry_owner_id: null, position: 'MEMBER', term_start: '' })
+const hint = ref(null)
 
 async function load() {
   try {
     const [, configData] = await Promise.all([reload(), admin.committeeConfig()])
     Object.assign(config, configData)
+    hint.value = configData?.half_majority_hint || null
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -123,12 +137,13 @@ async function gotoPage(n) {
 }
 
 async function create() {
-  if (!form.user_id) return ElMessage.warning('请先搜索并选择用户')
+  if (!form.registry_owner_id) return ElMessage.warning('请先选择专有部分与产权业主')
   try {
-    const body = { user_id: form.user_id, position: form.position }
+    const body = { registry_owner_id: form.registry_owner_id, position: form.position }
     if (form.term_start) body.term_start = form.term_start
     await admin.createSeat(body)
     showCreate.value = false
+    form.registry_owner_id = null
     ElMessage.success('已赋予')
     load()
   } catch (e) {
@@ -147,7 +162,8 @@ async function change(row) {
 }
 
 async function revoke(row) {
-  if (!(await confirmDanger('revokeSeat', { name: row.user?.nickname || row.user?.account_no }))) return
+  const name = row.user ? (row.user.nickname || row.user.account_no) : row.holder?.owner_name
+  if (!(await confirmDanger('revokeSeat', { name }))) return
   try {
     await admin.deleteSeat(row.id)
     ElMessage.success('已撤销')

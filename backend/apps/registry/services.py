@@ -11,6 +11,14 @@ class RegistryService:
         return RegistryPhone.objects.filter(unit_id=unit_id, phone=phone).exists()
 
     @staticmethod
+    def owner_id_by_phone(unit_id: int, phone: str) -> int | None:
+        """IFC-355：该专有部分登记该号码的清册业主 id（手机号匹配确认用）。"""
+        if not phone:
+            return None
+        return (RegistryPhone.objects.filter(unit_id=unit_id, phone=phone)
+                .values_list("owner_id", flat=True).first())
+
+    @staticmethod
     def get_unit(unit_id: int) -> RegistryUnit | None:
         return RegistryUnit.objects.filter(id=unit_id).first()
 

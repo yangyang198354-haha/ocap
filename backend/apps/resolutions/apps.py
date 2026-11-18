@@ -30,7 +30,9 @@ class ResolutionAttachmentPolicy:
         if getattr(principal, "is_admin_principal", False):
             return True
         user_id = getattr(principal, "id", None)
-        if resolution.status in {"APPROVED", "REJECTED"}:
+        from .services import is_publicly_visible
+
+        if is_publicly_visible(resolution):  # IFC-358：进行中的半数同意决议附件同样公开
             return True
         if resolution.status == "PENDING":
             from apps.committee.services import CommitteeQuery

@@ -24,19 +24,21 @@
       >
         <span class="side-label">{{ node.label }}</span>
       </router-link>
-      <ul v-if="node.children && openKey === node.key" :id="`side-sub-${node.key}`" class="side-sub" @keydown.esc="collapse(node.key, $event)">
-        <li v-for="leaf in node.children" :key="leaf.key">
-          <router-link
-            :to="leaf.to"
-            class="side-sub-item"
-            :class="{ 'is-active': active.leaf && active.leaf.key === leaf.key }"
-            :aria-current="active.leaf && active.leaf.key === leaf.key ? 'page' : undefined"
-          >
-            <span class="side-label">{{ leaf.label }}</span>
-            <span v-if="badgeCount(leaf) > 0" class="side-badge">{{ badgeCount(leaf) }}</span>
-          </router-link>
-        </li>
-      </ul>
+      <Transition name="side-sub" :css="false" @enter="onEnter" @leave="onLeave">
+        <ul v-if="node.children && openKey === node.key" :id="`side-sub-${node.key}`" class="side-sub" @keydown.esc="collapse(node.key, $event)">
+          <li v-for="(leaf, index) in node.children" :key="leaf.key" :style="{ '--i': index }">
+            <router-link
+              :to="leaf.to"
+              class="side-sub-item"
+              :class="{ 'is-active': active.leaf && active.leaf.key === leaf.key }"
+              :aria-current="active.leaf && active.leaf.key === leaf.key ? 'page' : undefined"
+            >
+              <span class="side-label">{{ leaf.label }}</span>
+              <span v-if="badgeCount(leaf) > 0" class="side-badge">{{ badgeCount(leaf) }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </Transition>
     </template>
   </nav>
 </template>
@@ -66,6 +68,36 @@ function toggle(key) {
 }
 
 const badgeCount = (leaf) => (leaf.badge ? Number(props.badges?.[leaf.badge]) || 0 : 0)
+
+// 二级菜单展开/收起的高度过渡（MOD-150 / IFC-366）：只动 height，≤280ms；系统"减少动效"或无法测量高度（jsdom）时直接完成。
+// matchMedia 在 jsdom 缺失，按"不减少"处理且不抛错
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+function animateHeight(el, from, to, done) {
+  el.style.overflow = 'hidden'
+  el.style.height = `${from}px`
+  void el.offsetHeight // 强制回流，使起始高度生效
+  el.style.transition = 'height 280ms ease'
+  el.style.height = `${to}px`
+  setTimeout(() => {
+    el.style.transition = ''
+    el.style.height = ''
+    el.style.overflow = ''
+    done()
+  }, 290)
+}
+
+function onEnter(el, done) {
+  const target = el.scrollHeight
+  if (reducedMotion() || !target) return done()
+  animateHeight(el, 0, target, done)
+}
+
+function onLeave(el, done) {
+  const from = el.scrollHeight
+  if (reducedMotion() || !from) return done()
+  animateHeight(el, from, 0, done)
+}
 
 // Esc：收起所属一级并把焦点还给其按钮
 function collapse(key, event) {

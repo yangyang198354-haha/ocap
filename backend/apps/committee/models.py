@@ -28,7 +28,15 @@ class Seat(models.Model):
     STATUSES = [("ACTIVE", "在任"), ("REVOKED", "撤销"), ("EXPIRED", "到期"),
                 ("INVALIDATED", "资格失效"), ("REPLACED", "变更"), ("MERGED", "合并")]
 
-    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="seats")
+    # MOD-140 / IFC-347：user 为空 = 待绑定（持有人为清册业主 holder_owner，尚未注册并认证）
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="seats",
+                             null=True, blank=True)
+    holder_owner = models.ForeignKey("registry.RegistryOwner", null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name="seats")
+    holder_unit_text = models.CharField(max_length=140, blank=True, default="")  # 授予时 specific_part 快照
+    holder_name = models.CharField(max_length=64, blank=True, default="")  # 授予时清册业主姓名（已归一）
+    bound_at = models.DateTimeField(null=True, blank=True)
+    bind_conflict_at = models.DateTimeField(null=True, blank=True)
     position = models.CharField(max_length=16, choices=POSITIONS)
     term_start = models.DateField()
     term_end = models.DateField()
@@ -41,5 +49,6 @@ class Seat(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "active_slot"], name="uniq_seat_active_per_user")
+            models.UniqueConstraint(fields=["user", "active_slot"], name="uniq_seat_active_per_user"),
+            models.UniqueConstraint(fields=["holder_owner", "active_slot"], name="uniq_seat_active_per_owner"),
         ]

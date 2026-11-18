@@ -582,6 +582,9 @@ def apply_plan(plan: ImportPlan, deadline: Deadline) -> None:
             _create_phones(plan, owner_ids, deadline)
             _move_phones(plan, owner_ids, deadline)
             _delete_owners(plan, deadline)
+            from apps.committee.services import CommitteeCommands  # IFC-353：清册变化使待绑定席位失效
+
+            CommitteeCommands.reconcile_registry_seats()
     except IntegrityError as exc:
         raise ImportConflict() from exc
 

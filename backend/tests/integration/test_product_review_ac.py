@@ -912,7 +912,7 @@ class TemplatePreflightAndRegressionTests(PRBase):
         self.assertTrue({"is_guest", "units", "committee", "labels"} <= set(me["identities"]))
         self.assertTrue({"profile", "identities"} <= set(me))
         housing = self.assert_ok(self.api("get", "/me/housing", token=token)).data
-        self.assertEqual(set(housing), {"summary", "units", "pending_review_count"})
+        self.assertEqual(set(housing), {"summary", "units", "pending_review_count", "real_names"})  # B5：新增 real_names（AC-247-01）
         prof = self.assert_ok(self.api("get", "/me/profile", token=token)).data
         self.assertTrue({"account_no", "phone", "nickname", "avatar_url", "gender", "birthday", "email",
                          "email_state"} <= set(prof))

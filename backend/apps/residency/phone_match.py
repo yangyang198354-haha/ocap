@@ -100,7 +100,8 @@ class PhoneMatchService:
                 if MembershipService.is_owner_of(user.id, uid):
                     items.append(ConfirmItem(uid, unit.specific_part, False, None, "ALREADY_CERTIFIED"))
                     continue
-                role, code = certify_one(user, unit, "REGISTRY_AUTO", detail_extra=extra)
+                role, code = certify_one(user, unit, "REGISTRY_AUTO", detail_extra=extra,
+                                         verified_owner_id=RegistryService.owner_id_by_phone(uid, phone))
                 items.append(ConfirmItem(uid, unit.specific_part, role is not None, role, code))
             prompt.status = "DONE"
             prompt.resolved_at = timezone.now()

@@ -13,8 +13,9 @@ from apps.core.serializers import page_response
 from apps.residency.services import MembershipService
 
 from .effective import is_effective
+from .binding import SeatBinding
 from .models import CommitteeConfig, Seat
-from .services import CAP_FIELDS, CommitteeCommands
+from .services import CAP_FIELDS, CommitteeCommands, CommitteeQuery
 
 from django.utils.dateparse import parse_date
 
@@ -23,12 +24,21 @@ TERM_START_MAX_DAYS = 5 * 366  # 开始日上界：今天起约 5 年（OQ-04，
 
 def seat_view(seat: Seat) -> dict:
     user = seat.user
+    is_registry_holder = bool(seat.holder_owner_id or seat.holder_name)
+    if user is None:
+        bind_state = "CONFLICT" if seat.bind_conflict_at else "PENDING_BIND"
+    else:
+        bind_state = "BOUND"
     return {
         "id": seat.id, "position": seat.position,
-        "user": {"id": user.id, "account_no": user.account_no, "nickname": user.nickname,
-                 "phone": mask_phone(user.phone) if user.phone else None},
+        "user": ({"id": user.id, "account_no": user.account_no, "nickname": user.nickname,
+                  "phone": mask_phone(user.phone) if user.phone else None} if user is not None else None),
         "term_start": seat.term_start, "term_end": seat.term_end, "status": seat.status,
         "effective": is_effective(seat, timezone.localdate()),
+        # IFC-349：持有人信息；不含手机号
+        "holder": {"kind": "REGISTRY_OWNER" if is_registry_holder else "USER",
+                   "unit_text": seat.holder_unit_text or None, "owner_name": seat.holder_name or None},
+        "bind_state": bind_state,
     }
 
 
@@ -56,16 +66,27 @@ class AdminSeatListCreateView(APIView):
         position = data.get("position")
         if position not in {"CHAIR", "VICE_CHAIR", "MEMBER", "REPRESENTATIVE"}:
             raise ApiError("INVALID_VALUE", "position 不合法")
-        try:
-            user_id = int(data.get("user_id"))
-        except (TypeError, ValueError) as exc:
-            raise ApiError("INVALID_VALUE", "user_id 不合法") from exc
-        from apps.accounts.models import User
+        has_user, has_owner = data.get("user_id") is not None, data.get("registry_owner_id") is not None
+        if has_user == has_owner:  # IFC-348：恰好给一个
+            raise ApiError("INVALID_VALUE", "user_id 与 registry_owner_id 须恰好给一个")
+        user_id = None
+        registry_owner_id = None
+        if has_owner:
+            raw = data.get("registry_owner_id")
+            if isinstance(raw, bool) or not isinstance(raw, int):
+                raise ApiError("INVALID_VALUE", "registry_owner_id 不合法")
+            registry_owner_id = raw
+        else:
+            try:
+                user_id = int(data.get("user_id"))
+            except (TypeError, ValueError) as exc:
+                raise ApiError("INVALID_VALUE", "user_id 不合法") from exc
+            from apps.accounts.models import User
 
-        if not User.objects.filter(id=user_id).exists():
-            raise ApiError("NOT_FOUND", "用户不存在", 404)
-        if not MembershipService.is_owner_of_any(user_id):
-            raise ApiError("NOT_AN_OWNER", "目标须是有效产权业主", 422)
+            if not User.objects.filter(id=user_id).exists():
+                raise ApiError("NOT_FOUND", "用户不存在", 404)
+            if not MembershipService.is_owner_of_any(user_id):
+                raise ApiError("NOT_AN_OWNER", "目标须是有效产权业主", 422)
         try:
             term_start = parse_date(str(data.get("term_start"))) if data.get("term_start") else timezone.localdate()
         except ValueError:  # DEF-024：格式合法但日期不存在（如 2026-02-30）
@@ -75,8 +96,8 @@ class AdminSeatListCreateView(APIView):
         # IFC-312：不再限制开始日早于今天；上界防止 add_months 对极大日期抛 ValueError [ASSUMPTION] OQ-04
         if term_start > timezone.localdate() + timedelta(days=TERM_START_MAX_DAYS):
             raise ApiError("INVALID_VALUE", "任期开始日过远")
-        seat = CommitteeCommands.grant(user_id=user_id, position=position, term_start=term_start,
-                                       admin_id=request.user.id)
+        seat = CommitteeCommands.grant(user_id=user_id, registry_owner_id=registry_owner_id,
+                                       position=position, term_start=term_start, admin_id=request.user.id)
         return Response(seat_view(seat), status=status.HTTP_201_CREATED)
 
 
@@ -103,6 +124,42 @@ class AdminSeatDetailView(APIView):
             raise ApiError("ALREADY_ENDED", "席位已结束", 409)
         CommitteeCommands.revoke(seat, admin_id=request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminOwnerCandidatesView(APIView):
+    """IFC-350：某专有部分的清册业主候选（姓名 + 脱敏手机号），仅管理员；不返回完整手机号。"""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        raw = request.query_params.get("unit_id")
+        try:
+            unit_id = int(raw)
+        except (TypeError, ValueError) as exc:
+            raise ApiError("INVALID_QUERY", "unit_id 不合法") from exc
+        if unit_id <= 0:
+            raise ApiError("INVALID_QUERY", "unit_id 不合法")
+        from apps.registry.models import RegistryUnit
+
+        unit = RegistryUnit.objects.prefetch_related("owners__phones").filter(id=unit_id).first()
+        if unit is None:
+            raise ApiError("NOT_FOUND", "专有部分不存在", 404)
+        owners = [o for o in unit.owners.all() if (o.name or "").strip()]
+        seated_owner_ids = set(Seat.objects.filter(holder_owner_id__in=[o.id for o in owners], status="ACTIVE")
+                               .values_list("holder_owner_id", flat=True))
+        certified = {o.id: SeatBinding.certified_user_of(o) for o in owners}
+        seated_user_ids = set(Seat.objects.filter(user_id__in=[u for u in certified.values() if u is not None],
+                                                  status="ACTIVE").values_list("user_id", flat=True))
+        results = []
+        for owner in owners:
+            phones = [p.phone for p in owner.phones.all()]
+            user_id = certified[owner.id]
+            results.append({
+                "owner_id": owner.id, "name": owner.name,
+                "phone_masked": mask_phone(phones[0]) if phones else None,
+                "seated": owner.id in seated_owner_ids or (user_id is not None and user_id in seated_user_ids),
+                "registered": user_id is not None,
+            })
+        return Response({"unit_id": unit.id, "specific_part": unit.specific_part, "owners": results})
 
 
 class AdminCommitteeConfigView(APIView):
@@ -152,6 +209,17 @@ def config_view(config: CommitteeConfig) -> dict:
         if cap is not None and current > cap:
             over_cap.append({"position": position, "current": current, "cap": cap})
     result["over_cap"] = over_cap
+    # IFC-356：半数同意通过性提示（仅提示、不拦截，Q-B18-33=A）
+    from apps.core.config import SystemConfig
+
+    mode = SystemConfig.get("vote.denominator_mode")
+    denominator = CommitteeQuery.denominator_for_half_majority(mode)
+    pending_bind = CommitteeQuery.pending_bind_count()
+    need_agree = denominator // 2 + 1
+    result["half_majority_hint"] = {
+        "mode": mode, "denominator": denominator, "pending_bind": pending_bind,
+        "need_agree": need_agree, "can_pass": (denominator - pending_bind) >= need_agree,
+    }
     return result
 
 

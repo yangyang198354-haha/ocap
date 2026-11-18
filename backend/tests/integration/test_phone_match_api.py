@@ -367,7 +367,7 @@ class HousingFieldsTests(PhoneMatchBase):
                          ("未登记", "未登记"))
         self.assertEqual(set(units[full.id]), {"unit_id", "specific_part", "role", "role_label", "certified_at",
                                                "residents", "pending_application_count",
-                                               "unit_type_label", "area_display"})
+                                               "unit_type_label", "area_display", "co_owners"})  # B4：新增 co_owners（AC-248-01）
 
     def test_tc_int_958_housing_only_active_relations(self):
         """TC-INT-958 / AC-232-03：已结束的关系不出现在 /me/housing；无有效关系 units==[]、汇总为游客。"""

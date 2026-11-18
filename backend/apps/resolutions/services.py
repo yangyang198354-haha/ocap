@@ -1,4 +1,6 @@
 """决议服务（IFC-092）。"""
+from typing import TypedDict
+
 from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
@@ -57,6 +59,11 @@ def merge_votes(primary_id: int, secondary_id: int) -> list[str]:
 
 class ResolutionService:
     @staticmethod
+    def vote_stats(rows) -> dict[int, "VoteStats"]:
+        """IFC-358：本页决议当前轮次投票统计（一次查询）。"""
+        return vote_stats(rows)
+
+    @staticmethod
     def judge_if_due(resolution_id: int, now=None) -> str:
         now = now or timezone.now()
         resolution = Resolution.objects.filter(id=resolution_id).first()
@@ -95,3 +102,37 @@ class ResolutionService:
                                         vote_deadline__lte=now).values_list("id", flat=True)
         return sum(1 for rid in list(ids)
                    if ResolutionService.judge_if_due(rid, now) in {"PASSED", "FAILED"})
+
+
+class VoteStats(TypedDict):
+    agree: int
+    disagree: int
+    abstain: int
+    voted: int
+
+
+def is_publicly_visible(row: Resolution) -> bool:
+    """IFC-358：已结束（通过/未通过），或表决进行中的半数同意决议，对所有已登录用户可见。"""
+    if row.status in ("APPROVED", "REJECTED"):
+        return True
+    return row.status == "PENDING" and row.approval_mode == "HALF_MAJORITY"
+
+
+def vote_stats(rows) -> dict[int, VoteStats]:
+    """本页决议当前轮次的投票统计，一次查询（IFC-358，无 N+1）。"""
+    revisions = {r.id: r.revision for r in rows}
+    stats: dict[int, VoteStats] = {
+        rid: {"agree": 0, "disagree": 0, "abstain": 0, "voted": 0} for rid in revisions}
+    if not revisions:
+        return stats
+    from .models import Vote
+
+    key = {"AGREE": "agree", "DISAGREE": "disagree", "ABSTAIN": "abstain"}
+    for resolution_id, revision, choice in Vote.objects.filter(
+            resolution_id__in=list(revisions)).values_list("resolution_id", "revision", "choice"):
+        if revisions[resolution_id] != revision:
+            continue
+        entry = stats[resolution_id]
+        entry[key[choice]] += 1
+        entry["voted"] += 1
+    return stats

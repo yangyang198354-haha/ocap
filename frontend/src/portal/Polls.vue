@@ -9,8 +9,8 @@
     </div>
     <div class="card">
       <el-empty v-if="!items.length" description="暂无投票或调查" />
-      <div v-for="item in items" :key="item.id" class="list-item">
-        <router-link :to="`/polls/${item.id}`">{{ item.title }}</router-link>
+      <div v-for="item in items" :key="item.id" class="list-item poll-item">
+        <router-link class="poll-link" :to="`/polls/${item.id}`">{{ item.title }}</router-link>
         <span class="muted" style="margin-left: 8px">
           {{ item.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · {{ statusLabel('poll', item.status) }} · 截止 {{ formatDateTime(item.deadline) }}
         </span>

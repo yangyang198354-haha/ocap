@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { meApi, unitApi } from '@/shared/api'
 import { useAuthStore } from '@/stores/auth'
 
-const emptyHousing = () => ({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
+const emptyHousing = () => ({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0, real_names: [] })
 const listOf = (data) => data?.results || data || []
 
 export const useHousingStore = defineStore('housing', {

@@ -28,6 +28,7 @@ from .import_template import build_csv, build_xlsx
 from .importing import Deadline, apply_plan, plan_import, read_rows
 from .models import UNIT_TYPE_CHOICES, RegistryOwner, RegistryPhone, RegistryUnit, build_specific_part
 from .serializers import RegistryUnitAdminSerializer
+from .listing import SORT_FIELDS, OrderedUnitPage, ordered_unit_ids
 from .ordering import sorted_values
 from .services import RegistryService
 
@@ -74,6 +75,11 @@ class UnitOptionsView(APIView):
         return Response(RegistryService.options(**levels))
 
 
+class AdminUnitOptionsView(UnitOptionsView):
+    """IFC-351：管理员版逐级选项（入参、校验、响应同 UnitOptionsView；不含姓名与手机号）。"""
+    permission_classes = [IsAdmin]
+
+
 _FILTER_PHONE_RE = re.compile(r"[0-9]{1,11}")
 
 
@@ -116,7 +122,15 @@ class AdminUnitListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        qs = RegistryUnit.objects.prefetch_related("owners__phones").order_by("id")
+        qs = RegistryUnit.objects.all()  # 排序与 prefetch 由 listing.OrderedUnitPage 处理（IFC-361/362）
+        sort = request.query_params.get("sort")
+        order = request.query_params.get("order")
+        if sort is not None and sort not in SORT_FIELDS:
+            raise ApiError("INVALID_QUERY", "sort 取值不合法")
+        if order is not None and order not in ("asc", "desc"):
+            raise ApiError("INVALID_QUERY", "order 取值不合法")
+        if order is not None and sort is None:
+            raise ApiError("INVALID_QUERY", "order 须与 sort 同时给出")
         q = request.query_params.get("q")
         if q:
             if len(q) > 64:
@@ -131,7 +145,8 @@ class AdminUnitListView(APIView):
             else:
                 raise ApiError("INVALID_QUERY", "unit_type 取值不合法")
         qs = _apply_unit_filters(qs, request)  # IFC-291：楼栋/单元/户号/业主姓名/业主电话
-        return page_response(qs, request, RegistryUnitAdminSerializer)
+        page = OrderedUnitPage(ordered_unit_ids(qs, sort, order or "asc"))
+        return page_response(page, request, RegistryUnitAdminSerializer)
 
     def post(self, request):
         data = request.data or {}
@@ -221,7 +236,11 @@ class AdminUnitDetailView(APIView):
         if Membership.objects.filter(unit_id=unit_id, ended_at__isnull=True).exists():
             raise ApiError("UNIT_IN_USE", "该专有部分仍有有效成员，不能删除", 409)
         _audit(request, unit, "delete")
-        unit.delete()
+        with transaction.atomic():
+            unit.delete()
+            from apps.committee.services import CommitteeCommands  # IFC-353
+
+            CommitteeCommands.reconcile_registry_seats()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -266,6 +285,9 @@ class AdminUnitOwnersView(APIView):
             if phones:
                 RegistryPhone.objects.bulk_create(phones, batch_size=500)
 
+            from apps.committee.services import CommitteeCommands  # IFC-353：改名/删除使待绑定席位失效
+
+            CommitteeCommands.reconcile_registry_seats()
             _audit(request, unit, "owners", extra={"owner_count": len(prepared)})
             unit.refresh_from_db()
             return Response(RegistryUnitAdminSerializer(unit).data)

@@ -124,14 +124,17 @@ describe('决议卡片三段比例（AC-087-02）', () => {
     expect(remaining(null, now)).toBeNull()
   })
 
-  it('列表渲染卡片：编号、三段条宽度、票数、发起人、审批方式、截止；指定负责人不画比例条', async () => {
+  it('列表渲染卡片：编号、三段条宽度、票数、发起人、审批方式、截止；指定负责人不画比例条（F9 改写，AC-250-01/05、AC-249-01）', async () => {
+    // 旧：条宽 = 票数/已投票数（50/10/40，无 participation）；新：分母=participation.expected（应参与人数），
+    // 夹具 expected=20：同意 5→25%、反对 1→5%、弃权 4→20%，余 50% 留白；并断言"已参与 10 / 20 · 50%"与"进行中"
     http.get.mockImplementation(routeTable({
       '/me': ME,
       '/resolutions': {
         results: [
           { id: 31, title: '车库照明改造', status: 'PENDING', approval_mode: 'HALF_MAJORITY', vote_deadline: '2026-11-10T18:00:00Z',
-            initiator: { labels: ['副主任'] }, vote_counts: { agree: 5, disagree: 1, abstain: 4 } },
-          { id: 28, title: '地胶更换', status: 'APPROVED', approval_mode: 'DESIGNATED', initiator: { labels: ['委员'] } }
+            initiator: { labels: ['副主任'], display_name: '发起人甲' }, vote_counts: { agree: 5, disagree: 1, abstain: 4 },
+            participation: { voted: 10, expected: 20 } },
+          { id: 28, title: '地胶更换', status: 'APPROVED', approval_mode: 'DESIGNATED', initiator: { labels: ['委员'], display_name: '发起人乙' }, participation: null }
         ]
       },
       '/approval/flows': { results: [] }
@@ -141,11 +144,11 @@ describe('决议卡片三段比例（AC-087-02）', () => {
     expect(cards).toHaveLength(2)
     expect(cards[0].find('.res-idx').text()).toBe('R-0031')
     const widths = cards[0].findAll('.vote-bar i').map((i) => i.attributes('style'))
-    expect(widths[0]).toContain('width: 50%')
-    expect(widths[1]).toContain('width: 10%')
-    expect(widths[2]).toContain('width: 40%')
+    expect(widths[0]).toContain('width: 25%')
+    expect(widths[1]).toContain('width: 5%')
+    expect(widths[2]).toContain('width: 20%')
     const text = cards[0].text()
-    for (const t of ['车库照明改造', '同意 5', '反对 1', '弃权 4', '副主任', '半数同意', '截止']) expect(text).toContain(t)
+    for (const t of ['车库照明改造', '同意 5', '反对 1', '弃权 4', '副主任', '发起人甲', '半数同意', '截止', '已参与 10 / 20 · 50%', '进行中']) expect(text).toContain(t)
     expect(cards[1].find('.vote-bar').exists()).toBe(false)
     expect(cards[1].text()).toContain('指定负责人')
     expect(http.get).toHaveBeenCalledWith('/resolutions', { params: { scope: 'public', page: 1, page_size: 20 } })

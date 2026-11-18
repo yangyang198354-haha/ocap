@@ -68,10 +68,17 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     // 个人中心与我的房屋相关的函数必须被覆盖到（拆页后没有遗漏调用）
     const used = new Set(refs.map(([c, f]) => `${c}.${f}`))
     for (const must of ['meApi.profile', 'meApi.updateProfile', 'meApi.housing', 'meApi.sendCode', 'meApi.bindPhone', 'meApi.changePhone', 'meApi.setPassword', 'meApi.verifyEmail', 'meApi.cancelAccount',
-      'unitApi.certify', 'unitApi.createAppeal', 'unitApi.createResidentApplication', 'unitApi.decideResidentApplication', 'unitApi.removeResident', 'unitApi.leaveUnit', 'unitApi.myAppeals', 'unitApi.myResidentApplications', 'unitApi.residentApplicationsToReview',
+      'unitApi.certify', 'unitApi.submitAppeal', 'unitApi.createResidentApplication', 'unitApi.decideResidentApplication', 'unitApi.removeResident', 'unitApi.leaveUnit', 'unitApi.myAppeals', 'unitApi.myResidentApplications', 'unitApi.residentApplicationsToReview',
       'admin.login', 'admin.users', 'admin.admins', 'admin.claims', 'admin.auditLogs', 'admin.contentServices', 'admin.promptTemplates', 'resolutionApi.list', 'claimApi.list']) {
       expect(used.has(must), must).toBe(true)
     }
+    // F1（ocap_batch_1118，AC-244-02）：旧清单 unitApi.createAppeal → 新 unitApi.submitAppeal（createAppeal 仅保留导出，Web 页面不再引用）
+    expect(used.has('unitApi.createAppeal')).toBe(false)
+    expect(typeof EXPORTS.unitApi.createAppeal).toBe('function')
+    // 新增调用也须被页面引用到：参与人、管理员取选项、业主候选（resolutionApi.participants 由 ResolutionDetail 使用）
+    // 引用（调用或作为 fetcher 传入）均算被页面使用到
+    const pagesText = ['frontend/src/portal/ResolutionDetail.vue', 'frontend/src/admin/AdminSeats.vue', 'frontend/src/admin/parts/SeatHolderPicker.vue'].map(read).join('\n')
+    for (const must of ['resolutionApi.participants', 'admin.unitOptions', 'admin.ownerCandidates']) expect(pagesText.includes(must), must).toBe(true)
   })
 
   it('TC-INT-922 / ADR-117：新增/改造文件不直接引入 HTTP 客户端（http/adminHttp）发请求；只允许取/存令牌（getToken/setToken）', () => {
@@ -92,8 +99,11 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     const names = Object.fromEntries(CLIENTS.map((c) => [c, Object.keys(EXPORTS[c] || {}).sort()]))
     // 改写：meApi 基线加入 confirmRegistryMatches / dismissRegistryMatches / registryMatches（IFC-343）
     expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'verifyEmail'])
-    expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview'])
-    expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'resubmit', 'vote', 'withdraw'])
+    // F2（ocap_batch_1118，IFC-363）：基线集合加 unitApi.submitAppeal、resolutionApi.participants、admin.unitOptions、admin.ownerCandidates
+    expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal'])
+    expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'participants', 'resubmit', 'vote', 'withdraw'])
+    expect(names.admin).toContain('unitOptions')
+    expect(names.admin).toContain('ownerCandidates')
     expect(names.attachmentApi).toEqual(['download', 'upload'])
   })
 })

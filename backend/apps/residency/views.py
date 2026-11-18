@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.core.attachments import AttachmentService
+from apps.core.attachments import AttachmentService, StoredFile, count_limit
 from apps.core.audit import AuditActor, AuditService
 from apps.core.errors import ApiError, NotFound, RateLimited
 from apps.core.masking import mask_phone
@@ -17,7 +17,8 @@ from apps.core.ratelimit import RateLimiter
 from apps.core.serializers import page_response
 from apps.registry.models import RegistryUnit
 from apps.registry.ownership import (
-    OWNER_NAME_MAX, PhoneOwnedByOtherOwner, append_owner_from_appeal, normalize_owner_name, owner_matches,
+    OWNER_NAME_MAX, PhoneOwnedByOtherOwner, append_owner_from_appeal, matched_owner, normalize_owner_name,
+    owner_matches,  # noqa: F401 - 既有测试以 apps.residency.views.owner_matches 为补丁目标，保留导出
 )
 from apps.registry.services import RegistryService
 
@@ -44,6 +45,7 @@ class MyHousingView(APIView):
             "summary": {"code": summary["identity_code"], "label": summary["identity_label"]},
             "units": payload["units"],
             "pending_review_count": payload["pending_review_count"],
+            "real_names": payload["real_names"],
         })
 
 
@@ -114,10 +116,12 @@ class CertificationView(APIView):
         if MembershipService.is_owner_of(request.user.id, unit_id):
             raise ApiError("ALREADY_CERTIFIED", "已是该专有部分产权业主", 409)
         # 姓名错 / 手机号错 / 无此业主 / 清册姓名为空 / 账号无手机号：同一出口（REQ-NFUNC-037）
-        if not owner_matches(unit_id, name, request.user.phone):
+        matched = matched_owner(unit_id, name, request.user.phone)
+        if matched is None:
             raise ApiError("OWNER_NOT_MATCHED", "姓名与手机号未能通过清册核对，可上传产权证明提交申诉",
                            422, {"appeal_available": True})
-        role = MembershipService.certify_owner(request.user.id, unit_id, "REGISTRY")
+        role = MembershipService.certify_owner(request.user.id, unit_id, "REGISTRY",
+                                               verified_owner_id=matched.id, via="MANUAL")
         return Response({**_unit_view(unit), "role": role}, status=status.HTTP_201_CREATED)
 
 
@@ -130,6 +134,8 @@ class AppealListCreateView(APIView):
         return Response([appeal_view(a) for a in rows])
 
     def post(self, request):
+        if (request.content_type or "").startswith("multipart/form-data"):
+            return self._post_multipart(request)  # IFC-345：一次提交分支（ADR-136）
         data = request.data or {}
         try:
             unit_id = int(data.get("unit_id"))
@@ -165,6 +171,54 @@ class AppealListCreateView(APIView):
             AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
                                 action="APPEAL_SUBMITTED", object_type="appeal",
                                 object_id=str(appeal.id), result="SUCCESS")
+        return Response(appeal_view(appeal), status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def _post_multipart(request):
+        """MOD-139 / IFC-345：校验顺序固定，任何一步失败均不落盘、不建记录；成功则事务内建申诉并落盘关联，
+        事务失败时清理已落盘文件。"""
+        data = request.data
+        raw_unit = data.get("unit_id")
+        try:
+            unit_id = int(raw_unit)
+        except (TypeError, ValueError) as exc:
+            raise ApiError("INVALID_VALUE", "缺少专有部分") from exc
+        unit = RegistryService.get_unit(unit_id)
+        if unit is None:
+            raise ApiError("NOT_FOUND", "专有部分不存在", 404)
+        if MembershipService.is_owner_of(request.user.id, unit_id):
+            raise ApiError("ALREADY_CERTIFIED", "已是该专有部分产权业主", 409)
+        owner_name = normalize_owner_name(data.get("owner_name"))
+        if not owner_name:
+            raise ApiError("NAME_REQUIRED", "请输入产权人名字")
+        if len(owner_name) > OWNER_NAME_MAX:
+            raise ApiError("INVALID_VALUE", f"产权人名字过长（最多 {OWNER_NAME_MAX} 字）")
+        files = request.FILES.getlist("files")
+        if not files:
+            raise ApiError("PROOF_REQUIRED", "请上传产权证明", 400)
+        if len(files) > int(count_limit("APPEAL_PROOF")):
+            raise ApiError("ATTACHMENT_LIMIT", "附件数量超过上限", 400)
+        if Appeal.objects.filter(user=request.user, unit=unit, status="PENDING").exists():
+            raise ApiError("APPEAL_PENDING", "该专有部分已有待审申诉", 409)
+        decision = RateLimiter.hit(f"appeal_submit:{request.user.id}", limit=60, window_seconds=3600)
+        if not decision.allowed:
+            raise RateLimited(decision.retry_after)
+        validated = [AttachmentService.validate_upload(f, "APPEAL_PROOF") for f in files]
+        stored: list[StoredFile] = []
+        try:
+            with transaction.atomic():
+                appeal = Appeal.objects.create(user=request.user, unit=unit, owner_name=owner_name)
+                for item in validated:
+                    _ref, saved = AttachmentService.store_validated(
+                        item, purpose="APPEAL_PROOF", owner=request.user,
+                        linked_type="appeal", linked_id=str(appeal.id))
+                    stored.append(saved)
+                AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
+                                    action="APPEAL_SUBMITTED", object_type="appeal",
+                                    object_id=str(appeal.id), result="SUCCESS")
+        except Exception:
+            AttachmentService.discard(stored)
+            raise
         return Response(appeal_view(appeal), status=status.HTTP_201_CREATED)
 
 
@@ -232,7 +286,9 @@ class AdminAppealDecisionView(APIView):
         with transaction.atomic():
             if decision == "APPROVE":
                 role = MembershipService.certify_owner(appeal.user_id, appeal.unit_id, "APPEAL")
-                registry_update = self._append_registry(request, appeal)
+                registry_update, owner_id = self._append_registry(request, appeal)
+                if owner_id is not None:  # IFC-354：申诉通过后记录核对的清册业主并尝试绑定席位
+                    MembershipService.record_verified_owner(appeal.user_id, appeal.unit_id, owner_id, via="APPEAL")
                 appeal.status = "APPROVED"
                 detail = {"role": role}
             else:
@@ -255,8 +311,9 @@ class AdminAppealDecisionView(APIView):
         return Response(payload)
 
     @staticmethod
-    def _append_registry(request, appeal: Appeal) -> dict:
-        """IFC-309：同一事务内追加产权人与号码并写审计；任何失败抛 ApiError 使整笔回滚（ADR-114）。"""
+    def _append_registry(request, appeal: Appeal) -> tuple[dict, int | None]:
+        """IFC-309：同一事务内追加产权人与号码并写审计；任何失败抛 ApiError 使整笔回滚（ADR-114）。
+        返回 (registry_update, 清册业主 id)；无产权人名字（历史申诉）时业主 id 为 None。"""
         actor = AuditActor("ADMIN", request.user.id, request.user.username)
         base = {"change": "appeal_append_owner", "appeal_id": appeal.id, "unit_id": appeal.unit_id}
         if not appeal.owner_name:
@@ -264,7 +321,7 @@ class AdminAppealDecisionView(APIView):
                                 object_id=str(appeal.unit_id), result="SUCCESS",
                                 detail={**base, "result": "SKIPPED_NO_OWNER_NAME",
                                         "note": "无产权人名字，未更新清册"})
-            return {"result": "SKIPPED_NO_OWNER_NAME", "owner_phone_written": False, "notice": None}
+            return {"result": "SKIPPED_NO_OWNER_NAME", "owner_phone_written": False, "notice": None}, None
         try:
             appended = append_owner_from_appeal(appeal.unit_id, appeal.owner_name, appeal.user.phone or None)
         except PhoneOwnedByOtherOwner as exc:
@@ -280,8 +337,8 @@ class AdminAppealDecisionView(APIView):
                                     "names_before": list(appended.names_before),
                                     "names_after": list(appended.names_after),
                                     "phone_masked": appended.phone_masked})
-        return {"result": appended.result, "owner_phone_written": appended.owner_phone_written,
-                "notice": None if appeal.user.phone else "该产权人无联系电话"}
+        return ({"result": appended.result, "owner_phone_written": appended.owner_phone_written,
+                 "notice": None if appeal.user.phone else "该产权人无联系电话"}, appended.owner_id)
 
 
 class ResidentApplicationCreateView(APIView):

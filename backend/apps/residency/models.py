@@ -19,6 +19,9 @@ class Membership(models.Model):
     end_reason = models.CharField(max_length=12, choices=END_REASONS, null=True, blank=True)
     active_slot = models.SmallIntegerField(null=True, blank=True, default=1)
     head_slot = models.SmallIntegerField(null=True, blank=True)
+    # MOD-141 / IFC-347b：认证时通过核对的清册业主；不参与任何唯一约束
+    registry_owner = models.ForeignKey("registry.RegistryOwner", null=True, blank=True,
+                                       on_delete=models.SET_NULL, related_name="verified_memberships")
 
     class Meta:
         constraints = [

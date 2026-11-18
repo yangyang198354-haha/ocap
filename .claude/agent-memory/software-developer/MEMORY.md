@@ -40,3 +40,6 @@
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
 - [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
+- [P-SD-012] 给既有服务函数加参数前先 grep 测试里 `mock.patch.object(... side_effect=...)` 的替身签名（TC-INT-308/TC-UNIT-916 的 `flaky(user_id, unit_id, source, origin=None, detail_extra=None)`），新增关键字会令其全挂；改为在调用成功后另调新函数 — 自记 2026-11-18 · 证据：ocap_batch_1118 GROUP_C 首跑 2 条失败
+- [P-SD-013] 前端新代码避开既有静态守护：`portal/units/*` 源码不得含 `split(`（TC-UNIT-549）、契约 reads() 会扫 `item.xxx` 循环变量（TC-INT-490）、管理端表格固定宽合计有预算（TC-UNIT-874/875，AdminSeats 1040、AdminRegistry 1070）— 自记 2026-11-18 · 证据：ocap_batch_1118 GROUP_C 前端首跑 12 失败中 3 条
+- [P-SD-014] 新增审计动作必须先登记 `core/audit.py` 的 AUDIT_ACTIONS（否则 record 抛 ValueError）；既有审计 detail 若被精确 assertEqual（TC-INT-708），新增键只能加在新路径上 — 自记 2026-11-18 · 证据：ocap_batch_1118 SEAT_BOUND、SEAT_GRANTED

@@ -48,6 +48,8 @@ export const unitApi = {
   certify: (unitId, name) => post('/certifications', { unit_id: unitId, name }),
   // data: { unit_id, owner_name, proof_ids: [附件 id 1~5 个] }，后端要求产权人名字与至少一份产权证明
   createAppeal: (data) => post('/appeals', data),
+  // 一次提交（MOD-146 / IFC-363）：form 为 FormData，字段 unit_id、owner_name、files（可重复）；最多 5×10MB，故放宽超时
+  submitAppeal: (form) => http.post('/appeals', form, { timeout: 120000 }),
   myAppeals: () => get('/appeals/mine'),
   createResidentApplication: (data) => post('/resident-applications', data),
   myResidentApplications: () => get('/resident-applications/mine'),
@@ -67,6 +69,8 @@ export const resolutionApi = {
   list: (scope = 'public', params = {}) => get('/resolutions', { scope, ...params }),
   create: (data) => post('/resolutions', data),
   detail: (id) => get(`/resolutions/${id}`),
+  // 参与人列表（IFC-359）：只含昵称、头像、参与时间
+  participants: (id) => get(`/resolutions/${id}/participants`),
   withdraw: (id) => post(`/resolutions/${id}/withdraw`, {}),
   // 重新提交需带标题、正文、流程（半数同意另需 vote_deadline），后端 _validate_submission
   resubmit: (id, data) => post(`/resolutions/${id}/resubmit`, data),
@@ -171,6 +175,9 @@ const admin = {
   updateSeat: (id, data) => adminHttp.patch(`/admin/committee/seats/${id}`, data),
   deleteSeat: (id) => adminHttp.delete(`/admin/committee/seats/${id}`),
   committeeConfig: () => adminHttp.get('/admin/committee/config'),
+  // 席位授予给清册业主（MOD-152 / IFC-350/351）：逐级选房与业主候选（手机号已脱敏）
+  unitOptions: (params) => adminHttp.get('/admin/registry/unit-options', { params }),
+  ownerCandidates: (params) => adminHttp.get('/admin/committee/owner-candidates', { params }),
   updateCommitteeConfig: (data) => adminHttp.put('/admin/committee/config', data),
   flows: (params) => adminHttp.get('/admin/approval/flows', { params }),
   createFlow: (data) => adminHttp.post('/admin/approval/flows', data),

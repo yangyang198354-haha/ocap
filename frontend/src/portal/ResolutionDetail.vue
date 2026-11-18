@@ -17,6 +17,12 @@
         <el-tag type="danger">反对 {{ item.vote_counts.disagree }}</el-tag>
         <el-tag type="info">弃权 {{ item.vote_counts.abstain }}</el-tag>
       </div>
+      <div v-if="item.participation" class="participation-line mt-12">
+        发起人：{{ item.initiator?.display_name }} · 已参与 {{ item.participation.voted }} / {{ item.participation.expected }}
+      </div>
+      <div class="mt-12">
+        <ParticipantList :items="participants" :mode="item.approval_mode" />
+      </div>
       <div class="row" v-if="item.approval_mode === 'HALF_MAJORITY' && item.status === 'PENDING' && auth.isCommittee" style="margin-top: 12px">
         <el-button type="success" @click="vote('AGREE')">同意</el-button>
         <el-button type="danger" @click="vote('DISAGREE')">反对</el-button>
@@ -58,6 +64,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { approvalApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
+import ParticipantList from './parts/ParticipantList.vue'
 import { apiUrl } from '@/shared/http'
 import { useAuthStore } from '@/stores/auth'
 import { errorText, formatDateTime } from '@/shared/format'
@@ -67,6 +74,7 @@ import { confirmDanger } from '@/shared/confirm'
 const route = useRoute()
 const auth = useAuthStore()
 const item = ref(null)
+const participants = ref([])
 const flows = ref([])
 const showResubmit = ref(false)
 const form = reactive({ title: '', content: '', approval_flow_id: null, vote_deadline: null })
@@ -79,6 +87,20 @@ async function load() {
     item.value = await resolutionApi.detail(route.params.id)
   } catch (e) {
     ElMessage.error(errorText(e))
+    return
+  }
+  await loadParticipants()
+}
+
+// 参与人列表（MOD-149）：失败不影响详情显示，按"暂无人参与"降级
+async function loadParticipants() {
+  participants.value = []
+  if (item.value?.approval_mode !== 'HALF_MAJORITY') return
+  try {
+    const data = await resolutionApi.participants(route.params.id)
+    participants.value = data?.results || []
+  } catch (e) {
+    participants.value = []
   }
 }
 

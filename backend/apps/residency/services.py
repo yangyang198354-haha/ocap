@@ -43,7 +43,9 @@ class PendingRequestService:
 class MembershipService:
     @staticmethod
     def certify_owner(user_id: int, unit_id: int, source: str, origin: str | None = None,
-                      detail_extra: dict | None = None) -> str:
+                      detail_extra: dict | None = None, verified_owner_id: int | None = None,
+                      via: str | None = None) -> str:
+        """verified_owner_id：本次认证核对通过的清册业主 id（IFC-354）；非空时记录并尝试绑定待绑定席位。"""
         with transaction.atomic():
             from apps.registry.models import RegistryUnit
 
@@ -61,8 +63,11 @@ class MembershipService:
                                                     ended_at__isnull=True).exists()
             role = "OWNER" if head_exists else "HEAD"
             Membership.objects.create(user_id=user_id, unit_id=unit_id, role=role, source=source,
-                                      active_slot=1, head_slot=1 if role == "HEAD" else None)
+                                      active_slot=1, head_slot=1 if role == "HEAD" else None,
+                                      registry_owner_id=verified_owner_id)
             detail = {"role": role, "source": source}
+            if verified_owner_id is not None:
+                detail["registry_owner_id"] = verified_owner_id
             if origin == "REGISTRY_AUTO":
                 detail.update({"origin": origin, "origin_label": "清册自动绑定"})
             if detail_extra:
@@ -76,7 +81,26 @@ class MembershipService:
                 AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="HEAD_ASSIGNED",
                                     object_type="unit", object_id=str(unit_id), result="SUCCESS",
                                     detail={"user_id": user_id})
+            if verified_owner_id is not None:
+                from apps.committee.binding import SeatBinding  # 函数级导入，避免模块级环（ADR-138）
+
+                SeatBinding.try_bind(user_id, verified_owner_id, via=via or source)
             return role
+
+    @staticmethod
+    def record_verified_owner(user_id: int, unit_id: int, owner_id: int, *, via: str) -> None:
+        """IFC-354：给该用户在该专有部分的有效产权业主 Membership 补写 registry_owner，并尝试绑定；无此 Membership 则空操作。"""
+        with transaction.atomic():
+            row = (Membership.objects.filter(user_id=user_id, unit_id=unit_id, ended_at__isnull=True,
+                                             role__in=["HEAD", "OWNER"]).first())
+            if row is None:
+                return
+            if row.registry_owner_id != owner_id:
+                row.registry_owner_id = owner_id
+                row.save(update_fields=["registry_owner"])
+            from apps.committee.binding import SeatBinding
+
+            SeatBinding.try_bind(user_id, owner_id, via=via)
 
     @staticmethod
     def end_membership(membership_id: int, reason: str) -> None:

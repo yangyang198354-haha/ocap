@@ -18,27 +18,38 @@
             <div class="res-idx mono">{{ resNo(item.id) }}</div>
             <router-link class="res-title" :to="`/resolutions/${item.id}`">{{ item.title }}</router-link>
           </div>
-          <StatusTag :status="item.status" />
+          <div class="res-state">
+            <span v-if="item.status === 'PENDING'" class="res-progress-tag">进行中</span>
+            <template v-else-if="item.status === 'APPROVED' || item.status === 'REJECTED'">
+              <span class="res-ended-tag">已结束</span>
+              <StatusTag :status="item.status" />
+            </template>
+            <StatusTag v-else :status="item.status" />
+          </div>
         </div>
         <template v-if="item.vote_counts">
-          <div class="vote-bar" role="img" :aria-label="`同意 ${share(item).agree}，反对 ${share(item).disagree}，弃权 ${share(item).abstain}`">
-            <i class="vote-agree" :style="{ width: share(item).agreePct + '%' }" />
-            <i class="vote-disagree" :style="{ width: share(item).disagreePct + '%' }" />
-            <i class="vote-abstain" :style="{ width: share(item).abstainPct + '%' }" />
-          </div>
-          <div class="vote-legend">
-            <span>同意 <b class="mono">{{ share(item).agree }}</b></span>
-            <span>反对 <b class="mono">{{ share(item).disagree }}</b></span>
-            <span>弃权 <b class="mono">{{ share(item).abstain }}</b></span>
-          </div>
+          <div v-if="part(item).empty" class="vote-legend"><span>暂无表决人</span></div>
+          <template v-else>
+            <div class="vote-bar" role="img" :aria-label="`已参与 ${part(item).voted} / ${part(item).expected}，同意 ${part(item).agree}，反对 ${part(item).disagree}，弃权 ${part(item).abstain}`">
+              <i class="vote-agree" :style="{ width: part(item).agreePct + '%' }" />
+              <i class="vote-disagree" :style="{ width: part(item).disagreePct + '%' }" />
+              <i class="vote-abstain" :style="{ width: part(item).abstainPct + '%' }" />
+            </div>
+            <div class="vote-legend">
+              <span class="res-participation">已参与 <b class="mono">{{ part(item).voted }} / {{ part(item).expected }} · {{ part(item).pct }}%</b></span>
+              <span>同意 <b class="mono">{{ part(item).agree }}</b></span>
+              <span>反对 <b class="mono">{{ part(item).disagree }}</b></span>
+              <span>弃权 <b class="mono">{{ part(item).abstain }}</b></span>
+            </div>
+          </template>
         </template>
         <div v-else class="vote-legend"><span>{{ modeText(item.approval_mode) }}：由指定负责人审批</span></div>
         <div class="res-foot">
-          <span>
-            {{ (item.initiator?.labels || []).join('、') || '发起人' }}
+          <span class="res-initiator">
+            发起人：{{ item.initiator?.display_name || '—' }}<template v-if="(item.initiator?.labels || []).length"> · {{ item.initiator.labels.join('、') }}</template>
             <span class="mode-tag">{{ modeText(item.approval_mode) }}</span>
           </span>
-          <span v-if="item.vote_deadline" class="mono">截止 {{ datetime(item.vote_deadline) }}</span>
+          <span class="mono">{{ item.vote_deadline ? `截止 ${datetime(item.vote_deadline)}` : '无截止时间' }}</span>
         </div>
       </article>
     </div>
@@ -83,7 +94,7 @@ import PagerBar from '@/shared/PagerBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { datetime, errorText } from '@/shared/format'
 import { usePaging } from '@/shared/usePaging'
-import { voteShare } from '@/shared/voteShare'
+import { participationShare } from '@/shared/voteShare'
 
 // 分区由路由 props 决定（MOD-124 / IFC-324）：public 公开决议 / mine 我发起的 / todo 待我表决
 const props = defineProps({ section: { type: String, default: 'public' } })
@@ -105,7 +116,7 @@ const needDeadline = computed(() => flows.value.find((f) => f.id === form.approv
 // 卡片展示用：编号由 id 派生（接口无决议编号字段）；比例见 shared/voteShare
 const resNo = (id) => `R-${String(id).padStart(4, '0')}`
 const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
-const share = (item) => voteShare(item.vote_counts)
+const part = (item) => participationShare(item)
 
 async function load() {
   try {

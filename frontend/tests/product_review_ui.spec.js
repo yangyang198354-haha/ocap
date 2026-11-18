@@ -391,33 +391,39 @@ describe('管理端页面', () => {
     expect(vnodeText(messageBox.confirm.mock.calls[0][0])).toMatch(/失去该房屋的身份[\s\S]*户主接任/)
   })
 
-  it('TC-UNIT-541 / AC-159-02：赋予席位对话框没有"用户 ID"输入框；搜索选中后显示昵称与最高身份并提交 user_id', async () => {
+  it('TC-UNIT-541 / AC-159-02、AC-256-01/02：赋予席位对话框没有"用户 ID"输入框；旧：搜索用户→提交 user_id；新：逐级选专有部分(UnitCascader，管理端选项接口)→选清册业主(姓名+脱敏手机号)→提交 registry_owner_id 且不含 user_id', async () => {
     const wrapper = await mountAdmin(AdminSeats, {
       '/admin/committee/seats': { count: 0, results: [] }, '/admin/committee/config': { cap_member: 5 },
-      '/admin/users': { count: 1, results: [{ id: 77, nickname: '候选甲', account_no: '1000000077', phone: '138****0001', identity_label: '户主', real_names: ['张三'] }] }
+      '/admin/registry/unit-options': { level: 'building', skipped: [], has_empty: false, options: [{ value: '1' }] },
+      '/admin/committee/owner-candidates': { unit_id: 5, specific_part: '1栋1单元9层902号', owners: [
+        { owner_id: 11, name: '业主甲', phone_masked: '138****0001', seated: false, registered: false },
+        { owner_id: 12, name: '业主乙', phone_masked: '139****0002', seated: true, registered: true }] }
     })
     await buttonOf(wrapper, '赋予席位').trigger('click')
     await flush()
     const dialog = document.body
     const placeholders = [...dialog.querySelectorAll('input')].map((i) => i.getAttribute('placeholder') || '')
-    expect(placeholders.join('|')).not.toMatch(/用户 ?ID|用户编号/)
-    const search = dialog.querySelector('input[placeholder^="搜索用户"]')
-    search.value = '0001'
-    search.dispatchEvent(new Event('input'))
-    await new Promise((r) => setTimeout(r, 400))
+    expect(placeholders.join('|')).not.toMatch(/用户 ?ID|用户编号|搜索用户/)
+    const cascader = wrapper.findComponent({ name: 'UnitCascader' })
+    expect(cascader.exists()).toBe(true)
+    cascader.vm.$emit('update:modelValue', 5)
     await flush()
-    expect(dialog.textContent).toContain('候选甲')
+    expect(adminHttp.get).toHaveBeenCalledWith('/admin/committee/owner-candidates', { params: { unit_id: 5 } })
+    expect(dialog.textContent).toContain('业主甲')
     expect(dialog.textContent).toContain('138****0001')
-    expect(dialog.textContent).toContain('张三')
-    ;[...dialog.querySelectorAll('.user-picker-item')][0].click()
+    expect(dialog.textContent).toContain('已有有效席位')
+    expect(dialog.querySelector('.seat-holder-owners').textContent).not.toMatch(/\d{11}/)
+    const radios = [...dialog.querySelectorAll('.seat-holder-owners input[type=radio]')]
+    expect(radios).toHaveLength(2)
+    expect(radios[1].disabled).toBe(true)
+    radios[0].click()
     await flush()
-    expect(dialog.textContent).toMatch(/已选：候选甲/)
-    expect(dialog.querySelector('.user-picker-selected').textContent).toContain('户主')
     adminHttp.post.mockResolvedValue({})
     const save = [...dialog.querySelectorAll('button')].find((b) => b.textContent.trim() === '保存')
     save.click()
     await flush()
-    expect(adminHttp.post).toHaveBeenCalledWith('/admin/committee/seats', { user_id: 77, position: 'MEMBER' })
+    expect(adminHttp.post).toHaveBeenCalledWith('/admin/committee/seats', { registry_owner_id: 11, position: 'MEMBER' })
+    expect(JSON.stringify(adminHttp.post.mock.calls)).not.toContain('user_id')
   })
 
   it('TC-UNIT-542 / AC-158-03：撤销席位、删除审批流程——取消不发请求', async () => {

@@ -10,6 +10,8 @@ from apps.committee.models import Seat
 from apps.registry import display
 from apps.registry.ordering import unit_sort_key
 
+from apps.registry.models import RegistryOwner
+
 from .models import Membership, ResidentApplication
 
 OWNER_ROLES = ("HEAD", "OWNER")
@@ -32,12 +34,14 @@ class HousingUnit(TypedDict):
     certified_at: datetime
     residents: list[HousingResident]
     pending_application_count: int
+    co_owners: list[str]  # IFC-357：该专有部分其余清册业主姓名（不含本人对应的业主行；无手机号、无注册状态）
 
 
 class HousingPayload(TypedDict):
     summary: IdentityView
     units: list[HousingUnit]
     pending_review_count: int
+    real_names: list[str]  # IFC-357：本人作为产权业主对应的清册姓名，去重保序
 
 
 def housing_view(user) -> HousingPayload:
@@ -62,6 +66,38 @@ def housing_view(user) -> HousingPayload:
                   .values("unit_id").annotate(n=Count("id")))
         pending_by_unit = {row["unit_id"]: row["n"] for row in counts}
 
+    # IFC-357：本人全部房屋的清册业主一次取出（含号码），查询数不随房屋数增长
+    my_unit_ids = list({m.unit_id for m in memberships})
+    owners_by_unit: dict[int, list[RegistryOwner]] = {}
+    if my_unit_ids:
+        for owner in (RegistryOwner.objects.filter(unit_id__in=my_unit_ids)
+                      .prefetch_related("phones").order_by("id")):
+            owners_by_unit.setdefault(owner.unit_id, []).append(owner)
+    linked_owner_ids: dict[int, set[int]] = {}
+    for m in memberships:
+        if m.registry_owner_id is not None:
+            linked_owner_ids.setdefault(m.unit_id, set()).add(m.registry_owner_id)
+
+    def is_mine(owner: RegistryOwner) -> bool:
+        if owner.id in linked_owner_ids.get(owner.unit_id, ()):
+            return True
+        return bool(user.phone) and any(p.phone == user.phone for p in owner.phones.all())
+
+    real_names: list[str] = []
+    for m in memberships:
+        if m.role not in OWNER_ROLES:
+            continue
+        for owner in owners_by_unit.get(m.unit_id, []):
+            if owner.name and is_mine(owner) and owner.name not in real_names:
+                real_names.append(owner.name)
+
+    def co_owner_names(unit_id: int) -> list[str]:
+        names: list[str] = []
+        for owner in owners_by_unit.get(unit_id, []):
+            if owner.name and not is_mine(owner) and owner.name not in names:
+                names.append(owner.name)
+        return names
+
     units: list[HousingUnit] = []
     # IFC-290：房屋行按数字自然顺序（与 /me 同口径）；summary/residents 仍用上面的原顺序
     ordered = sorted(memberships, key=lambda m: (
@@ -75,6 +111,8 @@ def housing_view(user) -> HousingPayload:
             "certified_at": m.certified_at,
             "residents": residents_by_unit.get(m.unit_id, []) if is_owner else [],
             "pending_application_count": pending_by_unit.get(m.unit_id, 0) if is_owner else 0,
+            "co_owners": co_owner_names(m.unit_id),
         })
     return {"summary": summary, "units": units,
-            "pending_review_count": sum(u["pending_application_count"] for u in units)}
+            "pending_review_count": sum(u["pending_application_count"] for u in units),
+            "real_names": real_names}

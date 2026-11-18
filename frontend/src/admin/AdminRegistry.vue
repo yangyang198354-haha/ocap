@@ -36,12 +36,13 @@
     </div>
 
     <div class="card">
-      <el-table :data="items" size="small" empty-text="暂无数据">
+      <!-- MOD-151：楼栋/单元/楼层/房号四列服务端排序（升序与降序两态），其余列不可排序 -->
+      <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" @sort-change="onSort">
         <el-table-column prop="specific_part" label="专有部分" min-width="150" />
-        <el-table-column prop="building" label="楼栋" width="80" />
-        <el-table-column prop="unit_no" label="单元" width="80" />
-        <el-table-column prop="floor" label="楼层" width="80" />
-        <el-table-column prop="room" label="房号" width="90" />
+        <el-table-column prop="building" label="楼栋" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
+        <el-table-column prop="unit_no" label="单元" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
+        <el-table-column prop="floor" label="楼层" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
+        <el-table-column prop="room" label="房号" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
         <el-table-column label="类型" width="100">
           <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
         </el-table-column>
@@ -124,6 +125,10 @@ const UNIT_TYPES = [
   { value: 'OTHER', label: '其他' }
 ]
 
+const SORT_ORDERS = ['ascending', 'descending']
+const tableRef = ref(null)
+// 排序状态：随翻页与过滤保持；无排序时不带 sort/order，服务端按默认升序
+const sort = reactive({ prop: null, order: null })
 const items = ref([])
 const page = ref(1)
 const pageSize = 20
@@ -159,7 +164,9 @@ async function load() {
       unit_no: filters.unit_no || undefined,
       room: filters.room || undefined,
       owner_name: filters.owner_name || undefined,
-      owner_phone: filters.owner_phone || undefined
+      owner_phone: filters.owner_phone || undefined,
+      sort: sort.prop && sort.order ? sort.prop : undefined,
+      order: sort.prop && sort.order ? (sort.order === 'descending' ? 'desc' : 'asc') : undefined
     })
     items.value = data.results || data || []
     total.value = data.count ?? items.value.length
@@ -186,7 +193,15 @@ function resetFilters() {
   keyword.value = ''
   typeFilter.value = ''
   Object.assign(filters, { building: '', unit_no: '', room: '', owner_name: '', owner_phone: '' })
+  Object.assign(sort, { prop: null, order: null }) // "重置"恢复默认升序并清除表头指示
+  tableRef.value?.clearSort?.()
   search()
+}
+
+function onSort({ prop, order }) {
+  Object.assign(sort, { prop: order ? prop : null, order: order || null })
+  page.value = 1
+  load()
 }
 
 function search() {

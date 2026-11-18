@@ -128,9 +128,13 @@ class AppealContractTests(ApiTestBase):
 
     def test_tc_int_713_both_clients_send_owner_name_unit_id_proof_ids(self):
         """AC-199-01 契约：Web Units.vue 与小程序 units/index.vue 调 createAppeal 时发送的键恰为 { unit_id, owner_name, proof_ids }。"""
-        web = self.appeal_keys_from(WEB["units"], r"createAppeal\(\{(.*?)\}\)")
+        # B3（ocap_batch_1118，AC-244-02/AC-245-05）：Web 改为 submitAppeal(FormData) 一次提交，读 form.append('键') 键集；小程序仍 JSON createAppeal
+        web_src = web_units_bundle()
+        web = set(re.findall(r"form\.append\('(\w+)'", web_src))
+        self.assertIsNotNone(re.search(r"unitApi\.submitAppeal\(", web_src), "Web 未调用 unitApi.submitAppeal")
+        self.assertNotIn("createAppeal(", web_src)
         mini = self.appeal_keys_from(MINI["units"], r"createAppeal\(\{(.*?)\}\)")
-        self.assertEqual(web, {"unit_id", "owner_name", "proof_ids"})
+        self.assertEqual(web, {"unit_id", "owner_name", "files"})
         self.assertEqual(mini, {"unit_id", "owner_name", "proof_ids"})
 
     def test_tc_int_714_keys_clients_send_for_appeal_are_accepted_by_backend(self):

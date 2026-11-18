@@ -10,6 +10,7 @@
       <template v-else>
         <div class="row">
           <span>汇总身份：<el-tag>{{ housing.summary.label }}</el-tag></span>
+          <span class="real-names">真实姓名：{{ (housing.real_names || []).join('、') || '—' }}</span>
         </div>
         <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
         <p v-if="!housing.units.length" class="muted">
@@ -24,6 +25,7 @@
             <el-tag size="small" type="info">{{ unit.role_label }}</el-tag>
             <el-button v-if="unit.role === 'RESIDENT'" size="small" @click="leave(unit)">退出</el-button>
           </div>
+          <p class="muted co-owners">共有产权人：{{ (unit.co_owners || []).length ? unit.co_owners.join('、') : '无' }}</p>
           <div v-if="isOwner(unit)">
             <p class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</p>
             <div v-for="r in unit.residents" :key="r.user_id" class="row">

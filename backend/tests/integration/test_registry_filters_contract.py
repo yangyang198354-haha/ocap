@@ -46,8 +46,9 @@ class RegistryFilterContractTests(ApiTestBase):
     def test_tc_int_585_page_query_params_all_accepted_and_effective(self):
         """AC-189-01~05 契约：AdminRegistry.vue 传的每个查询参数名后端都识别并真正过滤（不匹配值 → 0 条）。"""
         params = vue_load_params()
+        # B7（ocap_batch_1118，AC-255-01）：新增 sort、order 两个排序参数（非过滤条件，另断言被后端识别）
         self.assertEqual(params, {"page", "page_size", "q", "unit_type", "building", "unit_no", "room",
-                                  "owner_name", "owner_phone"})
+                                  "owner_name", "owner_phone", "sort", "order"})
         _, admin_token = self.make_admin()
         unit = RegistryUnit.objects.create(building="1", unit_no="2", floor="9", room="902",
                                            unit_type="RESIDENCE", area="50.00")
@@ -64,7 +65,14 @@ class RegistryFilterContractTests(ApiTestBase):
             miss = self.api("get", "/admin/registry/units", {key: misses[key]}, token=admin_token)
             self.assert_ok(miss)
             self.assertEqual(miss.data["count"], 0, f"{key} 参数未被后端当作过滤条件")
-        self.assertEqual(set(hits), params - {"page", "page_size"})
+        self.assertEqual(set(hits), params - {"page", "page_size", "sort", "order"})
+        # sort/order 被后端识别：非法值 400 INVALID_QUERY，合法值 200 且不改变 count
+        self.assert_error(self.api("get", "/admin/registry/units", {"sort": "zzz"}, token=admin_token), 400, "INVALID_QUERY")
+        self.assert_error(self.api("get", "/admin/registry/units", {"sort": "floor", "order": "up"}, token=admin_token), 400, "INVALID_QUERY")
+        for sort in ("building", "unit_no", "floor", "room"):
+            ok = self.api("get", "/admin/registry/units", {"sort": sort, "order": "desc"}, token=admin_token)
+            self.assert_ok(ok)
+            self.assertEqual(ok.data["count"], 1)
 
     def test_tc_int_586_page_reads_only_existing_response_keys(self):
         """AC-189 契约：页面读取的 data.buildings / data.unit_nos / data.results / data.count 均为后端真实响应键。"""

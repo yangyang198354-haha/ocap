@@ -43,3 +43,6 @@
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
+- [P-TE-007] VTU `mount` 默认把 `<Transition>` 桩掉，组件的 JS 钩子（onEnter/onLeave 高度动画）要 `global.stubs.transition:false` 才会执行；jsdom 不认 `style.transition`，改断言内联 `height`；同一 router 实例装到第二个 app 后 `useRoute().params` 丢失，多次挂载每次新建 router — 自记 2026-11-18 · 证据 frontend/tests/batch1118_resolution_nav.spec.js TC-UNIT-1322/1340
+- [P-TE-008] 时段相关缺陷（UTC/本地日期差一天）：用例里 `mock.patch("django.utils.timezone.now", return_value=<UTC 16:30>)` 即可同时影响 `localdate()`；既有"白天才通过"的用例用 scratchpad 脚本 patch 后 `call_command("test", <用例路径>)` 冻结复跑，并在副本回退修复行确认变红 — 自记 2026-11-18 · 证据 backend/tests/integration/test_batch1118_timezone.py、冻结复跑 TC-INT-504
+- [P-TE-009] 公开列表/授权口径变化的回归，在 scratchpad 副本做逐行变异（回退清理、可见性、分母、字段泄露、排序方向、本人排除各一处）并跑新用例，全部被抓才算有效；本批 6/6 命中 — 自记 2026-11-18 · 证据 ocap_batch_1118 test_batch1118_*.py 变异记录

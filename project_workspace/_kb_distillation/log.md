@@ -308,3 +308,9 @@
 | 2026-11-18T14:35:00+08:00 | (gate) GR-C-001-F03/GR-D-001-F02 CR-012 | 淘汰：临时状态，已入 delivery_report 遗留表 | committed |
 | 2026-11-18T14:35:00+08:00 | (gate) GR-C-001-F01/F02、GR-E2-001-F01 | 淘汰：单次无复用价值 MINOR | committed |
 | 2026-11-18T14:35:00+08:00 | (memory) P-DE-003 | 保留：未满 90 天，git 不可核验 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-SA-028 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-SD-040 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-TE-042 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-DE-043 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-PM-011 | committed |
+| 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 通用候选 2（枚举互斥写入端校验 / 错位缺陷双向断言）→ 待复现 | pending |

@@ -283,3 +283,28 @@
 | 2026-11-17T22:59:48+08:00 | (gate) GR-C-001-F03/EXCEPTION | 晋升→M-PM-008 | committed |
 | 2026-11-17T22:59:48+08:00 | (gate) GR-C-001-F01/GR-D-001 | 晋升→M-PM-009 | committed |
 | 2026-11-17T22:59:48+08:00 | (gate) GR-A-001-F01、GR-B-001-F01 漏读 | 合并→M-PM-001 命中 23→25 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_A-001-1 | 合并→M-RA-002 命中 4→5 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_A-001-2 | 晋升→M-RA-028 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_A-002-1 | 晋升→M-RA-029 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_B-001-1 | 晋升→M-SA-025 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_B-001-2 | 晋升→M-SA-026 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_B-001-3 | 晋升→M-SA-027 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_C-001-1 | 晋升→M-SD-037 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_C-001-2 | 晋升→M-SD-038 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_C-001-3 | 晋升→M-SD-039 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_D-001-1 | 晋升→M-TE-039 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_D-001-2 | 晋升→M-TE-040；关联→M-PM-010 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_D-001-3 | 晋升→M-TE-041 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_E1-001-1 | 晋升→M-DE-039 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_E1-001-2 | 晋升→M-DE-040 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_E1-001-3 | 合并→M-DE-028 命中 2→3 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_E2-001-1 | 晋升→M-DE-041 | committed |
+| 2026-11-18T14:35:00+08:00 | ocap_batch_1118-GROUP_E2-001-2 | 晋升→M-DE-042 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) 时段相关基线失败 audit_log 2026-11-18T00:58 / GR-C-001 / GR-D-001 | 晋升→M-PM-010 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-A-001-F01、GR-B-001-F03 漏读 | 合并→M-PM-001 命中 25→27 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-D-001 契约 TC-INT-1130~1134 | 合并→M-PM-002 命中 5→6 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-E1-001/GR-E2-001 构建带 VITE_API_BASE（反向验证） | 合并→M-PM-007 命中 2→3 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-C-001-F04→GR-D-001 baseline | 合并→M-PM-009 命中 1→2 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-C-001-F03/GR-D-001-F02 CR-012 | 淘汰：临时状态，已入 delivery_report 遗留表 | committed |
+| 2026-11-18T14:35:00+08:00 | (gate) GR-C-001-F01/F02、GR-E2-001-F01 | 淘汰：单次无复用价值 MINOR | committed |
+| 2026-11-18T14:35:00+08:00 | (memory) P-DE-003 | 保留：未满 90 天，git 不可核验 | committed |

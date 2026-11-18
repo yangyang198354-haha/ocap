@@ -38,11 +38,11 @@
 - [M-TE-036] 带状态假服务端（vitest 前端 E2E）的列表接口返回数组副本 `[...S.list]`：返回同一引用后原地 push，Pinia 赋值因引用未变不触发更新，像产品缺陷实为夹具问题 — conf 0.6 · 证据 frontend/tests/identity_property_e2e.spec.js（TC-E2E-912 首版失败，改副本后通过）、GR-D-001 · 首见 2026-11-17 · 命中 1
 - [M-TE-037] 客户端守卫类断言（merged 时不跳转）喂互相矛盾的响应（merged=true 且 pending=true），否则回退守卫的变异测不出；变异验证首轮漏掉一条后才加强 — conf 0.6 · 证据 identity_property_match_panel.spec.js TC-WEB-932、miniprogram/tests/identity_property_pages.spec.js TC-MP-908、GR-D-001 · 首见 2026-11-17 · 命中 1
 - [M-TE-038] 页面新增名称含旧按钮名的按钮（"认证产权"含"认证"）后，旧用例 byText 的 includes 匹配会先命中新按钮；改写用文本恰等于的精确查找 — conf 0.6 · 证据 miniprogram/tests/owner_auth_v2.spec.js:33 certifyButton（TC-MP-504~506）、GR-D-001 · 首见 2026-11-17 · 命中 1
+- [M-TE-039] VTU `mount` 默认把 `<Transition>` 桩掉，组件 JS 钩子（onEnter/onLeave）要 `global.stubs.transition:false` 才执行；jsdom 不认 `style.transition`，改断言内联 `height`；同一 router 装到第二个 app 后 `useRoute().params` 丢失，多次挂载每次新建 router — conf 0.6 · 证据 ocap_batch_1118 frontend/tests/batch1118_resolution_nav.spec.js TC-UNIT-1322/1340、GR-D-001 前端 531/531 · 首见 2026-11-18 · 命中 1
+- [M-TE-040] 时段相关缺陷（UTC/本地日期差一天）：`mock.patch("django.utils.timezone.now", return_value=<UTC 16:30>)` 同时影响 `localdate()`；既有"白天才通过"的用例用脚本 patch 后 `call_command("test", <路径>)` 冻结复跑，并在副本回退修复行确认变红 — conf 0.6 · 证据 ocap_batch_1118 test_batch1118_timezone.py（TC-INT-1140~1142）、GR-D-001 时区 condition · 首见 2026-11-18 · 命中 1
+- [M-TE-041] 公开范围/授权口径变化的回归，在 scratchpad 副本逐行变异（回退清理、可见性、分母、字段泄露、排序方向、本人排除各一处）并跑新用例，全部被抓才算有效 — conf 0.6 · 证据 ocap_batch_1118 test_batch1118_{resolutions,seats,housing_registry,appeal}.py 存在、GR-D-001 J-D（6/6 为 TE 自述） · 首见 2026-11-18 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-TE-001] test_plan 的用例方法名要用 grep `def test_` 对账：0.3.0 计划里有 4 处方法名与代码不符、1 行无对应测试 — 自记 2026-11-08 · 证据 GROUP_D-7 对账（旧版已 SUPERSEDED，不可核验）
 - [P-TE-005] 延迟释放资源的下载辅助函数（setTimeout 后 revokeObjectURL）用 vi.useFakeTimers + advanceTimersByTime，finally 恢复真实计时器；jsdom 里 anchor.click 要 spy — 自记 2026-11-11 · 证据 registry_import.spec.js:59 用了 useFakeTimers，spy/finally 细节未核
 - [P-TE-006] Fake 类的 reset() 会清空构造参数，替身初始化应先 reset 再赋值 — 自记 2026-11-11 · 证据：content GR-D-001 无对应 finding，未核
-- [P-TE-007] VTU `mount` 默认把 `<Transition>` 桩掉，组件的 JS 钩子（onEnter/onLeave 高度动画）要 `global.stubs.transition:false` 才会执行；jsdom 不认 `style.transition`，改断言内联 `height`；同一 router 实例装到第二个 app 后 `useRoute().params` 丢失，多次挂载每次新建 router — 自记 2026-11-18 · 证据 frontend/tests/batch1118_resolution_nav.spec.js TC-UNIT-1322/1340
-- [P-TE-008] 时段相关缺陷（UTC/本地日期差一天）：用例里 `mock.patch("django.utils.timezone.now", return_value=<UTC 16:30>)` 即可同时影响 `localdate()`；既有"白天才通过"的用例用 scratchpad 脚本 patch 后 `call_command("test", <用例路径>)` 冻结复跑，并在副本回退修复行确认变红 — 自记 2026-11-18 · 证据 backend/tests/integration/test_batch1118_timezone.py、冻结复跑 TC-INT-504
-- [P-TE-009] 公开列表/授权口径变化的回归，在 scratchpad 副本做逐行变异（回退清理、可见性、分母、字段泄露、排序方向、本人排除各一处）并跑新用例，全部被抓才算有效；本批 6/6 命中 — 自记 2026-11-18 · 证据 ocap_batch_1118 test_batch1118_*.py 变异记录

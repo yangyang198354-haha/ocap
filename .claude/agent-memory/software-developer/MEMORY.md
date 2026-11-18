@@ -36,10 +36,10 @@
 - [M-SD-034] 装饰性 SVG 不要用 `<text>`（进入 wrapper.text()，令"三风格页面文本一致"用例 TC-E2E-104 失败），改 foreignObject + CSS `content: attr(data-t)`；同一组件对应多条路由时 router 中只 import 一次，否则 qa_unit_theme 的 import 计数变化 — conf 0.6 · 证据 ocap_brand_layout GR-C-001（首跑 41 失败→39 均在影响清单）、frontend/src/router/index.js:8 · 首见 2026-11-17 · 命中 1
 - [M-SD-035] 删除被既有 spec 直接 import 的组件，会让整个 spec 文件显示 0 test（总数少一截，不算 failed）；统计失败时核对"运行数 + 隐藏数 = 基线"，并在 scratch 副本临时改 import 才能看到真实失败 — conf 0.6 · 证据 ocap_identity_property GROUP_C（373+65=438）、GR-C-001-F01（44 条 + 2 文件预期失败与复跑对上） · 首见 2026-11-17 · 命中 1
 - [M-SD-036] 冒烟/基线对照一律在 scratch 副本里做（后端：复制 backend 放临时测试文件；前端：tar 排除 node_modules 后符号链接，放临时 spec），不污染仓库测试目录；"不改测试代码"的批次尤其如此 — conf 0.8 · 证据 ocap_identity_property code_review_report.md:36-42（scratch 设置/临时库自验证）、GR-C-001；ocap_unit_sort_filters GROUP_C 自验证（原 P-SD-009） · 首见 2026-11-16 · 命中 2
+- [M-SD-037] 给既有服务函数加参数前先 grep 测试里 `mock.patch.object(... side_effect=...)` 的替身签名（TC-INT-308/TC-UNIT-916），新增关键字参数会令旧替身全挂；改为原函数成功后另调新函数 — conf 0.6 · 证据 ocap_batch_1118 GR-C-001（git grep 命中两用例所在文件） · 首见 2026-11-18 · 命中 1
+- [M-SD-038] 前端新代码避开既有静态守护：`portal/units/*` 源码不得含 `split(`（TC-UNIT-549）、契约 reads() 会扫 `item.xxx` 循环变量（TC-INT-490）、管理端表格固定宽合计有预算（TC-UNIT-874/875） — conf 0.6 · 证据 ocap_batch_1118 GR-C-001 前端 F1~F9（git grep 命中 TC-UNIT-549/874） · 首见 2026-11-18 · 命中 1
+- [M-SD-039] 新增审计动作先登记 `core/audit.py` 的 AUDIT_ACTIONS（否则 record 抛 ValueError）；既有审计 detail 被精确 assertEqual（TC-INT-708）时，新增键只加在新路径上 — conf 0.6 · 证据 ocap_batch_1118 audit.py:10/:17/:66（git grep）、SEAT_GRANTED · 首见 2026-11-18 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SD-004] 富文本渲染函数应同时接受 dataclass 与 dict 令牌，避免调用方传 JSON 时 AttributeError — 自记 2026-11-11 · 证据：content GR-C-001 无对应 finding，渲染入口未核实
 - [P-SD-011] 临时自检 spec 的 vitest 配置不要 `mergeConfig` 基础配置（`include` 数组会被拼接，整套测试一起跑，约 3 分钟）；单独写含 vue 插件与 `@` 别名的独立配置，spec 放 `frontend/` 下临时目录并在交付前删除 — 自记 2026-11-17 · 证据：ocap_brand_layout GROUP_C 自验证
-- [P-SD-012] 给既有服务函数加参数前先 grep 测试里 `mock.patch.object(... side_effect=...)` 的替身签名（TC-INT-308/TC-UNIT-916 的 `flaky(user_id, unit_id, source, origin=None, detail_extra=None)`），新增关键字会令其全挂；改为在调用成功后另调新函数 — 自记 2026-11-18 · 证据：ocap_batch_1118 GROUP_C 首跑 2 条失败
-- [P-SD-013] 前端新代码避开既有静态守护：`portal/units/*` 源码不得含 `split(`（TC-UNIT-549）、契约 reads() 会扫 `item.xxx` 循环变量（TC-INT-490）、管理端表格固定宽合计有预算（TC-UNIT-874/875，AdminSeats 1040、AdminRegistry 1070）— 自记 2026-11-18 · 证据：ocap_batch_1118 GROUP_C 前端首跑 12 失败中 3 条
-- [P-SD-014] 新增审计动作必须先登记 `core/audit.py` 的 AUDIT_ACTIONS（否则 record 抛 ValueError）；既有审计 detail 若被精确 assertEqual（TC-INT-708），新增键只能加在新路径上 — 自记 2026-11-18 · 证据：ocap_batch_1118 SEAT_BOUND、SEAT_GRANTED

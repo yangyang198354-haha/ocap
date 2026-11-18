@@ -24,6 +24,9 @@
 - [M-SA-022] 新增 SVG 配图等 .vue 不得写颜色字面量（theme.spec 守护），颜色经 scoped CSS 取 var(--accent)；UnitCascader 不回显初值 id，跨页预填房屋不可行，只能预填姓名 — conf 0.6 · 证据 frontend/src/portal/parts/UnitCascader.vue:40、ocap_ui_theme ADR-029 · 首见 2026-11-17 · 命中 1
 - [M-SA-023] 给 /me/housing 等被契约测试用 assertEqual 锁定字段集的接口加字段前，先 git grep 该集合（test_frontend_contract.py:582-585），并在 module_design 列出要改的断言；页面循环变量名（item/unit/r）会被 reads() 扫描，新组件用别的变量名 — conf 0.6 · 证据 ocap_identity_property ADR-131、git grep 核验 · 首见 2026-11-17 · 命中 1
 - [M-SA-024] "触发时机一次性、之后清册变化不得触发"的引导类需求，用"服务端状态行（触发点有匹配才建行）+ 匹配实时查询"，不存快照也不做无状态查询；代价是 PENDING 期间清册新增同号会出现（须列 ASSUMPTION） — conf 0.6 · 证据 ocap_identity_property ADR-128（architecture_design.md:45-54、:129） · 首见 2026-11-17 · 命中 1
+- [M-SA-025] 把 `Seat.user` 这类被多处读取的外键改可空前，先 git grep 返回 `user_id` 的查询（如 `active_representative_ids` 被 `sorted(set(...))` 使用，遇 None 会 TypeError），在 module_design 列"空值读取点清单" — conf 0.6 · 证据 ocap_batch_1118 GR-B-001 J-B 引用存在（polls/views.py:71）、committee/services.py:59 · 首见 2026-11-18 · 命中 1
+- [M-SA-026] 终端主题用 `.side-item.is-active::before { content: "> " }`（themes.css:634），新增导航选中动效不得占用 `::before`，用 `::after`；新动画包进 `@media (prefers-reduced-motion: no-preference)` 比依赖全局覆盖更稳 — conf 0.6 · 证据 ocap_batch_1118 themes.css:634（git grep）、GR-D-001 TC-UNIT-865 · 首见 2026-11-18 · 命中 1
+- [M-SA-027] 同一动作的多个认证入口若要"记录核对通过的是谁"，申诉通过路径里 `certify_owner` 先于 `append_owner_from_appeal`，拿不到 owner_id，须另设补写函数，不调换原有顺序 — conf 0.6 · 证据 ocap_batch_1118 residency/views.py:288 先于 :326（git grep）、GR-C-001 追溯抽查 · 首见 2026-11-18 · 命中 1
 ## 用户偏好与禁止项
 ## 待验证
 - [P-SA-001] 取微信官方服务端接口文档时，用 `developers.weixin.qq.com/miniprogram/dev/server/API/<分类>/<api_xxx>.md`（带 .md）可拿到干净正文；`/framework/open-ability/*.html` 页面正文过长，WebFetch 只返回导航 — 自记 2026-11-07 · 证据 WebFetch 结果（不可核验）
@@ -35,7 +38,4 @@
 - [P-SA-010] 迁移拆分旧版无归属数据时，要提前定义"同人多号吸收并入"规则，否则全量重传会判成冲突 — 自记 2026-11-10 · 证据：设计推演（待真实历史数据迁移复现）
 - [P-SA-013] 设计"替代旧约束"类变更前先 git grep 现有守护测试里对旧约束的断言（如"管理端固定 B"），在 module_design 列出需同步更新的用例清单，避免门控时被判新增失败 — 自记 2026-11-11 · 证据 module_design MOD-073（git grep 实测 4 个前端测试文件）
 - [P-SA-014] 渐变背景上放白字：半透明白叠层会变亮、拉低对比度（bento `#DB2777` 端 4.60→3.77），半透明深色叠层恒更暗而不会；本仓库 `scripts/themes/schema.mjs:68` 的 contrast 只收单色 `#RRGGBB`，渐变须"各停点逐一建项 + 测试对插值采样"，`--accent` 恰为 bento 渐变起点色，焦点环在渐变上须改 `--on-hero` — 自记 2026-11-11 · 证据 schema.mjs 的 contrastRatio 本机实算（ocap_admin_polish ADR-075 1.1.0）
-- [P-SA-018] 把 `Seat.user` 这类被多处读取的外键改可空前，先 git grep 返回 `user_id` 的查询（如 `active_representative_ids` 被 `sorted(set(...))` 使用，遇 None 会 TypeError），在 module_design 列"空值读取点清单" — 自记 2026-11-18 · 证据 backend/apps/committee/services.py:52-62、backend/apps/polls/views.py:71（git grep 实测，设计阶段推演）
-- [P-SA-019] 终端主题用 `.side-item.is-active::before { content: "> " }`（themes.css:634），新增导航选中动效不得占用 `::before`，用 `::after`；新动画包进 `@media (prefers-reduced-motion: no-preference)` 比依赖全局覆盖更稳 — 自记 2026-11-18 · 证据 frontend/src/theme/generated/themes.css:634,689-692
-- [P-SA-020] 同一动作的多个认证入口（手动/申诉通过/手机号匹配）若要"记录核对通过的是谁"，申诉通过路径里 `certify_owner` 先于 `append_owner_from_appeal` 执行，拿不到 owner_id，须另设 `record_verified_owner` 在追加之后补写，不要调换原有顺序 — 自记 2026-11-18 · 证据 backend/apps/residency/views.py:216-257、registry/ownership.py:40-80
 - [P-SA-017] uni-app 文档中 `uni.chooseFile` 小程序不支持，`wx.chooseMessageFile` 仅 mp-weixin（参数在微信文档），小程序传 pdf 须核微信官方文档，否则本批只做图片 — 自记 2026-11-16 · 证据 [WEB: https://uniapp.dcloud.net.cn/api/media/file.html，2026-11-16]（WebFetch 摘要，未核对微信原文）

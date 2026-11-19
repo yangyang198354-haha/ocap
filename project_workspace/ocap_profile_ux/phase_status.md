@@ -1,4 +1,4 @@
-<phase_status project="ocap_profile_ux" mode="INCREMENTAL" created="2026-11-18T22:51:12+08:00" updated="2026-11-18T22:51:12+08:00">
+<phase_status project="ocap_profile_ux" mode="INCREMENTAL" created="2026-11-18T22:51:12+08:00" updated="2026-11-20T00:32:00+08:00">
   <request>1. 个人资料页面，名字、性别、生日，和保存按钮不在同一水平线上，生日控件略低于其他控件。2. 用户应该有一个默认头像，并且在右上角自己昵称和下拉菜单旁边显示。3. 更换头像不要限制2MB，可以5M。4. 管理端业委会席位、业主代表的卡片不要用一行字显示，应该用一个表格显示。持有人列表需要有过滤器。默认把资格失效的折叠起来。然后可以按照昵称，姓名，联系电话，专有部分坐落，专有部分类型、按列显示。现有的列都保留。并且可以按照楼栋，单元，职位过滤。5. 审批流程还要能编辑。不然看不到细节。6. 用户房屋关系，应当可以按照专有部分的楼栋，单元，楼层过滤，能够容易地看到整体信息，也能根据名字找人，根据专有部分招人，或者根据电话号码找人。7. 注册的用户有 profile 页，他人可以点击昵称，头像看到 profile。profile 页显示昵称，头像，身份，已经验证身份的产权业主自己可以选择是否显示实名。用户还可以编辑自己的签名档，并且在 profile 页展示。本批次先完成需求分析与用户故事，用户确认后再开发。</request>
   <profile version="1.2.0"/>
   <groups>
@@ -23,7 +23,9 @@
       <phase id="PHASE_10" status="APPROVED"/>
       <phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0" environment="test">
+      <phase id="PHASE_11b" status="APPROVED"/>
+    </group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_profile_ux/requirements/requirements_spec.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -39,6 +41,7 @@
     <artifact path="project_workspace/ocap_profile_ux/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_profile_ux/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_profile_ux/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_profile_ux/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline></legacy_baseline>
   <invocations>
@@ -47,6 +50,7 @@
     <invocation id="ocap_profile_ux-GROUP_C-1" agent="software-developer" started="2026-11-18T23:35:30+08:00" ended="2026-11-19T00:10:19+08:00" result="SUCCESS"/>
     <invocation id="ocap_profile_ux-GROUP_D-1" agent="test-engineer" started="2026-11-19T00:10:50+08:00" ended="2026-11-19T00:29:14+08:00" result="SUCCESS"/>
     <invocation id="ocap_profile_ux-GROUP_E1-1" agent="devops-engineer" started="2026-11-19T00:36:00+08:00" ended="2026-11-19T00:30:46+08:00" result="SUCCESS"/>
+    <invocation id="ocap_profile_ux-GROUP_E2-1" agent="devops-engineer" started="2026-11-20T00:28:00+08:00" ended="2026-11-20T00:32:00+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_profile_ux-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-18T22:54:53+08:00">

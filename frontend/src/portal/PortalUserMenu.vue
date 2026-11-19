@@ -11,8 +11,6 @@
     </button>
     <template #dropdown>
       <el-dropdown-menu>
-        <!-- AC-270-01：本人主页入口（头像/昵称所在菜单内直达 profile） -->
-        <el-dropdown-item v-if="auth.me?.profile?.id" command="my-profile">我的主页</el-dropdown-item>
         <el-dropdown-item v-for="item in PORTAL_USER_MENU" :key="item.key" :command="item.to">{{ item.label }}</el-dropdown-item>
         <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
       </el-dropdown-menu>
@@ -41,10 +39,6 @@ async function onCommand(command) {
     await auth.logout()
     useHousingStore().$reset()
     router.replace('/login')
-    return
-  }
-  if (command === 'my-profile') {
-    router.push(`/users/${auth.me.profile.id}/profile`)
     return
   }
   router.push(command)

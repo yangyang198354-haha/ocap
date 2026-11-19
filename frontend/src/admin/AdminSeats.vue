@@ -1,3 +1,5 @@
+<!-- MOD-160 / IFC-372：业委会席位（持有人分列、楼栋/单元/职位过滤、非 ACTIVE 默认折叠）
+     口径（GR-B-001-F02）：status=ACTIVE 但未到任期开始的席位保留在主表并显示"待生效"标签 -->
 <template>
   <div class="page">
     <div class="card">
@@ -17,32 +19,56 @@
       <p v-if="hint && hint.pending_bind > 0 && hint.can_pass === false" class="error-text seat-hint">
         当前半数同意决议无法通过
       </p>
+      <div class="row filters">
+        <el-select v-model="position" placeholder="全部职位" clearable style="width: 140px" @change="resetAndLoad">
+          <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
+        </el-select>
+        <el-select v-model="building" placeholder="全部楼栋" clearable style="width: 140px" @change="onBuildingChange">
+          <el-option v-for="o in buildingOptions" :key="o.value" :label="o.value" :value="o.value" />
+        </el-select>
+        <el-select v-model="unitNo" placeholder="全部单元" clearable style="width: 140px" :disabled="!building" @change="resetAndLoad">
+          <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
+        </el-select>
+      </div>
     </div>
     <div class="card">
+      <el-empty v-if="!seats.length" description="暂无席位记录" />
       <el-table :data="seats" size="small">
-        <el-table-column label="持有人" min-width="180">
+        <el-table-column label="昵称" width="100">
           <template #default="{ row }">
-            <template v-if="row.user">{{ row.user.nickname || row.user.account_no }}（#{{ row.user.id }}）</template>
-            <template v-else>{{ row.holder?.unit_text }} · {{ row.holder?.owner_name }}</template>
+            <router-link v-if="row.user?.id" :to="`/users/${row.user.id}/profile`" class="user-link">{{ nicknameText(row) }}</router-link>
+            <template v-else>{{ nicknameText(row) }}</template>
+          </template>
+        </el-table-column>
+        <el-table-column label="姓名" width="70">
+          <template #default="{ row }">{{ nameText(row) }}</template>
+        </el-table-column>
+        <el-table-column label="联系电话" width="100">
+          <template #default="{ row }">{{ row.holder_detail?.phone_masked || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="专有部分坐落" width="140">
+          <template #default="{ row }">{{ unitText(row) }}</template>
+        </el-table-column>
+        <el-table-column label="专有部分类型" width="80">
+          <template #default="{ row }">{{ row.holder_detail?.unit_type || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="职位" width="80">
+          <template #default="{ row }">{{ positionLabel(row.position) }}</template>
+        </el-table-column>
+        <el-table-column label="状态" width="110">
+          <template #default="{ row }">
+            {{ statusLabel('seat', row.status) }}
+            <el-tag v-if="row.status === 'ACTIVE' && row.effective === false" size="small" type="warning">待生效</el-tag>
             <el-tag v-if="row.bind_state === 'PENDING_BIND'" size="small" type="warning">待绑定</el-tag>
             <el-tag v-if="row.bind_state === 'CONFLICT'" size="small" type="danger">待处理冲突</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="职位" width="130">
-          <template #default="{ row }">{{ positionLabel(row.position) }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="150">
-          <template #default="{ row }">
-            {{ statusLabel('seat', row.status) }}
-            <el-tag v-if="row.status === 'ACTIVE' && row.effective === false" size="small" type="warning">待生效</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="term_start" label="任期开始" width="130" />
-        <el-table-column prop="term_end" label="任期结束" width="130" />
-        <el-table-column label="操作" width="320">
+        <el-table-column prop="term_start" label="任期开始" width="85" />
+        <el-table-column prop="term_end" label="任期结束" width="85" />
+        <el-table-column label="操作" width="220">
           <template #default="{ row }">
             <template v-if="row.status === 'ACTIVE'">
-              <el-select v-model="changeTo[row.id]" placeholder="变更为" size="small" style="width: 120px">
+              <el-select v-model="changeTo[row.id]" placeholder="变更为" size="small" style="width: 110px">
                 <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
               </el-select>
               <el-button size="small" :disabled="!changeTo[row.id]" @click="change(row)">变更职位</el-button>
@@ -52,6 +78,40 @@
         </el-table-column>
       </el-table>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
+    </div>
+    <div class="card">
+      <el-collapse v-model="openedEnded" @change="onEndedToggle">
+        <el-collapse-item name="ended" :title="`资格失效 / 已结束（${endedTotal}）`">
+          <el-empty v-if="!endedSeats.length" description="暂无记录" />
+          <el-table v-else :data="endedSeats" size="small">
+            <el-table-column label="昵称" min-width="110">
+              <template #default="{ row }">{{ row.holder_detail?.nickname || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="姓名" min-width="100">
+              <template #default="{ row }">{{ row.holder_detail?.name || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="电话" width="120">
+              <template #default="{ row }">{{ row.holder_detail?.phone_masked || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="专有部分坐落" min-width="160">
+              <template #default="{ row }">{{ row.holder_detail?.unit_text || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="类型" width="100">
+              <template #default="{ row }">{{ row.holder_detail?.unit_type || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="职位" width="100">
+              <template #default="{ row }">{{ positionLabel(row.position) }}</template>
+            </el-table-column>
+            <el-table-column label="状态" width="100">
+              <template #default="{ row }">{{ statusLabel('seat', row.status) }}</template>
+            </el-table-column>
+            <el-table-column label="结束原因" min-width="130">
+              <template #default="{ row }">{{ row.end_reason || '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="term_end" label="任期结束" width="100" />
+          </el-table>
+        </el-collapse-item>
+      </el-collapse>
     </div>
 
     <el-dialog v-model="showCreate" title="赋予席位" width="480px">
@@ -82,7 +142,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
@@ -109,16 +169,63 @@ const configFields = [
   { key: 'term_months_rep', label: '业主代表任期（月）', min: 1, max: 120 }
 ]
 const positionLabel = (p) => positions.find((x) => x.value === p)?.label || p
+// 兼容旧响应（无 holder_detail）：回退到 user / holder 字段（AC-258-01 既有展示）
+const nicknameText = (row) => {
+  const name = row.holder_detail?.nickname || row.user?.nickname || row.user?.account_no
+  return name ? `${name}（#${row.user?.id}）` : '-'
+}
+const nameText = (row) => row.holder_detail?.name || row.holder?.owner_name || '-'
+const unitText = (row) => row.holder_detail?.unit_text || row.holder?.unit_text || '-'
 
-const { items: seats, total, page, pageSize, reload, goto } = usePaging({ fetch: (params) => admin.seats(params) })
+const position = ref('')
+const building = ref('')
+const unitNo = ref('')
+const buildingOptions = ref([])
+const unitOptions = ref([])
+const filters = computed(() => {
+  const f = { bucket: 'active' }
+  if (position.value) f.position = position.value
+  if (building.value) f.building = building.value
+  if (unitNo.value) f.unit_no = unitNo.value
+  return f
+})
+// AC-265-01：失效总数由 active 响应带回，折叠区标题在展开前即可显示条数
+const endedTotal = ref(0)
+const { items: seats, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
+  fetch: async (params) => {
+    const data = await admin.seats(params)
+    if (data && data.ended_count !== undefined) endedTotal.value = data.ended_count
+    return data
+  },
+  filters
+})
 const config = reactive({})
 const changeTo = reactive({})
 const showCreate = ref(false)
 const showConfig = ref(false)
 const form = reactive({ registry_owner_id: null, position: 'MEMBER', term_start: '' })
 const hint = ref(null)
+const openedEnded = ref([])
+const endedSeats = ref([])
+let endedLoaded = false
+
+async function loadOptions(buildingValue) {
+  try {
+    const data = await admin.unitOptions(buildingValue ? { building: buildingValue } : {})
+    return data.options || []
+  } catch (e) {
+    return []
+  }
+}
+
+async function onBuildingChange() {
+  unitNo.value = ''
+  unitOptions.value = building.value ? await loadOptions(building.value) : []
+  resetAndLoad()
+}
 
 async function load() {
+  buildingOptions.value = await loadOptions('')
   try {
     const [, configData] = await Promise.all([reload(), admin.committeeConfig()])
     Object.assign(config, configData)
@@ -126,6 +233,30 @@ async function load() {
   } catch (e) {
     ElMessage.error(errorText(e))
   }
+}
+
+async function resetAndLoad() {
+  try {
+    await pagingReset()
+    if (openedEnded.value.includes('ended')) await loadEnded()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function loadEnded() {
+  try {
+    const data = await admin.seats({ ...filters.value, bucket: 'ended', page: 1, page_size: 50 })
+    endedSeats.value = data.results || []
+    endedTotal.value = data.count || 0
+    endedLoaded = true
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function onEndedToggle(names) {
+  if (names.includes('ended')) await loadEnded()
 }
 
 async function gotoPage(n) {
@@ -146,6 +277,7 @@ async function create() {
     form.registry_owner_id = null
     ElMessage.success('已赋予')
     load()
+    if (endedLoaded) loadEnded()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -156,18 +288,21 @@ async function change(row) {
     await admin.updateSeat(row.id, { position: changeTo[row.id] })
     ElMessage.success('已变更')
     load()
+    if (endedLoaded) loadEnded()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
 }
 
 async function revoke(row) {
-  const name = row.user ? (row.user.nickname || row.user.account_no) : row.holder?.owner_name
+  const name = row.holder_detail?.name || row.holder?.owner_name ||
+    row.holder_detail?.nickname || row.user?.nickname || row.user?.account_no
   if (!(await confirmDanger('revokeSeat', { name }))) return
   try {
     await admin.deleteSeat(row.id)
     ElMessage.success('已撤销')
     load()
+    if (endedLoaded) loadEnded()
   } catch (e) {
     ElMessage.error(errorText(e))
   }
@@ -188,3 +323,9 @@ async function saveConfig() {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.filters { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.user-link { color: var(--accent); text-decoration: none; }
+.user-link:hover { text-decoration: underline; }
+</style>

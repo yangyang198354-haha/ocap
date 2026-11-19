@@ -11,6 +11,8 @@
 - [M-DE-016] 数据迁移上线前先跑只读预览命令，把 conflicts=0 作为 migrate 门控；停服务窗口内完成上传、预检、迁移与启动 — conf 0.6 · 证据 GR-E1-001 / deployment_plan DEPLOY-002~005 · 首见 2026-11-11 · 命中 1
 - [M-DE-017] 可逆数据迁移的反向仍可能因迁移后新增数据而冲突：标 MANUAL_ROLLBACK_REQUIRED，并准备 JSON 与整库两级备份 — conf 0.6 · 证据 GR-E1-001 / deployment_plan ROLLBACK-005、DEPLOY-001 · 首见 2026-11-11 · 命中 1
 - [M-DE-018] 无迁移的展示层增量可用“快照 → 后端解包重启 → 前端静态替换”四步部署，回滚按逆序用同一时间戳锚点恢复 — conf 0.8 · 证据 GR-E1-001 / GE1-2 / E2 部署成功、锚点 20261114194943 · 首见 2026-11-14 · 命中 1
+- [M-DE-044] CI 全量测试 job 已覆盖新增测试目录时无需改 CI；只需确认 Windows 与 Linux 的既有失败差异 — conf 0.6 · 证据 ocap_profile_ux-GROUP_E1-1-1 / .github/workflows/ci.yml:48-49 · 首见 2026-11-19 · 命中 1
+- [M-DE-045] 无令牌大文件 POST 同时打内网与反代入口，可用 401/413 无写入验证 nginx client_max_body_size — conf 0.6 · 证据 ocap_batch_1118-GROUP_E2-001-2 / deployment_report V-17 · 首见 2026-11-18 · 命中 1
 
 ## 用户偏好与禁止项
 

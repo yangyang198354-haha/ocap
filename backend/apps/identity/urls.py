@@ -2,11 +2,12 @@ from django.urls import path
 
 from .views import (
     AdminMembershipListView, AdminMembershipRevokeView, CancelAccountView,
-    MeView, PhoneBindView, PhoneChangeView,
+    MeView, PhoneBindView, PhoneChangeView, UserProfileView,
 )
 
 urlpatterns = [
     path("me", MeView.as_view()),
+    path("users/<int:user_id>/profile", UserProfileView.as_view()),
     path("me/phone/bind", PhoneBindView.as_view()),
     path("me/phone/change", PhoneChangeView.as_view()),
     path("me/cancel", CancelAccountView.as_view()),

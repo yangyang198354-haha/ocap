@@ -81,6 +81,38 @@ class IdentityService:
         }
 
     @staticmethod
+    def public_profile(user_id: int, viewer=None) -> dict:
+        """MOD-154 / IFC-370：他人可见的资料白名单（ADR-147）。
+
+        只返回昵称、头像、身份、签名与本人开启后的实名；禁止返回手机号、邮箱、生日、
+        账号编号、证件等敏感字段（REQ-NFUNC-052）。
+        """
+        from apps.committee.services import CommitteeQuery
+
+        user = User.objects.filter(id=user_id, status="ACTIVE").first()
+        if user is None:
+            raise ApiError("NOT_FOUND", "用户不存在", 404)
+        memberships = list(Membership.objects.filter(user=user, ended_at__isnull=True)
+                           .select_related("unit", "registry_owner"))
+        seats = list(Seat.objects.filter(user=user, status="ACTIVE"))
+        summary = identity_view(memberships=memberships, seats=seats)
+        real_name = None
+        if user.real_name_visible:
+            owners = [m.registry_owner.name for m in memberships
+                      if m.registry_owner_id and m.role in ("HEAD", "OWNER") and m.registry_owner]
+            real_name = owners[-1] if owners else None
+        return {
+            "id": user.id,
+            "nickname": user.nickname,
+            "avatar_url": user.avatar_url,
+            "identity": {"code": summary["identity_code"], "label": summary["identity_label"]},
+            "labels": CommitteeQuery.identity_labels(user.id),
+            "real_name": real_name,
+            "signature": user.signature or "",
+            "is_self": bool(viewer is not None and viewer.id == user.id),
+        }
+
+    @staticmethod
     def bind_phone(user, phone: str, code: str) -> dict:
         if not PHONE_RE.match(phone):
             raise ApiError("INVALID_TARGET", "手机号格式不正确")

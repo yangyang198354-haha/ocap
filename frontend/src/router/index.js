@@ -28,6 +28,8 @@ const routes = [
       { path: 'me/style', component: () => import('@/portal/me/MeStyle.vue') },
       { path: 'me/identity', component: UnitsPage, props: { section: 'identity' } },
       { path: 'me/profile', component: () => import('@/portal/me/MeProfile.vue') },
+      // MOD-162 / IFC-375：他人 profile 页（需登录，入口见各用户展示位）
+      { path: 'users/:user_id(\\d+)/profile', component: () => import('@/portal/UserProfile.vue') },
       { path: 'me/phone', component: () => import('@/portal/me/MePhone.vue') },
       { path: 'me/password', component: () => import('@/portal/me/MePassword.vue') },
       { path: 'me/email', component: () => import('@/portal/me/MeEmail.vue') },

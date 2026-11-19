@@ -22,7 +22,8 @@ SPECS = {
     "APPEAL_PROOF": {"ext": {"jpg", "jpeg", "png", "pdf"}, "single": 10 * 1024 * 1024, "count": 5, "total": None},
     "INVOICE": {"ext": {"jpg", "jpeg", "png", "pdf"}, "single": 10 * 1024 * 1024, "count": 10, "total": None},
     "INCOME_VOUCHER": {"ext": {"jpg", "jpeg", "png", "pdf"}, "single": 10 * 1024 * 1024, "count": 10, "total": None},
-    "AVATAR": {"ext": {"jpg", "jpeg", "png"}, "single": 2 * 1024 * 1024, "count": 1, "total": 2 * 1024 * 1024},
+    # MOD-156 / REQ-FUNC-257：头像上限 5 MB（前端常量与文案须同步）
+    "AVATAR": {"ext": {"jpg", "jpeg", "png"}, "single": 5 * 1024 * 1024, "count": 1, "total": 5 * 1024 * 1024},
 }
 
 MAGIC = {

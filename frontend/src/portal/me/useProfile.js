@@ -5,7 +5,10 @@ import { meApi } from '@/shared/api'
 import { errorText } from '@/shared/format'
 
 export function useProfile() {
-  const profile = reactive({ nickname: '', gender: 0, birthday: null, phone: '', email: '', avatar_url: '' })
+  const profile = reactive({
+    id: null, nickname: '', gender: 0, birthday: null, phone: '', email: '', avatar_url: '',
+    signature: '', real_name: '', real_name_visible: false, can_show_real_name: false
+  })
 
   async function loadProfile() {
     try {

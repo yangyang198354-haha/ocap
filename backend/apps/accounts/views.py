@@ -269,6 +269,7 @@ class ProfileView(APIView):
 
 def profile_view(user: User) -> dict:
     return {
+        "id": user.id,
         "account_no": user.account_no,
         "phone": mask_phone(user.phone) if user.phone else None,
         "nickname": user.nickname,
@@ -277,7 +278,24 @@ def profile_view(user: User) -> dict:
         "birthday": user.birthday,
         "email": mask_email(user.email) if user.email else None,
         "email_state": user.email_state,
+        # MOD-153 / IFC-368/369：签名档、实名开关与本人可见的实名（他人不可见）
+        "signature": user.signature or "",
+        "real_name_visible": user.real_name_visible,
+        "real_name": _own_real_name(user),
+        # AC-271-03：资格以有效产权认证为准，不随最高身份（如业委会职务）变化
+        "can_show_real_name": AccountService._is_verified_owner(user),
     }
+
+
+def _own_real_name(user: User) -> str | None:
+    """取最近一条有效产权认证对应的清册姓名；无则 None（ADR-148 决策）。"""
+    from apps.residency.models import Membership
+
+    membership = (Membership.objects.filter(
+        user=user, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+        registry_owner__isnull=False,
+    ).select_related("registry_owner").order_by("-id").first())
+    return membership.registry_owner.name if membership else None
 
 
 class ThemePreferenceView(APIView):

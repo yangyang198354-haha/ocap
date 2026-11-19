@@ -183,7 +183,7 @@ describe('管理端表格宽度（ADR-121，R-02，AC-231-02）', () => {
   it('TC-UNIT-875 / ADR-121 R-02：已知最宽的表格（AdminRegistry 1070、AdminSeats 1040、AdminUsers 注册用户 990）合计与实现记录一致，列含义与数量未变', () => {
     const by = Object.fromEntries(tables.map((t) => [t.id, t]))
     expect(by['AdminRegistry.vue#0']).toMatchObject({ cols: 9, total: 1070 })
-    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 6, total: 1040 })
+    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 10, total: 1070 })
     expect(by['AdminUsers.vue#1']).toMatchObject({ cols: 9, total: 990 })
     expect(by['AdminUsers.vue#0']).toMatchObject({ cols: 4, total: 480 })
     // 注册用户表列顺序与含义不变（AdminUsers.vue 注册用户表）

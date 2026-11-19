@@ -81,7 +81,7 @@ class Batch1118ContractTests(SeatHolderBase):
         parts = self.assert_ok(self.api("get", f"/resolutions/{res.id}/participants", token=token)).json()
         plist = text("portal/parts/ParticipantList.vue")
         read = set(re.findall(r"\bp\.(\w+)", plist))
-        self.assertEqual(read, {"avatar_url", "display_name", "voted_at"})
+        self.assertEqual(read, {"user_id", "avatar_url", "display_name", "voted_at"})
         self.assertLessEqual(read, set(parts["results"][0]))
         detail_src = text("portal/ResolutionDetail.vue")
         self.assertLessEqual(set(re.findall(r"data\??\.(\w+)", detail_src[detail_src.index("participants("):][:200])), {"results"})

@@ -4,7 +4,11 @@
     <h3 class="title">待我审批的同住人申请 <el-badge v-if="toReview.length" :value="toReview.length" /></h3>
     <p v-if="!toReview.length" class="muted">暂无待审批的同住人申请</p>
     <div v-for="item in toReview" :key="item.id" class="row list-item-top">
-      <span>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</span>
+      <span>
+        <router-link v-if="item.applicant?.id" :to="`/users/${item.applicant.id}/profile`">{{ item.applicant?.nickname || item.applicant?.account_no }}</router-link>
+        <template v-else>{{ item.applicant?.nickname || item.applicant?.account_no }}</template>
+        → {{ item.unit?.specific_part }}
+      </span>
       <span class="muted">{{ formatDateTime(item.created_at) }}</span>
       <el-button size="small" type="primary" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
       <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>

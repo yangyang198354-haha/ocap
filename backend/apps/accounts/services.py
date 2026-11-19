@@ -349,7 +349,8 @@ class AccountService:
 
     @staticmethod
     def update_profile(user: User, data: dict) -> User:
-        editable = {"nickname", "gender", "birthday", "email", "avatar_attachment_id"}
+        editable = {"nickname", "gender", "birthday", "email", "avatar_attachment_id",
+                    "signature", "real_name_visible"}
         forbidden = set(data) - editable
         if forbidden:
             raise ApiError("FIELD_NOT_EDITABLE", "该字段不可编辑")
@@ -390,8 +391,30 @@ class AccountService:
                 if row is None:
                     raise ApiError("INVALID_VALUE", "头像附件不存在")
             user.avatar_attachment_id = attachment_id
+        if "signature" in data:  # MOD-153 / REQ-FUNC-263：纯文本，≤100 字
+            signature = "" if data["signature"] is None else str(data["signature"]).strip()
+            if len(signature) > 100:
+                raise ApiError("INVALID_VALUE", "签名档不能超过 100 字")
+            user.signature = signature
+        if "real_name_visible" in data:  # MOD-153 / REQ-FUNC-262、C-83
+            visible = data["real_name_visible"]
+            if not isinstance(visible, bool):
+                raise ApiError("INVALID_VALUE", "实名展示开关取值不合法")
+            if visible and not AccountService._is_verified_owner(user):
+                raise ApiError("FORBIDDEN", "仅已验证产权业主可开启实名展示", 403)
+            user.real_name_visible = visible
         user.save()
         return user
+
+    @staticmethod
+    def _is_verified_owner(user: User) -> bool:
+        """MOD-153：是否存在有效产权认证且关联清册业主（实名来源）。"""
+        from apps.residency.models import Membership
+
+        return Membership.objects.filter(
+            user=user, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+            registry_owner__isnull=False,
+        ).exists()
 
     @staticmethod
     def verify_email(user: User, email: str, code: str) -> None:

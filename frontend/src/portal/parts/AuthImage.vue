@@ -1,12 +1,14 @@
-<!-- MOD-082 / IFC-280：带令牌取图（blob URL），卸载与 src 变化时释放 -->
+<!-- MOD-082 / IFC-280：带令牌取图（blob URL），卸载与 src 变化时释放
+     MOD-155 / REQ-FUNC-256：无头像或加载失败时回退内置默认头像（ADR-149） -->
 <template>
-  <img v-if="url" :src="url" :alt="alt" class="auth-image" :style="boxStyle" />
-  <span v-else class="auth-image auth-image-empty" :style="boxStyle">{{ alt || '无头像' }}</span>
+  <img v-if="url" :src="url" :alt="alt || '默认头像'" class="auth-image" :style="boxStyle" @error="release" />
+  <img v-else :src="avatarDefault" :alt="alt || '默认头像'" class="auth-image" :style="boxStyle" />
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { attachmentApi } from '@/shared/api'
+import avatarDefault from '@/assets/avatar-default.svg'
 
 const props = defineProps({
   src: { type: String, default: null },

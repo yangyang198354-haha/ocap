@@ -19,8 +19,9 @@
         <el-table-column label="启用" width="90">
           <template #default="{ row }">{{ yesNo(row.is_active) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="260">
           <template #default="{ row }">
+            <el-button size="small" @click="openDetail(row)">查看详情</el-button>
             <el-button size="small" @click="toggle(row)">{{ row.is_active ? '停用' : '启用' }}</el-button>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </template>
@@ -56,12 +57,58 @@
         <el-button type="primary" @click="create">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showDetail" title="审批流程详情" width="560px">
+      <template v-if="detailRow">
+        <el-form label-width="96px">
+          <el-form-item label="名称">
+            <el-input v-model="editForm.name" :disabled="!editing" maxlength="60" />
+          </el-form-item>
+          <el-form-item label="适用范围">
+            <el-select v-model="editForm.scope" :disabled="!editing" style="width: 100%">
+              <el-option label="决议" value="RESOLUTION" />
+              <el-option label="财务（报销/备用金）" value="EXPENSE" />
+              <el-option label="收入表" value="INCOME" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="审批方式">
+            <el-select v-model="editForm.mode" :disabled="!editing" style="width: 100%">
+              <el-option label="指定负责人审批" value="DESIGNATED" />
+              <el-option v-if="editForm.scope === 'RESOLUTION'" label="半数人员同意" value="HALF_MAJORITY" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="启用">
+            <el-switch v-model="editForm.is_active" :disabled="!editing" />
+          </el-form-item>
+          <el-form-item label="审批人">
+            <div v-if="editForm.mode === 'HALF_MAJORITY'" class="muted">无需设置审批人</div>
+            <div v-else class="approvers">
+              <p v-for="a in editApprovers" :key="a.id" class="row">
+                <b>{{ a.nickname || a.account_no }}</b>
+                <el-tag v-if="a.identity_label" size="small" type="info">{{ a.identity_label }}</el-tag>
+                <el-button v-if="editing" size="small" link @click="removeEditApprover(a.id)">移除</el-button>
+              </p>
+              <p v-if="!editApprovers.length" class="muted">暂无审批人</p>
+              <UserPicker v-if="editing" :model-value="null" placeholder="搜索并添加审批人" @change="addEditApprover" />
+            </div>
+          </el-form-item>
+        </el-form>
+      </template>
+      <template #footer>
+        <el-button @click="showDetail = false">关闭</el-button>
+        <el-button v-if="!editing" type="primary" @click="startEdit">编辑</el-button>
+        <template v-else>
+          <el-button @click="editing = false">取消编辑</el-button>
+          <el-button type="primary" @click="saveEdit">保存</el-button>
+        </template>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
 import { errorText } from '@/shared/format'
@@ -75,6 +122,61 @@ const showCreate = ref(false)
 const approvers = ref([])
 const form = reactive({ name: '', scope: 'RESOLUTION', mode: 'DESIGNATED' })
 const isHalfMajority = computed(() => form.mode === 'HALF_MAJORITY')
+
+// MOD-158：详情与编辑（复用 PUT /admin/approval/flows/{id}）
+const showDetail = ref(false)
+const editing = ref(false)
+const detailRow = ref(null)
+const editForm = reactive({ name: '', scope: 'RESOLUTION', mode: 'DESIGNATED', is_active: true })
+const editApprovers = ref([])
+
+function openDetail(row) {
+  detailRow.value = row
+  editing.value = false
+  editForm.name = row.name
+  editForm.scope = row.scope
+  editForm.mode = row.mode
+  editForm.is_active = row.is_active
+  editApprovers.value = (row.approvers || []).map((a) => ({ ...a }))
+  showDetail.value = true
+}
+
+function startEdit() {
+  editing.value = true
+}
+
+function addEditApprover(user) {
+  if (user && !editApprovers.value.some((a) => a.id === user.id)) editApprovers.value.push(user)
+}
+
+function removeEditApprover(id) {
+  editApprovers.value = editApprovers.value.filter((a) => a.id !== id)
+}
+
+async function saveEdit() {
+  if (detailRow.value.scope !== editForm.scope || detailRow.value.mode !== editForm.mode) {
+    try {
+      await ElMessageBox.confirm('修改适用范围或审批方式会影响后续审批，确认保存？', '确认修改', { type: 'warning' })
+    } catch (e) {
+      return
+    }
+  }
+  try {
+    await admin.updateFlow(detailRow.value.id, {
+      name: editForm.name,
+      scope: editForm.scope,
+      mode: editForm.mode,
+      is_active: editForm.is_active,
+      approver_ids: editForm.mode === 'HALF_MAJORITY' ? [] : editApprovers.value.map((a) => a.id)
+    })
+    ElMessage.success('已保存')
+    editing.value = false
+    showDetail.value = false
+    load()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
 
 // 切到半数同意：清空已选审批人（半数同意不设审批人）
 function onModeChange() {

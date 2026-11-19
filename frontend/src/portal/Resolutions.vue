@@ -46,7 +46,7 @@
         <div v-else class="vote-legend"><span>{{ modeText(item.approval_mode) }}：由指定负责人审批</span></div>
         <div class="res-foot">
           <span class="res-initiator">
-            发起人：{{ item.initiator?.display_name || '—' }}<template v-if="(item.initiator?.labels || []).length"> · {{ item.initiator.labels.join('、') }}</template>
+            发起人：<router-link v-if="item.initiator?.id" :to="`/users/${item.initiator.id}/profile`">{{ item.initiator?.display_name || '—' }}</router-link><template v-else>{{ item.initiator?.display_name || '—' }}</template><template v-if="(item.initiator?.labels || []).length"> · {{ item.initiator.labels.join('、') }}</template>
             <span class="mode-tag">{{ modeText(item.approval_mode) }}</span>
           </span>
           <span class="mono">{{ item.vote_deadline ? `截止 ${datetime(item.vote_deadline)}` : '无截止时间' }}</span>

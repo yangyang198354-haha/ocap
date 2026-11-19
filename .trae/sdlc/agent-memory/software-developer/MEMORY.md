@@ -11,6 +11,8 @@
 - [M-SD-024] 仅作用于某一端的主题覆盖要挂在 html 级属性（如 data-surface）上，不要挂布局根类：组件库弹层 Teleport 到 body — conf 0.6 · 证据 GR-C-001 / ADR-075 / bento.web.css 管理端作用域 · 首见 2026-11-11 · 命中 1
 - [M-SD-025] 管理端与用户端主题偏好使用独立设备键与独立账号接口；共用会互相覆盖 — conf 0.6 · 证据 GR-C-001 / adminStore.js:ADMIN_DEVICE_KEY / TC-UNIT-504 · 首见 2026-11-11 · 命中 1
 - [M-SD-026] 跨端展示字段由后端统一提供 display 文案，可避免 Web 与小程序各自实现空值与精度规则 — conf 0.6 · 证据 GR-C-001 / IFC-248 / 后端 572、前端 185、小程序 78 项通过 · 首见 2026-11-14 · 命中 1
+- [M-SD-041] 列表派生字段在批量序列化层预取关联集合（如 RegistryPhone），避免逐行 related manager 造成 N+1 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-1 / tests/integration/test_batch1118_seats.py:301 · 首见 2026-11-19 · 命中 1
+- [M-SD-042] 给隐私白名单接口加字段前先搜索测试中的反向字段断言，契约优先于便利 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-2 / CR-006 / TC-INT-1071 · 首见 2026-11-19 · 命中 1
 
 ## 用户偏好与禁止项
 

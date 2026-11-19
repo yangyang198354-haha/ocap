@@ -98,7 +98,7 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
   it('TC-INT-923 / REQ-NFUNC-044（旧 REQ-NFUNC-040）：api.js 导出的函数集合与契约基线一致（本批仅新增 meApi 的 3 个 registry-matches 函数）', () => {
     const names = Object.fromEntries(CLIENTS.map((c) => [c, Object.keys(EXPORTS[c] || {}).sort()]))
     // 改写：meApi 基线加入 confirmRegistryMatches / dismissRegistryMatches / registryMatches（IFC-343）
-    expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'verifyEmail'])
+    expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'userProfile', 'verifyEmail'])
     // F2（ocap_batch_1118，IFC-363）：基线集合加 unitApi.submitAppeal、resolutionApi.participants、admin.unitOptions、admin.ownerCandidates
     expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal'])
     expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'participants', 'resubmit', 'vote', 'withdraw'])

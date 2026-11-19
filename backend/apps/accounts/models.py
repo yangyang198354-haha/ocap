@@ -27,6 +27,10 @@ class User(models.Model):
     cancelled_at = models.DateTimeField(null=True, blank=True)
     # MOD-023：界面风格偏好；NULL = 未选择（客户端按默认风格 bento 解释）
     theme_key = models.CharField(max_length=32, null=True, blank=True)
+    # MOD-153 / REQ-FUNC-263：签名档（纯文本，≤100 字）
+    signature = models.CharField(max_length=100, blank=True, default="")
+    # MOD-153 / REQ-FUNC-262：实名展示开关，默认关闭（C-83）
+    real_name_visible = models.BooleanField(default=False)
 
     is_admin_principal = False
     is_authenticated = True

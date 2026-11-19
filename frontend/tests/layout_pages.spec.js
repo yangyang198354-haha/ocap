@@ -448,7 +448,7 @@ describe('个人中心各页（US-212/213/220）', () => {
     expect(useAuthStore(pinia).me.profile.nickname).toBe('小红')
   })
 
-  it('TC-INT-901 / AC-213-02：昵称保存成功提示"已保存"；3MB png 头像被拒绝提示"头像不能超过 2 MB"且不发上传请求', async () => {
+  it('TC-INT-901 / AC-213-02：昵称保存成功提示"已保存"；6MB png 头像被拒绝提示"头像不能超过 5 MB"且不发上传请求', async () => {
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
     http.get.mockImplementation(base())
@@ -459,8 +459,8 @@ describe('个人中心各页（US-212/213/220）', () => {
     await flush()
     expect(success).toHaveBeenCalledWith('已保存')
     const before = wrapper.findComponent({ name: 'ElUpload' }).props('beforeUpload')
-    expect(before({ name: 'a.png', type: 'image/png', size: 3 * 1024 * 1024 })).toBe(false)
-    expect(error).toHaveBeenCalledWith('头像不能超过 2 MB')
+    expect(before({ name: 'a.png', type: 'image/png', size: 6 * 1024 * 1024 })).toBe(false)
+    expect(error).toHaveBeenCalledWith('头像不能超过 5 MB')
     expect(http.post.mock.calls.filter((c) => c[0] === '/attachments')).toHaveLength(0)
   })
 

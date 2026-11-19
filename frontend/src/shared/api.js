@@ -28,6 +28,8 @@ export const meApi = {
   // 当前生效的规则限制（IFC-272）
   limits: () => get('/system/limits'),
   profile: () => get('/me/profile'),
+  // 他人 profile 白名单（IFC-370 / ADR-147）：昵称、头像、身份、签名、可选实名
+  userProfile: (userId) => get(`/users/${userId}/profile`),
   updateProfile: (data) => http.patch('/me/profile', data),
   // 界面风格偏好（IFC-142/143）：{ theme: string | null }
   theme: () => get('/me/theme'),

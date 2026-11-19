@@ -9,6 +9,7 @@
 - [M-SA-006] `Membership.source` 仅 12 字符，新来源值须 ≤12，否则把来源放进审计 detail — conf 0.6 · 证据 GR-B-001 / apps/residency/models.py:16 · 首见 2026-11-10 · 命中 1
 - [M-SA-010] DRF 列表增加跨表派生字段优先固定 prefetch + 应用层计算，并用“每页查询数不随行数增长”测试守 N+1；跨表搜索用 Exists 避免 distinct 放大 — conf 0.6 · 证据 GR-B-001-F02 / TC-INT-397 · 首见 2026-11-11 · 命中 1
 - [M-SA-011] 共享展示型聚合函数被多个输出面复用时，改口径前须枚举全部消费方，避免只改首页遗漏决议/报销文案 — conf 0.6 · 证据 GR-B-001 / GB-3 / module_design IFC-247 · 首见 2026-11-14 · 命中 1
+- [M-SA-029] 列表已返回的聚合摘要足以支撑详情视图时，不为详情新增端点，减少分页与权限一致性成本 — conf 0.6 · 证据 ocap_profile_ux-GROUP_B-1-1 / approval/views.py:16-22 · 首见 2026-11-18 · 命中 1
 
 ## 用户偏好与禁止项
 

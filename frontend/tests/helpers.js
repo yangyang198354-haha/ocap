@@ -14,6 +14,7 @@ export async function mountPage(component, { path = '/', props = {}, pinia: shar
     routes: [
       { path: '/', component: { template: '<div />' } },
       { path: '/polls/:id', component: { template: '<div />' } },
+      { path: '/users/:user_id(\\d+)/profile', component: { template: '<div />' } },
       { path: '/:pathMatch(.*)*', component: { template: '<div />' } }
     ]
   })

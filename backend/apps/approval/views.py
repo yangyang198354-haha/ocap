@@ -14,11 +14,17 @@ from .services import ApprovalEngine, subject_title
 
 
 def flow_view(flow: ApprovalFlow) -> dict:
+    from apps.committee.services import CommitteeQuery
+
+    approvers = []
+    for a in flow.approvers.select_related("user"):
+        labels = CommitteeQuery.identity_labels(a.user_id)
+        approvers.append({"id": a.user_id, "nickname": a.user.nickname,
+                          "identity_label": labels[0] if labels else "业委会成员"})
     return {
         "id": flow.id, "scope": flow.scope, "name": flow.name, "mode": flow.mode,
         "is_active": flow.is_active,
-        "approvers": [{"id": a.user_id, "nickname": a.user.nickname}
-                      for a in flow.approvers.select_related("user")],
+        "approvers": approvers,
     }
 
 

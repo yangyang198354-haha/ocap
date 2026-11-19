@@ -223,8 +223,9 @@ class ParticipationTests(ResBase):
 
 class ParticipantsEndpointTests(ResBase):
     def test_tc_int_1071_participants_fields_order_and_privacy(self):
-        """TC-INT-1071 / AC-251-01/02、NFUNC-046(3)：3 人参与（第 3 人无头像、无昵称）→ count=3，每项键恰为 display_name/avatar_url/voted_at，按参与时间升序；
-        无 choice、user_id、手机号、真实姓名；未参与者（含待绑定）不列；普通用户可见；昵称为空时用账号编号。"""
+        """TC-INT-1071 / AC-251-01/02、NFUNC-046(3)、AC-270-01：3 人参与（第 3 人无头像、无昵称）→ count=3，
+        每项键恰为 user_id/display_name/avatar_url/voted_at，按参与时间升序（user_id 用于跳转他人 profile）；
+        无 choice、手机号、真实姓名；未参与者（含待绑定）不列；普通用户可见；昵称为空时用账号编号。"""
         self.bound_members(3)
         for (user, _), name in zip(self.members, ("委员甲", "委员乙", None)):
             user.nickname = name
@@ -244,14 +245,15 @@ class ParticipantsEndpointTests(ResBase):
         self.assertEqual((body["mode"], body["count"]), ("HALF_MAJORITY", 3))
         self.assertEqual(set(body), {"mode", "count", "results"})
         for item in body["results"]:
-            self.assertEqual(set(item), {"display_name", "avatar_url", "voted_at"})
+            self.assertEqual(set(item), {"user_id", "display_name", "avatar_url", "voted_at"})
+        self.assertEqual([i["user_id"] for i in body["results"]], [u.id for u, _ in self.members])
         self.assertEqual([i["display_name"] for i in body["results"]], ["委员甲", "委员乙", self.members[2][0].account_no])
         self.assertEqual(body["results"][0]["avatar_url"], "/api/v1/attachments/00000000-0000-0000-0000-000000000001/download")
         self.assertIsNone(body["results"][2]["avatar_url"])
         text = resp.content.decode()
         for user, _ in self.members:
             self.assertNotIn(user.phone, text)
-        for forbidden in ("choice", "AGREE", "DISAGREE", "ABSTAIN", "user_id", "voter", "phone", "real_name"):
+        for forbidden in ("choice", "AGREE", "DISAGREE", "ABSTAIN", "voter", "phone", "real_name"):
             self.assertNotIn(forbidden, text)
         self.assertNotIn("待绑定", text)
 

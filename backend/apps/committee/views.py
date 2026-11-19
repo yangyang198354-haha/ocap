@@ -1,6 +1,7 @@
 """业委会视图（IFC-060/061）。"""
 from datetime import timedelta
 
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from apps.core.errors import ApiError, NotFound
 from apps.core.masking import mask_phone
 from apps.core.permissions import IsAdmin
 from apps.core.serializers import page_response
+from apps.residency.models import Membership
 from apps.residency.services import MembershipService
 
 from .effective import is_effective
@@ -21,45 +23,140 @@ from django.utils.dateparse import parse_date
 
 TERM_START_MAX_DAYS = 5 * 366  # 开始日上界：今天起约 5 年（OQ-04，待用户确认）
 
+ENDED_STATUSES = ("REVOKED", "EXPIRED", "INVALIDATED", "REPLACED", "MERGED")
 
-def seat_view(seat: Seat) -> dict:
+
+def seat_view(seat: Seat, holder_detail: dict | None = None) -> dict:
     user = seat.user
     is_registry_holder = bool(seat.holder_owner_id or seat.holder_name)
     if user is None:
         bind_state = "CONFLICT" if seat.bind_conflict_at else "PENDING_BIND"
     else:
         bind_state = "BOUND"
+    detail = holder_detail if holder_detail is not None else _holder_detail_single(seat)
     return {
         "id": seat.id, "position": seat.position,
         "user": ({"id": user.id, "account_no": user.account_no, "nickname": user.nickname,
                   "phone": mask_phone(user.phone) if user.phone else None} if user is not None else None),
         "term_start": seat.term_start, "term_end": seat.term_end, "status": seat.status,
+        "end_reason": seat.end_reason,
         "effective": is_effective(seat, timezone.localdate()),
         # IFC-349：持有人信息；不含手机号
         "holder": {"kind": "REGISTRY_OWNER" if is_registry_holder else "USER",
                    "unit_text": seat.holder_unit_text or None, "owner_name": seat.holder_name or None},
+        "holder_detail": detail,
         "bind_state": bind_state,
+    }
+
+
+def _holder_detail_single(seat: Seat) -> dict:
+    """MOD-157：单个席位的持有人分列信息（详情/新建响应使用）。"""
+    membership = None
+    if seat.user_id:
+        membership = (Membership.objects.filter(
+            user_id=seat.user_id, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+        ).select_related("unit", "registry_owner").order_by("-id").first())
+    owner = seat.holder_owner if seat.holder_owner_id else None
+    return _build_holder_detail(seat, membership, owner)
+
+
+def _holder_details(seats: list) -> dict[int, dict]:
+    """MOD-157：批量构造持有人明细，避免列表 N+1（M-SA-010）。"""
+    from apps.registry.models import RegistryPhone
+
+    user_ids = [s.user_id for s in seats if s.user_id]
+    memberships = {}
+    if user_ids:
+        for m in (Membership.objects.filter(
+                user_id__in=user_ids, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+        ).select_related("unit", "registry_owner").order_by("-id")):
+            memberships.setdefault(m.user_id, m)
+    owner_ids = [s.holder_owner_id for s in seats if s.holder_owner_id]
+    owner_phones = {}
+    if owner_ids:
+        for row in RegistryPhone.objects.filter(owner_id__in=owner_ids).values("owner_id", "phone"):
+            owner_phones.setdefault(row["owner_id"], row["phone"])
+    return {s.id: _build_holder_detail(s, memberships.get(s.user_id), s.holder_owner,
+                                       owner_phones.get(s.holder_owner_id))
+            for s in seats}
+
+
+def _build_holder_detail(seat: Seat, membership, owner, owner_phone=None) -> dict:
+    from apps.registry import display as registry_display
+
+    unit = membership.unit if membership is not None else (owner.unit if owner is not None else None)
+    name = None
+    if owner is not None:
+        name = owner.name or None
+    if name is None and seat.holder_name:
+        name = seat.holder_name
+    nickname = None
+    if seat.user is not None:
+        nickname = seat.user.nickname or seat.user.account_no
+    phone = None
+    if seat.user_id and seat.user.phone:
+        phone = mask_phone(seat.user.phone)
+    elif owner is not None:
+        if owner_phone is None and hasattr(owner, "phones"):
+            first_phone = owner.phones.first()
+            owner_phone = first_phone.phone if first_phone is not None else None
+        if owner_phone:
+            phone = mask_phone(owner_phone)
+    return {
+        "nickname": nickname,
+        "name": name,
+        "phone_masked": phone,
+        "unit_text": (unit.specific_part if unit is not None else None) or (seat.holder_unit_text or None),
+        "unit_type": registry_display.unit_type_label(unit) if unit is not None else None,
+        "building": unit.building if unit is not None else None,
+        "unit_no": unit.unit_no if unit is not None else None,
+        "floor": unit.floor if unit is not None else None,
     }
 
 
 class SeatSerializer:
     def __init__(self, rows, many=False, context=None):
-        rows = rows if many else [rows]
-        self.data = [seat_view(r) for r in rows]
+        rows = list(rows) if many else [rows]
+        details = _holder_details(rows)
+        self.data = [seat_view(r, details.get(r.id)) for r in rows]
 
 
 class AdminSeatListCreateView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        qs = Seat.objects.select_related("user").order_by("-id")
+        qs = Seat.objects.select_related("user", "holder_owner__unit").order_by("-id")
         position = request.query_params.get("position")
         status_param = request.query_params.get("status")
         if position:
             qs = qs.filter(position=position)
         if status_param:
             qs = qs.filter(status=status_param)
-        return page_response(qs, request, SeatSerializer)
+        # MOD-157 / IFC-372：分桶与楼栋/单元/楼层过滤（ADR-152）
+        bucket = request.query_params.get("bucket", "active")
+        ended_count = None
+        if bucket == "active":
+            ended_count = qs.filter(status__in=ENDED_STATUSES).count()  # AC-265-01：折叠区标题条数
+            qs = qs.filter(status="ACTIVE")
+        elif bucket == "ended":
+            qs = qs.filter(status__in=ENDED_STATUSES)
+        else:
+            raise ApiError("INVALID_QUERY", "bucket 取值不合法")
+        for param, field in (("building", "building"), ("unit_no", "unit_no"), ("floor", "floor")):
+            value = request.query_params.get(param)
+            if not value:
+                continue
+            member_units = Membership.objects.filter(
+                user_id=OuterRef("user_id"), ended_at__isnull=True,
+                **{f"unit__{field}": value},
+            ).values("user_id")
+            qs = qs.filter(
+                Q(**{f"holder_owner__unit__{field}": value}) | Q(Exists(member_units))
+            )
+        response = page_response(qs, request, SeatSerializer)
+        if ended_count is not None:
+            response.data["ended_count"] = ended_count
+        return response
 
     def post(self, request):
         data = request.data or {}

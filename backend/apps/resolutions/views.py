@@ -156,7 +156,8 @@ def _ensure_can_view(row: Resolution, user) -> None:
 
 
 class ResolutionParticipantsView(APIView):
-    """GET /resolutions/{id}/participants（IFC-359）：只返回昵称、头像、参与时间；无选项、手机号、真实姓名。"""
+    """GET /resolutions/{id}/participants（IFC-359）：返回昵称、头像、参与时间与 user_id（用于跳转 profile）；
+    无选项、手机号、真实姓名。"""
     permission_classes = [IsMember]
 
     def get(self, request, resolution_id: int):
@@ -167,8 +168,9 @@ class ResolutionParticipantsView(APIView):
         if row.approval_mode != "HALF_MAJORITY":
             return Response({"mode": row.approval_mode, "count": 0, "results": []})
         votes = (row.votes.filter(revision=row.revision).select_related("voter").order_by("voted_at", "id"))
-        results = [{"display_name": v.voter.nickname or v.voter.account_no, "avatar_url": v.voter.avatar_url,
-                    "voted_at": v.voted_at} for v in votes]
+        results = [{"user_id": v.voter_id,
+                    "display_name": v.voter.nickname or v.voter.account_no,
+                    "avatar_url": v.voter.avatar_url, "voted_at": v.voted_at} for v in votes]
         return Response({"mode": row.approval_mode, "count": len(results), "results": results})
 
 

@@ -1,4 +1,5 @@
 """身份视图（IFC-030~034）。"""
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -31,6 +32,15 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(IdentityService.me(request.user))
+
+
+class UserProfileView(APIView):
+    """MOD-154 / IFC-370：登录用户查看他人 profile（字段白名单，ADR-147）。"""
+
+    permission_classes = [IsMember]
+
+    def get(self, request, user_id: int):
+        return Response(IdentityService.public_profile(user_id, viewer=request.user))
 
 
 class PhoneBindView(APIView):
@@ -91,21 +101,51 @@ class MembershipSerializer:
         } for m in rows]
 
 
+def _owner_unit_ids(term: str):
+    """AC-269-01：按清册业主姓名反查专有部分，使该业主名下的同住人也进入结果。"""
+    return Membership.objects.filter(
+        ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+        registry_owner__name__icontains=term,
+    ).values("unit_id")
+
+
 class AdminMembershipListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
         qs = (Membership.objects.filter(ended_at__isnull=True)
-              .select_related("unit", "user").order_by("-id"))
+              .select_related("unit", "user", "registry_owner").order_by("-id"))
         role = request.query_params.get("role")
         if role:
             qs = qs.filter(role=role)
+        # MOD-159 / IFC-374：楼栋/单元/楼层过滤与姓名/电话搜索（ADR-153）
+        building = request.query_params.get("building")
+        unit_no = request.query_params.get("unit_no")
+        floor = request.query_params.get("floor")
+        if building:
+            qs = qs.filter(unit__building=building)
+        if unit_no:
+            qs = qs.filter(unit__unit_no=unit_no)
+        if floor:
+            qs = qs.filter(unit__floor=floor)
+        name = request.query_params.get("name", "")[:32]
+        if name:
+            qs = qs.filter(Q(registry_owner__name__icontains=name)
+                           | Q(unit_id__in=_owner_unit_ids(name)))
+        phone = request.query_params.get("phone", "").strip()
+        if phone:
+            if not phone.isdigit() or not 4 <= len(phone) <= 11:
+                raise ApiError("INVALID_QUERY", "phone 须为 4~11 位数字")
+            if len(phone) == 4:
+                qs = qs.filter(user__phone__endswith=phone)
+            else:
+                qs = qs.filter(user__phone__icontains=phone)
         q = request.query_params.get("q", "")[:32]
         if q:
-            from django.db.models import Q
-
             qs = qs.filter(Q(user__account_no__icontains=q) | Q(user__nickname__icontains=q)
-                           | Q(unit__specific_part__icontains=q))
+                           | Q(unit__specific_part__icontains=q)
+                           | Q(registry_owner__name__icontains=q)
+                           | Q(unit_id__in=_owner_unit_ids(q)))
         return page_response(qs, request, MembershipSerializer)
 
 

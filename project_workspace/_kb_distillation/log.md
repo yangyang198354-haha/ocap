@@ -314,3 +314,11 @@
 | 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-DE-043 | committed |
 | 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 晋升→M-PM-011 | committed |
 | 2026-11-18T20:39:00+08:00 | ocap_half_majority_fix-GROUP_Z-001 | 通用候选 2（枚举互斥写入端校验 / 错位缺陷双向断言）→ 待复现 | pending |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_A-1-1 | 晋升→M-RA-012 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_A-1-2 | 晋升→M-RA-013 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_B-1-1 | 晋升→M-SA-029 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_C-1-1 | 晋升→M-SD-041 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_C-1-2 | 晋升→M-SD-042 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_D-1-1 | 晋升→M-TE-043 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_E1-1-1 | 晋升→M-DE-044 | committed |
+| 2026-11-19T00:32:00+08:00 | ocap_batch_1118-GROUP_E2-001-2 | 晋升→M-DE-045 | committed |

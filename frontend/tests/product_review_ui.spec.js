@@ -231,18 +231,18 @@ describe('个人中心 me/* 各页（原 Me.vue）', () => {
     expect(card.findAll('button').map((b) => b.text())).toEqual(['认证产权'])
   })
 
-  it('TC-UNIT-531 / AC-165-03：更换头像处提示"jpg/png，不超过 2 MB"，选择器仅允许 jpg/png；超大或错误格式在上传前被拒', async () => {
+  it('TC-UNIT-531 / AC-165-03：更换头像处提示"jpg/png，不超过 5 MB"，选择器仅允许 jpg/png；超大或错误格式在上传前被拒', async () => {
     const error = vi.spyOn(ElMessage, 'error').mockImplementation(() => {})
     const { wrapper } = await mountMe({}, MeProfile)
-    expect(wrapper.text()).toContain('jpg/png，不超过 2 MB')
+    expect(wrapper.text()).toContain('jpg/png，不超过 5 MB')
     expect(wrapper.find('input[type="file"]').attributes('accept')).toBe('.jpg,.jpeg,.png')
     const upload = wrapper.findComponent({ name: 'ElUpload' })
     const before = upload.props('beforeUpload')
     expect(before({ name: 'a.gif', type: 'image/gif', size: 10 })).toBe(false)
-    expect(before({ name: 'a.png', type: 'image/png', size: 2 * 1024 * 1024 + 1 })).toBe(false)
-    expect(before({ name: 'a.png', type: 'image/png', size: 2 * 1024 * 1024 })).toBe(true)
+    expect(before({ name: 'a.png', type: 'image/png', size: 5 * 1024 * 1024 + 1 })).toBe(false)
+    expect(before({ name: 'a.png', type: 'image/png', size: 5 * 1024 * 1024 })).toBe(true)
     expect(error).toHaveBeenCalledWith('头像仅支持 jpg/png 格式')
-    expect(error).toHaveBeenCalledWith('头像不能超过 2 MB')
+    expect(error).toHaveBeenCalledWith('头像不能超过 5 MB')
   })
 
   it('TC-UNIT-532 / AC-165-01：保存生日提交 YYYY-MM-DD；留空提交 null（选填）', async () => {

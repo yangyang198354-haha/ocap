@@ -18,7 +18,7 @@
         <el-tag type="info">弃权 {{ item.vote_counts.abstain }}</el-tag>
       </div>
       <div v-if="item.participation" class="participation-line mt-12">
-        发起人：{{ item.initiator?.display_name }} · 已参与 {{ item.participation.voted }} / {{ item.participation.expected }}
+        发起人：<router-link v-if="item.initiator?.id" :to="`/users/${item.initiator.id}/profile`">{{ item.initiator?.display_name }}</router-link><template v-else>{{ item.initiator?.display_name }}</template> · 已参与 {{ item.participation.voted }} / {{ item.participation.expected }}
       </div>
       <div class="mt-12">
         <ParticipantList :items="participants" :mode="item.approval_mode" />

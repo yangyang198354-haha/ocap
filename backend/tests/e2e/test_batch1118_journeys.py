@@ -112,7 +112,7 @@ class SeatGrantJourney(SeatHolderBase):
             self.assert_ok(self.api("post", f"/resolutions/{rid}/votes", {"choice": choice}, token=t))
         parts = self.assert_ok(self.api("get", f"/resolutions/{rid}/participants", token=gtoken)).json()
         self.assertEqual(parts["count"], 2)
-        self.assertTrue(all(set(p) == {"display_name", "avatar_url", "voted_at"} for p in parts["results"]))
+        self.assertTrue(all(set(p) == {"user_id", "display_name", "avatar_url", "voted_at"} for p in parts["results"]))
         self.assertEqual(self.api("get", f"/resolutions/{rid}", token=gtoken).json()["participation"], {"voted": 2, "expected": 4})
         # 业主甲首次注册 → 手机号匹配确认
         user_json, token, _ = self.register(phone=phone)

@@ -34,6 +34,11 @@ export function usePaging(opts) {
     page.value = 1
     return load()
   }
+  // REQ-FUNC-283：切换每页条数后回到第 1 页重新加载
+  const setPageSize = (n) => {
+    pageSize.value = Math.min(Math.max(Number(n) || 20, 1), 100)
+    return resetAndLoad()
+  }
 
-  return { items, total, page, pageSize, loading, reload, goto, resetAndLoad }
+  return { items, total, page, pageSize, loading, reload, goto, resetAndLoad, setPageSize }
 }

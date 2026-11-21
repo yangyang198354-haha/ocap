@@ -138,10 +138,10 @@ class FieldContractTests(ApiTestBase):
         identities, profile = resp.data["identities"], resp.data["profile"]
         self.assertIsInstance(identities, dict)
         self.assertEqual(set(identities), {"is_guest", "units", "committee", "labels", "summary"})
-        self.assertEqual(identities["summary"], {"code": "CHAIR", "label": "主任"})
+        self.assertEqual(identities["summary"], {"code": "CHAIR", "label": "业委会主任"})
         self.assertEqual(identities["units"][0]["role_label"], "产权业主")
         self.assertIsInstance(identities["labels"], list)
-        self.assertEqual(identities["labels"], ["主任"])
+        self.assertEqual(identities["labels"], ["业委会主任"])
         self.assertEqual(identities["committee"]["position"], "CHAIR")
         id_re = re.compile(r"\bme\??\.identities\??\.(\w+)")
         committee_re = re.compile(r"\bidentities\??\.committee\??\.(\w+)")

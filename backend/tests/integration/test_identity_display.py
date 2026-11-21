@@ -83,7 +83,7 @@ class IdentityDisplayTests(ApiTestBase):
         Membership.objects.create(user=user, unit=unit, role="HEAD", source="REGISTRY",
                                   active_slot=1, head_slot=1)
         self.make_seat(user, "CHAIR")
-        self.assertEqual(self.api("get", "/me", token=token).data["identities"]["labels"], ["主任"])
+        self.assertEqual(self.api("get", "/me", token=token).data["identities"]["labels"], ["业委会主任"])
 
         user2, token2 = self.make_user()
         unit2 = self.make_display_unit(building="3栋", unit_no="", floor="", room="D001",

@@ -160,7 +160,7 @@ class MembershipFilterTests(ApiTestBase):
         self.assertEqual(count("?building=9栋"), 0)
         self.assertEqual(count("?name=李四"), 2)  # AC-269-01：含同住人
         self.assertEqual(count(f"?phone={phone[-4:]}"), 1)
-        self.assertEqual(count("?q=1001"), 2)
+        self.assertEqual(count("?unit_keyword=1001"), 2)  # REQ-FUNC-284：专有部分标识/户号独立过滤
         self.assert_error(self.api("get", "/admin/memberships?phone=12ab", token=admin_token),
                           400, "INVALID_QUERY")
 

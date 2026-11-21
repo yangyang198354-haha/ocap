@@ -273,14 +273,14 @@ describe('AdminAppeals.vue', () => {
     return wrapper
   }
 
-  it('TC-UNIT-677 / AC-197-01：每条申诉显示"申诉编码 #123"、账号、昵称、产权人名字、申诉时间、专有部分坐落、缩略图格数=资料数；无完整手机号', async () => {
+  it('TC-UNIT-677 / AC-197-01、REQ-FUNC-285：每条申诉以表格行显示编码、账号、昵称、产权人、申诉时间、专有部分与缩略图（最多 3 个）；无完整手机号', async () => {
     const wrapper = await mountAppeals()
-    const first = wrapper.findAll('.list-item')[0]
-    expect(first.text()).toContain('申诉编码 #123')
-    expect(first.text()).toContain('账号：A001')
-    expect(first.text()).toContain('昵称：小明')
-    expect(first.text()).toContain('产权人名字：张三')
-    expect(first.text()).toContain('申诉时间：2026-11-16 10:00')
+    const first = wrapper.findAll('tbody tr')[0]
+    expect(first.text()).toContain('#123')
+    expect(first.text()).toContain('A001')
+    expect(first.text()).toContain('小明')
+    expect(first.text()).toContain('张三')
+    expect(first.text()).toContain('2026-11-16 10:00')
     expect(first.text()).toContain('商铺建设南路142号1号')
     expect(first.findAll('.proof-cell')).toHaveLength(3)
     expect(wrapper.text()).not.toMatch(/1[3-9]\d{9}/)
@@ -288,9 +288,9 @@ describe('AdminAppeals.vue', () => {
 
   it('TC-UNIT-678 / AC-197-02/03：无昵称显示"未设置"；旧申诉无产权人名字显示"未提供"；无资料不渲染缩略图区；页面无报错', async () => {
     const wrapper = await mountAppeals()
-    const second = wrapper.findAll('.list-item')[1]
-    expect(second.text()).toContain('昵称：未设置')
-    expect(second.text()).toContain('产权人名字：未提供')
+    const second = wrapper.findAll('tbody tr')[1]
+    expect(second.text()).toContain('未设置')
+    expect(second.text()).toContain('未提供')
     expect(second.findAll('.proof-cell')).toHaveLength(0)
   })
 
@@ -298,9 +298,9 @@ describe('AdminAppeals.vue', () => {
     const warn = vi.spyOn(ElMessage, 'warning').mockImplementation(() => {})
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const wrapper = await mountAppeals()
-    const second = wrapper.findAll('.list-item')[1]
-    expect(second.text()).toContain('申诉人无手机号：通过后清册只写姓名、不写联系电话')
-    expect(wrapper.findAll('.list-item')[0].text()).not.toContain('申诉人无手机号')
+    const second = wrapper.findAll('tbody tr')[1]
+    expect(second.text()).toContain('通过后清册只写姓名、不写联系电话')
+    expect(wrapper.findAll('tbody tr')[0].text()).not.toContain('通过后清册')
     adminHttp.post.mockResolvedValue({ status: 'APPROVED', registry_update: { result: 'OWNER_ADDED', owner_phone_written: false, notice: '该产权人无联系电话' } })
     const before = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/appeals').length
     await second.findAll('button').find((b) => b.text() === '通过').trigger('click')
@@ -317,13 +317,13 @@ describe('AdminAppeals.vue', () => {
     for (const [code, message] of [['PHONE_OWNED_BY_OTHER', '该手机号已登记在本专有部分的另一位业主名下，无法更新清册'], ['REGISTRY_UPDATE_FAILED', '清册更新失败，申诉保持待审']]) {
       adminHttp.post.mockRejectedValueOnce({ code, message })
       const before = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/appeals').length
-      await wrapper.findAll('.list-item')[0].findAll('button').find((b) => b.text() === '通过').trigger('click')
+      await wrapper.findAll('tbody tr')[0].findAll('button').find((b) => b.text() === '通过').trigger('click')
       await flush()
       expect(error).toHaveBeenLastCalledWith(message)
       expect(adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/appeals').length).toBe(before)
     }
     expect(success).not.toHaveBeenCalled()
-    expect(wrapper.findAll('.list-item')).toHaveLength(2)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2)
   })
 
   it('TC-UNIT-681 / AC-198-01：点击第 2 张缩略图弹出大图（取该资料原图），上一份/下一份可切换；关闭后列表不重新加载、筛选保持', async () => {
@@ -351,7 +351,7 @@ describe('AdminAppeals.vue', () => {
     await flush()
     expect(listCalls()).toBe(before)
     expect(wrapper.find('.el-select').exists()).toBe(true)
-    expect(wrapper.findAll('.list-item')).toHaveLength(2)
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2)
   })
 })
 

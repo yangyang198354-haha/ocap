@@ -8,8 +8,8 @@
         <el-button size="small" @click="loadHousing">重试</el-button>
       </div>
       <template v-else>
-        <div class="row">
-          <span>汇总身份：<el-tag>{{ housing.summary.label }}</el-tag></span>
+        <div class="row summary-row">
+          <span class="summary-identity">汇总身份：<el-tag size="large" class="summary-tag">{{ housing.summary.label }}</el-tag></span>
           <span class="real-names">真实姓名：{{ (housing.real_names || []).join('、') || '—' }}</span>
         </div>
         <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
@@ -108,3 +108,9 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.summary-row { align-items: baseline; }
+.summary-identity { font-size: 16px; }
+.summary-tag { font-size: 15px; padding: 0 12px; }
+</style>

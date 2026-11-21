@@ -156,9 +156,9 @@ class AppealContractTests(ApiTestBase):
         """AC-197-01 契约：AdminAppeals.vue 读取的 item.* / item.applicant.* / item.unit.* 字段 ⊆ 后端 /admin/appeals 真实响应；
         item.unit_id 仅作回退（后端不返回顶层 unit_id）；注册更新提示读取 registry_update.notice 与决定响应一致。"""
         source = text(WEB["appeals"])
-        top = set(re.findall(r"item\.(\w+)", source))
-        applicant = set(re.findall(r"item\.applicant\??\.(\w+)", source))
-        unit = set(re.findall(r"item\.unit\??\.(\w+)", source))
+        top = set(re.findall(r"row\.(\w+)", source))
+        applicant = set(re.findall(r"row\.applicant\??\.(\w+)", source))
+        unit = set(re.findall(r"row\.unit\??\.(\w+)", source))
         _, admin_token = self.make_admin()
         unit_row = RegistryUnit.objects.create(building="3", unit_no="1", floor="1", room="103")
         user, token = self.make_user(nickname="契约昵称")

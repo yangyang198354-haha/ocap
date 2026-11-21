@@ -11,8 +11,11 @@
     <div v-if="!items.length" class="card">
       <el-empty description="暂无决议" />
     </div>
-    <div v-else class="res-grid">
-      <article v-for="item in items" :key="item.id" class="card res-card">
+    <template v-else>
+      <section v-for="group in displayGroups" :key="group.key" class="res-section">
+        <h4 v-if="group.title" class="res-section-title">{{ group.title }}（{{ group.items.length }}）</h4>
+        <div class="res-grid">
+      <article v-for="item in group.items" :key="item.id" class="card res-card">
         <div class="res-top">
           <div>
             <div class="res-idx mono">{{ resNo(item.id) }}</div>
@@ -52,7 +55,9 @@
           <span class="mono">{{ item.vote_deadline ? `截止 ${datetime(item.vote_deadline)}` : '无截止时间' }}</span>
         </div>
       </article>
-    </div>
+        </div>
+      </section>
+    </template>
     <div class="card"><PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" /></div>
 
     <el-dialog v-model="showCreate" title="发起决议" width="560px">
@@ -121,6 +126,15 @@ const needDeadline = computed(() => flows.value.find((f) => f.id === form.approv
 const resNo = (id) => `R-${String(id).padStart(4, '0')}`
 const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
 const part = (item) => participationShare(item)
+
+// REQ-FUNC-278 / REQ-FUNC-280：公开决议按进行中/已结束分区；其余分区保持单列表
+const displayGroups = computed(() => {
+  if (scope.value !== 'public') return [{ key: 'all', title: '', items: items.value }]
+  return [
+    { key: 'active', title: '进行中', items: items.value.filter((item) => item.status === 'PENDING') },
+    { key: 'ended', title: '已结束', items: items.value.filter((item) => item.status !== 'PENDING') }
+  ].filter((group) => group.items.length)
+})
 
 async function load() {
   try {
@@ -208,3 +222,8 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.res-section-title { margin: 4px 2px 10px; font-size: 14px; font-weight: 650; color: var(--muted); }
+.res-section + .res-section { margin-top: 8px; }
+</style>

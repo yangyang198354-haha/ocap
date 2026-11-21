@@ -11,6 +11,22 @@ from apps.residency.models import Membership
 POSITION_RANK = {"CHAIR": 4, "VICE_CHAIR": 3, "MEMBER": 2, "REPRESENTATIVE": 1}
 ROLE_RANK = {"HEAD": 3, "OWNER": 2, "RESIDENT": 1}
 ROLE_LABELS = {"HEAD": "产权业主", "OWNER": "产权业主", "RESIDENT": "同住人"}  # C-34：用户可见文案
+# REQ-FUNC-277 / D-01：身份展示用业务全称；席位页"职位"列仍用 Seat.POSITIONS 短名
+IDENTITY_LABELS = {
+    "CHAIR": "业委会主任",
+    "VICE_CHAIR": "业委会副主任",
+    "MEMBER": "业委会委员",
+    "REPRESENTATIVE": "业主代表",
+    "HEAD": "产权业主",
+    "OWNER": "产权业主",
+    "RESIDENT": "同住人",
+    "GUEST": "游客",
+}
+
+
+def identity_label(code: str) -> str:
+    """身份 code → 用户可见全称；未知 code 原样返回（AC-282-04）。"""
+    return IDENTITY_LABELS.get(code, code)
 
 
 class IdentityView(TypedDict):
@@ -24,7 +40,7 @@ def identity_view(*, memberships: Sequence[Membership], seats: Sequence[Seat]) -
     active_seats = [s for s in seats if is_effective(s, today)]
     if active_seats:
         seat = max(active_seats, key=lambda s: (POSITION_RANK.get(s.position, 0), s.term_end, s.id or 0))
-        return {"identity_code": seat.position, "identity_label": seat.get_position_display()}
+        return {"identity_code": seat.position, "identity_label": identity_label(seat.position)}
     active_memberships = [m for m in memberships if m.ended_at is None]
     if active_memberships:
         membership = max(active_memberships,

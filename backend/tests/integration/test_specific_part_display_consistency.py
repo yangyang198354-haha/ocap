@@ -14,7 +14,7 @@ class SpecificPartDisplayConsistencyTests(RegistryImportTestBase):
         self.assert_ok(admin_units)
         self.assertEqual([item["specific_part"] for item in admin_units.data["results"]], ["1栋1单元1层101号"])
 
-        memberships = self.api("get", "/admin/memberships?q=1栋1单元", token=self.admin_token)
+        memberships = self.api("get", "/admin/memberships?unit_keyword=1栋1单元", token=self.admin_token)
         self.assert_ok(memberships)
         self.assertEqual([item["specific_part"] for item in memberships.data["results"]], ["1栋1单元1层101号"])
 

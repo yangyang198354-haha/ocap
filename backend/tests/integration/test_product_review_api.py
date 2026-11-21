@@ -351,5 +351,5 @@ class IdentityLabelsTests(ApiTestBase):
         Membership.objects.create(user=user, unit=a, role="RESIDENT", source="APPLICATION", active_slot=1)
         Membership.objects.create(user=user, unit=b, role="OWNER", source="APPEAL", active_slot=1)
         self.make_seat(user, "VICE_CHAIR")
-        self.assertEqual(CommitteeQuery.identity_labels(user.id), ["副主任"])  # C-34：职务直接显示，不并列"产权业主"
+        self.assertEqual(CommitteeQuery.identity_labels(user.id), ["业委会副主任"])  # C-34：职务直接显示，不并列"产权业主"
         self.assertEqual(Seat.objects.filter(user=user).count(), 1)

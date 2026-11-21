@@ -2,7 +2,7 @@
 <template>
   <div class="proof-thumbs">
     <div
-      v-for="(p, index) in proofs"
+      v-for="(p, index) in visibleProofs"
       :key="p.id"
       ref="cells"
       class="proof-cell"
@@ -19,6 +19,9 @@
         <span v-else-if="thumbs[p.id]?.error" class="proof-error">{{ thumbs[p.id].error }}</span>
         <span v-else class="proof-name">加载中…</span>
       </template>
+    </div>
+    <div v-if="overflow > 0" class="proof-cell proof-more" :title="`还有 ${overflow} 份证明材料`" @click="openAt(visibleProofs.length)">
+      +{{ overflow }}
     </div>
 
     <el-dialog v-model="visible" :title="current ? current.name : '产权证明'" width="720px" @closed="onClosed">
@@ -47,10 +50,17 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { admin } from '@/shared/api'
 import { errorText } from '@/shared/format'
 
-const props = defineProps({ proofs: { type: Array, default: () => [] } })
+const props = defineProps({
+  proofs: { type: Array, default: () => [] },
+  // REQ-FUNC-286：表格内最多展示 N 份，超出显示 +N
+  max: { type: Number, default: 0 }
+})
 
 const MAX_CONCURRENT = 3
 const THUMB_WIDTH = 160
+
+const visibleProofs = computed(() => (props.max > 0 ? props.proofs.slice(0, props.max) : props.proofs))
+const overflow = computed(() => (props.max > 0 ? Math.max(props.proofs.length - props.max, 0) : 0))
 
 const cells = ref([])
 const thumbs = reactive({}) // id -> { url?, error? }（按 id 缓存）
@@ -179,6 +189,7 @@ onBeforeUnmount(() => {
   border-style: solid; border-width: 1px; border-color: var(--line); border-radius: 8px;
   cursor: pointer; overflow: hidden; padding: 4px;
 }
+.proof-more { font-weight: 700; color: var(--accent-text); }
 .proof-img { max-width: 100%; max-height: 100%; object-fit: cover; }
 .proof-icon { font-weight: 700; }
 .proof-name { font-size: 12px; word-break: break-all; text-align: center; }

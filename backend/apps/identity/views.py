@@ -128,6 +128,11 @@ class AdminMembershipListView(APIView):
             qs = qs.filter(unit__unit_no=unit_no)
         if floor:
             qs = qs.filter(unit__floor=floor)
+        # REQ-FUNC-284：独立的"专有部分标识 / 户号"过滤，同时包含匹配两者（D-04）
+        unit_keyword = request.query_params.get("unit_keyword", "")[:64]
+        if unit_keyword:
+            qs = qs.filter(Q(unit__specific_part__icontains=unit_keyword)
+                           | Q(unit__room__icontains=unit_keyword))
         name = request.query_params.get("name", "")[:32]
         if name:
             qs = qs.filter(Q(registry_owner__name__icontains=name)
@@ -142,8 +147,8 @@ class AdminMembershipListView(APIView):
                 qs = qs.filter(user__phone__icontains=phone)
         q = request.query_params.get("q", "")[:32]
         if q:
+            # D-07：关键词框只匹配姓名/账号/昵称；专有部分与户号由 unit_keyword 命中
             qs = qs.filter(Q(user__account_no__icontains=q) | Q(user__nickname__icontains=q)
-                           | Q(unit__specific_part__icontains=q)
                            | Q(registry_owner__name__icontains=q)
                            | Q(unit_id__in=_owner_unit_ids(q)))
         return page_response(qs, request, MembershipSerializer)

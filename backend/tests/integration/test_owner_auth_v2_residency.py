@@ -385,7 +385,7 @@ class AdminAppealListTests(OwnerAuthBase):
         for row in body["results"]:
             self.assertEqual({"id", "unit", "status", "submitted_at", "decided_at", "reject_reason", "owner_name",
                               "applicant", "proof"}, set(row))
-            self.assertEqual(set(row["applicant"]), {"id", "account_no", "nickname", "phone", "has_phone"})
+            self.assertEqual(set(row["applicant"]), {"id", "account_no", "nickname", "avatar_url", "phone", "has_phone"})
             self.assertEqual(row["status"], "PENDING")
 
     def test_tc_int_674_five_proofs_listed_and_query_count_flat(self):

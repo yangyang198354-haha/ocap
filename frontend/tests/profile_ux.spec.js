@@ -223,7 +223,7 @@ describe('US-268 / US-269：房屋关系过滤与搜索', () => {
     mockMemberships()
     const { wrapper } = await mountPage(AdminMemberships)
     await flush()
-    const input = wrapper.find('input[placeholder="姓名 / 电话（后 4 位起）/ 专有部分"]')
+    const input = wrapper.find('input[placeholder="姓名 / 手机号（后 4 位起）"]')
     await input.setValue('1234')
     await buttonOf(wrapper, '搜索').trigger('click')
     await flush()

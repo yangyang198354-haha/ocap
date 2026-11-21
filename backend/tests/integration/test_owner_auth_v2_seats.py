@@ -158,12 +158,12 @@ class FutureSeatTests(SeatBase):
         me = self.api("get", "/me", token=token).json()["identities"]
         self.assertIsNone(me["committee"])
         self.assertEqual(me["summary"]["label"], "产权业主")
-        self.assertNotIn("委员", me["labels"])
+        self.assertNotIn("业委会委员", me["labels"])
         eff, etoken, _ = self.make_owner()
         self.assert_ok(self.grant(eff, "MEMBER", today()), 201)
         me2 = self.api("get", "/me", token=etoken).json()["identities"]
-        self.assertEqual((me2["committee"]["position"], me2["summary"]["label"]), ("MEMBER", "委员"))
-        self.assertIn("委员", me2["labels"])
+        self.assertEqual((me2["committee"]["position"], me2["summary"]["label"]), ("MEMBER", "业委会委员"))
+        self.assertIn("业委会委员", me2["labels"])
 
     def test_tc_int_699_callsite_permissions_committee_member_endpoints(self):
         """IFC-311 调用点 active_seat → IsCommitteeMember：未来席位用户调用委员专属接口（发起报销）403 FORBIDDEN 且提示无权限；
@@ -216,7 +216,7 @@ class FutureSeatTests(SeatBase):
         self.assert_ok(self.grant(eff, "MEMBER", today()), 201)
         rows = {r["id"]: r for r in self.api("get", "/admin/users?page_size=100", token=self.admin_token).json()["results"]}
         self.assertEqual(rows[fut.id]["identity_label"], "产权业主")
-        self.assertEqual(rows[eff.id]["identity_label"], "委员")
+        self.assertEqual(rows[eff.id]["identity_label"], "业委会委员")
 
     def test_tc_int_703_expire_due_ignores_future_seat_but_expires_past_one(self):
         """AC-206-02：到期任务不把开始日在将来的席位置为已到期；结束日已过的席位仍被置为已到期。"""

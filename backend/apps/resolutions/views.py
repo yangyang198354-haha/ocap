@@ -3,6 +3,7 @@ from datetime import timedelta
 import uuid
 
 from django.db import transaction
+from django.db.models import Case, IntegerField, Value, When
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -87,8 +88,12 @@ class ResolutionListCreateView(APIView):
             return Response(_todo_list(qs, request.user))
         elif scope == "public":
             # IFC-358：已结束，或表决进行中的半数同意决议（Q-B18-08=A）
-            qs = qs.filter(Q(status__in=["APPROVED", "REJECTED"])
-                           | Q(status="PENDING", approval_mode="HALF_MAJORITY"))
+            # REQ-FUNC-279：进行中优先，其余仍按发起时间倒序，避免进行中决议被分页挤到后面
+            qs = (qs.filter(Q(status__in=["APPROVED", "REJECTED"])
+                            | Q(status="PENDING", approval_mode="HALF_MAJORITY"))
+                  .annotate(_ended_order=Case(When(status="PENDING", then=Value(0)),
+                                              default=Value(1), output_field=IntegerField()))
+                  .order_by("_ended_order", "-created_at"))
         return page_response(qs, request, ResolutionListSerializer)
 
     def post(self, request):

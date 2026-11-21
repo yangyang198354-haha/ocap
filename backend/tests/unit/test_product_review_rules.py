@@ -122,7 +122,7 @@ class IdentityRulesTests(TestCase):
                                       term_end=today - timedelta(days=1), status="ACTIVE", active_slot=1)
         self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_code"], "OWNER")
         expired.term_end = today
-        self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_label"], "主任")
+        self.assertEqual(identity_view(memberships=[m_head], seats=[expired])["identity_label"], "业委会主任")
 
     def test_tc_unit_513_rank_tables_consistent(self):
         """TC-UNIT-513 / AC-157-04：目录与 residency 服务使用同一角色排序（管理端与本人汇总同源）。"""

@@ -104,7 +104,7 @@ class GrantToRegistryOwnerTests(SeatHolderBase):
         self.assertEqual(resp.json()["bind_state"], "BOUND")
         me = self.assert_ok(self.api("get", "/me", token=token)).data["identities"]
         self.assertEqual(me["committee"]["position"], "MEMBER")
-        self.assertIn("委员", me["labels"])
+        self.assertIn("业委会委员", me["labels"])
 
     def test_tc_int_1025_term_errors_unchanged(self):
         """TC-INT-1025 / AC-256-06：任期未配置 → 409 TERM_NOT_CONFIGURED；开始日使结束日不晚于今天 → 400 INVALID_VALUE；均无席位新增。"""

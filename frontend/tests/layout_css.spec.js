@@ -174,16 +174,19 @@ describe('管理端表格宽度（ADR-121，R-02，AC-231-02）', () => {
     }
   }
 
-  it('TC-UNIT-874 / AC-231-02、AC-219-02：全部管理端表格"固定宽 + min-width"合计 ≤ 1090px（1366 视口扣侧栏与内边距后的可用宽，设计上限 1110）', () => {
+  it('TC-UNIT-874 / AC-231-02、AC-219-02：除已批准加宽并对整体横向滚动的表格外，其余管理端表格合计 ≤ 1090px（设计上限 1110）', () => {
     expect(tables.length).toBeGreaterThanOrEqual(10)
-    const over = tables.filter((t) => t.total > BUDGET).map((t) => `${t.id}=${t.total}`)
+    // REQ-FUNC-282/285/287：清册 1160、申诉 1750、席位 1220，三者按批准设计整体横向滚动
+    const wide = new Set(['AdminRegistry.vue#0', 'AdminAppeals.vue#0', 'AdminSeats.vue#0'])
+    const over = tables.filter((t) => !wide.has(t.id) && t.total > BUDGET).map((t) => `${t.id}=${t.total}`)
     expect(over).toEqual([])
   })
 
-  it('TC-UNIT-875 / ADR-121 R-02：已知最宽的表格（AdminRegistry 1070、AdminSeats 1040、AdminUsers 注册用户 990）合计与实现记录一致，列含义与数量未变', () => {
+  it('TC-UNIT-875 / ADR-121 R-02、REQ-FUNC-282/285/287：已知最宽的表格合计与批准列宽一致，列含义与数量未变', () => {
     const by = Object.fromEntries(tables.map((t) => [t.id, t]))
-    expect(by['AdminRegistry.vue#0']).toMatchObject({ cols: 9, total: 1070 })
-    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 10, total: 1070 })
+    expect(by['AdminRegistry.vue#0']).toMatchObject({ cols: 9, total: 1160 })
+    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 10, total: 1220 })
+    expect(by['AdminAppeals.vue#0']).toMatchObject({ cols: 10, total: 1750 })
     expect(by['AdminUsers.vue#1']).toMatchObject({ cols: 9, total: 990 })
     expect(by['AdminUsers.vue#0']).toMatchObject({ cols: 4, total: 480 })
     // 注册用户表列顺序与含义不变（AdminUsers.vue 注册用户表）

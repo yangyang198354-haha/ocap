@@ -19,65 +19,79 @@
       <p v-if="hint && hint.pending_bind > 0 && hint.can_pass === false" class="error-text seat-hint">
         当前半数同意决议无法通过
       </p>
-      <div class="row filters">
-        <el-select v-model="position" placeholder="全部职位" clearable style="width: 140px" @change="resetAndLoad">
-          <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
-        </el-select>
-        <el-select v-model="building" placeholder="全部楼栋" clearable style="width: 140px" @change="onBuildingChange">
-          <el-option v-for="o in buildingOptions" :key="o.value" :label="o.value" :value="o.value" />
-        </el-select>
-        <el-select v-model="unitNo" placeholder="全部单元" clearable style="width: 140px" :disabled="!building" @change="resetAndLoad">
-          <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
-        </el-select>
-      </div>
-    </div>
-    <div class="card">
-      <el-empty v-if="!seats.length" description="暂无席位记录" />
-      <el-table :data="seats" size="small">
-        <el-table-column label="昵称" width="100">
-          <template #default="{ row }">
-            <router-link v-if="row.user?.id" :to="`/users/${row.user.id}/profile`" class="user-link">{{ nicknameText(row) }}</router-link>
-            <template v-else>{{ nicknameText(row) }}</template>
-          </template>
-        </el-table-column>
-        <el-table-column label="姓名" width="70">
-          <template #default="{ row }">{{ nameText(row) }}</template>
-        </el-table-column>
-        <el-table-column label="联系电话" width="100">
-          <template #default="{ row }">{{ row.holder_detail?.phone_masked || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="专有部分坐落" width="140">
-          <template #default="{ row }">{{ unitText(row) }}</template>
-        </el-table-column>
-        <el-table-column label="专有部分类型" width="80">
-          <template #default="{ row }">{{ row.holder_detail?.unit_type || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="职位" width="80">
-          <template #default="{ row }">{{ positionLabel(row.position) }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="110">
-          <template #default="{ row }">
-            {{ statusLabel('seat', row.status) }}
-            <el-tag v-if="row.status === 'ACTIVE' && row.effective === false" size="small" type="warning">待生效</el-tag>
-            <el-tag v-if="row.bind_state === 'PENDING_BIND'" size="small" type="warning">待绑定</el-tag>
-            <el-tag v-if="row.bind_state === 'CONFLICT'" size="small" type="danger">待处理冲突</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="term_start" label="任期开始" width="85" />
-        <el-table-column prop="term_end" label="任期结束" width="85" />
-        <el-table-column label="操作" width="220">
-          <template #default="{ row }">
-            <template v-if="row.status === 'ACTIVE'">
-              <el-select v-model="changeTo[row.id]" placeholder="变更为" size="small" style="width: 110px">
-                <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
-              </el-select>
-              <el-button size="small" :disabled="!changeTo[row.id]" @click="change(row)">变更职位</el-button>
-              <el-button size="small" type="danger" @click="revoke(row)">撤销</el-button>
+      <!-- REQ-FUNC-287/288：筛选区与主表共用列宽网格；职位对"职位"列，楼栋/单元并排占"专有部分坐落"列 -->
+      <div class="seat-scroll">
+        <div class="filter-grid">
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell location-cell">
+            <el-select v-model="building" placeholder="全部楼栋" clearable @change="onBuildingChange">
+              <el-option v-for="o in buildingOptions" :key="o.value" :label="o.value" :value="o.value" />
+            </el-select>
+            <el-select v-model="unitNo" placeholder="全部单元" clearable :disabled="!building" @change="resetAndLoad">
+              <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell" />
+          <div class="filter-cell">
+            <el-select v-model="position" placeholder="全部职位" clearable @change="resetAndLoad">
+              <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+        </div>
+
+        <el-table :data="seats" size="small" class="seat-table" style="width: 1220px">
+          <el-table-column label="昵称" width="110">
+            <template #default="{ row }">
+              <router-link v-if="row.user?.id" :to="`/users/${row.user.id}/profile`" class="user-link">{{ nicknameText(row) }}</router-link>
+              <template v-else>{{ nicknameText(row) }}</template>
             </template>
-          </template>
-        </el-table-column>
-      </el-table>
-      <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
+          </el-table-column>
+          <el-table-column label="姓名" width="80">
+            <template #default="{ row }">{{ nameText(row) }}</template>
+          </el-table-column>
+          <el-table-column label="联系电话" width="110">
+            <template #default="{ row }">{{ row.holder_detail?.phone_masked || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="专有部分坐落" width="200">
+            <template #default="{ row }">{{ unitText(row) }}</template>
+          </el-table-column>
+          <el-table-column label="专有部分类型" width="100">
+            <template #default="{ row }">{{ row.holder_detail?.unit_type || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="职位" width="90">
+            <template #default="{ row }">{{ positionLabel(row.position) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              {{ statusLabel('seat', row.status) }}
+              <el-tag v-if="row.status === 'ACTIVE' && row.effective === false" size="small" type="warning">待生效</el-tag>
+              <el-tag v-if="row.bind_state === 'PENDING_BIND'" size="small" type="warning">待绑定</el-tag>
+              <el-tag v-if="row.bind_state === 'CONFLICT'" size="small" type="danger">待处理冲突</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="term_start" label="任期开始" width="95" />
+          <el-table-column prop="term_end" label="任期结束" width="95" />
+          <el-table-column label="操作" width="220" class-name="op-cell">
+            <template #default="{ row }">
+              <div v-if="row.status === 'ACTIVE'" class="op-actions">
+                <el-select v-model="changeTo[row.id]" placeholder="变更为" size="small" style="width: 110px">
+                  <el-option v-for="p in positions" :key="p.value" :label="p.label" :value="p.value" />
+                </el-select>
+                <el-button size="small" :disabled="!changeTo[row.id]" @click="change(row)">变更职位</el-button>
+                <el-button size="small" type="danger" @click="revoke(row)">撤销</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" sizable
+                @change="gotoPage" @update:page-size="changePageSize" />
     </div>
     <div class="card">
       <el-collapse v-model="openedEnded" @change="onEndedToggle">
@@ -191,7 +205,7 @@ const filters = computed(() => {
 })
 // AC-265-01：失效总数由 active 响应带回，折叠区标题在展开前即可显示条数
 const endedTotal = ref(0)
-const { items: seats, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
+const { items: seats, total, page, pageSize, reload, goto, resetAndLoad: pagingReset, setPageSize } = usePaging({
   fetch: async (params) => {
     const data = await admin.seats(params)
     if (data && data.ended_count !== undefined) endedTotal.value = data.ended_count
@@ -199,6 +213,11 @@ const { items: seats, total, page, pageSize, reload, goto, resetAndLoad: pagingR
   },
   filters
 })
+
+// REQ-FUNC-283：切换每页条数后回到第 1 页，保留职位/楼栋/单元筛选
+function changePageSize(n) {
+  setPageSize(n).catch((e) => ElMessage.error(errorText(e)))
+}
 const config = reactive({})
 const changeTo = reactive({})
 const showCreate = ref(false)
@@ -325,7 +344,28 @@ onMounted(load)
 </script>
 
 <style scoped>
-.filters { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+/* 筛选区与主表共用列宽：110/80/110/200/100/90/120/95/95/220 */
+.seat-scroll { overflow-x: auto; margin-top: 10px; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: 110px 80px 110px 200px 100px 90px 120px 95px 95px 220px;
+  width: 1220px;
+  margin-bottom: 12px;
+}
+.filter-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+.filter-cell :deep(.el-input),
+.filter-cell :deep(.el-select) { width: 100%; }
+.location-cell :deep(.el-select) { width: auto; flex: 1; min-width: 0; }
+.seat-table :deep(.cell) { padding: 0 8px; }
+.op-actions { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.op-actions :deep(.el-button) { padding-left: 4px; padding-right: 4px; margin-left: 0; }
 .user-link { color: var(--accent); text-decoration: none; }
 .user-link:hover { text-decoration: underline; }
 </style>

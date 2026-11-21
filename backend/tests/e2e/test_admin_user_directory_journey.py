@@ -40,7 +40,7 @@ class AdminDirectoryJourneyTests(ApiTestBase):
         resp = self.api("get", "/admin/users", {"q": "张三"}, token=token)
         self.assert_ok(resp)
         row = next(item for item in resp.data["results"] if item["id"] == user.id)
-        self.assertEqual(row["identity_label"], "委员")
+        self.assertEqual(row["identity_label"], "业委会委员")
         self.assertEqual(row["certified_units"], 1)
         self.assertEqual(row["real_names"], ["张三"])
         self.assertIsNotNone(row["last_login_at"])

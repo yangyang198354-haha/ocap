@@ -57,7 +57,9 @@ function listCalls() {
 
 function placeholders(wrapper) {
   // el-input 的占位在 input[placeholder]；el-select 的占位在 .el-select__placeholder 的文字里（DOM 顺序）
-  return wrapper.findAll('input[placeholder], .el-select__placeholder')
+  // 只看筛选区：分页区的"每页条数"选择不属于过滤控件（REQ-FUNC-283）
+  const scope = wrapper.find('.filter-grid')
+  return scope.findAll('input[placeholder], .el-select__placeholder')
     .map((n) => (n.element.tagName === 'INPUT' ? n.attributes('placeholder') : n.text()))
     .filter(Boolean)
 }

@@ -2,7 +2,7 @@
   <author_agent>devops-engineer</author_agent>
   <timestamp>2026-11-20T00:32:00+08:00</timestamp>
   <project_name>ocap_profile_ux</project_name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <input_files>
     <file>deployment/deployment_plan.md</file>
     <file>deployment/cicd_pipeline.md</file>
@@ -84,6 +84,19 @@
 2. DEPLOY-004 属 `[MANUAL_ROLLBACK_REQUIRED]`：回滚 `accounts.0004` 会删除 `signature`、`real_name_visible` 两列及其数据。
 3. DEPLOY-009 手动执行一次 timer 已真实运行到期任务/清理，该副作用不随回滚撤销。
 4. 回滚可用性：锚点 `20261120002832` 的 4 份制品已核验；如后续需要回滚，按 deployment_plan §7 逆序执行（004 → 002 → 005，再 006/007/009）。
+
+## 增量部署：实名判定口径统一（2026-11-21）
+
+- 来源提交：`89298e3`（CI run `44861395112` 全绿）。
+- 回滚锚点：`TS=20261121113119`，backend/web 两份 tar 与两份 nginx 备份已核验存在。
+- 执行：DEPLOY-001~005；DEPLOY-006（前端）、DEPLOY-007/008（nginx）、DEPLOY-009（systemd 单元）因无改动跳过。
+- 迁移：无新增迁移。`migrate` 返回既有提示：`content` app 存在未生成迁移的模型变更（与本次改动无关，未在目标机生成迁移）。
+- 验证：
+  - `ocap-backend` active；近 3 分钟 Traceback 计数 0。
+  - 错误凭据登录 400；未登录访问 `/api/v1/users/1/profile` 401；内网前端 200；timer active。
+  - 目标机实际执行 `verified_owner_names(u)` → `['杨扬']`，`AccountService._is_verified_owner(u)` → `True`。
+- 数据修复：M68 → 清册业主 147、M69 → 清册业主 148（与代码同批次生效）。
+- **最终状态：DEPLOYED_SUCCESSFULLY**。
 
 ## 人工验收（待执行）
 

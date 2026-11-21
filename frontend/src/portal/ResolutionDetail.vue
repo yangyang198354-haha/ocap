@@ -30,8 +30,18 @@
       </div>
       <div class="row" v-if="isInitiator" style="margin-top: 12px">
         <el-button v-if="item.status === 'PENDING'" @click="withdraw">撤回</el-button>
-        <el-button v-if="['REJECTED', 'WITHDRAWN'].includes(item.status)" type="primary" @click="openResubmit">修改后重新提交</el-button>
+        <el-button v-if="item.status === 'WITHDRAWN'" type="primary" @click="openResubmit">修改后重新提交</el-button>
+        <el-button v-if="item.status === 'REJECTED'" type="primary" @click="newResolution">新建决议</el-button>
       </div>
+      <p v-if="item.status === 'REJECTED'" class="muted">
+        该决议已结束（{{ failReason }}），如需再次表决请新建决议。
+      </p>
+      <p v-if="item.origin_id" class="muted">
+        重新发起自 <router-link :to="`/resolutions/${item.origin_id}`">{{ resNo(item.origin_id) }}</router-link>
+      </p>
+      <p v-if="item.reopened_by_id" class="muted">
+        已由 <router-link :to="`/resolutions/${item.reopened_by_id}`">{{ resNo(item.reopened_by_id) }}</router-link> 重新发起
+      </p>
     </div>
     <div class="card" v-else>
       <el-empty description="决议不存在或无权查看" />
@@ -60,7 +70,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { approvalApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
@@ -72,6 +82,7 @@ import { APPROVAL_MODE_TEXT, textOf } from '@/shared/labels'
 import { confirmDanger } from '@/shared/confirm'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const item = ref(null)
 const participants = ref([])
@@ -81,6 +92,14 @@ const form = reactive({ title: '', content: '', approval_flow_id: null, vote_dea
 
 const isInitiator = computed(() => item.value && auth.me?.profile?.id === item.value.initiator?.id)
 const needDeadline = computed(() => flows.value.find((f) => f.id === form.approval_flow_id)?.mode === 'HALF_MAJORITY')
+// REQ-FUNC-275：失败原因区分“表决未过半 / 审批人拒绝”
+const failReason = computed(() => (item.value?.approval_mode === 'HALF_MAJORITY' ? '表决未过半' : '审批人拒绝'))
+const resNo = (id) => `R-${String(id).padStart(4, '0')}`
+
+// REQ-FUNC-271：失败的决议只能新建，原单只读留痕
+function newResolution() {
+  router.push({ path: '/resolutions/mine', query: { origin: item.value.id } })
+}
 
 async function load() {
   try {

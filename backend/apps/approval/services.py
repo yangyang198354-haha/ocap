@@ -77,8 +77,9 @@ class ApprovalEngine:
                  revision: int) -> ApprovalInstance:
         latest = (ApprovalInstance.objects.filter(subject_type=subject_type, subject_id=subject_id)
                   .order_by("-revision").first())
-        if latest is not None and latest.status not in {"REJECTED", "WITHDRAWN"}:
-            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交", 409)
+        # REQ-FUNC-269/270：审批失败即终局，原单只能撤回后重提，失败后须新建单据
+        if latest is not None and latest.status != "WITHDRAWN":
+            raise ApiError("NOT_RESUBMITTABLE", "该单据已结束，如需再次办理请新建", 409)
         return ApprovalEngine.submit(scope=scope, subject_type=subject_type, subject_id=subject_id,
                                      flow_id=flow_id, submitter=submitter, revision=revision + 1)
 

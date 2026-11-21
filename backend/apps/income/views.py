@@ -167,20 +167,22 @@ class IncomeImportView(APIView):
                 "total_rows": parsed["total"], "imported": 0,
                 "failed": len(parsed["errors"]), "errors": skipped}})
         title = request.data.get("title") or None
+        origin = _origin_of(request.data, request.user)
         from apps.committee.services import CommitteeQuery
 
         with transaction.atomic():
             sheet = IncomeSheet.objects.create(title=title, source="IMPORT",
                                                creator_labels=",".join(
                                                    CommitteeQuery.identity_labels(request.user.id)),
-                                               submitted_by=request.user)
+                                               submitted_by=request.user, origin=origin)
             IncomeRecord.objects.bulk_create([IncomeRecord(sheet=sheet, **row)
                                               for row in parsed["records"]])
             recalculate(sheet)
         AuditService.record(actor=AuditActor("ADMIN", request.user.id, request.user.identity_label),
                             action="INCOME_IMPORTED", object_type="income_sheet",
                             object_id=str(sheet.id), result="SUCCESS",
-                            detail={"rows": parsed["total"], "failed": len(parsed["errors"])})
+                            detail={"rows": parsed["total"], "failed": len(parsed["errors"]),
+                                    "origin_id": origin.id if origin else None})
         return Response({**sheet_view(sheet), "import_summary": {
             "total_rows": parsed["total"], "imported": len(parsed["records"]),
             "failed": len(parsed["errors"]), "errors": parsed["errors"][:100],
@@ -233,13 +235,14 @@ class AdminSheetListView(APIView):
         if errors:  # 逐条录入不跳过错误：整体拒绝，便于当场更正
             raise ApiError("INCOME_RECORD_INVALID", "收入记录存在错误", 400, {"errors": errors[:100]})
         voucher_ids = _voucher_ids(data.get("voucher_ids"))
+        origin = _origin_of(data, request.user)
         from apps.committee.services import CommitteeQuery
 
         with transaction.atomic():
             sheet = IncomeSheet.objects.create(
                 title=data.get("title") or None, source="MANUAL",
                 creator_labels=",".join(CommitteeQuery.identity_labels(request.user.id)),
-                submitted_by=request.user)
+                submitted_by=request.user, origin=origin)
             IncomeRecord.objects.bulk_create([IncomeRecord(sheet=sheet, **row) for row in valid])
             if voucher_ids:
                 AttachmentService.link(voucher_ids, linked_type="income_sheet",
@@ -273,7 +276,7 @@ class AdminSheetDetailView(APIView):
 
     def patch(self, request, sheet_id: int):
         sheet = _get_sheet(sheet_id)
-        if sheet.status not in {"DRAFT", "REJECTED", "WITHDRAWN"}:
+        if sheet.status not in {"DRAFT", "WITHDRAWN"}:
             raise ApiError("IMMUTABLE", "该收入表不可编辑", 409)
         data = request.data or {}
         rows = data.get("records")
@@ -322,7 +325,8 @@ class SheetSubmitView(APIView):
             sheet.save(update_fields=["status", "approval_instance_id"])
         AuditService.record(actor=AuditActor("ADMIN", request.user.id, request.user.identity_label),
                             action="INCOME_SUBMITTED", object_type="income_sheet",
-                            object_id=str(sheet.id), result="SUCCESS")
+                            object_id=str(sheet.id), result="SUCCESS",
+                            detail={"origin_id": sheet.origin_id})
         return Response(sheet_view(sheet))
 
 
@@ -331,8 +335,8 @@ class SheetResubmitView(APIView):
 
     def post(self, request, sheet_id: int):
         sheet = _get_sheet(sheet_id)
-        if sheet.status not in {"REJECTED", "WITHDRAWN"}:
-            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交", 409)
+        if sheet.status != "WITHDRAWN":
+            raise ApiError("NOT_RESUBMITTABLE", "该收入表已结束，如需再次提交请新建", 409)
         flow = _flow(request.data or {})
         if not sheet.records.exists():
             raise ApiError("INCOME_SHEET_EMPTY", "收入表没有记录", 409)
@@ -417,6 +421,8 @@ def sheet_view(sheet: IncomeSheet) -> dict:
         "total_amount": money(sheet.total_amount), "status": sheet.status,
         "submitted_by": sheet.submitted_by_id, "created_at": sheet.created_at,
         "decided_at": sheet.decided_at,
+        "origin_id": sheet.origin_id,
+        "reopened_by_id": sheet.reissued.order_by("id").values_list("id", flat=True).first(),
     }
 
 
@@ -443,6 +449,21 @@ def _flow(data: dict) -> ApprovalFlow:
                                         is_active=True)
     except (TypeError, ValueError, ApprovalFlow.DoesNotExist) as exc:
         raise ApiError("INVALID_VALUE", "审批流程不可用") from exc
+
+
+def _origin_of(data, user) -> IncomeSheet | None:
+    """新建收入表时的原单关联：只能是本人提交且已失败的收入表（REQ-FUNC-271/273）。"""
+    raw = data.get("origin_id")
+    if raw in (None, ""):
+        return None
+    try:
+        origin_id = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ApiError("INVALID_VALUE", "origin_id 不合法") from exc
+    origin = IncomeSheet.objects.filter(id=origin_id, submitted_by=user, status="REJECTED").first()
+    if origin is None:
+        raise ApiError("INVALID_VALUE", "原收入表不存在或不可关联")
+    return origin
 
 
 _ = (uuid, timezone)

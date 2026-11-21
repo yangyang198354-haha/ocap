@@ -31,18 +31,24 @@
           </div>
           <div class="row">
             <el-button size="small" @click="showDetail(item.id)">明细</el-button>
-            <el-button v-if="['DRAFT', 'REJECTED', 'WITHDRAWN'].includes(item.status)" size="small" @click="submit(item)">
-              {{ item.status === 'DRAFT' ? '提交' : '重新提交' }}
-            </el-button>
+            <el-button v-if="item.status === 'DRAFT'" size="small" @click="submit(item)">提交</el-button>
+            <el-button v-if="item.status === 'WITHDRAWN'" size="small" @click="submit(item)">重新提交</el-button>
+            <el-button v-if="item.status === 'REJECTED'" size="small" @click="openReissue(item)">重新发起</el-button>
             <el-button v-if="item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
             <el-button v-if="item.status === 'EFFECTIVE' && item.can_void" size="small" type="danger" @click="voidSheet(item.id)">作废</el-button>
           </div>
+        </div>
+        <div v-if="item.status === 'REJECTED' || item.origin_id || item.reopened_by_id" class="muted" style="margin-top: 4px">
+          <span v-if="item.status === 'REJECTED'">该收入表已结束（审批未通过），如需再次提交请新建。</span>
+          <span v-if="item.origin_id">重新发起自 #{{ item.origin_id }}</span>
+          <span v-if="item.reopened_by_id">已由 #{{ item.reopened_by_id }} 重新发起</span>
         </div>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="逐条录入收入" width="560px">
+      <p v-if="originId" class="muted">重新发起自 #{{ originId }}（原收入表已结束，本表独立审批）</p>
       <div v-for="(r, i) in form.records" :key="i" class="list-item" style="padding-top: 0; margin-bottom: 8px">
         <el-date-picker v-model="r.occurred_on" type="date" value-format="YYYY-MM-DD" placeholder="日期" style="width: 100%" />
         <el-input v-model="r.amount" placeholder="金额（最多两位小数）" style="margin-top: 6px" />
@@ -65,6 +71,9 @@
     </el-dialog>
 
     <el-dialog v-model="showDetailDialog" title="收入表明细" width="640px">
+      <p v-if="detail?.status === 'REJECTED'" class="muted">该收入表已结束（审批未通过），如需再次提交请新建。</p>
+      <p v-if="detail?.origin_id" class="muted">重新发起自 #{{ detail.origin_id }}</p>
+      <p v-if="detail?.reopened_by_id" class="muted">已由 #{{ detail.reopened_by_id }} 重新发起</p>
       <el-table :data="detail?.records || []" size="small">
         <el-table-column prop="line_no" label="#" width="50" />
         <el-table-column prop="occurred_on" label="日期" width="110" />
@@ -99,6 +108,7 @@ const skipped = ref([])
 const showCreate = ref(false)
 const showDetailDialog = ref(false)
 const detail = ref(null)
+const originId = ref(null)
 const voucherIds = ref([])
 const newRecord = () => ({ occurred_on: '', amount: '', category: '', source_note: '', remark: '' })
 const form = reactive({ records: [newRecord()] })
@@ -132,7 +142,25 @@ async function loadLimits() {
 function openCreate() {
   form.records = [newRecord()]
   voucherIds.value = []
+  originId.value = null
   showCreate.value = true
+}
+
+// 失败收入表只能新建：复制原表明细作为新表初始内容（REQ-FUNC-271/273）
+async function openReissue(item) {
+  try {
+    const origin = await incomeApi.adminDetail(item.id)
+    form.records = (origin.records || []).map((r) => ({
+      occurred_on: r.occurred_on, amount: r.amount, category: r.category,
+      source_note: r.source_note, remark: r.remark
+    }))
+    if (!form.records.length) form.records = [newRecord()]
+    voucherIds.value = []
+    originId.value = item.id
+    showCreate.value = true
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
 }
 
 async function uploadVoucher({ file }) {
@@ -147,8 +175,10 @@ async function uploadVoucher({ file }) {
 
 async function create() {
   try {
-    await incomeApi.create({ records: form.records, voucher_ids: voucherIds.value })
+    await incomeApi.create({ records: form.records, voucher_ids: voucherIds.value,
+      origin_id: originId.value || undefined })
     showCreate.value = false
+    originId.value = null
     ElMessage.success('已保存为草稿，请选择审批流程后提交')
     load()
   } catch (e) {
@@ -182,8 +212,8 @@ async function showDetail(id) {
 async function submit(item) {
   if (!flowId.value) return ElMessage.warning('请选择审批流程')
   try {
-    if (item.status === 'DRAFT') await incomeApi.submit(item.id, flowId.value)
-    else await incomeApi.resubmit(item.id, flowId.value)
+    if (item.status === 'WITHDRAWN') await incomeApi.resubmit(item.id, flowId.value)
+    else await incomeApi.submit(item.id, flowId.value)
     ElMessage.success('已提交审批')
     load()
   } catch (e) {

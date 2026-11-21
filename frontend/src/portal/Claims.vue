@@ -28,13 +28,20 @@
           <div class="row">
             <StatusTag :status="item.status" />
             <el-button v-if="scope === 'mine' && item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
+            <el-button v-if="scope === 'mine' && item.status === 'REJECTED' && item.type !== 'SETTLEMENT'" size="small" @click="openReissue(item)">重新发起</el-button>
           </div>
+        </div>
+        <div v-if="item.status === 'REJECTED' || item.origin_id || item.reopened_by_id" class="muted" style="margin-top: 4px">
+          <span v-if="item.status === 'REJECTED'">该申请已结束（审批未通过），如需再次申请请新建。</span>
+          <span v-if="item.origin_id">重新发起自 #{{ item.origin_id }}</span>
+          <span v-if="item.reopened_by_id">已由 #{{ item.reopened_by_id }} 重新发起</span>
         </div>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </div>
 
     <el-dialog v-model="showCreate" title="新建申请" width="760px">
+      <p v-if="originId" class="muted">重新发起自 #{{ originId }}（原申请已结束，本申请独立审批）</p>
       <div class="claim-form-wrap">
         <div class="claim-form">
           <div class="field-block">
@@ -192,6 +199,7 @@ const advances = ref([])
 const reimbursements = ref([])
 const showCreate = ref(false)
 const showSettle = ref(false)
+const originId = ref(null)
 const form = reactive({
   type: 'REIMBURSEMENT', amount: '', reason: '', occurred_on: '',
   expected_usage: '', expected_settle_on: '', approval_flow_id: null
@@ -262,6 +270,22 @@ async function loadFlows() {
 }
 
 function openCreate() {
+  originId.value = null
+  showCreate.value = true
+}
+
+// 失败申请只能新建：预填原申请内容，发票需重新上传（REQ-FUNC-271/273）
+function openReissue(item) {
+  Object.assign(form, {
+    type: item.type, amount: item.amount, reason: item.reason,
+    occurred_on: item.occurred_on || '',
+    expected_usage: item.expected_usage || '',
+    expected_settle_on: item.expected_settle_on || '',
+    approval_flow_id: null
+  })
+  invoiceIds.value = []
+  invoiceFiles.value = []
+  originId.value = item.id
   showCreate.value = true
 }
 
@@ -286,15 +310,18 @@ async function create() {
     if (form.type === 'REIMBURSEMENT') {
       await claimApi.createReimbursement({
         amount: form.amount, reason: form.reason, occurred_on: form.occurred_on,
-        invoice_ids: invoiceIds.value, approval_flow_id: form.approval_flow_id
+        invoice_ids: invoiceIds.value, approval_flow_id: form.approval_flow_id,
+        origin_id: originId.value || undefined
       })
     } else {
       await claimApi.createAdvance({
         amount: form.amount, reason: form.reason, expected_usage: form.expected_usage,
-        expected_settle_on: form.expected_settle_on, approval_flow_id: form.approval_flow_id
+        expected_settle_on: form.expected_settle_on, approval_flow_id: form.approval_flow_id,
+        origin_id: originId.value || undefined
       })
     }
     showCreate.value = false
+    originId.value = null
     invoiceIds.value = []
     invoiceFiles.value = []
     ElMessage.success('已提交审批')

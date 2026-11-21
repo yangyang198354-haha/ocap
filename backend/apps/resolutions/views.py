@@ -47,6 +47,8 @@ def resolution_view(row: Resolution, *, with_content: bool = True, stats: VoteSt
         "revision": row.revision, "decided_at": row.decided_at, "result": row.result,
         "created_at": row.created_at, "attachments": linked_attachment_list("resolution", row.id),
         "participation": None,
+        "origin_id": row.origin_id,
+        "reopened_by_id": row.reissued.order_by("id").values_list("id", flat=True).first(),
     }
     if with_content:
         data["content"] = row.content
@@ -92,13 +94,14 @@ class ResolutionListCreateView(APIView):
     def post(self, request):
         data = request.data or {}
         flow, deadline = _validate_submission(data)
+        origin = _origin_of(data, request.user)
         attachment_ids = _parse_attachment_ids(data.get("attachment_ids") or [])
         labels = CommitteeQuery.identity_labels(request.user.id)
         with transaction.atomic():
             row = Resolution.objects.create(
                 title=str(data["title"]).strip(), content=str(data["content"]).strip(),
                 initiator=request.user, initiator_labels=labels,
-                approval_mode=flow.mode, vote_deadline=deadline,
+                approval_mode=flow.mode, vote_deadline=deadline, origin=origin,
             )
             AttachmentService.link(attachment_ids, linked_type="resolution", linked_id=str(row.id),
                                    purpose="RESOLUTION", owner=request.user)
@@ -107,7 +110,8 @@ class ResolutionListCreateView(APIView):
             AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
                                 action="RESOLUTION_SUBMITTED", object_type="resolution",
                                 object_id=str(row.id), result="SUCCESS",
-                                detail={"mode": flow.mode, "instance": instance.id})
+                                detail={"mode": flow.mode, "instance": instance.id,
+                                        "origin_id": origin.id if origin else None})
         return Response(resolution_view(row), status=status.HTTP_201_CREATED)
 
 
@@ -198,8 +202,8 @@ class ResolutionResubmitView(APIView):
         row = Resolution.objects.filter(id=resolution_id, initiator=request.user).first()
         if row is None:
             raise ApiError("NOT_FOUND", "决议不存在或非本人发起", 404)
-        if row.status not in {"REJECTED", "WITHDRAWN"}:
-            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交", 409)
+        if row.status != "WITHDRAWN":
+            raise ApiError("NOT_RESUBMITTABLE", "该决议已结束，如需再次表决请新建决议", 409)
         data = request.data or {}
         flow, deadline = _validate_submission(data)
         attachment_ids = _parse_attachment_ids(data.get("attachment_ids") or [])
@@ -247,6 +251,21 @@ class VoteView(APIView):
         if not created:
             raise ApiError("ALREADY_VOTED", "本轮已投票", 409)
         return Response(resolution_view(row))
+
+
+def _origin_of(data: dict, user) -> Resolution | None:
+    """新建决议时的原单关联：只能是本人发起且已失败的决议（REQ-FUNC-271/273）。"""
+    raw = data.get("origin_id")
+    if raw in (None, ""):
+        return None
+    try:
+        origin_id = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ApiError("INVALID_VALUE", "origin_id 不合法") from exc
+    origin = Resolution.objects.filter(id=origin_id, initiator=user, status="REJECTED").first()
+    if origin is None:
+        raise ApiError("INVALID_VALUE", "原决议不存在或不可关联")
+    return origin
 
 
 def _validate_submission(data: dict):

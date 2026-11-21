@@ -33,6 +33,8 @@ def claim_view(claim: Claim) -> dict:
         "ledger_posted": claim.ledger_posted, "created_at": claim.created_at,
         "decided_at": claim.decided_at, "submitter_id": claim.submitter_id,
         "attachments": linked_attachment_list("claim", claim.id),
+        "origin_id": claim.origin_id,
+        "reopened_by_id": claim.reissued.order_by("id").values_list("id", flat=True).first(),
     }
 
 
@@ -83,6 +85,22 @@ def _applicant_labels(user) -> str:
     return ",".join(CommitteeQuery.identity_labels(user.id))
 
 
+def _origin_of(data: dict, user, claim_type: str) -> Claim | None:
+    """新建申请时的原单关联：只能是本人同类型且已失败的申请（REQ-FUNC-271/273）。"""
+    raw = data.get("origin_id")
+    if raw in (None, ""):
+        return None
+    try:
+        origin_id = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ApiError("INVALID_VALUE", "origin_id 不合法") from exc
+    origin = Claim.objects.filter(id=origin_id, submitter=user, type=claim_type,
+                                  status="REJECTED").first()
+    if origin is None:
+        raise ApiError("INVALID_VALUE", "原申请不存在或不可关联")
+    return origin
+
+
 class ReimbursementCreateView(APIView):
     permission_classes = [IsCommitteeMember]
 
@@ -102,14 +120,22 @@ class ReimbursementCreateView(APIView):
             raise ApiError("INVALID_VALUE", "发生日期不得晚于今日")
         invoice_ids = _parse_invoice_ids(data.get("invoice_ids") or [], required=True)
         flow = _flow(data, "EXPENSE")
+        origin = _origin_of(data, request.user, "REIMBURSEMENT")
         with transaction.atomic():
             claim = Claim.objects.create(type="REIMBURSEMENT", submitter=request.user,
                                          applicant_labels=_applicant_labels(request.user),
-                                         amount=amount, reason=reason, occurred_on=occurred_on)
+                                         amount=amount, reason=reason, occurred_on=occurred_on,
+                                         origin=origin)
             AttachmentService.link(invoice_ids, linked_type="claim", linked_id=str(claim.id),
                                    purpose="INVOICE", owner=request.user)
             ApprovalEngine.submit(scope="EXPENSE", subject_type="claim", subject_id=claim.id,
                                   flow_id=flow.id, submitter=request.user)
+            AuditService.record(actor=AuditActor("MEMBER", request.user.id,
+                                                 request.user.identity_label),
+                                action="CLAIM_SUBMITTED", object_type="claim",
+                                object_id=str(claim.id), result="SUCCESS",
+                                detail={"type": "REIMBURSEMENT",
+                                        "origin_id": origin.id if origin else None})
         return Response(claim_view(claim), status=status.HTTP_201_CREATED)
 
 
@@ -132,14 +158,22 @@ class AdvanceCreateView(APIView):
         if expected_settle_on is None or expected_settle_on <= date.today():
             raise ApiError("INVALID_VALUE", "预计核销日期须晚于今日")
         flow = _flow(data, "EXPENSE")
+        origin = _origin_of(data, request.user, "ADVANCE")
         with transaction.atomic():
             claim = Claim.objects.create(type="ADVANCE", submitter=request.user,
                                          applicant_labels=_applicant_labels(request.user),
                                          amount=amount, reason=reason,
                                          expected_usage=expected_usage,
-                                         expected_settle_on=expected_settle_on)
+                                         expected_settle_on=expected_settle_on,
+                                         origin=origin)
             ApprovalEngine.submit(scope="EXPENSE", subject_type="claim", subject_id=claim.id,
                                   flow_id=flow.id, submitter=request.user)
+            AuditService.record(actor=AuditActor("MEMBER", request.user.id,
+                                                 request.user.identity_label),
+                                action="CLAIM_SUBMITTED", object_type="claim",
+                                object_id=str(claim.id), result="SUCCESS",
+                                detail={"type": "ADVANCE",
+                                        "origin_id": origin.id if origin else None})
         return Response(claim_view(claim), status=status.HTTP_201_CREATED)
 
 
@@ -262,8 +296,11 @@ class ClaimResubmitView(APIView):
         claim = Claim.objects.filter(id=claim_id, submitter=request.user).first()
         if claim is None:
             raise ApiError("NOT_FOUND", "申请不存在或非本人提交", 404)
-        if claim.status not in {"REJECTED", "WITHDRAWN"} or claim.type == "SETTLEMENT":
-            raise ApiError("NOT_RESUBMITTABLE", "当前状态不可重新提交（核销请重新发起）", 409)
+        if claim.type == "SETTLEMENT":
+            raise ApiError("NOT_RESUBMITTABLE", "核销不支持重新提交，请重新发起", 409)
+        # REQ-FUNC-269/270：审批失败即终局，仅撤回后可在原单重提
+        if claim.status != "WITHDRAWN":
+            raise ApiError("NOT_RESUBMITTABLE", "该申请已结束，如需再次申请请新建", 409)
         data = request.data or {}
         amount = _parse_amount(data.get("amount", claim.amount))
         reason = str(data.get("reason", claim.reason)).strip()

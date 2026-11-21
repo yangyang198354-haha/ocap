@@ -98,9 +98,10 @@
           </el-table-column>
           <el-table-column label="操作" min-width="140">
             <template #default="{ row }">
-              <el-button v-if="row.role !== 'RESIDENT'" size="small" type="danger" @click="revoke(row)">撤销认证</el-button>
+              <el-button v-if="row.role !== 'RESIDENT'" class="op-btn" size="small" type="danger"
+                         @click="revoke(row)">撤销认证</el-button>
               <!-- REQ-FUNC-293：管理员可移除同住人 -->
-              <el-button v-else size="small" type="danger" @click="removeResident(row)">移除同住人</el-button>
+              <el-button v-else class="op-btn" size="small" type="danger" @click="removeResident(row)">移除同住人</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -275,6 +276,8 @@ onMounted(load)
 .filter-cell :deep(.el-input),
 .filter-cell :deep(.el-select) { width: 100%; }
 .action-cell :deep(.el-button) { padding-inline: 8px; }
+/* REQ-FUNC-293：操作列按钮等宽，避免 4/5 字文案宽度不一致 */
+.op-btn { width: 96px; }
 .membership-table { min-width: 1550px; }
 .user-link { color: var(--accent); text-decoration: none; }
 .user-link:hover { text-decoration: underline; }

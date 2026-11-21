@@ -288,14 +288,11 @@ def profile_view(user: User) -> dict:
 
 
 def _own_real_name(user: User) -> str | None:
-    """取最近一条有效产权认证对应的清册姓名；无则 None（ADR-148 决策）。"""
-    from apps.residency.models import Membership
+    """取有效产权认证对应的清册姓名；无则 None（ADR-148 决策，与身份页同一口径）。"""
+    from apps.residency.housing import verified_owner_names
 
-    membership = (Membership.objects.filter(
-        user=user, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
-        registry_owner__isnull=False,
-    ).select_related("registry_owner").order_by("-id").first())
-    return membership.registry_owner.name if membership else None
+    names = verified_owner_names(user)
+    return names[-1] if names else None
 
 
 class ThemePreferenceView(APIView):

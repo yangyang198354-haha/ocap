@@ -98,9 +98,10 @@ class IdentityService:
         summary = identity_view(memberships=memberships, seats=seats)
         real_name = None
         if user.real_name_visible:
-            owners = [m.registry_owner.name for m in memberships
-                      if m.registry_owner_id and m.role in ("HEAD", "OWNER") and m.registry_owner]
-            real_name = owners[-1] if owners else None
+            from apps.residency.housing import verified_owner_names
+
+            names = verified_owner_names(user)
+            real_name = names[-1] if names else None
         return {
             "id": user.id,
             "nickname": user.nickname,

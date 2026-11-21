@@ -17,6 +17,45 @@ from .models import Membership, ResidentApplication
 OWNER_ROLES = ("HEAD", "OWNER")
 
 
+def _is_mine(owner: RegistryOwner, linked_owner_ids: dict[int, set[int]],
+             phone: str | None) -> bool:
+    """IFC-357：清册业主与本人的对应关系——认证时记录关联，或该专有部分内手机号一致。"""
+    if owner.id in linked_owner_ids.get(owner.unit_id, ()):
+        return True
+    return bool(phone) and any(p.phone == phone for p in owner.phones.all())
+
+
+def _owner_names(memberships, owners_by_unit: dict[int, list[RegistryOwner]],
+                 linked_owner_ids: dict[int, set[int]], phone: str | None) -> list[str]:
+    names: list[str] = []
+    for m in memberships:
+        if m.role not in OWNER_ROLES:
+            continue
+        for owner in owners_by_unit.get(m.unit_id, []):
+            if owner.name and _is_mine(owner, linked_owner_ids, phone) and owner.name not in names:
+                names.append(owner.name)
+    return names
+
+
+def verified_owner_names(user) -> list[str]:
+    """MOD-153 / AC-271-03：与“我的身份与房屋”同一口径的有效产权业主清册姓名。"""
+    memberships = list(Membership.objects.filter(user=user, ended_at__isnull=True))
+    owner_memberships = [m for m in memberships if m.role in OWNER_ROLES]
+    if not owner_memberships:
+        return []
+    unit_ids = {m.unit_id for m in owner_memberships}
+    owners_by_unit: dict[int, list[RegistryOwner]] = {}
+    for owner in (RegistryOwner.objects.filter(unit_id__in=unit_ids)
+                  .prefetch_related("phones").order_by("id")):
+        owners_by_unit.setdefault(owner.unit_id, []).append(owner)
+    linked_owner_ids: dict[int, set[int]] = {}
+    for m in owner_memberships:
+        if m.registry_owner_id is not None:
+            linked_owner_ids.setdefault(m.unit_id, set()).add(m.registry_owner_id)
+    return _owner_names(owner_memberships, owners_by_unit, linked_owner_ids,
+                        getattr(user, "phone", None))
+
+
 class HousingResident(TypedDict):
     user_id: int
     nickname: str | None
@@ -79,17 +118,10 @@ def housing_view(user) -> HousingPayload:
             linked_owner_ids.setdefault(m.unit_id, set()).add(m.registry_owner_id)
 
     def is_mine(owner: RegistryOwner) -> bool:
-        if owner.id in linked_owner_ids.get(owner.unit_id, ()):
-            return True
-        return bool(user.phone) and any(p.phone == user.phone for p in owner.phones.all())
+        return _is_mine(owner, linked_owner_ids, getattr(user, "phone", None))
 
-    real_names: list[str] = []
-    for m in memberships:
-        if m.role not in OWNER_ROLES:
-            continue
-        for owner in owners_by_unit.get(m.unit_id, []):
-            if owner.name and is_mine(owner) and owner.name not in real_names:
-                real_names.append(owner.name)
+    real_names = _owner_names(memberships, owners_by_unit, linked_owner_ids,
+                              getattr(user, "phone", None))
 
     def co_owner_names(unit_id: int) -> list[str]:
         names: list[str] = []

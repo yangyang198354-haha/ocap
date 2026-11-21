@@ -47,6 +47,24 @@ class ProfileFieldsTests(ApiTestBase):
         self.assertTrue(body["can_show_real_name"])
         self.assert_ok(self.api("patch", "/me/profile", {"real_name_visible": True}, token=token))
 
+    def test_phone_matched_owner_without_link_can_show_real_name(self):
+        """AC-271-03：历史记录未写 registry_owner，但手机号命中清册业主时同样可开启实名。"""
+        unit = RegistryUnit.objects.create(building="4栋", unit_no="2单元", floor="5", room="501")
+        owner = RegistryOwner.objects.create(unit=unit, name="赵六")
+        phone = next_phone()
+        RegistryPhone.objects.create(unit=unit, owner=owner, phone=phone)
+        user, token = self.make_user(phone=phone, nickname="历史用户")
+        Membership.objects.create(user=user, unit=unit, role="HEAD", source="CERTIFIED",
+                                  active_slot=1, head_slot=1)
+        _, viewer_token = self.make_user()
+
+        body = self.assert_ok(self.api("get", "/me/profile", token=token)).json()
+        self.assertTrue(body["can_show_real_name"])
+        self.assertEqual(body["real_name"], "赵六")
+        self.assert_ok(self.api("patch", "/me/profile", {"real_name_visible": True}, token=token))
+        pub = self.assert_ok(self.api("get", f"/users/{user.id}/profile", token=viewer_token)).json()
+        self.assertEqual(pub["real_name"], "赵六")
+
     def test_owner_real_name_visibility_and_public_profile_whitelist(self):
         unit = RegistryUnit.objects.create(building="1栋", unit_no="1单元", floor="9", room="902")
         owner = RegistryOwner.objects.create(unit=unit, name="张三")

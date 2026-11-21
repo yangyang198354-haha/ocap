@@ -408,13 +408,10 @@ class AccountService:
 
     @staticmethod
     def _is_verified_owner(user: User) -> bool:
-        """MOD-153：是否存在有效产权认证且关联清册业主（实名来源）。"""
-        from apps.residency.models import Membership
+        """MOD-153 / AC-271-03：是否存在有效产权认证（关联清册业主或手机号命中）。"""
+        from apps.residency.housing import verified_owner_names
 
-        return Membership.objects.filter(
-            user=user, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
-            registry_owner__isnull=False,
-        ).exists()
+        return bool(verified_owner_names(user))
 
     @staticmethod
     def verify_email(user: User, email: str, code: str) -> None:

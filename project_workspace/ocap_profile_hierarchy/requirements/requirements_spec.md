@@ -51,9 +51,9 @@
 
 | ID | 约束 | 来源 |
 |---|---|---|
-| C-84 | 实名仅在用户开启（`real_name_visible`）且存在有效实名时展示；不得为此新增公开字段或扩大公开白名单 | `backend/apps/identity/services.py:99-104`、`backend/apps/accounts/views.py:280-287` |
-| C-85 | 身份文案沿用现有汇总口径（`identity.label` / `identitySummary.label`），不新增身份枚举或改写身份名称 | `backend/apps/accounts/directory.py:21-34`、`miniprogram/pages/me/index.vue:23` |
-| C-86 | Web 与小程序的主信息区调整不得改变头像、签名档、编辑资料入口的现有功能与权限 | `frontend/src/portal/UserProfile.vue:8-22`、`miniprogram/pages/me/index.vue:21-44` |
+| C-87 | 实名仅在用户开启（`real_name_visible`）且存在有效实名时展示；不得为此新增公开字段或扩大公开白名单 | `backend/apps/identity/services.py:99-104`、`backend/apps/accounts/views.py:280-287` |
+| C-88 | 身份文案沿用现有汇总口径（`identity.label` / `identitySummary.label`），不新增身份枚举或改写身份名称 | `backend/apps/accounts/directory.py:21-34`、`miniprogram/pages/me/index.vue:23` |
+| C-89 | Web 与小程序的主信息区调整不得改变头像、签名档、编辑资料入口的现有功能与权限 | `frontend/src/portal/UserProfile.vue:8-22`、`miniprogram/pages/me/index.vue:21-44` |
 
 ## 决策记录
 

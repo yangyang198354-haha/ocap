@@ -61,7 +61,7 @@
       <criterion id="J-A-P11数值" result="SATISFIED">画像 P11-2 为无，本次不涉及数值指标。</criterion>
       <criterion id="J-A-故事覆盖" result="SATISFIED">REQ-FUNC-264~268 全部映射到 US-273~276；每个故事至少 2 条 AC；故事点合计 10。</criterion>
       <finding id="GR-A-001-F01" severity="MINOR">开放问题 Q3（徽章具体文案/图标）与 Q4（身份与实名的具体色值/字号）尚未定稿；AC 只约束存在性与“颜色、字体至少各一项不同”。</finding>
-      <condition>GROUP_B 需给出认证徽章文案建议与身份/实名样式区分方案（颜色/字体令牌），并在 module_design 中保留 C-84（实名白名单）与 C-85（身份文案沿用）。</condition>
+      <condition>GROUP_B 需给出认证徽章文案建议与身份/实名样式区分方案（颜色/字体令牌），并在 module_design 中保留 C-87（实名白名单）与 C-88（身份文案沿用）。</condition>
       <verification>PM 核对：两份文件存在，文件头 version=1.0.0 status=APPROVED；phase_status XML 可解析；kb_inbox.py --check-response 返回 RESPONSE_OK invocation_id=ocap_profile_hierarchy-GROUP_A-1 status=SUCCESS；收件箱追加 1 条 proposal。</verification>
     </gate_review>
     <gate_review id="GR-B-001" invocation_id="ocap_profile_hierarchy-GROUP_B-1" decision="PASS" time="2026-11-21T11:45:46+08:00">
@@ -152,5 +152,6 @@
     <event time="2026-11-21T12:13:37+08:00" type="GATE" actor="pm-orchestrator">GR-D-001 decision=PASS_WITH_CONDITIONS；PM 复跑 14+6 用例通过，全量回归新增失败 0；进入 GROUP_E1。</event>
     <event time="2026-11-21T12:13:37+08:00" type="INVOCATION" actor="pm-orchestrator">调用 ocap_profile_hierarchy-GROUP_E1-1（devops-engineer，PHASE_10,PHASE_11a）。</event>
     <event time="2026-11-21T12:19:05+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 decision=PASS；CI 无需修改，部署计划 8 DEPLOY / 8 ROLLBACK，测试环境 recreate，后端不重启；等待用户本轮部署授权（E2 NOT_AUTHORIZED）。</event>
+    <event time="2026-11-21T12:41:10+08:00" type="CORRECTION" actor="pm-orchestrator">CI run 44866643038 后端 job 失败于 TC-INT-480：本批约束编号 C-84 与 ocap_profile_ux C-84 重复。已将本批约束重编号为 C-87/C-88/C-89（requirements_spec、architecture_design、本文件门控条件同步），本地 test_requirements_numbering 8 tests OK。</event>
   </audit_log>
 </phase_status>

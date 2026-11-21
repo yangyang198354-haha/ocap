@@ -391,6 +391,19 @@ describe('管理端页面', () => {
     expect(vnodeText(messageBox.confirm.mock.calls[0][0])).toMatch(/失去该房屋的身份[\s\S]*户主接任/)
   })
 
+  it('REQ-FUNC-293：同住人行显示"移除同住人"，确认后调用 /admin/memberships/revoke', async () => {
+    const wrapper = await mountAdmin(AdminMemberships, {
+      '/admin/memberships': { count: 1, results: [{ id: 2, user: { id: 8, nickname: '乙', account_no: '2' }, unit_id: 3, specific_part: 'A房', role: 'RESIDENT', certified_at: '2026-01-01' }] }
+    })
+    adminHttp.post.mockResolvedValue({})
+    expect(wrapper.text()).not.toContain('撤销认证')
+    messageBox.confirm.mockResolvedValueOnce('confirm')
+    await buttonOf(wrapper, '移除同住人').trigger('click')
+    await flush()
+    expect(adminHttp.post).toHaveBeenCalledWith('/admin/memberships/revoke', { user_id: 8, unit_id: 3 })
+    expect(vnodeText(messageBox.confirm.mock.calls[0][0])).toMatch(/不再是同住人/)
+  })
+
   it('TC-UNIT-541 / AC-159-02、AC-256-01/02、REQ-FUNC-292：赋予席位对话框没有"用户 ID"输入框；新：逐级选专有部分(UnitCascader，管理端选项接口)→选清册业主(姓名+完整手机号)→提交 registry_owner_id 且不含 user_id', async () => {
     const wrapper = await mountAdmin(AdminSeats, {
       '/admin/committee/seats': { count: 0, results: [] }, '/admin/committee/config': { cap_member: 5 },

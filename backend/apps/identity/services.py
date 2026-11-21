@@ -200,7 +200,16 @@ class IdentityService:
         membership = Membership.objects.filter(user_id=user_id, unit_id=unit_id,
                                                ended_at__isnull=True).first()
         if membership is None:
-            raise ApiError("NOT_FOUND", "目标不是该专有部分有效产权业主", 404)
+            raise ApiError("NOT_FOUND", "目标不是该专有部分有效产权业主或同住人", 404)
+        if membership.role == "RESIDENT":
+            # REQ-FUNC-293：管理员可移除同住人（与产权业主移除同口径，不影响其他房屋身份）
+            MembershipService.end_membership(membership.id, "REMOVED")
+            AuditService.record(actor=AuditActor("ADMIN", admin_id, f"管理员{admin_id}"),
+                                action="RESIDENT_REMOVED", object_type="membership",
+                                object_id=str(membership.id), result="SUCCESS",
+                                detail={"user_id": user_id, "unit_id": unit_id, "operator": "ADMIN"})
+            return {"removed": True, "was_head": False, "new_head_id": None,
+                    "seat_invalidated": False}
         if membership.role not in {"HEAD", "OWNER"}:
             raise ApiError("INVALID_VALUE", "仅产权业主可撤销认证", 409)
         result = MembershipService.revoke_owner(user_id, unit_id)

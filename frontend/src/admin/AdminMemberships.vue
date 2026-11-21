@@ -99,6 +99,8 @@
           <el-table-column label="操作" min-width="140">
             <template #default="{ row }">
               <el-button v-if="row.role !== 'RESIDENT'" size="small" type="danger" @click="revoke(row)">撤销认证</el-button>
+              <!-- REQ-FUNC-293：管理员可移除同住人 -->
+              <el-button v-else size="small" type="danger" @click="removeResident(row)">移除同住人</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -232,6 +234,17 @@ async function revoke(row) {
   try {
     const result = await admin.revokeMembership(row.user.id, row.unit_id)
     ElMessage.success(result.was_head && result.new_head_id ? '已撤销，户主已由最早认证的产权业主接任' : '已撤销')
+    load()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function removeResident(row) {
+  if (!(await confirmDanger('removeResident', { name: `${row.user?.nickname || row.user?.account_no} · ${row.specific_part}` }))) return
+  try {
+    await admin.revokeMembership(row.user.id, row.unit_id)
+    ElMessage.success('已移除同住人')
     load()
   } catch (e) {
     ElMessage.error(errorText(e))

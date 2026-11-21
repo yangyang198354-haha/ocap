@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.committee.models import Seat
+from apps.core.models import AuditLog
 from apps.residency.models import Membership
 from tests.support import ApiTestBase, next_phone
 
@@ -175,6 +176,32 @@ class MembershipRevokeTests(ApiTestBase):
         promoted = Membership.objects.get(user=owner, unit=unit, ended_at__isnull=True)
         self.assertEqual(promoted.role, "HEAD")
         self.assertFalse(Seat.objects.filter(user=head, status="ACTIVE").exists())
+
+    def test_admin_can_remove_resident(self):
+        """REQ-FUNC-293：管理员移除同住人 → 结束该房屋身份（REMOVED）并写 ADMIN 审计；其他房屋身份与产权业主不受影响。"""
+        unit = self.make_unit(phones=[next_phone(), next_phone()])
+        owner, owner_token = self.make_user(phone=unit.phones.all()[0].phone)
+        self.assert_ok(self.api("post", "/certifications", {"unit_id": unit.id, "name": "业主甲"},
+                                token=owner_token), 201)
+        resident, _ = self.make_user()
+        Membership.objects.create(user=resident, unit=unit, role="RESIDENT", source="APPLICATION",
+                                  active_slot=1)
+        other_unit = self.make_unit(phones=[next_phone()])
+        Membership.objects.create(user=resident, unit=other_unit, role="RESIDENT",
+                                  source="APPLICATION", active_slot=1)
+        _, admin_token = self.make_admin()
+        resp = self.api("post", "/admin/memberships/revoke",
+                        {"user_id": resident.id, "unit_id": unit.id}, token=admin_token)
+        self.assert_ok(resp)
+        removed = Membership.objects.get(user=resident, unit=unit)
+        self.assertIsNotNone(removed.ended_at)
+        self.assertEqual(removed.end_reason, "REMOVED")
+        self.assertTrue(Membership.objects.filter(user=resident, unit=other_unit,
+                                                  ended_at__isnull=True).exists())
+        self.assertTrue(Membership.objects.filter(user=owner, unit=unit, role="HEAD",
+                                                  ended_at__isnull=True).exists())
+        log = AuditLog.objects.filter(action="RESIDENT_REMOVED").latest("id")
+        self.assertEqual(log.detail, {"user_id": resident.id, "unit_id": unit.id, "operator": "ADMIN"})
 
 
 class SeatTests(ApiTestBase):

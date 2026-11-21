@@ -20,7 +20,11 @@
     </view>
     <view class="card">
       <view class="title">{{ auth.me?.profile?.nickname || '业主' }}</view>
-      <view class="muted">身份：{{ auth.me ? auth.identitySummary.label : '加载中…' }}</view>
+      <view class="profile-tags">
+        <text v-if="realName" class="real-name">实名：{{ realName }}</text>
+        <view v-if="realName" class="tag is-success">✓ 已实名认证</view>
+        <view class="tag">身份：{{ auth.me ? auth.identitySummary.label : '加载中…' }}</view>
+      </view>
       <view v-if="!housingUnits.length" class="muted">暂无已认证房屋</view>
       <view v-for="u in housingUnits" :key="u.unit_id" class="muted">{{ u.specific_part }}（{{ u.role_label }}）</view>
       <view class="muted">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</view>
@@ -68,6 +72,7 @@ async function pickTheme(key) {
   }
 }
 const housingUnits = ref([])
+const realName = ref('')
 const { items: reports, total, hasMore, loadMore, reset } = usePaging({
   fetch: (params) => api.reports(params)
 })
@@ -94,6 +99,13 @@ async function load() {
     housingUnits.value = []
   }
   try {
+    // IFC-377：复用本人 profile，实名仅在本人开启且存在时返回（C-84）
+    realName.value = (await api.profile()).real_name || ''
+  } catch (e) {
+    // AC-276-03：实名数据失败时静默降级，不影响昵称与身份
+    realName.value = ''
+  }
+  try {
     await reset()
   } catch (e) {
     reports.value = []
@@ -107,3 +119,8 @@ function logout() {
 
 onShow(load)
 </script>
+
+<style scoped>
+.profile-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8rpx 12rpx; margin: 8rpx 0; }
+.real-name { color: var(--text); font-weight: 650; font-size: 26rpx; }
+</style>

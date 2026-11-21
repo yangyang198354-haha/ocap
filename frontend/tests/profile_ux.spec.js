@@ -1,6 +1,7 @@
 // ocap_profile_ux GROUP_D：资料字段 / 他人 profile / 席位表格 / 房屋关系搜索 / 右上角头像。
 // 层级：unit（页面 + 真实 api.js，仅 mock HTTP）。TC-UNIT-1501 起。
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
@@ -63,6 +64,59 @@ describe('US-270 / US-272：他人 profile 页', () => {
     await flush()
     expect(wrapper.text()).toContain('这个人很懒，什么都没写')
     expect(buttonOf(wrapper, '编辑资料')).toBeFalsy()
+  })
+
+  it('TC-UNIT-1509：实名可见时顺序为昵称 → 实名+徽章 → 身份，身份样式独立（AC-273-01/274-01/275-01）', async () => {
+    http.get.mockResolvedValue({
+      id: 9, nickname: '昵称丙', avatar_url: null,
+      identity: { code: 'HEAD', label: '产权业主' }, labels: ['产权业主'],
+      real_name: '杨扬', signature: '', is_self: false
+    })
+    const { wrapper } = await mountPage(UserProfile, { path: '/users/9/profile' })
+    await flush()
+    const text = wrapper.text()
+    expect(text.indexOf('昵称丙')).toBeLessThan(text.indexOf('杨扬'))
+    expect(text.indexOf('杨扬')).toBeLessThan(text.indexOf('产权业主'))
+    expect(wrapper.find('.real-name').exists()).toBe(true)
+    expect(wrapper.find('.real-name .verified-badge').text()).toContain('已实名认证')
+    expect(wrapper.find('.identity-tag').text()).toContain('产权业主')
+  })
+
+  it('TC-UNIT-1510：无实名时不渲染实名文本与认证徽章（AC-273-02/274-02）', async () => {
+    http.get.mockResolvedValue({
+      id: 10, nickname: '昵称丁', avatar_url: null,
+      identity: { code: 'GUEST', label: '游客' }, labels: ['游客'],
+      real_name: null, signature: '', is_self: false
+    })
+    const { wrapper } = await mountPage(UserProfile, { path: '/users/10/profile' })
+    await flush()
+    expect(wrapper.find('.real-name').exists()).toBe(false)
+    expect(wrapper.find('.verified-badge').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('实名：')
+    expect(wrapper.find('.identity-tag').exists()).toBe(true)
+  })
+
+  it('TC-UNIT-1511：昵称为空时显示占位且仍在身份之前（AC-273-03）', async () => {
+    http.get.mockResolvedValue({
+      id: 11, nickname: '', avatar_url: null,
+      identity: { code: 'GUEST', label: '游客' }, labels: ['游客'],
+      real_name: null, signature: '', is_self: false
+    })
+    const { wrapper } = await mountPage(UserProfile, { path: '/users/11/profile' })
+    await flush()
+    const text = wrapper.text()
+    expect(text).toContain('未设置昵称')
+    expect(text.indexOf('未设置昵称')).toBeLessThan(text.indexOf('游客'))
+  })
+
+  it('TC-UNIT-1512：实名与身份的样式规则不同（AC-275-01/275-02）', () => {
+    const src = readFileSync('src/portal/UserProfile.vue', 'utf8')
+    const realRule = src.match(/\.real-name\s*\{([^}]*)\}/)[1]
+    const identityRule = src.match(/\.identity-tag\s*\{([^}]*)\}/)[1]
+    expect(realRule).toContain('var(--text)')
+    expect(realRule).toContain('font-weight: 650')
+    expect(identityRule).not.toContain('var(--text)')
+    expect(identityRule).not.toContain('font-weight: 650')
   })
 })
 

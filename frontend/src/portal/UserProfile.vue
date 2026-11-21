@@ -7,11 +7,14 @@
         <div class="row profile-head">
           <AuthImage :src="profile.avatar_url" alt="默认头像" :size="72" />
           <div class="profile-meta">
-            <h3 class="title" style="margin: 0">{{ profile.nickname || '未设置昵称' }}</h3>
-            <p class="muted" style="margin: 4px 0">
-              <el-tag size="small" type="info">{{ profile.identity?.label || '游客' }}</el-tag>
-              <span v-if="profile.real_name" class="muted" style="margin-left: 8px">实名：{{ profile.real_name }}</span>
-            </p>
+            <h3 class="title profile-name" style="margin: 0">{{ profile.nickname || '未设置昵称' }}</h3>
+            <div class="profile-tags">
+              <span v-if="profile.real_name" class="real-name">
+                实名：{{ profile.real_name }}
+                <el-tag class="verified-badge" size="small" type="success" effect="plain">✓ 已实名认证</el-tag>
+              </span>
+              <el-tag class="identity-tag" size="small" type="info">{{ profile.identity?.label || '游客' }}</el-tag>
+            </div>
           </div>
           <el-button v-if="profile.is_self" type="primary" plain @click="$router.push('/me/profile')">编辑资料</el-button>
         </div>
@@ -57,6 +60,9 @@ watch(() => route.params.user_id, load)
 <style scoped>
 .profile-head { align-items: center; gap: 16px; }
 .profile-meta { flex: 1; min-width: 0; }
+.profile-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; }
+.real-name { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-weight: 650; font-size: 14px; }
+.identity-tag { font-weight: 400; }
 .signature { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
 .signature-text { margin: 0; white-space: pre-wrap; word-break: break-word; }
 </style>

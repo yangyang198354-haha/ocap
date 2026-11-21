@@ -63,4 +63,33 @@ describe('小程序认证房屋（US-146 / US-148）', () => {
     expect(text).toContain('身份：产权业主')
     expect(text).not.toContain('户主')
   })
+
+  it('TC-MP-504 “我的”页：实名在身份前并带认证徽章（AC-276-01）', async () => {
+    respondWith({
+      'GET /me': ME(['产权业主'], [UNIT_A]),
+      'GET /me/housing': { units: [UNIT_A] },
+      'GET /me/profile': { real_name: '杨扬', real_name_visible: true },
+      'GET /ledger/reports': { results: [] }
+    })
+    const { wrapper } = await mountPage(Me)
+    const text = wrapper.text()
+    expect(text.indexOf('张三')).toBeLessThan(text.indexOf('杨扬'))
+    expect(text.indexOf('杨扬')).toBeLessThan(text.indexOf('产权业主'))
+    expect(wrapper.find('.real-name').text()).toContain('实名：杨扬')
+    const badge = wrapper.findAll('.tag').find((t) => t.text().includes('已实名认证'))
+    expect(badge).toBeTruthy()
+  })
+
+  it('TC-MP-505 实名接口失败时静默降级，昵称与身份仍展示（AC-276-02/276-03）', async () => {
+    uni.request.mockImplementation(({ url, success }) => {
+      const path = url.replace('/api/v1', '')
+      if (path === '/me') return success({ statusCode: 200, data: ME(['产权业主'], [UNIT_A]) })
+      if (path === '/me/profile') return success({ statusCode: 500, data: { code: 'SERVER_ERROR' } })
+      return success({ statusCode: 200, data: { results: [] } })
+    })
+    const { wrapper } = await mountPage(Me)
+    expect(wrapper.find('.real-name').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('已实名认证')
+    expect(wrapper.text()).toContain('身份：产权业主')
+  })
 })

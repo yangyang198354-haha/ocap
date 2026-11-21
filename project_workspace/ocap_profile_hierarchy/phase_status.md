@@ -1,4 +1,4 @@
-<phase_status project="ocap_profile_hierarchy" mode="INCREMENTAL" created="2026-11-21T11:36:28+08:00" updated="2026-11-21T12:19:05+08:00">
+<phase_status project="ocap_profile_hierarchy" mode="INCREMENTAL" created="2026-11-21T11:36:28+08:00" updated="2026-11-21T12:45:00+08:00">
   <request>个人主页应该先显示昵称或者实名，然后才是身份标记。 如果是实名。可以追加一个实名认证徽章， 身份的颜色和字体可以和实名不一样。 web 端和小程序都应该做这样的改动</request>
   <profile version="1.2.0"/>
   <groups>
@@ -23,7 +23,7 @@
       <phase id="PHASE_10" status="APPROVED"/>
       <phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="test"/>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_profile_hierarchy/requirements/requirements_spec.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -38,7 +38,8 @@
     <artifact path="project_workspace/ocap_profile_hierarchy/testing/integration_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_profile_hierarchy/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_profile_hierarchy/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
-    <artifact path="project_workspace/ocap_profile_hierarchy/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_profile_hierarchy/deployment/deployment_plan.md" version="1.0.1" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_profile_hierarchy/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -47,6 +48,7 @@
     <invocation id="ocap_profile_hierarchy-GROUP_C-1" agent="software-developer" started="2026-11-21T11:45:46+08:00" ended="2026-11-21T11:57:40+08:00" result="SUCCESS"/>
     <invocation id="ocap_profile_hierarchy-GROUP_D-1" agent="test-engineer" started="2026-11-21T11:57:40+08:00" ended="2026-11-21T12:13:37+08:00" result="SUCCESS"/>
     <invocation id="ocap_profile_hierarchy-GROUP_E1-1" agent="devops-engineer" started="2026-11-21T12:13:37+08:00" ended="2026-11-21T12:19:05+08:00" result="SUCCESS"/>
+    <invocation id="ocap_profile_hierarchy-GROUP_E2-1" agent="devops-engineer" started="2026-11-21T12:38:31+08:00" ended="2026-11-21T12:44:10+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_profile_hierarchy-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-21T11:43:21+08:00">
@@ -123,7 +125,20 @@
       <criterion id="J-E1-不可逆项" result="SATISFIED">不可逆汇总列出浏览器缓存、微信平台上传（不在自动计划内）、nginx 备份清理；均给出处置，未插入未授权操作。</criterion>
       <criterion id="J-E1-测试门控" result="SATISFIED">计划前置引用 GROUP_D APPROVED 与全量回归结果；部署计划未包含任何绕过失败继续部署的路径。</criterion>
       <finding id="GR-E1-001-F01" severity="MINOR">DEPLOY-002/003 命令混用 PowerShell 变量（`$env:TEMP`）与占位符 `&lt;sha&gt;/&lt;TS&gt;`，执行时需先确定提交短号与时间戳；已在执行前核验要求中说明。</finding>
-      <verification>PM 核对：两份文件存在，文件头 version=1.0.0 status=APPROVED；`.github/workflows/ci.yml` 实际内容与“无需修改”结论一致；DEPLOY/ROLLBACK 编号配对与逆序正确；phase_status XML 可解析；kb_inbox.py --check-response 返回 RESPONSE_OK invocation_id=ocap_profile_hierarchy-GROUP_E1-1 status=SUCCESS；收件箱追加 1 条 proposal。E2 未授权，未执行任何目标机命令。</verification>
+    </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_profile_hierarchy-GROUP_E2-1" decision="PASS" time="2026-11-21T12:44:10+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_profile_hierarchy/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="J-E2-授权" result="SATISFIED">用户本轮明确选择“提交+推送+CI 全绿后部署”；CI run 44866876013 三 job 全绿后才执行；环境名与计划、画像 P7 一致。</criterion>
+      <criterion id="J-E2-锚点" result="SATISFIED">先取回滚锚点：`TS=20261121123831`，快照 SHA256 `71b581…f96c`，旧 `index.html` SHA256 `9acfea53…608c`，nginx 备份已生成。</criterion>
+      <criterion id="J-E2-执行" result="SATISFIED">DEPLOY-001~004 按序执行成功：构建 `built in 5.20s`；包 SHA256 两端一致；`WEB_SWAPPED`；新 index.html 与本地 `dist/index.html` 均为 `6f8e0f26…9100`。</criterion>
+      <criterion id="J-E2-跳过项" result="SATISFIED">后端零改动未重启、未迁移；nginx 未改未 reload；无禁用操作（无容器、无 pscp 逐文件）。</criterion>
+      <criterion id="J-E2-验证" result="SATISFIED">内网/外网首页与静态资源 200；新产物含“已实名认证”；未登录 profile 401；backend/nginx active；`systemctl --failed` 0；SPA 回退 200；Freeark 200。</criterion>
+      <criterion id="J-E2-报告" result="SATISFIED">deployment_report 含授权核对、分步执行、验证结果、回滚路径与遗留问题；未执行步骤标 SKIPPED；无凭据。</criterion>
+      <finding id="GR-E2-001-F01" severity="MINOR">E1 计划原稿静态目录 `web/dist` 有误，E2 前已修正为 `web/ocap`（v1.0.1）；后续 E1 应先以目标机实际目录核对再出稿。</finding>
+      <condition>MV-01（Web 主题下实名与身份颜色/字体区分）与 MV-02（微信开发者工具“我的”页）须由用户人工验收；小程序上传不在本批自动部署内。</condition>
+      <verification>PM 复核：报告文件存在，version=1.0.0 status=APPROVED；外部命令输出与报告一致；phase_status XML 可解析。</verification>
     </gate_review>
   </gate_reviews>
   <clarifications>
@@ -153,5 +168,9 @@
     <event time="2026-11-21T12:13:37+08:00" type="INVOCATION" actor="pm-orchestrator">调用 ocap_profile_hierarchy-GROUP_E1-1（devops-engineer，PHASE_10,PHASE_11a）。</event>
     <event time="2026-11-21T12:19:05+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 decision=PASS；CI 无需修改，部署计划 8 DEPLOY / 8 ROLLBACK，测试环境 recreate，后端不重启；等待用户本轮部署授权（E2 NOT_AUTHORIZED）。</event>
     <event time="2026-11-21T12:41:10+08:00" type="CORRECTION" actor="pm-orchestrator">CI run 44866643038 后端 job 失败于 TC-INT-480：本批约束编号 C-84 与 ocap_profile_ux C-84 重复。已将本批约束重编号为 C-87/C-88/C-89（requirements_spec、architecture_design、本文件门控条件同步），本地 test_requirements_numbering 8 tests OK。</event>
+    <event time="2026-11-21T12:52:00+08:00" type="CORRECTION" actor="pm-orchestrator">deployment_plan v1.0.0 → 1.0.1：目标机预检确认静态目录为 `/home/yangyang/ocap/web/ocap`（原稿 `web/dist` 笔误），构建命令补 `VITE_API_BASE=/ocap/api/v1` 与 `--base=/ocap/`。</event>
+    <event time="2026-11-21T12:52:00+08:00" type="AUTHORIZATION" actor="user">用户本轮明确选择“提交+推送+CI 全绿后部署”，授权在 CI 全绿后部署到测试环境。CI run 44866876013（af1cc46）三 job 全绿：Mini program 39s / Backend 1m12s / Web frontend 1m3s。PM 写入 PRODUCTION_DEPLOY_CONFIRM=true，环境=测试（内网/外网），调用 GROUP_E2。</event>
+    <event time="2026-11-21T12:52:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 ocap_profile_hierarchy-GROUP_E2-1（devops-engineer，PHASE_11b，环境=测试）。</event>
+    <event time="2026-11-21T12:44:10+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 decision=PASS；DEPLOYED_SUCCESSFULLY（8 步：6 完成 / 2 跳过 / 0 失败）；锚点 20261121123831；GROUP_E2 → APPROVED。</event>
   </audit_log>
 </phase_status>

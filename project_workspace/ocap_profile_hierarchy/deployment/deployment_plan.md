@@ -2,7 +2,7 @@
   <author_agent>devops-engineer</author_agent>
   <timestamp>2026-11-21T12:17:20+08:00</timestamp>
   <project_name>ocap_profile_hierarchy</project_name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <input_files>
     <file>project_workspace/ocap_profile_hierarchy/architecture/module_design.md</file>
     <file>project_workspace/ocap_profile_hierarchy/testing/e2e_test_report.md</file>
@@ -14,11 +14,13 @@
 
 # 部署计划：个人主页信息层级与实名认证徽章
 
+> v1.0.1（2026-11-21）：预检发现静态目录实际为 `web/ocap`（原稿 `web/dist` 为笔误），构建补齐 `VITE_API_BASE=/ocap/api/v1` 与 `--base=/ocap/`（M-DE-034）；与 ocap_profile_ux 已验证流程对齐。
+
 ## 变更摘要
 
 | 组件 | 文件 | 迁移 | 构建 | 需重启/发布 |
 |---|---|---|---|---|
-| Web 前端 | `frontend/src/portal/UserProfile.vue` | 无 | `npm run build`（frontend） | 替换目标机静态目录 `/home/yangyang/ocap/web/dist` |
+| Web 前端 | `frontend/src/portal/UserProfile.vue` | 无 | `VITE_API_BASE=/ocap/api/v1 npm --prefix frontend run build -- --base=/ocap/` | 替换目标机静态目录 `/home/yangyang/ocap/web/ocap` |
 | 小程序 | `miniprogram/pages/me/index.vue` | 无 | `uni build -p mp-weixin`（UNI_INPUT_DIR/UNI_OUTPUT_DIR） | 仅生成产物；上传由微信开发者工具人工完成，不在自动部署内 |
 | 后端 | 无 | 无 | 无 | 不重启 |
 
@@ -35,8 +37,8 @@
 | 测试已通过 | 本计划前置：GROUP_D APPROVED；CI 全绿 | 报告与 CI 一致 |
 | 远端可达、磁盘充足 | `ssh yangyang@192.168.31.51 "df -h /home \| tail -1"` | 可用空间 > 500MB |
 | 后端/定时任务状态 | `systemctl is-active ocap-backend ocap-run-due-jobs.timer` | 均 active |
-| 现有静态目录存在 | `test -f /home/yangyang/ocap/web/dist/index.html && echo OK` | 输出 OK |
-| 当前版本锚点 | 记录 `sha256sum /home/yangyang/ocap/web/dist/index.html` | 输出 SHA256 非空 |
+| 现有静态目录存在 | `test -f /home/yangyang/ocap/web/ocap/index.html && echo OK` | 输出 OK |
+| 当前版本锚点 | 记录 `sha256sum /home/yangyang/ocap/web/ocap/index.html` | 输出 SHA256 非空 |
 | nginx 配置未变 | `sudo -n nginx -t` | syntax is ok |
 
 ## 部署步骤
@@ -44,14 +46,14 @@
 ### DEPLOY-001: 生成回滚锚点（目标机）
 - 组件：Web 静态产物 + nginx 备份
 - 位置：目标机
-- 命令：`TS=$(date +%Y%m%d%H%M%S); sudo tar czf /home/yangyang/ocap/snapshots/web-$TS.tar.gz -C /home/yangyang/ocap web && sudo cp /etc/nginx/sites-available/ocap /etc/nginx/sites-available/ocap.bak_$TS && sha256sum /home/yangyang/ocap/snapshots/web-$TS.tar.gz`
+- 命令：`TS=$(date +%Y%m%d%H%M%S); mkdir -p /home/yangyang/ocap/snapshots; tar -czf /home/yangyang/ocap/snapshots/web-$TS.tar.gz -C /home/yangyang/ocap/web ocap && cp /etc/nginx/sites-available/ocap /etc/nginx/sites-available/ocap.bak_$TS && sha256sum /home/yangyang/ocap/snapshots/web-$TS.tar.gz`
 - 预期：快照存在且 SHA256 非空；记录 `TS` 到部署报告
 - 回滚：ROLLBACK-001
 
 ### DEPLOY-002: 本地构建 Web 并打包（开发机）
 - 组件：Web 前端
 - 位置：开发机
-- 命令：`cd frontend && npm run build && cd .. && tar czf "$env:TEMP\web_dist_<sha>_<TS>.tar.gz" -C frontend dist`
+- 命令：`$env:VITE_API_BASE='/ocap/api/v1'; npm --prefix frontend run build -- --base=/ocap/; tar -czf "$env:TEMP\web_dist_<sha>_<TS>.tar.gz" -C frontend dist`
 - 预期：构建退出码 0，`dist/assets/index-*.js` 更新；tar 生成
 - 回滚：ROLLBACK-002
 
@@ -65,8 +67,8 @@
 ### DEPLOY-004: 替换静态目录（目标机）
 - 组件：Web 静态产物
 - 位置：目标机
-- 命令：`cd /home/yangyang/ocap/web && rm -rf dist.new && mkdir dist.new && tar xzf /tmp/web_dist_<sha>_<TS>.tar.gz -C dist.new --strip-components=1 && rm -rf dist && mv dist.new dist`
-- 预期：`dist/index.html` 存在，资源哈希为新版本
+- 命令：`ssh yangyang@192.168.31.51 "cd /home/yangyang/ocap/web && rm -rf ocap.new && mkdir ocap.new && tar -xzf /tmp/web_dist_<sha>_<TS>.tar.gz -C ocap.new && rm -rf ocap.old && mv ocap ocap.old && mv ocap.new ocap && echo WEB_SWAPPED"`
+- 预期：`WEB_SWAPPED`；`web/ocap/index.html` 的 SHA256 与本地 `frontend/dist/index.html` 一致
 - 回滚：ROLLBACK-004
 
 ### DEPLOY-005: 构建小程序产物（开发机，不部署）
@@ -115,9 +117,9 @@
 
 ### ROLLBACK-004: 恢复旧静态产物（目标机）
 - 类型：正式回滚
-- 命令：`TS=<部署报告记录的锚点>; rm -rf /home/yangyang/ocap/web/dist && tar xzf /home/yangyang/ocap/snapshots/web-$TS.tar.gz -C /home/yangyang/ocap/web --strip-components=1 web/dist`（如 tar 路径为 `web/dist`，使用 `--strip-components=2` 前先 `tar tzf` 核对）
-- 变量取值与核验：`TS` 取自部署报告 DEPLOY-001；执行前 `tar tzf` 确认包含 `web/dist/index.html`
-- 预期：`dist/index.html` 的 SHA256 与锚点记录一致
+- 命令：`TS=<部署报告记录的锚点>; cd /home/yangyang/ocap/web && rm -rf ocap && tar -xzf /home/yangyang/ocap/snapshots/web-$TS.tar.gz -C /home/yangyang/ocap/web && mv ocap ocap 2>/dev/null || true`（快照内为 `ocap/` 目录，解包即恢复；如已存在 `ocap.old` 可优先 `mv ocap.old ocap`）
+- 变量取值与核验：`TS` 取自部署报告 DEPLOY-001；执行前 `tar tzf` 确认包含 `ocap/index.html`
+- 预期：`web/ocap/index.html` 的 SHA256 与锚点记录一致
 
 ### ROLLBACK-003: 删除远端临时制品
 - 类型：正式回滚
@@ -146,7 +148,7 @@
 | 检查项 | 命令/URL | 成功标准 |
 |---|---|---|
 | Web 首页 | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/ocap/` | 200 |
-| 新产物包含徽章文案 | `grep -rl "已实名认证" /home/yangyang/ocap/web/dist/assets | head -1` | 输出非空 |
+| 新产物包含徽章文案 | `grep -rl "已实名认证" /home/yangyang/ocap/web/ocap/assets | head -1` | 输出非空 |
 | 主资源可达 | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/ocap/<index.html 中引用的 js>` | 200 |
 | 未登录访问他人主页接口 | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:9000/api/v1/users/1/profile` | 401 |
 | 后端与定时任务 | `systemctl is-active ocap-backend ocap-run-due-jobs.timer` | 均 active |

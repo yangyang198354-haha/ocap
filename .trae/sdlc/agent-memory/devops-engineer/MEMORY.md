@@ -17,3 +17,5 @@
 ## 用户偏好与禁止项
 
 ## 待验证
+- [P-DE-046] ocap 测试环境 Web 静态目录是 `/home/yangyang/ocap/web/ocap`（属主 yangyang:yangyang），替换用 `ocap.new` → `ocap.old` 交换并保留旧目录；`web/dist` 是错误路径 — 自记 2026-11-21 · 证据：ocap_profile_hierarchy DEPLOY-001~004
+- [P-DE-047] 纯前端增量发布前要确认构建命令含 `VITE_API_BASE=/ocap/api/v1` 与 `--base=/ocap/`，并在产物中 grep 关键文案作为制品正确性证据 — 自记 2026-11-21 · 证据：DEPLOY-002/006 `built in 5.20s`、徽章文案命中

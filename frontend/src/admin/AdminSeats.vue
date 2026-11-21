@@ -19,13 +19,22 @@
       <p v-if="hint && hint.pending_bind > 0 && hint.can_pass === false" class="error-text seat-hint">
         当前半数同意决议无法通过
       </p>
-      <!-- REQ-FUNC-287/288：筛选区与主表共用列宽网格；楼栋/单元对齐各自列，职位对齐"职位"列 -->
+      <!-- REQ-FUNC-291：昵称/姓名/电话/专有部分搜索与业主清册一致；筛选区与主表共用列宽网格 -->
       <div class="seat-scroll">
         <div class="filter-grid">
-          <div class="filter-cell" />
-          <div class="filter-cell" />
-          <div class="filter-cell" />
-          <div class="filter-cell" />
+          <div class="filter-cell">
+            <el-input v-model="nicknameKeyword" placeholder="昵称" clearable @change="resetAndLoad" />
+          </div>
+          <div class="filter-cell">
+            <el-input v-model="nameKeyword" placeholder="姓名" clearable @change="resetAndLoad" />
+          </div>
+          <div class="filter-cell">
+            <el-input v-model="phoneKeyword" placeholder="电话" clearable maxlength="11"
+                      :formatter="digitsOnly" :parser="digitsOnly" @change="resetAndLoad" />
+          </div>
+          <div class="filter-cell">
+            <el-input v-model="unitKeyword" placeholder="专有部分" clearable @change="resetAndLoad" />
+          </div>
           <div class="filter-cell">
             <el-select v-model="building" placeholder="楼栋" clearable @change="onBuildingChange">
               <el-option v-for="o in buildingOptions" :key="o.value" :label="o.value" :value="o.value" />
@@ -230,13 +239,22 @@ const unitText = (row) => row.holder_detail?.unit_text || row.holder?.unit_text 
 const position = ref('')
 const building = ref('')
 const unitNo = ref('')
+const nicknameKeyword = ref('')
+const nameKeyword = ref('')
+const phoneKeyword = ref('')
+const unitKeyword = ref('')
 const buildingOptions = ref([])
 const unitOptions = ref([])
+const digitsOnly = (value) => String(value ?? '').replace(/\D/g, '')
 const filters = computed(() => {
   const f = { bucket: 'active' }
   if (position.value) f.position = position.value
   if (building.value) f.building = building.value
   if (unitNo.value) f.unit_no = unitNo.value
+  if (nicknameKeyword.value) f.nickname = nicknameKeyword.value
+  if (nameKeyword.value) f.name = nameKeyword.value
+  if (phoneKeyword.value) f.phone = phoneKeyword.value
+  if (unitKeyword.value) f.unit_keyword = unitKeyword.value
   return f
 })
 // AC-265-01：失效总数由 active 响应带回，折叠区标题在展开前即可显示条数

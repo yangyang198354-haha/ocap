@@ -1,4 +1,5 @@
 """业委会视图（IFC-060/061）。"""
+import re
 from datetime import timedelta
 
 from django.db.models import Exists, OuterRef, Q
@@ -11,6 +12,7 @@ from apps.core.errors import ApiError, NotFound
 from apps.core.masking import mask_phone
 from apps.core.permissions import IsAdmin
 from apps.core.serializers import page_response
+from apps.registry.models import RegistryPhone
 from apps.residency.models import Membership
 from apps.residency.services import MembershipService
 
@@ -62,8 +64,6 @@ def _holder_detail_single(seat: Seat) -> dict:
 
 def _holder_details(seats: list) -> dict[int, dict]:
     """MOD-157：批量构造持有人明细，避免列表 N+1（M-SA-010）。"""
-    from apps.registry.models import RegistryPhone
-
     user_ids = [s.user_id for s in seats if s.user_id]
     memberships = {}
     if user_ids:
@@ -155,6 +155,31 @@ class AdminSeatListCreateView(APIView):
             ).values("user_id")
             qs = qs.filter(
                 Q(**{f"holder_owner__unit__{field}": value}) | Q(Exists(member_units))
+            )
+        # REQ-FUNC-291：与业主清册一致的昵称/姓名/电话/专有部分搜索（作用于在任与失效两个分桶）
+        nickname = (request.query_params.get("nickname") or "").strip()
+        if nickname:
+            qs = qs.filter(Q(user__nickname__icontains=nickname) | Q(user__account_no__icontains=nickname))
+        name_keyword = (request.query_params.get("name") or "").strip()
+        if name_keyword:
+            qs = qs.filter(Q(holder_owner__name__icontains=name_keyword) | Q(holder_name__icontains=name_keyword))
+        phone = re.sub(r"\D", "", request.query_params.get("phone") or "")
+        if phone:
+            owner_phones = RegistryPhone.objects.filter(
+                owner_id=OuterRef("holder_owner_id"), phone__icontains=phone,
+            ).values("owner_id")
+            qs = qs.filter(Q(user__phone__icontains=phone) | Q(Exists(owner_phones)))
+        unit_keyword = (request.query_params.get("unit_keyword") or "").strip()
+        if unit_keyword:
+            member_units = Membership.objects.filter(
+                user_id=OuterRef("user_id"), ended_at__isnull=True,
+            ).filter(Q(unit__specific_part__icontains=unit_keyword) | Q(unit__room__icontains=unit_keyword)
+                     ).values("user_id")
+            qs = qs.filter(
+                Q(holder_owner__unit__specific_part__icontains=unit_keyword)
+                | Q(holder_owner__unit__room__icontains=unit_keyword)
+                | Q(holder_unit_text__icontains=unit_keyword)
+                | Q(Exists(member_units))
             )
         response = page_response(qs, request, SeatSerializer)
         if ended_count is not None:

@@ -314,6 +314,29 @@ class SeatListAndReconcileTests(SeatHolderBase):
         self.assertEqual(Seat.objects.filter(status="ACTIVE", holder_owner_id=owner.id).count(), 1)
         self.assertTrue(self.actions("SEAT_CHANGED").exists())
 
+    def test_tc_int_1045_list_searches_nickname_name_phone_and_unit(self):
+        """REQ-FUNC-291：席位列表支持昵称/姓名/电话/专有部分搜索（电话忽略非数字），条件之间按 AND 叠加。"""
+        user_phone, owner_phone = next_phone(), next_phone()
+        user, _, _ = self.make_owner(phone=user_phone)
+        user.nickname = "昵称甲"
+        user.save()
+        bound = self.make_seat(user, "MEMBER")
+        unit, owner, _, _ = self.reg_unit(name="业主乙", phones=[owner_phone], room="903")
+        pending = self.pending_seat(owner)
+
+        def ids(**params):
+            resp = self.assert_ok(self.api("get", "/admin/committee/seats", params, token=self.admin_token))
+            return {r["id"] for r in resp.json()["results"]}
+
+        self.assertEqual(ids(nickname="昵称"), {bound.id})
+        self.assertEqual(ids(name="业主乙"), {pending.id})
+        self.assertEqual(ids(phone=user_phone), {bound.id})
+        self.assertEqual(ids(phone=f"{owner_phone[:3]}-{owner_phone[3:]}"), {pending.id})
+        self.assertEqual(ids(unit_keyword="903"), {pending.id})
+        self.assertEqual(ids(unit_keyword="1栋1单元"), {pending.id})
+        self.assertEqual(ids(unit_keyword="903", name="业主丙"), set())
+        self.assertEqual(ids(nickname="查无此人"), set())
+
     def test_tc_int_1042_registry_owner_rename_invalidates_pending_seat_with_audit(self):
         """TC-INT-1042 / AC-258-03：清册改名（PUT owners 使业主甲不再是该专有部分业主）→ 待绑定席位 INVALIDATED，原因"清册变化"，审计 SEAT_INVALIDATED 1 条；已绑定席位不受影响。"""
         unit, owner, _, _ = self.reg_unit()

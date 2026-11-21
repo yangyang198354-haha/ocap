@@ -163,4 +163,19 @@ describe('AdminSeats：持有人、待绑定、冲突、提示（US-258、US-259
     w = await mountSeats([BOUND], { half_majority_hint: { mode: 'ACTIVE', denominator: 5, pending_bind: 0, need_agree: 3, can_pass: true } })
     expect(w.find('.seat-hint').exists()).toBe(false)
   })
+
+  it('TC-UNIT-1413 / REQ-FUNC-291：昵称/姓名/电话/专有部分输入与楼栋/单元/职位一起作为筛选参数提交', async () => {
+    const w = await mountSeats([BOUND])
+    const input = (placeholder) => w.findAll('input').find((i) => i.attributes('placeholder') === placeholder)
+    for (const [placeholder, value] of [['昵称', '昵称甲'], ['姓名', '业主乙'],
+      ['电话', '13800001111'], ['专有部分', '903']]) {
+      await input(placeholder).setValue(value)
+      await input(placeholder).trigger('change')
+    }
+    await flush()
+    const call = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/committee/seats').at(-1)
+    expect(call[1].params).toMatchObject({
+      bucket: 'active', nickname: '昵称甲', name: '业主乙', phone: '13800001111', unit_keyword: '903'
+    })
+  })
 })

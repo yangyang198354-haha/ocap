@@ -124,8 +124,8 @@ describe('回流 2 另修的页面：中文与时间格式（REQ-FUNC-158）', (
     const { wrapper } = await mountPage(AdminMemberships)
     await flush()
     const [row] = cellsOf(wrapper)
-    expect(row[8]).toBe('户主')
-    expect(row[9]).toBe('2026-11-13 20:30')
+    expect(row[10]).toBe('户主')
+    expect(row[11]).toBe('2026-11-13 20:30')
     expect(wrapper.text()).not.toMatch(NO_ISO)
   })
 

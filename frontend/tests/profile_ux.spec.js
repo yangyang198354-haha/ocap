@@ -171,7 +171,7 @@ describe('US-264 / US-265：席位表格', () => {
     id: 1, position: 'MEMBER', status: 'ACTIVE', effective: true, bind_state: 'BOUND',
     user: { id: 7, account_no: '8000000007', nickname: '昵称甲' },
     holder: { kind: 'USER', unit_text: null, owner_name: null },
-    holder_detail: { nickname: '昵称甲', name: '张三', phone_masked: '138****0001', unit_text: '1栋1单元9层902号',
+    holder_detail: { nickname: '昵称甲', name: '张三', phone: '13800000001', unit_text: '1栋1单元9层902号',
                      unit_type: '住宅', building: '1栋', unit_no: '1单元', floor: '9' },
     term_start: '2026-01-01', term_end: '2027-01-01'
   }
@@ -196,7 +196,7 @@ describe('US-264 / US-265：席位表格', () => {
     }
     const first = adminHttp.get.mock.calls.find((c) => c[0] === '/admin/committee/seats')[1].params
     expect(first.bucket).toBe('active')
-    expect(wrapper.text()).toContain('138****0001')
+    expect(wrapper.text()).toContain('13800000001')  // REQ-FUNC-292：管理后台显示完整手机号
     expect(wrapper.text()).toContain('住宅')
     expect(wrapper.text()).toContain('资格失效 / 已结束（2）')  // AC-265-01：展开前显示条数
     await wrapper.find('.el-collapse-item__header').trigger('click')
@@ -209,8 +209,8 @@ describe('US-264 / US-265：席位表格', () => {
 describe('US-268 / US-269：房屋关系过滤与搜索', () => {
   const ROW = {
     id: 1, unit_id: 3, specific_part: '2栋3单元10层1001号', role: 'HEAD', source: 'CERTIFIED',
-    certified_at: '2026-11-18T10:00:00+08:00',
-    user: { id: 9, account_no: '8000000009', nickname: '四哥', phone: '139****0000' }
+    certified_at: '2026-11-18T10:00:00+08:00', real_name: '王五',
+    user: { id: 9, account_no: '8000000009', nickname: '四哥', phone: '13900001111' }
   }
 
   function mockMemberships() {
@@ -220,23 +220,24 @@ describe('US-268 / US-269：房屋关系过滤与搜索', () => {
     }))
   }
 
-  it('TC-UNIT-1505：电话关键字走 phone 参数、姓名关键字走 q 参数', async () => {
+  it('TC-UNIT-1505：昵称/账号、实名、手机号分别走 q/name/phone 参数，并展示实名与完整手机号', async () => {
     mockMemberships()
     const { wrapper } = await mountPage(AdminMemberships)
     await flush()
-    const input = wrapper.find('input[placeholder="姓名 / 手机号"]')
-    await input.setValue('1234')
-    await buttonOf(wrapper, '搜索').trigger('click')
-    await flush()
-    let last = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/memberships').at(-1)[1].params
-    expect(last.phone).toBe('1234')
-
-    await input.setValue('李四')
-    await buttonOf(wrapper, '搜索').trigger('click')
-    await flush()
-    last = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/memberships').at(-1)[1].params
-    expect(last.q).toBe('李四')
-    expect(last.phone).toBeUndefined()
+    const input = (placeholder) => wrapper.find(`input[placeholder="${placeholder}"]`)
+    const search = async () => {
+      await buttonOf(wrapper, '搜索').trigger('click')
+      await flush()
+      return adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/memberships').at(-1)[1].params
+    }
+    await input('昵称 / 账号').setValue('四哥')
+    expect((await search()).q).toBe('四哥')
+    await input('实名').setValue('王五')
+    expect((await search()).name).toBe('王五')
+    await input('手机号').setValue('1111')
+    expect((await search()).phone).toBe('1111')
+    expect(wrapper.text()).toContain('王五')
+    expect(wrapper.text()).toContain('13900001111')
     expect(wrapper.find('a[href*="/users/9/profile"]').exists()).toBe(true)
   })
 })

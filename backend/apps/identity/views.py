@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.services import AccountService
 from apps.core.errors import ApiError
-from apps.core.masking import PHONE_RE, mask_phone
+from apps.core.masking import PHONE_RE
 from apps.core.permissions import IsAdmin, IsMember
 from apps.core.serializers import page_response
 from apps.residency.models import Membership
@@ -91,9 +91,24 @@ class CancelAccountView(APIView):
 
 class MembershipSerializer:
     def __init__(self, rows, many=False, context=None):
+        from apps.accounts.directory import real_names
         from apps.registry import display as registry_display
 
         rows = rows if many else [rows]
+        # IFC-246：实名取手机号与该专有部分清册业主手机号匹配的结果，按用户批量计算
+        memberships_by_user = {}
+        user_ids = {m.user_id for m in rows}
+        if user_ids:
+            active = (Membership.objects.filter(user_id__in=user_ids, ended_at__isnull=True)
+                      .select_related("unit").prefetch_related("unit__owners__phones"))
+            for m in active:
+                memberships_by_user.setdefault(m.user_id, []).append(m)
+        real_name_by_user = {}
+        for m in rows:
+            if m.user_id in real_name_by_user:
+                continue
+            names = real_names(user=m.user, memberships=memberships_by_user.get(m.user_id, []))
+            real_name_by_user[m.user_id] = "、".join(names) or None
         self.data = [{
             "id": m.id, "unit_id": m.unit_id, "specific_part": m.unit.specific_part,
             # REQ-FUNC-284：房屋关系表拆列展示楼栋/单元/楼层/房号/类型/面积
@@ -102,9 +117,12 @@ class MembershipSerializer:
             "unit_type": registry_display.unit_type_label(m.unit),
             "area": registry_display.area_text(m.unit),
             "role": m.role, "source": m.source, "certified_at": m.certified_at,
+            # REQ-FUNC-292：管理后台显示实名与完整手机号
+            "real_name": real_name_by_user.get(m.user_id)
+            or (m.registry_owner.name if m.registry_owner_id else None),
             "user": {"id": m.user_id, "account_no": m.user.account_no,
                      "nickname": m.user.nickname,
-                     "phone": mask_phone(m.user.phone) if m.user.phone else None},
+                     "phone": m.user.phone or None},
         } for m in rows]
 
 
@@ -114,6 +132,14 @@ def _owner_unit_ids(term: str):
         ended_at__isnull=True, role__in=("HEAD", "OWNER"),
         registry_owner__name__icontains=term,
     ).values("unit_id")
+
+
+def _user_ids_by_real_name(term: str):
+    """IFC-246：实名搜索按用户维度匹配（手机号与清册业主姓名需同源）。"""
+    from apps.accounts.directory import real_name_q
+    from apps.accounts.models import User
+
+    return User.objects.filter(real_name_q(term)).values("id")
 
 
 class AdminMembershipListView(APIView):
@@ -135,6 +161,10 @@ class AdminMembershipListView(APIView):
             qs = qs.filter(unit__unit_no=unit_no)
         if floor:
             qs = qs.filter(unit__floor=floor)
+        # REQ-FUNC-292：房号作为独立过滤控件
+        room = request.query_params.get("room", "")[:32]
+        if room:
+            qs = qs.filter(unit__room__icontains=room)
         # REQ-FUNC-284：独立的"专有部分标识 / 户号"过滤，同时包含匹配两者（D-04）
         unit_keyword = request.query_params.get("unit_keyword", "")[:64]
         if unit_keyword:
@@ -143,7 +173,8 @@ class AdminMembershipListView(APIView):
         name = request.query_params.get("name", "")[:32]
         if name:
             qs = qs.filter(Q(registry_owner__name__icontains=name)
-                           | Q(unit_id__in=_owner_unit_ids(name)))
+                           | Q(unit_id__in=_owner_unit_ids(name))
+                           | Q(user_id__in=_user_ids_by_real_name(name)))
         phone = request.query_params.get("phone", "").strip()
         if phone:
             if not phone.isdigit() or not 4 <= len(phone) <= 11:
@@ -157,7 +188,8 @@ class AdminMembershipListView(APIView):
             # D-07：关键词框只匹配姓名/账号/昵称；专有部分与户号由 unit_keyword 命中
             qs = qs.filter(Q(user__account_no__icontains=q) | Q(user__nickname__icontains=q)
                            | Q(registry_owner__name__icontains=q)
-                           | Q(unit_id__in=_owner_unit_ids(q)))
+                           | Q(unit_id__in=_owner_unit_ids(q))
+                           | Q(user_id__in=_user_ids_by_real_name(q)))
         return page_response(qs, request, MembershipSerializer)
 
 

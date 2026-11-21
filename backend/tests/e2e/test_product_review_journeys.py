@@ -184,7 +184,7 @@ class AdminSeatAndFlowJourneyTests(ApiTestBase):
         guest, _ = self.make_user(phone="13800005679", nickname="e2e_游客乙")
         hits = self.api("get", "/admin/users", {"q": "5678"}, token=admin_token).data["results"]
         self.assertEqual([h["id"] for h in hits], [owner.id])
-        self.assertEqual(hits[0]["phone"], "138****5678")
+        self.assertEqual(hits[0]["phone"], "13800005678")  # 管理后台显示完整手机号
         self.assert_error(self.api("post", "/admin/committee/seats", {"user_id": guest.id, "position": "MEMBER"},
                                    token=admin_token), 422, "NOT_AN_OWNER")
         seat = self.assert_ok(self.api("post", "/admin/committee/seats", {"user_id": owner.id, "position": "MEMBER"},

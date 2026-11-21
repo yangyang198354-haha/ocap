@@ -375,8 +375,7 @@ class AdminSearchAndPagingTests(PRBase):
         r = hit[0]
         self.assertEqual((r["nickname"], r["account_no"], r["identity_label"]), ("e2e_甲", user.account_no, "产权业主"))
         self.assertEqual(r["real_names"], ["清册实名丙"])
-        self.assertEqual(r["phone"], "138****0001")
-        self.assertNotIn(phone, str(r))
+        self.assertEqual(r["phone"], phone)  # REQ-FUNC-292：管理后台显示完整手机号
 
     def test_tc_int_446_ac_159_03_grant_seat_to_guest_rejected(self):
         """TC-INT-446 / AC-159-03：对游客赋予委员席位 → 422 NOT_AN_OWNER，不创建席位。"""

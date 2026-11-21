@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.errors import ApiError, NotFound
-from apps.core.masking import mask_phone
 from apps.core.permissions import IsAdmin
 from apps.core.serializers import page_response
 from apps.registry.models import RegistryPhone
@@ -39,7 +38,7 @@ def seat_view(seat: Seat, holder_detail: dict | None = None) -> dict:
     return {
         "id": seat.id, "position": seat.position,
         "user": ({"id": user.id, "account_no": user.account_no, "nickname": user.nickname,
-                  "phone": mask_phone(user.phone) if user.phone else None} if user is not None else None),
+                  "phone": user.phone or None} if user is not None else None),
         "term_start": seat.term_start, "term_end": seat.term_end, "status": seat.status,
         "end_reason": seat.end_reason,
         "effective": is_effective(seat, timezone.localdate()),
@@ -113,17 +112,17 @@ def _build_holder_detail(seat: Seat, membership, owner, owner_phone=None) -> dic
         nickname = seat.user.nickname or seat.user.account_no
     phone = None
     if seat.user_id and seat.user.phone:
-        phone = mask_phone(seat.user.phone)
+        phone = seat.user.phone
     elif owner is not None:
         if owner_phone is None and hasattr(owner, "phones"):
             first_phone = owner.phones.first()
             owner_phone = first_phone.phone if first_phone is not None else None
-        if owner_phone:
-            phone = mask_phone(owner_phone)
+        phone = owner_phone or None
     return {
         "nickname": nickname,
         "name": name,
-        "phone_masked": phone,
+        # REQ-FUNC-292：管理后台席位表显示完整手机号
+        "phone": phone,
         "unit_text": (unit.specific_part if unit is not None else None) or (seat.holder_unit_text or None),
         "unit_type": registry_display.unit_type_label(unit) if unit is not None else None,
         "building": unit.building if unit is not None else None,
@@ -163,16 +162,19 @@ class AdminSeatListCreateView(APIView):
             qs = qs.filter(status__in=ENDED_STATUSES)
         else:
             raise ApiError("INVALID_QUERY", "bucket 取值不合法")
-        for param, field in (("building", "building"), ("unit_no", "unit_no"), ("floor", "floor")):
+        # REQ-FUNC-292：楼栋/单元/楼层/房号四个过滤控件
+        for param, field in (("building", "building"), ("unit_no", "unit_no"),
+                             ("floor", "floor"), ("room", "room")):
             value = request.query_params.get(param)
             if not value:
                 continue
+            lookup = "icontains" if field == "room" else "exact"
             member_units = Membership.objects.filter(
                 user_id=OuterRef("user_id"), ended_at__isnull=True,
-                **{f"unit__{field}": value},
+                **{f"unit__{field}__{lookup}": value},
             ).values("user_id")
             qs = qs.filter(
-                Q(**{f"holder_owner__unit__{field}": value}) | Q(Exists(member_units))
+                Q(**{f"holder_owner__unit__{field}__{lookup}": value}) | Q(Exists(member_units))
             )
         # REQ-FUNC-291：与业主清册一致的昵称/姓名/电话/专有部分搜索（作用于在任与失效两个分桶）
         nickname = (request.query_params.get("nickname") or "").strip()
@@ -308,7 +310,7 @@ class AdminOwnerCandidatesView(APIView):
             user_id = certified[owner.id]
             results.append({
                 "owner_id": owner.id, "name": owner.name,
-                "phone_masked": mask_phone(phones[0]) if phones else None,
+                "phone": phones[0] if phones else None,
                 "seated": owner.id in seated_owner_ids or (user_id is not None and user_id in seated_user_ids),
                 "registered": user_id is not None,
             })

@@ -168,14 +168,15 @@ describe('AdminSeats：持有人、待绑定、冲突、提示（US-258、US-259
     const w = await mountSeats([BOUND])
     const input = (placeholder) => w.findAll('input').find((i) => i.attributes('placeholder') === placeholder)
     for (const [placeholder, value] of [['昵称', '昵称甲'], ['姓名', '业主乙'],
-      ['电话', '13800001111'], ['专有部分', '903']]) {
+      ['电话', '13800001111'], ['专有部分', '903'], ['房号', '902']]) {
       await input(placeholder).setValue(value)
       await input(placeholder).trigger('change')
     }
     await flush()
     const call = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/committee/seats').at(-1)
     expect(call[1].params).toMatchObject({
-      bucket: 'active', nickname: '昵称甲', name: '业主乙', phone: '13800001111', unit_keyword: '903'
+      bucket: 'active', nickname: '昵称甲', name: '业主乙', phone: '13800001111',
+      unit_keyword: '903', room: '902'
     })
   })
 })

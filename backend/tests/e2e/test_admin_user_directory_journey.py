@@ -44,5 +44,4 @@ class AdminDirectoryJourneyTests(ApiTestBase):
         self.assertEqual(row["certified_units"], 1)
         self.assertEqual(row["real_names"], ["张三"])
         self.assertIsNotNone(row["last_login_at"])
-        self.assertTrue(row["phone"].endswith(phone[-4:]))
-        self.assertNotIn(phone, row["phone"])
+        self.assertEqual(row["phone"], phone)  # REQ-FUNC-292：管理后台显示完整手机号

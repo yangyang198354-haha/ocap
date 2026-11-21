@@ -351,15 +351,12 @@ class AdminAppealListTests(OwnerAuthBase):
         self.assertEqual(row["status"], "PENDING")
         self.assertTrue(row["applicant"]["has_phone"])
 
-    def test_tc_int_671_phone_masked_never_plaintext(self):
-        """AC-197-04 / C-63：申请人账号已绑手机号 → 列表只含脱敏号码，响应全文无完整手机号。"""
+    def test_tc_int_671_admin_appeal_list_shows_full_phone(self):
+        """REQ-FUNC-292：管理后台申诉列表显示申请人完整手机号（仅管理端；用户端仍脱敏）。"""
         user, _, _ = self.submit()
         resp = self.api("get", "/admin/appeals", token=self.admin_token)
-        text = resp.content.decode()
-        self.assertNotIn(user.phone, text)
-        masked = resp.json()["results"][0]["applicant"]["phone"]
-        self.assertIn("****", masked)
-        self.assertEqual((masked[:3], masked[-4:]), (user.phone[:3], user.phone[-4:]))
+        row = resp.json()["results"][0]
+        self.assertEqual(row["applicant"]["phone"], user.phone)
 
     def test_tc_int_672_no_nickname_and_legacy_appeal_fields(self):
         """AC-197-02/03：申请人无昵称 → nickname 为 null（前端显示「未设置」）；本批前提交（owner_name 为空串）→ owner_name 为 null（前端显示「未提供」）；其余字段正常。"""

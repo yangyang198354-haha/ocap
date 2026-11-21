@@ -108,7 +108,7 @@ describe('US-288 用户房屋关系', () => {
       '/admin/registry/unit-options': { options: [] }
     }))
     const { wrapper } = await mountPage(AdminMemberships)
-    const input = wrapper.findAll('input').find((i) => i.attributes('placeholder') === '专有部分标识 / 户号')
+    const input = wrapper.findAll('input').find((i) => i.attributes('placeholder') === '专有部分')
     expect(input).toBeTruthy()
     await input.setValue('101')
     await input.trigger('keyup.enter')
@@ -117,14 +117,21 @@ describe('US-288 用户房屋关系', () => {
     expect(call[1].params).toMatchObject({ unit_keyword: '101', page: 1 })
   })
 
-  it('原关键词框提示收紧为姓名/手机号', async () => {
+  it('关键词/实名/手机号/专有部分/房号各自独立，提示文字不截断', async () => {
     adminHttp.get.mockImplementation(routeTable({
       '/admin/memberships': { count: 0, results: [] },
       '/admin/registry/unit-options': { options: [] }
     }))
     const { wrapper } = await mountPage(AdminMemberships)
     const placeholders = wrapper.findAll('input').map((i) => i.attributes('placeholder'))
-    expect(placeholders).toContain('姓名 / 手机号')
-    expect(placeholders).toContain('专有部分标识 / 户号')
+    for (const placeholder of ['昵称 / 账号', '实名', '手机号', '专有部分', '房号']) {
+      expect(placeholders).toContain(placeholder)
+    }
+    const room = wrapper.findAll('input').find((i) => i.attributes('placeholder') === '房号')
+    await room.setValue('1001')
+    await room.trigger('keyup.enter')
+    await flush()
+    const call = adminHttp.get.mock.calls.filter((c) => c[0] === '/admin/memberships').at(-1)
+    expect(call[1].params).toMatchObject({ room: '1001', page: 1 })
   })
 })

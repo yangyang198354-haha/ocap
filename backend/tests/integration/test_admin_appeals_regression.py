@@ -35,7 +35,7 @@ class AdminAppealListRegressionTests(ApiTestBase):
         self.assertEqual(item["applicant"]["id"], user.id)
         self.assertEqual(item["applicant"]["account_no"], user.account_no)
         self.assertEqual(set(item["applicant"]), {"id", "account_no", "nickname", "avatar_url", "phone", "has_phone"})
-        self.assertNotEqual(item["applicant"]["phone"], user.phone, "手机号必须脱敏")
+        self.assertEqual(item["applicant"]["phone"], user.phone, "管理后台展示完整手机号")
         self.assertEqual(item["proof"], [])
         self.assertIsNone(item["decided_at"])
 

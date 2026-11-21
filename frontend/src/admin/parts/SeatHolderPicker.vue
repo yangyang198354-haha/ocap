@@ -6,7 +6,7 @@
     <el-radio-group v-if="candidates.length" :model-value="modelValue" class="seat-holder-owners" @update:model-value="pick">
       <el-radio v-for="o in candidates" :key="o.owner_id" :value="o.owner_id" :disabled="o.seated">
         {{ o.name }}
-        <span class="muted">{{ o.phone_masked || '无手机号' }}</span>
+        <span class="muted">{{ o.phone || '无手机号' }}</span>
         <el-tag v-if="o.registered" size="small" type="info">已注册</el-tag>
         <el-tag v-if="o.seated" size="small" type="warning">已有有效席位</el-tag>
       </el-radio>

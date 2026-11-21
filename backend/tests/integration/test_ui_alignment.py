@@ -84,7 +84,7 @@ class UiAlignmentTests(ApiTestBase):
         self.assertEqual(row["applicant"]["avatar_url"],
                          f"/api/v1/attachments/{user.avatar_attachment_id}/download")
         self.assertEqual(row["applicant"]["has_phone"], True)
-        self.assertNotEqual(row["applicant"]["phone"], user.phone)
+        self.assertEqual(row["applicant"]["phone"], user.phone)  # REQ-FUNC-292：管理后台显示完整手机号
 
     def test_identity_label_migrations_rewrite_text_and_are_idempotent(self):
         """REQ-FUNC-277 / D-05：历史身份快照改为全称，重复执行不再变化。"""

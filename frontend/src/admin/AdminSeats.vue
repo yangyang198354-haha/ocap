@@ -41,12 +41,18 @@
             </el-select>
           </div>
           <div class="filter-cell">
-            <el-select v-model="unitNo" placeholder="单元" clearable :disabled="!building" @change="resetAndLoad">
+            <el-select v-model="unitNo" placeholder="单元" clearable :disabled="!building" @change="onUnitChange">
               <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
             </el-select>
           </div>
-          <div class="filter-cell" />
-          <div class="filter-cell" />
+          <div class="filter-cell">
+            <el-select v-model="floor" placeholder="楼层" clearable :disabled="!unitNo" @change="resetAndLoad">
+              <el-option v-for="o in floorOptions" :key="o.value" :label="o.value" :value="o.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell">
+            <el-input v-model="roomKeyword" placeholder="房号" clearable @change="resetAndLoad" />
+          </div>
           <div class="filter-cell" />
           <div class="filter-cell" />
           <div class="filter-cell">
@@ -71,7 +77,7 @@
             <template #default="{ row }">{{ nameText(row) }}</template>
           </el-table-column>
           <el-table-column label="联系电话" min-width="120">
-            <template #default="{ row }">{{ row.holder_detail?.phone_masked || '-' }}</template>
+            <template #default="{ row }">{{ row.holder_detail?.phone || '-' }}</template>
           </el-table-column>
           <el-table-column label="专有部分坐落" min-width="180" show-overflow-tooltip>
             <template #default="{ row }">{{ unitText(row) }}</template>
@@ -239,18 +245,23 @@ const unitText = (row) => row.holder_detail?.unit_text || row.holder?.unit_text 
 const position = ref('')
 const building = ref('')
 const unitNo = ref('')
+const floor = ref('')
 const nicknameKeyword = ref('')
 const nameKeyword = ref('')
 const phoneKeyword = ref('')
 const unitKeyword = ref('')
+const roomKeyword = ref('')
 const buildingOptions = ref([])
 const unitOptions = ref([])
+const floorOptions = ref([])
 const digitsOnly = (value) => String(value ?? '').replace(/\D/g, '')
 const filters = computed(() => {
   const f = { bucket: 'active' }
   if (position.value) f.position = position.value
   if (building.value) f.building = building.value
   if (unitNo.value) f.unit_no = unitNo.value
+  if (floor.value) f.floor = floor.value
+  if (roomKeyword.value) f.room = roomKeyword.value
   if (nicknameKeyword.value) f.nickname = nicknameKeyword.value
   if (nameKeyword.value) f.name = nameKeyword.value
   if (phoneKeyword.value) f.phone = phoneKeyword.value
@@ -282,9 +293,12 @@ const openedEnded = ref([])
 const endedSeats = ref([])
 let endedLoaded = false
 
-async function loadOptions(buildingValue) {
+async function loadOptions(buildingValue, unitValue = '') {
   try {
-    const data = await admin.unitOptions(buildingValue ? { building: buildingValue } : {})
+    const data = await admin.unitOptions({
+      ...(buildingValue ? { building: buildingValue } : {}),
+      ...(unitValue ? { unit_no: unitValue } : {})
+    })
     return data.options || []
   } catch (e) {
     return []
@@ -293,7 +307,15 @@ async function loadOptions(buildingValue) {
 
 async function onBuildingChange() {
   unitNo.value = ''
+  floor.value = ''
+  floorOptions.value = []
   unitOptions.value = building.value ? await loadOptions(building.value) : []
+  resetAndLoad()
+}
+
+async function onUnitChange() {
+  floor.value = ''
+  floorOptions.value = unitNo.value ? await loadOptions(building.value, unitNo.value) : []
   resetAndLoad()
 }
 

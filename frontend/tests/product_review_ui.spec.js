@@ -391,13 +391,13 @@ describe('管理端页面', () => {
     expect(vnodeText(messageBox.confirm.mock.calls[0][0])).toMatch(/失去该房屋的身份[\s\S]*户主接任/)
   })
 
-  it('TC-UNIT-541 / AC-159-02、AC-256-01/02：赋予席位对话框没有"用户 ID"输入框；旧：搜索用户→提交 user_id；新：逐级选专有部分(UnitCascader，管理端选项接口)→选清册业主(姓名+脱敏手机号)→提交 registry_owner_id 且不含 user_id', async () => {
+  it('TC-UNIT-541 / AC-159-02、AC-256-01/02、REQ-FUNC-292：赋予席位对话框没有"用户 ID"输入框；新：逐级选专有部分(UnitCascader，管理端选项接口)→选清册业主(姓名+完整手机号)→提交 registry_owner_id 且不含 user_id', async () => {
     const wrapper = await mountAdmin(AdminSeats, {
       '/admin/committee/seats': { count: 0, results: [] }, '/admin/committee/config': { cap_member: 5 },
       '/admin/registry/unit-options': { level: 'building', skipped: [], has_empty: false, options: [{ value: '1' }] },
       '/admin/committee/owner-candidates': { unit_id: 5, specific_part: '1栋1单元9层902号', owners: [
-        { owner_id: 11, name: '业主甲', phone_masked: '138****0001', seated: false, registered: false },
-        { owner_id: 12, name: '业主乙', phone_masked: '139****0002', seated: true, registered: true }] }
+        { owner_id: 11, name: '业主甲', phone: '13800000001', seated: false, registered: false },
+        { owner_id: 12, name: '业主乙', phone: '13900000002', seated: true, registered: true }] }
     })
     await buttonOf(wrapper, '赋予席位').trigger('click')
     await flush()
@@ -410,9 +410,8 @@ describe('管理端页面', () => {
     await flush()
     expect(adminHttp.get).toHaveBeenCalledWith('/admin/committee/owner-candidates', { params: { unit_id: 5 } })
     expect(dialog.textContent).toContain('业主甲')
-    expect(dialog.textContent).toContain('138****0001')
+    expect(dialog.textContent).toContain('13800000001')
     expect(dialog.textContent).toContain('已有有效席位')
-    expect(dialog.querySelector('.seat-holder-owners').textContent).not.toMatch(/\d{11}/)
     const radios = [...dialog.querySelectorAll('.seat-holder-owners input[type=radio]')]
     expect(radios).toHaveLength(2)
     expect(radios[1].disabled).toBe(true)

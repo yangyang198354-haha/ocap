@@ -109,8 +109,7 @@ class ReadOnlyChecks(RemoteBase):
             hit = [r for r in rows if r["account_no"] == account_no]
             self.assertTrue(hit, f"搜索 {q} 未命中")
         r = hit[0]
-        self.assertEqual(r["phone"], "199****0001")
-        self.assertNotIn("19900000001", str(r))
+        self.assertEqual(r["phone"], "19900000001")  # 管理后台显示完整手机号
         self.assertEqual(r["identity_label"], "产权业主")
         self.err(R.get("/admin/users", "e2e_guest", params={"q": "e2e"}), 403)
 

@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from apps.core.masking import MaskedPhoneField
-
 from .directory import certified_units, identity_view, real_names
 from .models import AdminAccount, User
 
@@ -13,8 +11,6 @@ class AdminAccountSerializer(serializers.ModelSerializer):
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
-    phone = MaskedPhoneField()
-
     class Meta:
         model = User
         fields = ["id", "account_no", "phone", "nickname", "status", "last_login_at"]

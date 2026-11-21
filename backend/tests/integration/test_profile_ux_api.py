@@ -120,11 +120,11 @@ class SeatListProfileUxTests(SeatHolderBase):
         self.assertNotIn(ended.id, ids)
         self.assertEqual(body["ended_count"], 1)  # AC-265-01：折叠区标题条数
         row = next(r for r in body["results"] if r["id"] == pending.id)
-        self.assertEqual(set(row["holder_detail"]), {"nickname", "name", "phone_masked", "unit_text",
+        self.assertEqual(set(row["holder_detail"]), {"nickname", "name", "phone", "unit_text",
                                                      "unit_type", "building", "unit_no", "floor",
                                                      "room", "area"})
         self.assertEqual(row["holder_detail"]["name"], "业主乙")
-        self.assertNotIn(phones[0], resp.content.decode())
+        self.assertEqual(row["holder_detail"]["phone"], phones[0])  # 管理后台显示完整手机号
 
         ended_resp = self.assert_ok(self.api(
             "get", "/admin/committee/seats?bucket=ended", token=self.admin_token))
@@ -134,6 +134,13 @@ class SeatListProfileUxTests(SeatHolderBase):
         filtered = self.assert_ok(self.api(
             "get", "/admin/committee/seats?building=1栋&unit_no=1单元", token=self.admin_token))
         self.assertEqual({r["id"] for r in filtered.json()["results"]}, {pending.id})
+        # REQ-FUNC-292：楼层与房号也作为席位过滤控件
+        by_floor = self.assert_ok(self.api(
+            "get", "/admin/committee/seats?floor=9", token=self.admin_token))
+        self.assertEqual({r["id"] for r in by_floor.json()["results"]}, {pending.id})
+        by_room = self.assert_ok(self.api(
+            "get", "/admin/committee/seats?room=902", token=self.admin_token))
+        self.assertEqual({r["id"] for r in by_room.json()["results"]}, {pending.id})
         self.assert_error(self.api("get", "/admin/committee/seats?bucket=oops", token=self.admin_token),
                           400, "INVALID_QUERY")
         self.assert_error(self.api("get", "/admin/committee/seats", token=token), 403)
@@ -192,8 +199,26 @@ class MembershipFilterTests(ApiTestBase):
         self.assertEqual(count("?name=李四"), 2)  # AC-269-01：含同住人
         self.assertEqual(count(f"?phone={phone[-4:]}"), 1)
         self.assertEqual(count("?unit_keyword=1001"), 2)  # REQ-FUNC-284：专有部分标识/户号独立过滤
+        self.assertEqual(count("?room=1001"), 2)  # REQ-FUNC-292：房号独立过滤
         self.assert_error(self.api("get", "/admin/memberships?phone=12ab", token=admin_token),
                           400, "INVALID_QUERY")
+
+    def test_real_name_and_full_phone_display(self):
+        """REQ-FUNC-292：房屋关系返回实名与完整手机号，并按实名搜索（不依赖 registry_owner 回填）。"""
+        unit = RegistryUnit.objects.create(building="5栋", unit_no="1单元", floor="8", room="801")
+        owner = RegistryOwner.objects.create(unit=unit, name="王五")
+        phone = next_phone()
+        RegistryPhone.objects.create(unit=unit, owner=owner, phone=phone)
+        user, _ = self.make_user(phone=phone, nickname="五哥")
+        Membership.objects.create(user=user, unit=unit, role="HEAD", source="CERTIFIED",
+                                  active_slot=1, head_slot=1)
+        _, admin_token = self.make_admin()
+        for query in ("?name=王五", "?q=王五"):
+            rows = self.assert_ok(self.api("get", f"/admin/memberships{query}",
+                                           token=admin_token)).json()["results"]
+            row = next(r for r in rows if r["user"]["id"] == user.id)
+            self.assertEqual(row["real_name"], "王五")
+            self.assertEqual(row["user"]["phone"], phone)
 
 
 class FlowDetailTests(ApiTestBase):

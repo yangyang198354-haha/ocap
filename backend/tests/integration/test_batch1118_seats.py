@@ -27,7 +27,7 @@ def today():
 class GrantToRegistryOwnerTests(SeatHolderBase):
     def test_tc_int_1020_grant_to_unregistered_owner_creates_pending_seat_and_audit(self):
         """TC-INT-1020 / AC-256-01、AC-258-04：授予未注册清册业主 → 201，席位 user=None、bind_state=PENDING_BIND、holder 含专有部分与姓名，
-        结束日=开始日+12 个月；审计 SEAT_GRANTED 含 holder 且审计与响应均不含手机号。"""
+        结束日=开始日+12 个月；审计 SEAT_GRANTED 含 holder 且不含手机号；管理员响应显示完整手机号（REQ-FUNC-292）。"""
         unit, owner, phones, _ = self.reg_unit()
         resp = self.grant_owner(owner, "MEMBER")
         self.assert_ok(resp, 201)
@@ -40,10 +40,10 @@ class GrantToRegistryOwnerTests(SeatHolderBase):
         log = self.actions("SEAT_GRANTED").latest("id")
         self.assertEqual(log.detail["holder"], {"owner_id": owner.id, "unit": unit.specific_part, "owner_name": "业主甲"})
         self.assertNotIn(phones[0], str(log.detail))
-        self.assertNotIn(phones[0], resp.content.decode())
+        self.assertIn(phones[0], resp.content.decode())  # 管理后台显示完整手机号
 
-    def test_tc_int_1021_candidates_list_both_owners_masked_phone_and_admin_only(self):
-        """TC-INT-1021 / AC-256-02、REQ-NFUNC-046(4)：同一专有部分两位业主 → 候选两位姓名，手机号脱敏（无完整号码）；seated/registered 标注；
+    def test_tc_int_1021_candidates_list_both_owners_full_phone_and_admin_only(self):
+        """TC-INT-1021 / AC-256-02、REQ-FUNC-292：同一专有部分两位业主 → 候选两位姓名，管理员可见完整手机号；seated/registered 标注；
         非管理员 403、未登录 401；unit_id 非法 400 INVALID_QUERY、不存在 404。"""
         p1, p2 = next_phone(), next_phone()
         unit, owner_a, _, (owner_b,) = self.reg_unit(phones=[p1], extra_owners=[("业主乙", p2)])
@@ -51,9 +51,8 @@ class GrantToRegistryOwnerTests(SeatHolderBase):
         self.assert_ok(resp)
         names = {o["name"]: o for o in resp.json()["owners"]}
         self.assertEqual(set(names), {"业主甲", "业主乙"})
-        for phone in (p1, p2):
-            self.assertNotIn(phone, resp.content.decode())
-        self.assertIn("*", names["业主甲"]["phone_masked"])
+        self.assertEqual(names["业主甲"]["phone"], p1)
+        self.assertEqual(names["业主乙"]["phone"], p2)
         self.assertEqual((names["业主甲"]["seated"], names["业主甲"]["registered"]), (False, False))
         self.pending_seat(owner_a)
         resp = self.api("get", "/admin/committee/owner-candidates", {"unit_id": unit.id}, token=self.admin_token)
@@ -267,8 +266,9 @@ class BindOnCertificationTests(SeatHolderBase):
 
 
 class SeatListAndReconcileTests(SeatHolderBase):
-    def test_tc_int_1040_list_distinguishes_bound_and_pending_and_hides_phone(self):
-        """TC-INT-1040 / AC-258-01、AC-258-04：列表第 1 行已绑定用户（昵称），另 1 行待绑定清册业主（专有部分 · 姓名，状态 PENDING_BIND）；响应无手机号明文；查询数不随行数增长。"""
+    def test_tc_int_1040_list_distinguishes_bound_and_pending_and_shows_phone(self):
+        """TC-INT-1040 / AC-258-01、AC-258-04、REQ-FUNC-292：列表第 1 行已绑定用户（昵称），另 1 行待绑定清册业主（专有部分 · 姓名，状态 PENDING_BIND）；
+        管理后台显示完整手机号；查询数不随行数增长。"""
         user, _, _ = self.make_owner()
         user.nickname = "昵称甲"
         user.save()
@@ -283,8 +283,8 @@ class SeatListAndReconcileTests(SeatHolderBase):
         self.assertEqual((bound_row["bind_state"], bound_row["user"]["nickname"]), ("BOUND", "昵称甲"))
         self.assertEqual((pend_row["bind_state"], pend_row["holder"]["unit_text"], pend_row["holder"]["owner_name"]),
                          ("PENDING_BIND", unit.specific_part, "业主乙"))
-        self.assertNotIn(phones[0], resp.content.decode())
-        self.assertNotIn(user.phone, resp.content.decode())
+        self.assertEqual(pend_row["holder_detail"]["phone"], phones[0])
+        self.assertEqual(bound_row["holder_detail"]["phone"], user.phone)
 
         counter = {"n": 0}
 

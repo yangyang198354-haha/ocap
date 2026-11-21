@@ -70,5 +70,5 @@ class IdentityDisplayJourneyTests(ApiTestBase):
                                 token=token), 201)
         self.make_seat(user, "VICE_CHAIR")
         identities = self.api("get", "/me", token=token).data["identities"]
-        self.assertEqual(identities["labels"], ["副主任"])
+        self.assertEqual(identities["labels"], ["业委会副主任"])
         self.assertEqual(identities["units"][0]["role_label"], "产权业主")

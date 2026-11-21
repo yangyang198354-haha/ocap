@@ -26,6 +26,9 @@ class IncomeSheet(models.Model):
     decided_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     pending_slot = models.SmallIntegerField(null=True, blank=True, default=1)
+    # 留痕：失败后重新发起时指向原收入表；原收入表本身不被改写（REQ-FUNC-271/273）
+    origin = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT,
+                               related_name="reissued")
 
     class Meta:
         ordering = ["-created_at", "-id"]

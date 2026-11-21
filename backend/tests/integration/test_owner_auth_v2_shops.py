@@ -192,7 +192,9 @@ class ShopApplyTests(ShopCommandBase):
         code, out = self.apply()
         self.assertEqual(code, 0, out)
         path = Path(self.backup_path())
-        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+        # POSIX 专属断言：Windows 的 chmod 不生效，由 Linux CI 做真实校验
+        if os.name != "nt":
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
         text = path.read_text(encoding="utf-8")
         header = json.loads(text.splitlines()[0])
         self.assertEqual((header["format"], header["records"]), ("ocap-shop-backup/1", 5))
@@ -489,7 +491,9 @@ class ExportGuardTests(ShopFixtureMixin, TestCase):
         files = list(self.dir.glob("registry_import_*.xlsx"))
         self.assertEqual(len(files), 1)
         self.assertRegex(files[0].name, r"^registry_import_\d{8}-\d{6}\.xlsx$")
-        self.assertEqual(stat.S_IMODE(files[0].stat().st_mode), 0o600)
+        # POSIX 专属断言：Windows 的 chmod 不生效，由 Linux CI 做真实校验
+        if os.name != "nt":
+            self.assertEqual(stat.S_IMODE(files[0].stat().st_mode), 0o600)
         raw = files[0].read_bytes()
         rows = [[r.cells[c] for c in IMPORT_COLUMNS] for r in read_rows(files[0].name, raw, Deadline(60))]
         shop_rows = [r for r in rows if r[0] == SHOP_BUILDING]
@@ -513,6 +517,8 @@ class ExportGuardTests(ShopFixtureMixin, TestCase):
     def test_tc_int_647_location_guard_rejects_open_dir_and_deploy_root_without_db_access(self):
         """AC-196-03 / AC-196-07：目录权限 755 → 退出码 3；输出路径位于部署根内（目录权限与属主合规，只可能因位置被拒）→ 退出码 3；
         两种情况都不生成文件；守卫先于库访问（零查询）；部署根之外的 700 目录通过（对照，见 TC-INT-645）。"""
+        if os.name == "nt":
+            self.skipTest("Windows 不支持 POSIX 目录权限语义；由 Linux CI 校验")
         from django.test import override_settings
 
         open_dir = Path(tempfile.mkdtemp())

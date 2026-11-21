@@ -5,6 +5,7 @@ critical path 口径：替代——无浏览器 E2E 框架，后端用多步 HTT
 前后端契约由 tests/integration/test_frontend_contract.py 与 test_owner_auth_v2_contract.py 守护（画像 P5）。
 关联 US-193~206。全部合成数据；备份与导出文件只写临时目录；不连接测试机。
 """
+import os
 import tempfile
 from datetime import timedelta
 from io import StringIO
@@ -270,7 +271,9 @@ class RelocateExportJourney(OwnerAuthJourneyBase):
                           out["diff_phones_distinct"]), ("shop_relocated", "0", "0", "0", "0", "0", "0"))
         files = list(export_dir.glob("registry_import_*.xlsx"))
         self.assertEqual(len(files), 1)
-        self.assertEqual(stat.S_IMODE(files[0].stat().st_mode), 0o600)
+        # POSIX 专属断言：Windows 的 chmod 不生效，由 Linux CI 做真实校验
+        if os.name != "nt":
+            self.assertEqual(stat.S_IMODE(files[0].stat().st_mode), 0o600)
         upload = SimpleUploadedFile(files[0].name, files[0].read_bytes(), content_type="application/octet-stream")
         precheck = self.upload("/admin/registry/import", {"file": upload}, data={"dry_run": "1"}, token=self.admin_token)
         self.assert_ok(precheck)
@@ -299,7 +302,7 @@ class SeatJourney(OwnerAuthJourneyBase):
         self.assert_ok(resp, 201)
         self.assertEqual((resp.data["term_start"], resp.data["effective"]), (start_old, True))
         me = self.api("get", "/me", token=btoken).json()["identities"]
-        self.assertEqual((me["summary"]["label"], me["committee"]["position"]), ("委员", "MEMBER"))
+        self.assertEqual((me["summary"]["label"], me["committee"]["position"]), ("业委会委员", "MEMBER"))
         self.assertEqual(self.api("post", "/claims/reimbursements", {}, token=btoken).status_code, 400)  # 过了权限层
 
         start_future = timezone.localdate() + timedelta(days=10)
@@ -323,7 +326,7 @@ class SeatJourney(OwnerAuthJourneyBase):
             self.assertIsNone(self.api("get", "/me", token=ftoken).json()["identities"]["committee"])
         with mock.patch.object(timezone, "localdate", return_value=start_future):
             me_started = self.api("get", "/me", token=ftoken).json()["identities"]
-            self.assertEqual((me_started["summary"]["label"], me_started["committee"]["position"]), ("委员", "MEMBER"))
+            self.assertEqual((me_started["summary"]["label"], me_started["committee"]["position"]), ("业委会委员", "MEMBER"))
             self.assertEqual(self.api("post", "/claims/reimbursements", {}, token=ftoken).status_code, 400)
         self.assertEqual(Seat.objects.filter(status="ACTIVE").count(), 2)
 

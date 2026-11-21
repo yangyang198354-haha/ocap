@@ -3,6 +3,7 @@ from typing import TypedDict
 
 from django.utils import timezone
 
+from apps.approval.models import ApprovalInstance
 from apps.core.audit import AuditActor, AuditService
 from apps.core.config import SystemConfig
 from apps.committee.services import CommitteeQuery
@@ -90,6 +91,10 @@ class ResolutionService:
         )
         if not updated:
             return "ALREADY_DECIDED"
+        # REQ-FUNC-274：决议终态与审批实例同步收尾，避免“决议已失败、实例仍审批中”的分叉
+        ApprovalInstance.objects.filter(subject_type="resolution", subject_id=resolution_id,
+                                        status="PENDING").update(
+            status="APPROVED" if passed else "REJECTED", decided_at=now, pending_slot=None)
         AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="RESOLUTION_DECIDED",
                             object_type="resolution", object_id=str(resolution_id), result="SUCCESS",
                             detail={"result": result})

@@ -84,8 +84,8 @@ class AdminUserDirectoryTests(ApiTestBase):
         u5, _ = self.make_user()
 
         rows = self.rows()
-        self.assertEqual(rows[u1.id]["identity_label"], "委员")
-        self.assertEqual(rows[u2.id]["identity_label"], "主任")
+        self.assertEqual(rows[u1.id]["identity_label"], "业委会委员")
+        self.assertEqual(rows[u2.id]["identity_label"], "业委会主任")
         self.assertEqual(rows[u3.id]["identity_label"], "产权业主")
         self.assertEqual(rows[u4.id]["identity_label"], "同住人")
         self.assertEqual(rows[u5.id]["identity_label"], "游客")

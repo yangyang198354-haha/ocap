@@ -330,7 +330,7 @@ class AppealAndIdentityTests(PRBase):
         user, token, unit = self.make_owner()
         self.make_seat(user, "VICE_CHAIR")
         data = self.api("get", "/me/housing", token=token).data
-        self.assertEqual(data["summary"]["label"], "副主任")
+        self.assertEqual(data["summary"]["label"], "业委会副主任")
         self.assertEqual(data["units"][0]["role_label"], "产权业主")
 
     def test_tc_int_443_ac_157_03_guest_summary(self):

@@ -175,7 +175,9 @@ class ExportSuccessTests(ExportBase):
         self.assertEqual(sorted(os.listdir(self.dir)), ["registry_import_underground_parking.csv"])
         self.assertEqual(sorted(after - before), [], "本次导出在仓库根新增了文件")
         self.assertEqual(sorted(before - after), [], "本次导出在仓库根移除了文件")
-        self.assertEqual(os.stat(self.path()).st_mode & 0o777, 0o600)
+        # POSIX 专属断言：Windows 的 chmod 不生效，由 Linux CI 做真实校验
+        if os.name != "nt":
+            self.assertEqual(os.stat(self.path()).st_mode & 0o777, 0o600)
 
 
 class ExportRefusalTests(ExportBase):

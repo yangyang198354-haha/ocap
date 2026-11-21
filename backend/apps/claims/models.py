@@ -24,6 +24,9 @@ class Claim(models.Model):
     settle_slot = models.IntegerField(null=True, blank=True)
     ledger_posted = models.BooleanField(default=False)
     approval_instance_id = models.BigIntegerField(null=True, blank=True)
+    # 留痕：失败后重新发起时指向原申请；原申请本身不被改写（REQ-FUNC-271/273）
+    origin = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT,
+                               related_name="reissued")
     created_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)

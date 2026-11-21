@@ -69,10 +69,12 @@ class CommitteeQuery:
 
     @staticmethod
     def identity_labels(user_id: int) -> list[str]:
-        """C-34 / REQ-FUNC-136：用户可见身份只返回单一最高身份。"""
+        """C-34 / REQ-FUNC-136：用户可见身份只返回单一最高身份；REQ-FUNC-277 用业务全称。"""
+        from apps.accounts.directory import identity_label
+
         seat = CommitteeQuery.active_seat(user_id)
         if seat is not None:
-            return [seat.get_position_display()]
+            return [identity_label(seat.position)]
         from apps.residency.services import MembershipService
 
         memberships = MembershipService.list_active(user_id)

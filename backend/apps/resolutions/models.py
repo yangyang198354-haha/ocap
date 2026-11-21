@@ -16,6 +16,9 @@ class Resolution(models.Model):
     revision = models.IntegerField(default=1)
     decided_at = models.DateTimeField(null=True, blank=True)
     result = models.JSONField(null=True, blank=True)
+    # 留痕：失败后重新发起时指向原决议；原决议本身不被改写（REQ-FUNC-271/273）
+    origin = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT,
+                               related_name="reissued")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

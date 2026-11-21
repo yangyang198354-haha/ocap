@@ -260,6 +260,7 @@ class AppealAdminSerializer:
             "reject_reason": appeal.reject_reason,
             "owner_name": appeal.owner_name or None,  # 历史申诉为 None（前端显示"未提供"）
             "applicant": {"id": appeal.user_id, "account_no": user.account_no, "nickname": user.nickname,
+                          "avatar_url": user.avatar_url,
                           "phone": mask_phone(user.phone) if user.phone else None,
                           "has_phone": bool(user.phone)},
             "proof": [{"id": str(p.id), "name": p.original_name, "size": p.size,

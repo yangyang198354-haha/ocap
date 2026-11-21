@@ -77,7 +77,7 @@ describe('AdminRegistry：表头排序（US-254、US-255）', () => {
     w.findComponent({ name: 'ElTable' }).vm.$emit('sort-change', { prop: 'room', order: 'descending' })
     await flush()
     expect([last().sort, last().order, last().page]).toEqual(['room', 'desc', 1])
-    await buttonOf(w, '下一页').trigger('click')
+    w.findComponent({ name: 'ElPagination' }).vm.$emit('current-change', 2)
     await flush()
     expect([last().sort, last().order, last().page]).toEqual(['room', 'desc', 2])
     await w.find('input[placeholder="户号"]').setValue('9')

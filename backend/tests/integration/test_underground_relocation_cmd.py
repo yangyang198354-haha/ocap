@@ -158,7 +158,9 @@ class ApplyTests(RelocationCommandBase):
         """AC-188-06 / NFUNC-032：备份 0600、JSONL、头部 records=3、末行 sha256；不含姓名与手机号。"""
         path, out = self.apply()
         mode = stat.S_IMODE(os.stat(path).st_mode)
-        self.assertEqual(mode, 0o600)
+        # POSIX 专属断言：Windows 的 chmod 不生效，由 Linux CI 做真实校验
+        if os.name != "nt":
+            self.assertEqual(mode, 0o600)
         lines = Path(path).read_text(encoding="utf-8").splitlines()
         header = json.loads(lines[0])
         self.assertEqual((header["format"], header["records"]), ("ocap-underground-backup/1", 3))

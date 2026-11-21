@@ -183,7 +183,7 @@ def setup(*, units: int, bulk_users: int, bulk_resolutions: int, password: str) 
             title = f"e2e_决议{n:02d}"
             if not Resolution.objects.filter(title=title, initiator=initiator).exists():
                 Resolution.objects.create(title=title, content="e2e 夹具数据", initiator=initiator,
-                                          initiator_labels=["委员"], status="APPROVED",
+                                          initiator_labels=["业委会委员"], status="APPROVED",
                                           approval_mode="DESIGNATED", decided_at=timezone.now())
 
         unit_report = [{"key": key, "unit_id": anchors[key].id, "specific_part": anchors[key].specific_part}

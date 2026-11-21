@@ -8,62 +8,79 @@
           <el-button type="primary" @click="openCreate">新增</el-button>
         </div>
       </div>
-      <!-- IFC-293：过滤器（REQ-FUNC-180/181/183）；占位文字与空状态全部中文 -->
-      <div class="row" style="margin-top: 12px; flex-wrap: wrap">
-        <el-input v-model="keyword" clearable placeholder="专有部分标识搜索" style="width: 200px" @change="search" />
-        <el-select v-model="filters.building" filterable clearable placeholder="楼栋" no-data-text="暂无数据"
-                   style="width: 120px" @change="search">
-          <el-option v-for="item in buildingOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-select v-model="filters.unit_no" filterable clearable placeholder="单元" no-data-text="暂无数据"
-                   style="width: 120px" @change="search">
-          <el-option v-for="item in unitNoOptions" :key="item" :label="item" :value="item" />
-        </el-select>
-        <el-input v-model="filters.room" clearable placeholder="户号" maxlength="32" style="width: 120px"
-                  @change="search" />
-        <el-select v-model="typeFilter" clearable placeholder="全部类型" no-data-text="暂无数据"
-                   style="width: 130px" @change="search">
-          <el-option label="全部类型" value="" />
-          <el-option label="未登记类型" value="UNSET" />
-          <el-option v-for="item in UNIT_TYPES" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-        <el-input v-model="filters.owner_name" clearable placeholder="产权业主姓名" maxlength="64"
-                  style="width: 150px" @change="search" />
-        <el-input v-model="filters.owner_phone" clearable placeholder="产权业主电话" maxlength="11"
-                  :formatter="digitsOnly" :parser="digitsOnly" style="width: 150px" @change="search" />
-        <el-button @click="resetFilters">重置</el-button>
-      </div>
     </div>
 
     <div class="card">
-      <!-- MOD-151：楼栋/单元/楼层/房号四列服务端排序（升序与降序两态），其余列不可排序 -->
-      <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" @sort-change="onSort">
-        <el-table-column prop="specific_part" label="专有部分" min-width="150" />
-        <el-table-column prop="building" label="楼栋" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
-        <el-table-column prop="unit_no" label="单元" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
-        <el-table-column prop="floor" label="楼层" width="80" sortable="custom" :sort-orders="SORT_ORDERS" />
-        <el-table-column prop="room" label="房号" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
-        <el-table-column label="类型" width="100">
-          <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
-        </el-table-column>
-        <el-table-column label="面积" width="110">
-          <template #default="{ row }">{{ row.area ? `${row.area} ㎡` : '未登记' }}</template>
-        </el-table-column>
-        <el-table-column label="业主" min-width="220">
-          <template #default="{ row }">{{ ownersText(row.owners) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="160">
-          <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button size="small" @click="remove(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="row" style="margin-top: 12px">
-        <el-button :disabled="page <= 1" @click="go(page - 1)">上一页</el-button>
-        <span class="muted">第 {{ page }} 页 / 共 {{ total }} 条</span>
-        <el-button :disabled="items.length < pageSize" @click="go(page + 1)">下一页</el-button>
+      <!-- REQ-FUNC-281/282：筛选区与表格同一滚动容器、共用列宽网格；面积列无筛选控件保留空位 -->
+      <div class="registry-scroll">
+        <div class="filter-grid">
+          <div class="filter-cell">
+            <el-input v-model="keyword" clearable placeholder="专有部分标识搜索" @change="search" />
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="filters.building" filterable clearable placeholder="楼栋" no-data-text="暂无数据"
+                       @change="search">
+              <el-option v-for="item in buildingOptions" :key="item" :label="item" :value="item" />
+            </el-select>
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="filters.unit_no" filterable clearable placeholder="单元" no-data-text="暂无数据"
+                       @change="search">
+              <el-option v-for="item in unitNoOptions" :key="item" :label="item" :value="item" />
+            </el-select>
+          </div>
+          <div class="filter-cell" />
+          <div class="filter-cell">
+            <el-input v-model="filters.room" clearable placeholder="户号" maxlength="32" @change="search" />
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="typeFilter" clearable placeholder="全部类型" no-data-text="暂无数据"
+                       @change="search">
+              <el-option label="全部类型" value="" />
+              <el-option label="未登记类型" value="UNSET" />
+              <el-option v-for="item in UNIT_TYPES" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell" />
+          <div class="filter-cell owner-cell">
+            <el-input v-model="filters.owner_name" clearable placeholder="产权业主姓名" maxlength="64"
+                      @change="search" />
+            <el-input v-model="filters.owner_phone" clearable placeholder="产权业主电话" maxlength="11"
+                      :formatter="digitsOnly" :parser="digitsOnly" @change="search" />
+          </div>
+          <div class="filter-cell action-cell">
+            <el-button @click="resetFilters">重置</el-button>
+          </div>
+        </div>
+        <!-- MOD-151：楼栋/单元/楼层/房号四列服务端排序（升序与降序两态），其余列不可排序 -->
+        <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" class="registry-table"
+                  style="width: 1160px" @sort-change="onSort">
+          <el-table-column prop="specific_part" label="专有部分" width="180" show-overflow-tooltip />
+          <el-table-column prop="building" label="楼栋" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="unit_no" label="单元" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="floor" label="楼层" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="room" label="房号" width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column label="类型" width="110">
+            <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
+          </el-table-column>
+          <el-table-column label="面积" width="110">
+            <template #default="{ row }">{{ row.area ? `${row.area} ㎡` : '未登记' }}</template>
+          </el-table-column>
+          <el-table-column label="业主" width="240" show-overflow-tooltip>
+            <template #default="{ row }">{{ ownersText(row.owners) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="150">
+            <template #default="{ row }">
+              <span class="row-actions">
+                <el-button size="small" @click="openEdit(row)">编辑</el-button>
+                <el-button size="small" @click="remove(row)">删除</el-button>
+              </span>
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
+      <PagerBar :total="total" :page="page" :page-size="pageSize" sizable
+                @change="go" @update:page-size="changePageSize" />
     </div>
 
     <el-dialog v-model="showCreate" title="新增专有部分" width="460px">
@@ -115,6 +132,7 @@ import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import { errorText } from '@/shared/format'
 import { confirmDanger } from '@/shared/confirm'
+import PagerBar from '@/shared/PagerBar.vue'
 import RegistryImportDialog from './RegistryImportDialog.vue'
 
 const UNIT_TYPES = [
@@ -131,7 +149,7 @@ const tableRef = ref(null)
 const sort = reactive({ prop: null, order: null })
 const items = ref([])
 const page = ref(1)
-const pageSize = 20
+const pageSize = ref(20)
 const total = ref(0)
 const keyword = ref('')
 const typeFilter = ref('')
@@ -157,7 +175,7 @@ async function load() {
   try {
     const data = await admin.registryUnits({
       page: page.value,
-      page_size: pageSize,
+      page_size: pageSize.value,
       q: keyword.value || undefined,
       unit_type: typeFilter.value || undefined,
       building: filters.building || undefined,
@@ -211,6 +229,13 @@ function search() {
 
 function go(next) {
   page.value = next
+  load()
+}
+
+// REQ-FUNC-283：切换每页条数后回到第 1 页，保留筛选与排序
+function changePageSize(n) {
+  pageSize.value = n
+  page.value = 1
   load()
 }
 
@@ -330,3 +355,27 @@ onMounted(() => {
   loadFilterOptions()
 })
 </script>
+
+<style scoped>
+/* 筛选区与表格共用列宽：专有部分 180 / 楼栋 90 / 单元 90 / 楼层 90 / 房号 100 / 类型 110 / 面积 110 / 业主 240 / 操作 150 */
+.registry-scroll { overflow-x: auto; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: 180px 90px 90px 90px 100px 110px 110px 240px 150px;
+  width: 1160px;
+  margin-bottom: 12px;
+}
+.filter-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.filter-cell :deep(.el-input),
+.filter-cell :deep(.el-select) { width: 100%; }
+.owner-cell :deep(.el-input) { width: auto; flex: 1; min-width: 0; }
+.action-cell :deep(.el-button) { width: 100%; }
+.row-actions { white-space: nowrap; }
+</style>

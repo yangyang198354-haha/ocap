@@ -654,7 +654,7 @@ class InFlightIdentityInvalidationTests(ApiTestBase):
         self.assert_ok(resp)
         self.assertEqual(resp.data["status"], "APPROVED")
         self.assertEqual(resp.data["initiator"]["id"], self.chair.id)
-        self.assertIn("主任", resp.data["initiator"]["labels"])
+        self.assertIn("业委会主任", resp.data["initiator"]["labels"])
 
     def test_invalidated_user_cannot_use_privileged_actions(self):
         """AC-068-06：身份失效者发起决议 / 发起投票 / 审批 → 403。"""

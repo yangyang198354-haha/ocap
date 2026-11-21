@@ -69,7 +69,8 @@ def _holder_details(seats: list) -> dict[int, dict]:
     if user_ids:
         for m in (Membership.objects.filter(
                 user_id__in=user_ids, ended_at__isnull=True, role__in=("HEAD", "OWNER"),
-        ).select_related("unit", "registry_owner").order_by("-id")):
+        ).select_related("unit", "registry_owner").prefetch_related("unit__owners__phones")
+                .order_by("-id")):
             memberships.setdefault(m.user_id, m)
     owner_ids = [s.holder_owner_id for s in seats if s.holder_owner_id]
     owner_phones = {}
@@ -81,6 +82,21 @@ def _holder_details(seats: list) -> dict[int, dict]:
             for s in seats}
 
 
+def _certified_real_name(membership, phone: str | None) -> str | None:
+    """已绑定用户的实名：先取认证关联的清册业主，再按手机号命中（与身份页同口径，兼容未回填的历史记录）。"""
+    if membership is None:
+        return None
+    owner = membership.registry_owner if membership.registry_owner_id else None
+    if owner is not None and owner.name:
+        return owner.name
+    if not phone:
+        return None
+    for candidate in membership.unit.owners.all():
+        if candidate.name and any(p.phone == phone for p in candidate.phones.all()):
+            return candidate.name
+    return None
+
+
 def _build_holder_detail(seat: Seat, membership, owner, owner_phone=None) -> dict:
     from apps.registry import display as registry_display
 
@@ -90,6 +106,8 @@ def _build_holder_detail(seat: Seat, membership, owner, owner_phone=None) -> dic
         name = owner.name or None
     if name is None and seat.holder_name:
         name = seat.holder_name
+    if name is None and seat.user is not None:  # 按用户授予的席位无清册快照：回退到认证实名
+        name = _certified_real_name(membership, seat.user.phone)
     nickname = None
     if seat.user is not None:
         nickname = seat.user.nickname or seat.user.account_no
@@ -162,7 +180,17 @@ class AdminSeatListCreateView(APIView):
             qs = qs.filter(Q(user__nickname__icontains=nickname) | Q(user__account_no__icontains=nickname))
         name_keyword = (request.query_params.get("name") or "").strip()
         if name_keyword:
-            qs = qs.filter(Q(holder_owner__name__icontains=name_keyword) | Q(holder_name__icontains=name_keyword))
+            # 已绑定用户按用户授予的席位没有清册快照：姓名搜索同时匹配其认证实名
+            certified_name_users = Membership.objects.filter(
+                user_id=OuterRef("user_id"), ended_at__isnull=True, role__in=("HEAD", "OWNER"),
+            ).filter(
+                Q(registry_owner__name__icontains=name_keyword)
+                | Q(unit__owners__name__icontains=name_keyword,
+                    unit__owners__phones__phone=OuterRef("user__phone"))
+            )
+            qs = qs.filter(Q(holder_owner__name__icontains=name_keyword)
+                           | Q(holder_name__icontains=name_keyword)
+                           | Q(Exists(certified_name_users)))
         phone = re.sub(r"\D", "", request.query_params.get("phone") or "")
         if phone:
             owner_phones = RegistryPhone.objects.filter(

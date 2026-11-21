@@ -138,6 +138,36 @@ class SeatListProfileUxTests(SeatHolderBase):
                           400, "INVALID_QUERY")
         self.assert_error(self.api("get", "/admin/committee/seats", token=token), 403)
 
+    def test_bound_user_seat_shows_phone_matched_real_name(self):
+        """按用户授予（无清册快照）的已绑定席位：姓名取认证房屋的清册实名（手机号命中，兼容未回填 registry_owner）。"""
+        phone = next_phone()
+        unit, _, _, _ = self.reg_unit(name="业主丙", phones=[phone])
+        user, _ = self.make_user(phone=phone, nickname="丙哥")
+        Membership.objects.create(user=user, unit=unit, role="HEAD", source="CERTIFIED",
+                                  active_slot=1, head_slot=1)
+        seat = self.make_seat(user)
+        body = self.assert_ok(self.api("get", "/admin/committee/seats", token=self.admin_token)).json()
+        row = next(r for r in body["results"] if r["id"] == seat.id)
+        self.assertEqual(row["bind_state"], "BOUND")
+        self.assertEqual(row["holder_detail"]["name"], "业主丙")
+        hit = self.assert_ok(self.api(
+            "get", "/admin/committee/seats?name=业主丙", token=self.admin_token)).json()
+        self.assertIn(seat.id, {r["id"] for r in hit["results"]})
+        miss = self.assert_ok(self.api(
+            "get", "/admin/committee/seats?name=查无此人", token=self.admin_token)).json()
+        self.assertNotIn(seat.id, {r["id"] for r in miss["results"]})
+
+    def test_bound_user_seat_shows_linked_registry_owner_name(self):
+        """已绑定用户认证时记录了清册业主（registry_owner）→ 席位姓名取该业主姓名。"""
+        unit, owner, _, _ = self.reg_unit(name="业主丁")
+        user, _ = self.make_user(nickname="丁哥")
+        Membership.objects.create(user=user, unit=unit, role="HEAD", source="CERTIFIED",
+                                  active_slot=1, head_slot=1, registry_owner=owner)
+        seat = self.make_seat(user)
+        body = self.assert_ok(self.api("get", "/admin/committee/seats", token=self.admin_token)).json()
+        row = next(r for r in body["results"] if r["id"] == seat.id)
+        self.assertEqual(row["holder_detail"]["name"], "业主丁")
+
 
 class MembershipFilterTests(ApiTestBase):
     def test_filters_and_search(self):

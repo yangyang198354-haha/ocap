@@ -1,4 +1,4 @@
-<phase_status project="ocap_profile_hierarchy" mode="INCREMENTAL" created="2026-11-21T11:36:28+08:00" updated="2026-11-21T12:45:00+08:00">
+<phase_status project="ocap_profile_hierarchy" mode="INCREMENTAL" created="2026-11-21T11:36:28+08:00" updated="2026-11-21T13:05:00+08:00">
   <request>个人主页应该先显示昵称或者实名，然后才是身份标记。 如果是实名。可以追加一个实名认证徽章， 身份的颜色和字体可以和实名不一样。 web 端和小程序都应该做这样的改动</request>
   <profile version="1.2.0"/>
   <groups>
@@ -137,7 +137,7 @@
       <criterion id="J-E2-验证" result="SATISFIED">内网/外网首页与静态资源 200；新产物含“已实名认证”；未登录 profile 401；backend/nginx active；`systemctl --failed` 0；SPA 回退 200；Freeark 200。</criterion>
       <criterion id="J-E2-报告" result="SATISFIED">deployment_report 含授权核对、分步执行、验证结果、回滚路径与遗留问题；未执行步骤标 SKIPPED；无凭据。</criterion>
       <finding id="GR-E2-001-F01" severity="MINOR">E1 计划原稿静态目录 `web/dist` 有误，E2 前已修正为 `web/ocap`（v1.0.1）；后续 E1 应先以目标机实际目录核对再出稿。</finding>
-      <condition>MV-01（Web 主题下实名与身份颜色/字体区分）与 MV-02（微信开发者工具“我的”页）须由用户人工验收；小程序上传不在本批自动部署内。</condition>
+      <condition>MV-01（Web 主题下实名与身份颜色/字体区分）与 MV-02（微信开发者工具“我的”页）已由用户 2026-11-21 人工确认通过（“人工确认了。没有问题”），条件关闭；小程序上传不在本批自动部署内。</condition>
       <verification>PM 复核：报告文件存在，version=1.0.0 status=APPROVED；外部命令输出与报告一致；phase_status XML 可解析。</verification>
     </gate_review>
   </gate_reviews>
@@ -172,5 +172,6 @@
     <event time="2026-11-21T12:52:00+08:00" type="AUTHORIZATION" actor="user">用户本轮明确选择“提交+推送+CI 全绿后部署”，授权在 CI 全绿后部署到测试环境。CI run 44866876013（af1cc46）三 job 全绿：Mini program 39s / Backend 1m12s / Web frontend 1m3s。PM 写入 PRODUCTION_DEPLOY_CONFIRM=true，环境=测试（内网/外网），调用 GROUP_E2。</event>
     <event time="2026-11-21T12:52:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 ocap_profile_hierarchy-GROUP_E2-1（devops-engineer，PHASE_11b，环境=测试）。</event>
     <event time="2026-11-21T12:44:10+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 decision=PASS；DEPLOYED_SUCCESSFULLY（8 步：6 完成 / 2 跳过 / 0 失败）；锚点 20261121123831；GROUP_E2 → APPROVED。</event>
+    <event time="2026-11-21T13:05:00+08:00" type="ACCEPTANCE" actor="user">用户人工验收 MV-01（Web 主题下实名与身份颜色/字体区分）与 MV-02（微信开发者工具“我的”页），确认“人工确认了。没有问题”。GR-E2-001 条件关闭。</event>
   </audit_log>
 </phase_status>

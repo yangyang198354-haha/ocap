@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
+// Windows 检出（core.autocrlf=true）为 CRLF，断言按 LF 口径比较
+const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n')
 const strip = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 const style = strip(read('frontend/src/shared/style.css'))
 // 取某选择器（完整匹配，可含逗号列表中的其一）的声明块；允许在 @media 内
@@ -176,16 +177,18 @@ describe('管理端表格宽度（ADR-121，R-02，AC-231-02）', () => {
 
   it('TC-UNIT-874 / AC-231-02、AC-219-02：除已批准加宽并对整体横向滚动的表格外，其余管理端表格合计 ≤ 1090px（设计上限 1110）', () => {
     expect(tables.length).toBeGreaterThanOrEqual(10)
-    // REQ-FUNC-282/285/287：清册 1160、申诉 1750、席位 1220，三者按批准设计整体横向滚动
-    const wide = new Set(['AdminRegistry.vue#0', 'AdminAppeals.vue#0', 'AdminSeats.vue#0'])
+    // REQ-FUNC-282/285/287：清册 1190、房屋关系 1430、申诉 1750、席位主表 1590 与失效折叠表 1430，按批准设计整体横向滚动
+    const wide = new Set(['AdminRegistry.vue#0', 'AdminMemberships.vue#0', 'AdminAppeals.vue#0',
+      'AdminSeats.vue#0', 'AdminSeats.vue#1'])
     const over = tables.filter((t) => !wide.has(t.id) && t.total > BUDGET).map((t) => `${t.id}=${t.total}`)
     expect(over).toEqual([])
   })
 
   it('TC-UNIT-875 / ADR-121 R-02、REQ-FUNC-282/285/287：已知最宽的表格合计与批准列宽一致，列含义与数量未变', () => {
     const by = Object.fromEntries(tables.map((t) => [t.id, t]))
-    expect(by['AdminRegistry.vue#0']).toMatchObject({ cols: 9, total: 1160 })
-    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 10, total: 1220 })
+    expect(by['AdminRegistry.vue#0']).toMatchObject({ cols: 9, total: 1190 })
+    expect(by['AdminMemberships.vue#0']).toMatchObject({ cols: 11, total: 1430 })
+    expect(by['AdminSeats.vue#0']).toMatchObject({ cols: 15, total: 1590 })
     expect(by['AdminAppeals.vue#0']).toMatchObject({ cols: 10, total: 1750 })
     expect(by['AdminUsers.vue#1']).toMatchObject({ cols: 9, total: 990 })
     expect(by['AdminUsers.vue#0']).toMatchObject({ cols: 4, total: 480 })

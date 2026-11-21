@@ -116,7 +116,8 @@ export function loadThemeFiles(dir) {
     const base = file.replace(/\.theme\.json$/, '')
     const read = (ext) => {
       const p = path.join(dir, `${base}.${ext}`)
-      return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''
+      // 统一换行符：Windows 检出（core.autocrlf=true）为 CRLF，避免生成物随平台漂移
+      return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n') : ''
     }
     return { file, def, errors, webCss: read('web.css'), mpCss: read('mp.css') }
   })
@@ -227,7 +228,7 @@ function main(argv) {
   let drift = 0
   for (const [rel, content] of Object.entries(outputs)) {
     const target = path.join(root, rel)
-    const current = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : null
+    const current = fs.existsSync(target) ? fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n') : null
     if (flag('--check')) {
       if (current !== content) { console.error(`生成物与风格定义不一致：${rel}`); drift++ }
     } else if (current !== content) {

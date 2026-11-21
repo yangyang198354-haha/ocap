@@ -3,29 +3,37 @@
   <div class="page">
     <div class="card">
       <h3 class="title">用户房屋关系</h3>
-      <!-- REQ-FUNC-284：筛选控件与表格列共用宽度网格（用户 160 / 专有部分 200 / 身份 120 / 认证时间 180 / 操作 140） -->
+      <!-- REQ-FUNC-284：筛选控件与表格列共用宽度网格，房号/类型/面积/认证时间列无筛选控件保留空位 -->
       <div class="membership-scroll">
         <div class="filter-grid">
           <div class="filter-cell">
-            <el-input v-model="keyword" placeholder="姓名 / 手机号（后 4 位起）" clearable
+            <el-input v-model="keyword" placeholder="姓名 / 手机号" clearable
                       @keyup.enter="resetAndLoad" @clear="resetAndLoad" />
           </div>
-          <div class="filter-cell unit-cell">
-            <el-input v-model="unitKeyword" placeholder="专有部分标识 / 户号" clearable class="span-2"
+          <div class="filter-cell">
+            <el-input v-model="unitKeyword" placeholder="专有部分标识 / 户号" clearable
                       @keyup.enter="resetAndLoad" @clear="resetAndLoad" />
-            <el-select v-model="building" placeholder="全部楼栋" clearable @change="onBuildingChange">
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="building" placeholder="楼栋" clearable @change="onBuildingChange">
               <el-option v-for="o in buildingOptions" :key="o.value" :label="o.value" :value="o.value" />
-            </el-select>
-            <el-select v-model="unitNo" placeholder="全部单元" clearable :disabled="!building" @change="onUnitChange">
-              <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
-            </el-select>
-            <el-select v-model="floor" placeholder="全部楼层" clearable :disabled="!unitNo" class="span-2"
-                       @change="resetAndLoad">
-              <el-option v-for="o in floorOptions" :key="o.value" :label="o.value" :value="o.value" />
             </el-select>
           </div>
           <div class="filter-cell">
-            <el-select v-model="role" placeholder="全部身份" clearable @change="resetAndLoad">
+            <el-select v-model="unitNo" placeholder="单元" clearable :disabled="!building" @change="onUnitChange">
+              <el-option v-for="o in unitOptions" :key="o.value" :label="o.value" :value="o.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="floor" placeholder="楼层" clearable :disabled="!unitNo" @change="resetAndLoad">
+              <el-option v-for="o in floorOptions" :key="o.value" :label="o.value" :value="o.value" />
+            </el-select>
+          </div>
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell" />
+          <div class="filter-cell">
+            <el-select v-model="role" placeholder="身份" clearable @change="resetAndLoad">
               <el-option label="户主" value="HEAD" />
               <el-option label="产权业主" value="OWNER" />
               <el-option label="同住人" value="RESIDENT" />
@@ -37,22 +45,40 @@
             <el-button @click="resetFilters">重置</el-button>
           </div>
         </div>
-        <el-table :data="items" size="small" empty-text="暂无匹配记录" style="width: 800px">
-          <el-table-column label="用户" width="160">
+        <el-table :data="items" size="small" empty-text="暂无匹配记录" class="membership-table">
+          <el-table-column label="用户" min-width="180">
             <template #default="{ row }">
               <router-link :to="`/users/${row.user?.id}/profile`" class="user-link">
                 {{ row.user?.nickname || row.user?.account_no }}（#{{ row.user?.id }}）
               </router-link>
             </template>
           </el-table-column>
-          <el-table-column prop="specific_part" label="专有部分" width="200" />
-          <el-table-column label="身份" width="120">
+          <el-table-column prop="specific_part" label="专有部分" min-width="200" show-overflow-tooltip />
+          <el-table-column label="楼栋" min-width="100">
+            <template #default="{ row }">{{ row.building || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="单元" min-width="100">
+            <template #default="{ row }">{{ row.unit_no || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="楼层" min-width="100">
+            <template #default="{ row }">{{ row.floor || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="房号" min-width="100">
+            <template #default="{ row }">{{ row.room || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="类型" min-width="120">
+            <template #default="{ row }">{{ row.unit_type || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="面积" min-width="100">
+            <template #default="{ row }">{{ row.area ? `${row.area} ㎡` : '-' }}</template>
+          </el-table-column>
+          <el-table-column label="身份" min-width="110">
             <template #default="{ row }">{{ ROLE_LABELS[row.role] || row.role }}</template>
           </el-table-column>
-          <el-table-column label="认证时间" width="180">
+          <el-table-column label="认证时间" min-width="170">
             <template #default="{ row }">{{ formatDateTime(row.certified_at) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="140">
+          <el-table-column label="操作" min-width="150">
             <template #default="{ row }">
               <el-button v-if="row.role !== 'RESIDENT'" size="small" type="danger" @click="revoke(row)">撤销认证</el-button>
             </template>
@@ -117,6 +143,7 @@ function resetFilters() {
   floor.value = ''
   keyword.value = ''
   unitKeyword.value = ''
+  unitOptions.value = []
   floorOptions.value = []
   resetAndLoad()
 }
@@ -187,31 +214,27 @@ onMounted(load)
 </script>
 
 <style scoped>
+/* REQ-FUNC-284：筛选区与表格同宽，按 min-width 比例伸展；窄屏仅本容器横向滚动 */
 .membership-scroll { overflow-x: auto; }
 .filter-grid {
   display: grid;
-  grid-template-columns: 160px 200px 120px 180px 140px;
-  width: 800px;
+  grid-template-columns: 180fr 200fr 100fr 100fr 100fr 100fr 120fr 100fr 110fr 170fr 150fr;
+  width: 100%;
+  min-width: 1430px;
   margin-bottom: 12px;
 }
 .filter-cell {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 10px;
   box-sizing: border-box;
 }
 .filter-cell :deep(.el-input),
 .filter-cell :deep(.el-select) { width: 100%; }
-.unit-cell {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  align-content: start;
-}
-.unit-cell .span-2 { grid-column: span 2; }
 .action-cell :deep(.el-button) { padding-inline: 8px; }
+.membership-table { min-width: 1430px; }
 .user-link { color: var(--accent); text-decoration: none; }
 .user-link:hover { text-decoration: underline; }
 </style>

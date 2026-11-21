@@ -125,7 +125,7 @@ describe('TC-UNIT-103 构建器拒绝不合规风格（AC-080-03、AC-088-04）'
     expect(errors.length).toBeGreaterThanOrEqual(3)
   })
   it('缺少默认风格 bento 时构建失败（fatal）', () => {
-    const { fatal } = withThemes((dir) => fs.rmSync(path.join(dir, 'bento.theme.json')))
+    const { fatal } = withThemes((dir) => fs.unlinkSync(path.join(dir, 'bento.theme.json')))
     expect(fatal).toBeTruthy()
   })
 })

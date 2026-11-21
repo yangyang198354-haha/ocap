@@ -47,16 +47,16 @@ class RegistryFilterContractTests(ApiTestBase):
         """AC-189-01~05 契约：AdminRegistry.vue 传的每个查询参数名后端都识别并真正过滤（不匹配值 → 0 条）。"""
         params = vue_load_params()
         # B7（ocap_batch_1118，AC-255-01）：新增 sort、order 两个排序参数（非过滤条件，另断言被后端识别）
-        self.assertEqual(params, {"page", "page_size", "q", "unit_type", "building", "unit_no", "room",
+        self.assertEqual(params, {"page", "page_size", "q", "unit_type", "building", "unit_no", "floor", "room",
                                   "owner_name", "owner_phone", "sort", "order"})
         _, admin_token = self.make_admin()
         unit = RegistryUnit.objects.create(building="1", unit_no="2", floor="9", room="902",
                                            unit_type="RESIDENCE", area="50.00")
         owner = RegistryOwner.objects.create(unit=unit, name="张三丰")
         RegistryPhone.objects.create(unit=unit, owner=owner, phone="13800001234")
-        hits = {"q": "902", "unit_type": "RESIDENCE", "building": "1", "unit_no": "2", "room": "902",
+        hits = {"q": "902", "unit_type": "RESIDENCE", "building": "1", "unit_no": "2", "floor": "9", "room": "902",
                 "owner_name": "张三", "owner_phone": "1234"}
-        misses = {"q": "zzz", "unit_type": "SHOP", "building": "9", "unit_no": "9", "room": "9",
+        misses = {"q": "zzz", "unit_type": "SHOP", "building": "9", "unit_no": "9", "floor": "99", "room": "9",
                   "owner_name": "王五", "owner_phone": "9999"}
         for key in hits:
             ok = self.api("get", "/admin/registry/units", {key: hits[key], "page": 1, "page_size": 20}, token=admin_token)
@@ -75,14 +75,16 @@ class RegistryFilterContractTests(ApiTestBase):
             self.assertEqual(ok.data["count"], 1)
 
     def test_tc_int_586_page_reads_only_existing_response_keys(self):
-        """AC-189 契约：页面读取的 data.buildings / data.unit_nos / data.results / data.count 均为后端真实响应键。"""
+        """AC-189 契约：页面读取的 data.options / data.results / data.count 均为后端真实响应键。"""
         text = VUE.read_text(encoding="utf-8")
-        option_reads = set(re.findall(r"data\.(buildings|unit_nos)\b", text))
-        self.assertEqual(option_reads, {"buildings", "unit_nos"})
+        self.assertIn("data.options", text)
+        self.assertIn("admin.unitOptions(", text)
+        self.assertNotIn("data.buildings", text)
+        self.assertNotIn("data.unit_nos", text)
         _, admin_token = self.make_admin()
         RegistryUnit.objects.create(building="1", unit_no="1", floor="1", room="1")
-        options = self.api("get", "/admin/registry/units/filter-options", token=admin_token)
-        self.assertTrue(option_reads <= set(options.data))
+        options = self.api("get", "/admin/registry/unit-options", token=admin_token)
+        self.assertTrue({"level", "skipped", "has_empty", "options"} <= set(options.data))
         listing = self.api("get", "/admin/registry/units", token=admin_token)
         self.assertTrue({"results", "count"} <= set(listing.data))
         self.assertRegex(text, r"data\.results")
@@ -91,11 +93,13 @@ class RegistryFilterContractTests(ApiTestBase):
         used = set(re.findall(r'prop="(\w+)"', text)) | set(re.findall(r"row\.(\w+)", text))
         self.assertEqual(sorted(k for k in used if k not in row_keys and k not in {"owners", "unit_type_label"}), [])
 
-    def test_tc_int_587_no_floor_filter_in_page_or_api_params(self):
-        """AC-189-09 契约：页面不传 floor 过滤参数；占位文字不含 select。"""
+    def test_tc_int_587_floor_filter_cascades_from_building_and_unit(self):
+        """REQ-FUNC-281 契约：页面传 floor 过滤参数，楼层下拉随楼栋/单元级联；占位文字不含 select。"""
         text = VUE.read_text(encoding="utf-8")
-        self.assertNotIn("floor", vue_load_params())
+        self.assertIn("floor", vue_load_params())
         header = text.split("<el-table", 1)[0]
-        self.assertNotRegex(header, r'placeholder="[^"]*楼层')
+        self.assertRegex(header, r'placeholder="楼层')
+        self.assertRegex(text, r"disabled=\"!filters\.building\"")
+        self.assertRegex(text, r"disabled=\"!filters\.unit_no\"")
         self.assertIsNone(re.search(r"select", re.sub(r"el-select|v-model|@change|filterable", "", header),
                                     re.I), "过滤区可见属性文字含英文 select")

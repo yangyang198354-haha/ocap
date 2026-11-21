@@ -185,12 +185,13 @@ describe('US-264 / US-265：席位表格', () => {
     }))
   }
 
-  it('TC-UNIT-1504：主表 10 列、默认 bucket=active、展开后请求 bucket=ended', async () => {
+  it('TC-UNIT-1504：主表 15 列（含楼栋/单元/楼层/房号/面积）、默认 bucket=active、展开后请求 bucket=ended', async () => {
     mockSeats()
     const { wrapper } = await mountPage(AdminSeats)
     await flush()
     const headers = wrapper.findAll('th').map((th) => th.text().trim())
-    for (const label of ['昵称', '姓名', '联系电话', '专有部分坐落', '专有部分类型', '职位', '状态', '任期开始', '任期结束', '操作']) {
+    for (const label of ['昵称', '姓名', '联系电话', '专有部分坐落', '楼栋', '单元', '楼层', '房号',
+      '专有部分类型', '面积', '职位', '状态', '任期开始', '任期结束', '操作']) {
       expect(headers).toContain(label)
     }
     const first = adminHttp.get.mock.calls.find((c) => c[0] === '/admin/committee/seats')[1].params
@@ -223,7 +224,7 @@ describe('US-268 / US-269：房屋关系过滤与搜索', () => {
     mockMemberships()
     const { wrapper } = await mountPage(AdminMemberships)
     await flush()
-    const input = wrapper.find('input[placeholder="姓名 / 手机号（后 4 位起）"]')
+    const input = wrapper.find('input[placeholder="姓名 / 手机号"]')
     await input.setValue('1234')
     await buttonOf(wrapper, '搜索').trigger('click')
     await flush()

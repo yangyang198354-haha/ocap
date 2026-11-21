@@ -91,9 +91,16 @@ class CancelAccountView(APIView):
 
 class MembershipSerializer:
     def __init__(self, rows, many=False, context=None):
+        from apps.registry import display as registry_display
+
         rows = rows if many else [rows]
         self.data = [{
             "id": m.id, "unit_id": m.unit_id, "specific_part": m.unit.specific_part,
+            # REQ-FUNC-284：房屋关系表拆列展示楼栋/单元/楼层/房号/类型/面积
+            "building": m.unit.building, "unit_no": m.unit.unit_no or None,
+            "floor": m.unit.floor or None, "room": m.unit.room,
+            "unit_type": registry_display.unit_type_label(m.unit),
+            "area": registry_display.area_text(m.unit),
             "role": m.role, "source": m.source, "certified_at": m.certified_at,
             "user": {"id": m.user_id, "account_no": m.user.account_no,
                      "nickname": m.user.nickname,

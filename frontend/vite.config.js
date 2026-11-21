@@ -15,6 +15,10 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    include: ['tests/**/*.spec.js']
+    include: ['tests/**/*.spec.js'],
+    // 路由用例首次导航需冷启动动态 import 登录页；并行 worker 下在 Windows 上可能超时，串行执行更稳定
+    fileParallelism: false,
+    hookTimeout: 30000,
+    testTimeout: 20000
   }
 })

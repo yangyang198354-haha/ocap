@@ -15,26 +15,31 @@
       <div class="registry-scroll">
         <div class="filter-grid">
           <div class="filter-cell">
-            <el-input v-model="keyword" clearable placeholder="专有部分标识搜索" @change="search" />
+            <el-input v-model="keyword" clearable placeholder="专有部分标识" @change="search" />
           </div>
           <div class="filter-cell">
             <el-select v-model="filters.building" filterable clearable placeholder="楼栋" no-data-text="暂无数据"
-                       @change="search">
+                       @change="onBuildingChange">
               <el-option v-for="item in buildingOptions" :key="item" :label="item" :value="item" />
             </el-select>
           </div>
           <div class="filter-cell">
             <el-select v-model="filters.unit_no" filterable clearable placeholder="单元" no-data-text="暂无数据"
-                       @change="search">
+                       :disabled="!filters.building" @change="onUnitChange">
               <el-option v-for="item in unitNoOptions" :key="item" :label="item" :value="item" />
             </el-select>
           </div>
-          <div class="filter-cell" />
           <div class="filter-cell">
-            <el-input v-model="filters.room" clearable placeholder="户号" maxlength="32" @change="search" />
+            <el-select v-model="filters.floor" filterable clearable placeholder="楼层" no-data-text="暂无数据"
+                       :disabled="!filters.unit_no" @change="search">
+              <el-option v-for="item in floorOptions" :key="item" :label="item" :value="item" />
+            </el-select>
           </div>
           <div class="filter-cell">
-            <el-select v-model="typeFilter" clearable placeholder="全部类型" no-data-text="暂无数据"
+            <el-input v-model="filters.room" clearable placeholder="房号" maxlength="32" @change="search" />
+          </div>
+          <div class="filter-cell">
+            <el-select v-model="typeFilter" clearable placeholder="类型" no-data-text="暂无数据"
                        @change="search">
               <el-option label="全部类型" value="" />
               <el-option label="未登记类型" value="UNSET" />
@@ -43,9 +48,9 @@
           </div>
           <div class="filter-cell" />
           <div class="filter-cell owner-cell">
-            <el-input v-model="filters.owner_name" clearable placeholder="产权业主姓名" maxlength="64"
+            <el-input v-model="filters.owner_name" clearable placeholder="业主姓名" maxlength="64"
                       @change="search" />
-            <el-input v-model="filters.owner_phone" clearable placeholder="产权业主电话" maxlength="11"
+            <el-input v-model="filters.owner_phone" clearable placeholder="业主电话" maxlength="11"
                       :formatter="digitsOnly" :parser="digitsOnly" @change="search" />
           </div>
           <div class="filter-cell action-cell">
@@ -54,22 +59,22 @@
         </div>
         <!-- MOD-151：楼栋/单元/楼层/房号四列服务端排序（升序与降序两态），其余列不可排序 -->
         <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" class="registry-table"
-                  style="width: 1160px" @sort-change="onSort">
-          <el-table-column prop="specific_part" label="专有部分" width="180" show-overflow-tooltip />
-          <el-table-column prop="building" label="楼栋" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="unit_no" label="单元" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="floor" label="楼层" width="90" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="room" label="房号" width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column label="类型" width="110">
+                  style="width: 100%" @sort-change="onSort">
+          <el-table-column prop="specific_part" label="专有部分" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="building" label="楼栋" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="unit_no" label="单元" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="floor" label="楼层" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column prop="room" label="房号" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column label="类型" min-width="120">
             <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
           </el-table-column>
-          <el-table-column label="面积" width="110">
+          <el-table-column label="面积" min-width="100">
             <template #default="{ row }">{{ row.area ? `${row.area} ㎡` : '未登记' }}</template>
           </el-table-column>
-          <el-table-column label="业主" width="240" show-overflow-tooltip>
+          <el-table-column label="业主" min-width="240" show-overflow-tooltip>
             <template #default="{ row }">{{ ownersText(row.owners) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="150">
+          <el-table-column label="操作" min-width="150">
             <template #default="{ row }">
               <span class="row-actions">
                 <el-button size="small" @click="openEdit(row)">编辑</el-button>
@@ -153,9 +158,10 @@ const pageSize = ref(20)
 const total = ref(0)
 const keyword = ref('')
 const typeFilter = ref('')
-const filters = reactive({ building: '', unit_no: '', room: '', owner_name: '', owner_phone: '' })
+const filters = reactive({ building: '', unit_no: '', floor: '', room: '', owner_name: '', owner_phone: '' })
 const buildingOptions = ref([])
 const unitNoOptions = ref([])
+const floorOptions = ref([])
 const showCreate = ref(false)
 const showEdit = ref(false)
 const showImport = ref(false)
@@ -180,6 +186,7 @@ async function load() {
       unit_type: typeFilter.value || undefined,
       building: filters.building || undefined,
       unit_no: filters.unit_no || undefined,
+      floor: filters.floor || undefined,
       room: filters.room || undefined,
       owner_name: filters.owner_name || undefined,
       owner_phone: filters.owner_phone || undefined,
@@ -197,20 +204,42 @@ function digitsOnly(value) {
   return String(value ?? '').replace(/\D/g, '')
 }
 
-async function loadFilterOptions() {
+// 楼栋 → 单元 → 楼层逐级联动（/admin/registry/unit-options）
+async function loadOptions(params) {
   try {
-    const data = await admin.registryFilterOptions()
-    buildingOptions.value = data.buildings || []
-    unitNoOptions.value = data.unit_nos || []
+    const data = await admin.unitOptions(params)
+    return (data.options || []).map((o) => o.value)
   } catch (e) {
-    ElMessage.error(errorText(e))
+    return []
   }
+}
+
+async function loadFilterOptions() {
+  buildingOptions.value = await loadOptions({})
+}
+
+async function onBuildingChange() {
+  filters.unit_no = ''
+  filters.floor = ''
+  floorOptions.value = []
+  unitNoOptions.value = filters.building ? await loadOptions({ building: filters.building }) : []
+  search()
+}
+
+async function onUnitChange() {
+  filters.floor = ''
+  floorOptions.value = filters.unit_no
+    ? await loadOptions({ building: filters.building, unit_no: filters.unit_no })
+    : []
+  search()
 }
 
 function resetFilters() {
   keyword.value = ''
   typeFilter.value = ''
-  Object.assign(filters, { building: '', unit_no: '', room: '', owner_name: '', owner_phone: '' })
+  Object.assign(filters, { building: '', unit_no: '', floor: '', room: '', owner_name: '', owner_phone: '' })
+  unitNoOptions.value = []
+  floorOptions.value = []
   Object.assign(sort, { prop: null, order: null }) // "重置"恢复默认升序并清除表头指示
   tableRef.value?.clearSort?.()
   search()
@@ -357,12 +386,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 筛选区与表格共用列宽：专有部分 180 / 楼栋 90 / 单元 90 / 楼层 90 / 房号 100 / 类型 110 / 面积 110 / 业主 240 / 操作 150 */
+/* REQ-FUNC-281：筛选区与表格同宽，按 min-width 比例伸展；窄屏仅本容器横向滚动 */
 .registry-scroll { overflow-x: auto; }
 .filter-grid {
   display: grid;
-  grid-template-columns: 180px 90px 90px 90px 100px 110px 110px 240px 150px;
-  width: 1160px;
+  grid-template-columns: 180fr 100fr 100fr 100fr 100fr 120fr 100fr 240fr 150fr;
+  width: 100%;
+  min-width: 1190px;
   margin-bottom: 12px;
 }
 .filter-cell {
@@ -370,12 +400,13 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 0 12px;
+  padding: 0 10px;
   box-sizing: border-box;
 }
 .filter-cell :deep(.el-input),
 .filter-cell :deep(.el-select) { width: 100%; }
 .owner-cell :deep(.el-input) { width: auto; flex: 1; min-width: 0; }
 .action-cell :deep(.el-button) { width: 100%; }
+.registry-table { min-width: 1190px; }
 .row-actions { white-space: nowrap; }
 </style>

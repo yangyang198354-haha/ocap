@@ -111,6 +111,9 @@ def _build_holder_detail(seat: Seat, membership, owner, owner_phone=None) -> dic
         "building": unit.building if unit is not None else None,
         "unit_no": unit.unit_no if unit is not None else None,
         "floor": unit.floor if unit is not None else None,
+        # REQ-FUNC-287：席位表拆列展示房号与面积
+        "room": unit.room if unit is not None else None,
+        "area": registry_display.area_text(unit) if unit is not None else None,
     }
 
 

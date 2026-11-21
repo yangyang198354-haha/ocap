@@ -86,7 +86,7 @@ _FILTER_PHONE_RE = re.compile(r"[0-9]{1,11}")
 def _apply_unit_filters(qs, request):
     """IFC-291：新增过滤参数，缺省或空串不限制；条件取交集；业主条件用 Exists，不产生重复行。"""
     params = request.query_params
-    for key in ("building", "unit_no", "room"):
+    for key in ("building", "unit_no", "floor", "room"):
         value = (params.get(key) or "").strip()
         if not value:
             continue

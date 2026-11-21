@@ -15,7 +15,9 @@ describe('风格生成物与源一致', () => {
     expect(fatal).toBeNull()
     expect(errors).toEqual([])
     for (const [rel, content] of Object.entries(outputs)) {
-      expect(fs.readFileSync(path.join(ROOT, rel), 'utf8'), rel).toBe(content)
+      // 生成物为 LF；Windows 检出（core.autocrlf=true）会把工作区文件转成 CRLF，比较前统一换行符
+      const actual = fs.readFileSync(path.join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n')
+      expect(actual, rel).toBe(content)
     }
   })
 })

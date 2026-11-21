@@ -121,7 +121,8 @@ class SeatListProfileUxTests(SeatHolderBase):
         self.assertEqual(body["ended_count"], 1)  # AC-265-01：折叠区标题条数
         row = next(r for r in body["results"] if r["id"] == pending.id)
         self.assertEqual(set(row["holder_detail"]), {"nickname", "name", "phone_masked", "unit_text",
-                                                     "unit_type", "building", "unit_no", "floor"})
+                                                     "unit_type", "building", "unit_no", "floor",
+                                                     "room", "area"})
         self.assertEqual(row["holder_detail"]["name"], "业主乙")
         self.assertNotIn(phones[0], resp.content.decode())
 

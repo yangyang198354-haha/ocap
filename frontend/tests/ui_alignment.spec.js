@@ -76,7 +76,7 @@ describe('US-285/US-286 业主清册', () => {
   it('分页可选每页条数：切换为 50 后回到第 1 页并按 page_size=50 请求', async () => {
     adminHttp.get.mockImplementation(routeTable({
       '/admin/registry/units': { count: 120, results: [] },
-      '/admin/registry/units/filter-options': { buildings: [], unit_nos: [] }
+      '/admin/registry/unit-options': { level: 'building', options: [] }
     }))
     const { wrapper } = await mountPage(AdminRegistry)
     const pagerSelect = wrapper.findAllComponents({ name: 'ElSelect' })
@@ -88,14 +88,16 @@ describe('US-285/US-286 业主清册', () => {
     expect(calls.at(-1)[1].params).toMatchObject({ page: 1, page_size: 50 })
   })
 
-  it('筛选区与表格共用 1160px 列宽容器，表宽固定为 1160px', async () => {
+  it('筛选区与表格同宽自适应（不再写死 1160px），窄屏由容器横向滚动', async () => {
     adminHttp.get.mockImplementation(routeTable({
       '/admin/registry/units': { count: 0, results: [] },
-      '/admin/registry/units/filter-options': { buildings: [], unit_nos: [] }
+      '/admin/registry/unit-options': { level: 'building', options: [] }
     }))
     const { wrapper } = await mountPage(AdminRegistry)
     expect(wrapper.find('.filter-grid').exists()).toBe(true)
-    expect(wrapper.find('.el-table').attributes('style')).toContain('width: 1160px')
+    expect(wrapper.find('.table-scroll, .registry-scroll').exists()).toBe(true)
+    expect(wrapper.find('.el-table').attributes('style') || '').not.toContain('1160px')
+    expect(wrapper.find('.el-table').classes()).toContain('registry-table')
   })
 })
 
@@ -115,14 +117,14 @@ describe('US-288 用户房屋关系', () => {
     expect(call[1].params).toMatchObject({ unit_keyword: '101', page: 1 })
   })
 
-  it('原关键词框提示收窄为姓名/手机号（后 4 位起）', async () => {
+  it('原关键词框提示收紧为姓名/手机号', async () => {
     adminHttp.get.mockImplementation(routeTable({
       '/admin/memberships': { count: 0, results: [] },
       '/admin/registry/unit-options': { options: [] }
     }))
     const { wrapper } = await mountPage(AdminMemberships)
     const placeholders = wrapper.findAll('input').map((i) => i.attributes('placeholder'))
-    expect(placeholders).toContain('姓名 / 手机号（后 4 位起）')
+    expect(placeholders).toContain('姓名 / 手机号')
     expect(placeholders).toContain('专有部分标识 / 户号')
   })
 })

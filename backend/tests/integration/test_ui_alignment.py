@@ -40,6 +40,9 @@ class UiAlignmentTests(ApiTestBase):
         """REQ-FUNC-284：专有部分标识/户号包含匹配，且与身份条件取交集。"""
         _, admin_token = self.make_admin()
         unit_a = self.make_registry_unit("1栋", "101")
+        unit_a.unit_type = "RESIDENCE"
+        unit_a.area = "88.50"
+        unit_a.save()
         unit_b = self.make_registry_unit("2栋", "202")
         owner, _ = self.make_user()
         resident, _ = self.make_user()
@@ -49,6 +52,12 @@ class UiAlignmentTests(ApiTestBase):
         resp = self.api("get", "/admin/memberships", {"unit_keyword": "101"}, token=admin_token)
         self.assert_ok(resp)
         self.assertEqual([row["unit_id"] for row in resp.data["results"]], [unit_a.id])
+        row = resp.data["results"][0]
+        # REQ-FUNC-284：房屋关系拆列为楼栋/单元/楼层/房号/类型/面积
+        self.assertEqual((row["building"], row["unit_no"], row["floor"], row["room"]),
+                         ("1栋", "1单元", "1", "101"))
+        self.assertEqual(row["unit_type"], "住宅")
+        self.assertEqual(row["area"], "88.50")
 
         resp = self.api("get", "/admin/memberships", {"unit_keyword": "2栋1单元1层202"},
                         token=admin_token)

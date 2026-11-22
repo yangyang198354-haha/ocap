@@ -277,7 +277,9 @@ class AppealSubmitTests(OwnerAuthBase):
                                              "proof_ids": [proof]}, token=token)
         self.assert_ok(resp, 201)
         self.assertEqual(Appeal.objects.get(user=user).owner_name, "名" * 64)
-        self.assertEqual(set(resp.json()), {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason"})
+        self.assertEqual(set(resp.json()), {"id", "unit", "status", "submitted_at", "decided_at",
+                                            "reject_reason", "decision_note", "withdrawn_at",
+                                            "previous_appeal_id"})
 
     def test_tc_int_667_pending_duplicate_proof_limit_and_file_rules(self):
         """AC-201-03/04：同一用户同一专有部分已有待审 → 409 APPEAL_PENDING 不产生第二条；6 个资料 → 400 ATTACHMENT_LIMIT；

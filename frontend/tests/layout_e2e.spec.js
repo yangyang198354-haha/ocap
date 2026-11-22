@@ -178,11 +178,11 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     expect(side(wrapper).findAll('.side-item.is-active .side-label').map((e) => e.text())).toEqual(['决议'])
     expect(side(wrapper).findAll('.side-sub-item.is-active')).toHaveLength(0)
 
-    // 4 我的房屋：同时只展开一个（AC-216-03）；二级项 5 个（AC-236-01）；"我的身份与房屋"项带角标 2，页面底部嵌入待审批卡片；通过一条后角标变 1
+    // 4 我的房屋：同时只展开一个（AC-216-03）；二级项 4 个（AC-291-01）；"我的身份与房屋"项带角标 2，页面底部嵌入待审批卡片；通过一条后角标变 1
     // 改写：旧"点二级项'待我审批'进入 /units/review、其页只有一个标题块" → 新"点'我的身份与房屋'进入 /units，页面含身份卡 + 底部待审批卡"（ADR-133、AC-234-01、AC-235-01）
     await toggle(wrapper, '我的房屋').trigger('click')
     expect(toggle(wrapper, '决议').attributes('aria-expanded')).toBe('false')
-    expect(side(wrapper).findAll('.side-sub-item')).toHaveLength(5)
+    expect(side(wrapper).findAll('.side-sub-item')).toHaveLength(4)
     expect(sub(wrapper, '待我审批')).toBeUndefined()
     // 注：刚登录时侧栏角标数据尚未取到，进入任一 /units* 页前不显示——该缺陷见 TC-INT-914（DEF-002），此处按"进入后"断言
     await sub(wrapper, '我的身份与房屋').trigger('click')
@@ -279,15 +279,15 @@ describe('TC-E2E-802 用户端旅程：非业委会成员与窄屏', () => {
     expect(router.currentRoute.value.path).toBe('/claims')
     expect(wrapper.find('h3.title').text()).toBe('报销 / 备用金')
     expect(wrapper.findAll('button').find((b) => b.text().includes('新建申请'))).toBeUndefined()
-    // 3 窄屏二级切换条：我的房屋 5 项（改写：旧 6 项，AC-236-04），点"我的申诉"只显示该项（US-230、AC-230-01）
+    // 3 窄屏二级切换条：我的房屋 4 项（AC-291-01），点"认证申诉"只显示该项（US-230、AC-230-01）
     await go('/units')
-    expect(wrapper.findAll('nav.sub-nav-bar .sub-nav-item')).toHaveLength(5)
+    expect(wrapper.findAll('nav.sub-nav-bar .sub-nav-item')).toHaveLength(4)
     expect(wrapper.find('nav.sub-nav-bar').text()).not.toContain('选择房屋')
-    await wrapper.findAll('nav.sub-nav-bar a').find((a) => a.text() === '我的申诉').trigger('click')
-    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units/appeals'))
+    await wrapper.findAll('nav.sub-nav-bar a').find((a) => a.text() === '认证申诉').trigger('click')
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units/appeal'))
     await settle()
-    expect(wrapper.find('main').findAll('h3.title').map((h) => h.text())).toEqual(['我的申诉'])
-    expect(wrapper.find('nav.sub-nav-bar .sub-nav-item.is-active').text()).toBe('我的申诉')
+    expect(wrapper.find('main').findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
+    expect(wrapper.find('nav.sub-nav-bar .sub-nav-item.is-active').text()).toBe('认证申诉')
     // 4 底部"我的" → /me 总览（窄屏不重定向）：7 项 + 退出登录（US-220、AC-220-02/05）
     await wrapper.findAll('nav.tabbar a').find((a) => a.text() === '我的').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me'))

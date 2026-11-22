@@ -134,7 +134,7 @@ class AppealContractTests(ApiTestBase):
         self.assertIsNotNone(re.search(r"unitApi\.submitAppeal\(", web_src), "Web 未调用 unitApi.submitAppeal")
         self.assertNotIn("createAppeal(", web_src)
         mini = self.appeal_keys_from(MINI["units"], r"createAppeal\(\{(.*?)\}\)")
-        self.assertEqual(web, {"unit_id", "owner_name", "files"})
+        self.assertEqual(web, {"unit_id", "owner_name", "files", "previous_appeal_id"})
         self.assertEqual(mini, {"unit_id", "owner_name", "proof_ids"})
 
     def test_tc_int_714_keys_clients_send_for_appeal_are_accepted_by_backend(self):

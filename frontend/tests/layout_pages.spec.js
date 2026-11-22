@@ -220,8 +220,8 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
       void router
       return out
     }
-    const units = await barItems('/units/appeals')
-    expect(units.items).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉'])
+    const units = await barItems('/units/appeal')
+    expect(units.items).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请'])
     expect(units.tabs).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(units.brand).toBe('Cyber@红枫岭')
     expect((await barItems('/resolutions/todo')).items).toEqual(['公开决议', '我发起的', '待我表决'])
@@ -241,10 +241,10 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
 // ------------------------------------------------------------------ 我的房屋分区（MOD-123）
 describe('我的房屋分区宿主 Units.vue（US-214）', () => {
   const TITLES = {
-    identity: '我的身份与房屋', pick: '认证产权', appeal: '认证申诉', applications: '我的同住人申请', appeals: '我的申诉'
-  } // 改写：旧 6 个分区（含 review 与"选择房屋"）→ 新 5 个分区（IFC-340、AC-236-02）
+    identity: '我的身份与房屋', pick: '认证产权', appeal: '认证申诉', applications: '我的同住人申请', appeals: '认证申诉'
+  } // 改写：旧 6 个分区 → 本批 4 个分区；旧 appeals 路由复用申诉中心（默认“我的申诉”Tab）
 
-  it('TC-INT-890 / AC-214-02、AC-234-04：5 个分区各只显示自己的卡片，其余不在页面上（游客的身份页无"待我审批"卡片）；缺省与未知分区（含已取消的 review）回退"我的身份与房屋"', async () => {
+  it('TC-INT-890 / AC-214-02、AC-234-04、AC-291-01：各分区各只显示自己的卡片，其余不在页面上（游客的身份页无"待我审批"卡片）；缺省与未知分区（含已取消的 review）回退"我的身份与房屋"', async () => {
     http.get.mockImplementation(fakeGet({ '/me/housing': { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 }, '/units/options': { level: 'building', options: [] } }))
     for (const [section, title] of Object.entries(TITLES)) {
       document.body.innerHTML = ''
@@ -274,7 +274,7 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
     expect(wrapper.find('h3.title').text()).toBe('我的同住人申请')
     await wrapper.setProps({ section: 'appeals' })
     await flush()
-    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的申诉'])
+    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
     await wrapper.setProps({ section: 'appeal' })
     await flush()
     expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])

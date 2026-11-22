@@ -29,6 +29,7 @@
           <div v-if="isOwner(unit)">
             <p class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</p>
             <div v-for="r in unit.residents" :key="r.user_id" class="row">
+              <span class="muted">实名：{{ r.real_name || '—' }}</span>
               <router-link v-if="r.user_id" :to="`/users/${r.user_id}/profile`">{{ r.nickname || r.account_no }}（{{ r.account_no }}）</router-link>
               <span v-else>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</span>
               <span class="muted">加入于 {{ formatDateTime(r.joined_at) }}</span>

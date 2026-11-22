@@ -60,6 +60,7 @@ class HousingResident(TypedDict):
     user_id: int
     nickname: str | None
     account_no: str
+    real_name: str | None  # IFC-389：最近一条 APPROVED 同住申请的本人实名；无则 None
     joined_at: datetime
 
 
@@ -83,6 +84,21 @@ class HousingPayload(TypedDict):
     real_names: list[str]  # IFC-357：本人作为产权业主对应的清册姓名，去重保序
 
 
+def _latest_resident_names(unit_ids: list[int], user_ids: list[int]) -> dict[tuple[int, int], str]:
+    """IFC-389：按 (unit_id, applicant_id) 取最近一条 APPROVED 申请的实名，一次查询，避免 N+1。"""
+    if not unit_ids or not user_ids:
+        return {}
+    names: dict[tuple[int, int], str] = {}
+    rows = (ResidentApplication.objects
+            .filter(unit_id__in=unit_ids, applicant_id__in=user_ids, status="APPROVED")
+            .order_by("decided_at", "id")
+            .values_list("unit_id", "applicant_id", "applicant_name"))
+    for unit_id, user_id, name in rows:
+        if name:
+            names[(unit_id, user_id)] = name
+    return names
+
+
 def housing_view(user) -> HousingPayload:
     memberships = list(Membership.objects.filter(user=user, ended_at__isnull=True)
                        .select_related("unit").order_by("certified_at", "id"))
@@ -93,13 +109,17 @@ def housing_view(user) -> HousingPayload:
     residents_by_unit: dict[int, list[HousingResident]] = {}
     pending_by_unit: dict[int, int] = {}
     if owner_unit_ids:
-        rows = (Membership.objects.filter(unit_id__in=owner_unit_ids, role="RESIDENT",
-                                          ended_at__isnull=True)
-                .select_related("user").order_by("certified_at", "id"))
+        rows = list(Membership.objects.filter(unit_id__in=owner_unit_ids, role="RESIDENT",
+                                              ended_at__isnull=True)
+                    .select_related("user").order_by("certified_at", "id"))
+        names = _latest_resident_names(list({r.unit_id for r in rows}),
+                                       list({r.user_id for r in rows}))
         for row in rows:
             residents_by_unit.setdefault(row.unit_id, []).append({
                 "user_id": row.user_id, "nickname": row.user.nickname,
-                "account_no": row.user.account_no, "joined_at": row.certified_at,
+                "account_no": row.user.account_no,
+                "real_name": names.get((row.unit_id, row.user_id)) or None,
+                "joined_at": row.certified_at,
             })
         counts = (ResidentApplication.objects.filter(unit_id__in=owner_unit_ids, status="PENDING")
                   .values("unit_id").annotate(n=Count("id")))
@@ -122,6 +142,13 @@ def housing_view(user) -> HousingPayload:
 
     real_names = _owner_names(memberships, owners_by_unit, linked_owner_ids,
                               getattr(user, "phone", None))
+    # IFC-389：本人以同住人身份存在时，把本人实名并入汇总（去重保序）
+    resident_unit_ids = [m.unit_id for m in memberships if m.role == "RESIDENT"]
+    own_names = _latest_resident_names(resident_unit_ids, [user.id])
+    for unit_id in resident_unit_ids:
+        name = own_names.get((unit_id, user.id))
+        if name and name not in real_names:
+            real_names.append(name)
 
     def co_owner_names(unit_id: int) -> list[str]:
         names: list[str] = []

@@ -296,7 +296,7 @@ describe('rankOptions / UnitCascader：四级下拉输入检索（US-246）', ()
   })
 
   it('TC-UNIT-1214 / AC-246-04：三页（认证产权、认证申诉、我的同住人申请）使用同一 UnitCascader 且不传 fetcher；更换上一级后下一级及户号清空（update:modelValue=null）并重新加载', async () => {
-    for (const rel of ['frontend/src/portal/units/UnitsPick.vue', 'frontend/src/portal/units/UnitsAppeal.vue', 'frontend/src/portal/units/UnitsApplications.vue']) {
+    for (const rel of ['frontend/src/portal/units/UnitsPick.vue', 'frontend/src/portal/units/UnitsAppeal.vue', 'frontend/src/portal/units/UnitsApplicationForm.vue']) {
       const src = read(rel)
       expect(src, rel).toMatch(/<UnitCascader\b/)
       expect(src, rel).not.toMatch(/fetcher/)

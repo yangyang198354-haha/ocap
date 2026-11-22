@@ -57,8 +57,12 @@
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
             <div v-if="row.status === 'PENDING'" class="row-actions">
-              <el-button size="small" type="success" @click="decide(row.id, 'APPROVE')">通过</el-button>
-              <el-button size="small" type="danger" @click="decide(row.id, 'REJECT')">拒绝</el-button>
+              <el-input v-model="notes[row.id]" maxlength="500" size="small" placeholder="处理备注（选填）"
+                        style="width: 130px; margin-bottom: 6px" />
+              <div>
+                <el-button size="small" type="success" @click="decide(row.id, 'APPROVE')">通过</el-button>
+                <el-button size="small" type="danger" @click="decide(row.id, 'REJECT')">拒绝</el-button>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -81,6 +85,7 @@ import avatarDefault from '@/assets/avatar-default.svg'
 import ProofThumbs from './parts/ProofThumbs.vue'
 
 const status = ref('PENDING')
+const notes = reactive({})
 const filters = computed(() => (status.value ? { status: status.value } : {}))
 const { items, total, page, pageSize, reload, goto, resetAndLoad: pagingReset, setPageSize } = usePaging({
   fetch: (params) => admin.appeals(params), filters
@@ -149,13 +154,19 @@ async function gotoPage(n) {
 
 async function decide(id, decision) {
   try {
+    const note = (notes[id] || '').trim() || undefined
+    if (note && note.length > 500) {
+      ElMessage.warning('备注不超过 500 字')
+      return
+    }
     let rejectReason
     if (decision === 'REJECT') {
       const { value } = await ElMessageBox.prompt('请输入拒绝原因（必填，≤500 字）', '拒绝申诉', { inputPattern: /\S+/, inputErrorMessage: '必填' })
       rejectReason = value
     }
-    const result = await admin.decideAppeal(id, decision, rejectReason)
+    const result = await admin.decideAppeal(id, decision, rejectReason, note)
     ElMessage.success('已处理')
+    delete notes[id]
     if (result?.registry_update?.notice) ElMessage.warning(result.registry_update.notice)
     load()
   } catch (e) {

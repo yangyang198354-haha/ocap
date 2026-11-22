@@ -143,7 +143,7 @@ describe('TC-E2E-910 手机号注册 → 引导 → 确认 → 我的身份与�
     expect(wrapper.find('.registry-match').exists()).toBe(false)
     // 左侧二级菜单 5 项，且无"选择房屋"/"待我审批的同住人申请"（当前在 /units/pick，"我的房屋"已自动展开）
     if (toggle(wrapper, '我的房屋').attributes('aria-expanded') !== 'true') await toggle(wrapper, '我的房屋').trigger('click')
-    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉'])
+    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请'])
     // 两个地址同页：10 行，含类型与面积，产权业主底部有待审批卡片
     for (const p of ['/me/identity', '/units']) {
       await go(p)
@@ -215,9 +215,10 @@ describe('TC-E2E-912 游客：提醒、认证产权入口与同住人申请迁�
     expect(mainTitles(wrapper)).toEqual(['我的同住人申请'])
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 42)
     await settle()
+    await wrapper.find('input[placeholder="本人实名"]').setValue('申请人')
     await buttonOf(wrapper, '申请成为同住人').trigger('click')
     await settle()
-    expect(S.applyBodies).toEqual([{ unit_id: 42 }])
+    expect(S.applyBodies).toEqual([{ unit_id: 42, applicant_name: '申请人' }])
     expect(wrapper.find('main').text()).toContain('2栋2单元3层301号')
     expect(wrapper.find('main').text()).toContain('待审批')
     wrapper.unmount()

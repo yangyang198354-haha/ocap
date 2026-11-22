@@ -55,10 +55,10 @@ describe('SideNav 展开/收起（US-216）', () => {
   it('TC-INT-803 / AC-216-03：在"我的房屋"展开状态下点"决议"——同时只展开一个（决议展开，我的房屋收起）', async () => {
     const { wrapper } = await mountNav('/')
     await toggleOf(wrapper, '我的房屋').trigger('click')
-    // 改写（AC-236-01）：旧 6 个二级项 → 新 5 个，且文案按新菜单
-    expect(wrapper.findAll('.side-sub-item')).toHaveLength(5)
+    // 改写（AC-291-01）：合并“认证申诉/我的申诉”后 4 个二级项
+    expect(wrapper.findAll('.side-sub-item')).toHaveLength(4)
     expect(wrapper.findAll('.side-sub-item').map((a) => a.text().replace(/\d+$/, '').trim())).toEqual(
-      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉']
+      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请']
     )
     await toggleOf(wrapper, '决议').trigger('click')
     expect(toggleOf(wrapper, '我的房屋').attributes('aria-expanded')).toBe('false')
@@ -68,14 +68,14 @@ describe('SideNav 展开/收起（US-216）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-804 / AC-216-04、AC-214-02：直达 /units/appeals（刷新）——"我的房屋"自动展开并高亮"我的申诉"，其余一级仍收起', async () => {
-    const { wrapper } = await mountNav('/units/appeals')
+  it('TC-INT-804 / AC-216-04、AC-291-01、AC-291-03：直达 /units/appeal（刷新）——"我的房屋"自动展开并高亮"认证申诉"，其余一级仍收起；旧地址 /units/appeals 无独立菜单项', async () => {
+    const { wrapper } = await mountNav('/units/appeal')
     expect(toggleOf(wrapper, '我的房屋').attributes('aria-expanded')).toBe('true')
     expect(toggleOf(wrapper, '决议').attributes('aria-expanded')).toBe('false')
     expect(toggleOf(wrapper, '报销/备用金').attributes('aria-expanded')).toBe('false')
     const active = wrapper.findAll('.side-sub-item.is-active')
     expect(active).toHaveLength(1)
-    expect(active[0].text()).toContain('我的申诉')
+    expect(active[0].text()).toContain('认证申诉')
     expect(active[0].attributes('aria-current')).toBe('page')
     expect(activeLabels(wrapper)).toEqual(['我的房屋'])
     wrapper.unmount()
@@ -225,16 +225,16 @@ describe('SubNavBar 窄屏二级切换条（US-230）', () => {
   }
   const units = PORTAL_MENU.find((n) => n.key === 'units').children
 
-  it('TC-INT-816 / AC-236-04（旧 AC-230-01）：/units/appeals 切换条含 5 项（"认证产权"，无"选择房屋"）且"我的申诉"高亮（aria-current=page）', async () => {
-    const { wrapper } = await mountBar('/units/appeals', units, {})
+  it('TC-INT-816 / AC-236-04、AC-291-01（旧 AC-230-01）：/units/appeal 切换条含 4 项（"认证产权"，无"选择房屋"）且"认证申诉"高亮（aria-current=page）', async () => {
+    const { wrapper } = await mountBar('/units/appeal', units, {})
     expect(wrapper.attributes('aria-label')).toBe('分区切换')
     expect(wrapper.findAll('a.sub-nav-item').map((a) => a.text())).toEqual(
-      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请', '我的申诉']
+      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请']
     )
     expect(wrapper.text()).not.toContain('选择房屋')
     const active = wrapper.findAll('.sub-nav-item.is-active')
     expect(active).toHaveLength(1)
-    expect(active[0].text()).toBe('我的申诉')
+    expect(active[0].text()).toBe('认证申诉')
     expect(active[0].attributes('aria-current')).toBe('page')
     wrapper.unmount()
   })

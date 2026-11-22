@@ -1,10 +1,11 @@
 from django.urls import path
 
 from .views import (
-    AdminAppealDecisionView, AdminAppealListView, AppealListCreateView, CertificationView,
-    MyHousingView, RegistryMatchesConfirmView, RegistryMatchesDismissView, RegistryMatchesView,
-    ResidentApplicationCreateView, ResidentApplicationDecisionView, ResidentApplicationMineView,
-    ResidentApplicationToReviewView, ResidentRemoveView, UnitLeaveView,
+    AdminAppealDecisionView, AdminAppealListView, AppealListCreateView, AppealWithdrawView,
+    CertificationView, MyHousingView, RegistryMatchesConfirmView, RegistryMatchesDismissView,
+    RegistryMatchesView, ResidentApplicationCreateView, ResidentApplicationDecisionView,
+    ResidentApplicationMineView, ResidentApplicationToReviewView, ResidentApplicationWithdrawView,
+    ResidentRemoveView, UnitLeaveView,
 )
 
 urlpatterns = [
@@ -15,10 +16,12 @@ urlpatterns = [
     path("certifications", CertificationView.as_view()),
     path("appeals", AppealListCreateView.as_view()),
     path("appeals/mine", AppealListCreateView.as_view()),
+    path("appeals/<int:appeal_id>/withdraw", AppealWithdrawView.as_view()),
     path("admin/appeals", AdminAppealListView.as_view()),
     path("admin/appeals/<int:appeal_id>/decision", AdminAppealDecisionView.as_view()),
     path("resident-applications", ResidentApplicationCreateView.as_view()),
     path("resident-applications/mine", ResidentApplicationMineView.as_view()),
+    path("resident-applications/<int:application_id>/withdraw", ResidentApplicationWithdrawView.as_view()),
     path("resident-applications/to-review", ResidentApplicationToReviewView.as_view()),
     path("resident-applications/<int:application_id>/decision", ResidentApplicationDecisionView.as_view()),
     path("units/<int:unit_id>/residents/<int:user_id>", ResidentRemoveView.as_view()),

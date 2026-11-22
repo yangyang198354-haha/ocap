@@ -10,8 +10,7 @@ export const PORTAL_MENU = [
       { key: 'units.identity', label: '我的身份与房屋', to: '/units', activeOn: ['/me/identity'], badge: 'pendingReview' },
       { key: 'units.pick', label: '认证产权', to: '/units/pick' },
       { key: 'units.appeal', label: '认证申诉', to: '/units/appeal' },
-      { key: 'units.applications', label: '我的同住人申请', to: '/units/applications' },
-      { key: 'units.appeals', label: '我的申诉', to: '/units/appeals' }
+      { key: 'units.applications', label: '我的同住人申请', to: '/units/applications' }
     ]
   },
   {

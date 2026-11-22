@@ -1,6 +1,6 @@
 <!-- MOD-123：认证申诉，自带房屋选择（Q-BL-21=A）；MOD-146：选文件只在页面内暂存，点提交时一次发送 -->
 <template>
-  <div id="appeal" class="card">
+  <div id="appeal">
     <h3 class="title">认证申诉</h3>
     <p class="muted">姓名与手机号未能通过清册核对时，可选择房屋、填写产权人名字并选择 1~5 份产权证明（jpg/png/pdf，单个不超过 10MB），点击“提交申诉”后一并提交，由管理员审核。</p>
     <UnitCascader :key="cascaderKey" v-model="appealUnitId" />
@@ -34,12 +34,15 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { unitApi } from '@/shared/api'
 import { errorText } from '@/shared/format'
 import { useHousingStore } from '@/stores/housing'
 import UnitCascader from '../parts/UnitCascader.vue'
+
+const props = defineProps({ prefill: { type: Object, default: null } })
+const emit = defineEmits(['submitted'])
 
 const MAX_FILES = 5
 const MAX_BYTES = 10 * 1024 * 1024
@@ -52,9 +55,20 @@ const cascaderKey = ref(0)
 const appeal = reactive({ ownerName: '' })
 // 页面内暂存（刷新即空，Q-B18-30=A）：选择阶段不向服务器发送任何文件
 const staged = ref([])
+const previousAppealId = ref(null)
 const uploadRef = ref(null)
 const submitting = ref(false)
 let seq = 0
+
+function applyPrefill(value) {
+  if (!value || !value.nonce) return
+  appealUnitId.value = value.unitId || null
+  appeal.ownerName = value.ownerName || ''
+  previousAppealId.value = value.previousAppealId || null
+  cascaderKey.value += 1
+}
+
+watch(() => props.prefill, applyPrefill, { deep: true })
 
 const extOf = (file) => {
   const name = String(file?.name || '')
@@ -90,6 +104,7 @@ async function submitAppeal() {
   const form = new FormData()
   form.append('unit_id', String(appealUnitId.value))
   form.append('owner_name', ownerName)
+  if (previousAppealId.value) form.append('previous_appeal_id', String(previousAppealId.value))
   staged.value.forEach((entry) => form.append('files', entry.file))
   submitting.value = true
   try {
@@ -98,8 +113,10 @@ async function submitAppeal() {
     staged.value = []
     appeal.ownerName = ''
     appealUnitId.value = null
+    previousAppealId.value = null
     cascaderKey.value += 1
     await store.loadLists()
+    emit('submitted')
   } catch (e) {
     // 失败保留专有部分、名字与暂存文件，便于修改后重新提交
     ElMessage.error(errorText(e))
@@ -112,6 +129,7 @@ async function submitAppeal() {
 onMounted(() => {
   const name = store.consumePrefillOwnerName()
   if (name) appeal.ownerName = name
+  applyPrefill(props.prefill)
 })
 </script>
 

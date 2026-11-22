@@ -34,6 +34,51 @@ def _unit_view(unit: RegistryUnit) -> dict:
     return {"unit_id": unit.id, "specific_part": unit.specific_part}
 
 
+NOTE_MAX = 500
+APPLICANT_NAME_MAX = 64
+
+
+def _optional_note(data: dict, field: str = "note") -> str | None:
+    """IFC-384/388：处理备注选填，≤500 字；空串视为未填写。"""
+    raw = data.get(field)
+    if raw is None or raw == "":
+        return None
+    value = str(raw)
+    if len(value) > NOTE_MAX:
+        raise ApiError("INVALID_VALUE", f"备注不超过 {NOTE_MAX} 字")
+    return value
+
+
+def _parse_previous_id(data: dict, field: str) -> int | None:
+    raw = data.get(field)
+    if raw in (None, ""):
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ApiError("INVALID_PREVIOUS_RECORD", "原记录不合法", 400) from exc
+
+
+def _validate_previous_appeal(user, previous_id: int | None) -> Appeal | None:
+    """IFC-382：重新提交的来源记录须属于本人且为已撤回（D-02）。"""
+    if previous_id is None:
+        return None
+    row = Appeal.objects.filter(id=previous_id, user=user).first()
+    if row is None or row.status != "WITHDRAWN":
+        raise ApiError("INVALID_PREVIOUS_RECORD", "原申诉记录不可用于重新提交", 400)
+    return row
+
+
+def _validate_previous_application(user, previous_id: int | None) -> ResidentApplication | None:
+    """IFC-385：重新提交的同住申请来源记录须属于本人且为已撤回（D-02）。"""
+    if previous_id is None:
+        return None
+    row = ResidentApplication.objects.filter(id=previous_id, applicant=user).first()
+    if row is None or row.status != "WITHDRAWN":
+        raise ApiError("INVALID_PREVIOUS_RECORD", "原申请记录不可用于重新提交", 400)
+    return row
+
+
 class MyHousingView(APIView):
     """GET /me/housing（IFC-261）：汇总身份、各房屋身份、同住人名单与待审数量。"""
     permission_classes = [IsMember]
@@ -156,6 +201,8 @@ class AppealListCreateView(APIView):
             raise ApiError("PROOF_REQUIRED", "请上传产权证明", 400)
         if len(proof_ids) > 5:
             raise ApiError("ATTACHMENT_LIMIT", "附件数量超过上限", 400)
+        previous = _validate_previous_appeal(
+            request.user, _parse_previous_id(data, "previous_appeal_id"))
         if Appeal.objects.filter(user=request.user, unit=unit, status="PENDING").exists():
             raise ApiError("APPEAL_PENDING", "该专有部分已有待审申诉", 409)
         parsed = []
@@ -165,12 +212,14 @@ class AppealListCreateView(APIView):
             except ValueError as exc:
                 raise ApiError("ATTACHMENT_LIMIT", "附件 id 不合法") from exc
         with transaction.atomic():
-            appeal = Appeal.objects.create(user=request.user, unit=unit, owner_name=owner_name)
+            appeal = Appeal.objects.create(user=request.user, unit=unit, owner_name=owner_name,
+                                           previous_appeal=previous)
             AttachmentService.link(parsed, linked_type="appeal", linked_id=str(appeal.id),
                                    purpose="APPEAL_PROOF", owner=request.user)
             AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
                                 action="APPEAL_SUBMITTED", object_type="appeal",
-                                object_id=str(appeal.id), result="SUCCESS")
+                                object_id=str(appeal.id), result="SUCCESS",
+                                detail={"previous_appeal_id": previous.id} if previous else None)
         return Response(appeal_view(appeal), status=status.HTTP_201_CREATED)
 
     @staticmethod
@@ -198,6 +247,8 @@ class AppealListCreateView(APIView):
             raise ApiError("PROOF_REQUIRED", "请上传产权证明", 400)
         if len(files) > int(count_limit("APPEAL_PROOF")):
             raise ApiError("ATTACHMENT_LIMIT", "附件数量超过上限", 400)
+        previous = _validate_previous_appeal(
+            request.user, _parse_previous_id(data, "previous_appeal_id"))
         if Appeal.objects.filter(user=request.user, unit=unit, status="PENDING").exists():
             raise ApiError("APPEAL_PENDING", "该专有部分已有待审申诉", 409)
         decision = RateLimiter.hit(f"appeal_submit:{request.user.id}", limit=60, window_seconds=3600)
@@ -207,7 +258,8 @@ class AppealListCreateView(APIView):
         stored: list[StoredFile] = []
         try:
             with transaction.atomic():
-                appeal = Appeal.objects.create(user=request.user, unit=unit, owner_name=owner_name)
+                appeal = Appeal.objects.create(user=request.user, unit=unit, owner_name=owner_name,
+                                               previous_appeal=previous)
                 for item in validated:
                     _ref, saved = AttachmentService.store_validated(
                         item, purpose="APPEAL_PROOF", owner=request.user,
@@ -215,7 +267,8 @@ class AppealListCreateView(APIView):
                     stored.append(saved)
                 AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
                                     action="APPEAL_SUBMITTED", object_type="appeal",
-                                    object_id=str(appeal.id), result="SUCCESS")
+                                    object_id=str(appeal.id), result="SUCCESS",
+                                    detail={"previous_appeal_id": previous.id} if previous else None)
         except Exception:
             AttachmentService.discard(stored)
             raise
@@ -227,7 +280,32 @@ def appeal_view(appeal: Appeal) -> dict:
         "id": appeal.id, "unit": _unit_view(appeal.unit), "status": appeal.status,
         "submitted_at": appeal.submitted_at, "decided_at": appeal.decided_at,
         "reject_reason": appeal.reject_reason,
+        "decision_note": appeal.decision_note,
+        "withdrawn_at": appeal.withdrawn_at,
+        "previous_appeal_id": appeal.previous_appeal_id,
     }
+
+
+class AppealWithdrawView(APIView):
+    """POST /appeals/{id}/withdraw（IFC-381）：仅本人且待审可撤回；释放待审槽位（C-359/C-360）。"""
+    permission_classes = [IsMember]
+
+    def post(self, request, appeal_id: int):
+        with transaction.atomic():
+            updated = (Appeal.objects.filter(id=appeal_id, user=request.user, status="PENDING")
+                       .update(status="WITHDRAWN", withdrawn_at=timezone.now(), pending_slot=None))
+            if not updated:
+                appeal = Appeal.objects.filter(id=appeal_id).first()
+                if appeal is None:
+                    raise ApiError("NOT_FOUND", "申诉不存在", 404)
+                if appeal.user_id != request.user.id:
+                    raise ApiError("FORBIDDEN", "仅本人可撤回申诉", 403)
+                raise ApiError("NOT_PENDING", "该申诉不可撤回", 409)
+            appeal = Appeal.objects.select_related("unit").get(id=appeal_id)
+            AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
+                                action="APPEAL_WITHDRAWN", object_type="appeal",
+                                object_id=str(appeal.id), result="SUCCESS")
+        return Response(appeal_view(appeal))
 
 
 class AdminAppealListView(APIView):
@@ -283,6 +361,7 @@ class AdminAppealDecisionView(APIView):
             raise ApiError("ALREADY_CLOSED", "该申诉已关闭", 409)
         if appeal.status != "PENDING":
             raise ApiError("ALREADY_DECIDED", "该申诉已处理", 409)
+        note = _optional_note(data, "note")
         registry_update = None
         with transaction.atomic():
             if decision == "APPROVE":
@@ -299,6 +378,9 @@ class AdminAppealDecisionView(APIView):
                 appeal.status = "REJECTED"
                 appeal.reject_reason = reason
                 detail = {"reason": reason}
+            appeal.decision_note = note
+            if note is not None:
+                detail["note"] = note
             appeal.decided_at = timezone.now()
             appeal.decided_by_admin_id = request.user.id
             appeal.pending_slot = None
@@ -346,10 +428,21 @@ class ResidentApplicationCreateView(APIView):
     permission_classes = [IsMember]
 
     def post(self, request):
+        data = request.data or {}
         try:
-            unit_id = int((request.data or {}).get("unit_id"))
+            unit_id = int(data.get("unit_id"))
         except (TypeError, ValueError) as exc:
             raise ApiError("INVALID_VALUE", "缺少专有部分") from exc
+        # IFC-385：Web 端强制填写本人实名；缺省允许（兼容未改造的小程序旧调用），提供时校验长度。
+        applicant_name = ""
+        if "applicant_name" in data:
+            applicant_name = str(data.get("applicant_name") or "").strip()
+            if not applicant_name:
+                raise ApiError("NAME_REQUIRED", "请输入本人实名", 400)
+            if len(applicant_name) > APPLICANT_NAME_MAX:
+                raise ApiError("INVALID_VALUE", f"实名过长（最多 {APPLICANT_NAME_MAX} 字）")
+        previous = _validate_previous_application(
+            request.user, _parse_previous_id(data, "previous_application_id"))
         if RegistryService.get_unit(unit_id) is None:
             raise ApiError("NOT_FOUND", "专有部分不存在", 404)
         if not Membership.objects.filter(unit_id=unit_id, ended_at__isnull=True,
@@ -360,13 +453,44 @@ class ResidentApplicationCreateView(APIView):
         if ResidentApplication.objects.filter(applicant=request.user, unit_id=unit_id,
                                               status="PENDING").exists():
             raise ApiError("APPLICATION_PENDING", "已有待审申请", 409)
-        application = ResidentApplication.objects.create(applicant=request.user, unit_id=unit_id)
+        application = ResidentApplication.objects.create(
+            applicant=request.user, unit_id=unit_id, applicant_name=applicant_name,
+            previous_application=previous)
         return Response(application_view(application), status=status.HTTP_201_CREATED)
 
 
 def application_view(application: ResidentApplication) -> dict:
     return {"id": application.id, "unit": _unit_view(application.unit), "status": application.status,
-            "created_at": application.created_at, "decided_at": application.decided_at}
+            "applicant_name": application.applicant_name,
+            "created_at": application.created_at, "decided_at": application.decided_at,
+            "reject_reason": application.reject_reason,
+            "decision_note": application.decision_note,
+            "withdrawn_at": application.withdrawn_at,
+            "previous_application_id": application.previous_application_id}
+
+
+class ResidentApplicationWithdrawView(APIView):
+    """POST /resident-applications/{id}/withdraw（IFC-386）：仅本人且待审可撤回。"""
+    permission_classes = [IsMember]
+
+    def post(self, request, application_id: int):
+        with transaction.atomic():
+            updated = (ResidentApplication.objects.filter(
+                id=application_id, applicant=request.user, status="PENDING")
+                .update(status="WITHDRAWN", withdrawn_at=timezone.now(), pending_slot=None))
+            if not updated:
+                application = ResidentApplication.objects.filter(id=application_id).first()
+                if application is None:
+                    raise ApiError("NOT_FOUND", "申请不存在", 404)
+                if application.applicant_id != request.user.id:
+                    raise ApiError("FORBIDDEN", "仅本人可撤回申请", 403)
+                raise ApiError("NOT_PENDING", "该申请不可撤回", 409)
+            application = ResidentApplication.objects.select_related("unit").get(id=application_id)
+            AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
+                                action="RESIDENT_APPLICATION_WITHDRAWN",
+                                object_type="resident_application",
+                                object_id=str(application.id), result="SUCCESS")
+        return Response(application_view(application))
 
 
 class ResidentApplicationMineView(APIView):
@@ -407,9 +531,14 @@ class ResidentApplicationDecisionView(APIView):
         decision = (request.data or {}).get("decision")
         if decision not in {"APPROVE", "REJECT"}:
             raise ApiError("INVALID_VALUE", "decision 不合法")
+        data = request.data or {}
+        reject_reason = _optional_note(data, "reject_reason")
+        note = _optional_note(data, "note")
         updated = (ResidentApplication.objects.filter(id=application_id, status="PENDING")
                    .update(status="APPROVED" if decision == "APPROVE" else "REJECTED",
-                           decided_by=request.user, decided_at=timezone.now(), pending_slot=None))
+                           decided_by=request.user, decided_at=timezone.now(), pending_slot=None,
+                           reject_reason=reject_reason if decision == "REJECT" else None,
+                           decision_note=note))
         if not updated:
             current = ResidentApplication.objects.filter(id=application_id).values_list(
                 "status", flat=True).first()
@@ -423,7 +552,9 @@ class ResidentApplicationDecisionView(APIView):
                                       role="RESIDENT", source="APPLICATION", active_slot=1)
         AuditService.record(actor=AuditActor("MEMBER", request.user.id, request.user.identity_label),
                             action="RESIDENT_APPLICATION_DECIDED", object_type="resident_application",
-                            object_id=str(application_id), result="SUCCESS", detail={"decision": decision})
+                            object_id=str(application_id), result="SUCCESS",
+                            detail={"decision": decision, "reject_reason": reject_reason,
+                                    "note": note})
         application.refresh_from_db()
         return Response(application_view(application))
 

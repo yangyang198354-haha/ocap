@@ -589,7 +589,7 @@ class ProductReviewFieldContractTests(ApiTestBase):
         self.assertEqual(set(unit), {"unit_id", "specific_part", "role", "role_label", "certified_at",
                                      "residents", "pending_application_count",
                                      "unit_type_label", "area_display", "co_owners"})
-        self.assertEqual(set(res), {"user_id", "nickname", "account_no", "joined_at"})
+        self.assertEqual(set(res), {"user_id", "nickname", "account_no", "real_name", "joined_at"})
         web_units = src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
         web_me = src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me")
         web_home = src("frontend/src/portal/Home.vue")
@@ -630,8 +630,11 @@ class ProductReviewFieldContractTests(ApiTestBase):
         apps = self.assert_ok(self.api("get", "/resident-applications/mine", token=self.atoken)).data
         appeals = self.assert_ok(self.api("get", "/appeals/mine", token=self.atoken)).data
         review = self.assert_ok(self.api("get", "/resident-applications/to-review", token=self.otoken)).data
-        self.assertEqual(set(apps[0]), {"id", "unit", "status", "created_at", "decided_at"})
-        self.assertEqual(set(appeals[0]), {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason"})
+        self.assertEqual(set(apps[0]), {"id", "unit", "status", "applicant_name", "created_at", "decided_at",
+                                        "reject_reason", "decision_note", "withdrawn_at",
+                                        "previous_application_id"})
+        self.assertEqual(set(appeals[0]), {"id", "unit", "status", "submitted_at", "decided_at", "reject_reason",
+                                           "decision_note", "withdrawn_at", "previous_appeal_id"})
         self.assertEqual(set(review[0]["applicant"]), {"id", "account_no", "nickname", "phone"})
         self.assertEqual(set(apps[0]["unit"]), {"unit_id", "specific_part"})
         allowed = set(apps[0]) | set(appeals[0]) | set(review[0])

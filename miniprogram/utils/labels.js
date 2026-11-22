@@ -3,10 +3,10 @@ export const ROLE_LABELS = { HEAD: '户主', OWNER: '产权业主', RESIDENT: '�
 export const POSITION_LABELS = { CHAIR: '主任', VICE_CHAIR: '副主任', MEMBER: '委员', REPRESENTATIVE: '业主代表' }
 export const IDENTITY_LABELS = { ...POSITION_LABELS, ...ROLE_LABELS, GUEST: '游客' }
 export const APPLICATION_STATUS_LABELS = {
-  PENDING: '待审批', APPROVED: '已通过', REJECTED: '已拒绝', CLOSED: '已关闭（申请人已注销）'
+  PENDING: '待审批', APPROVED: '已通过', REJECTED: '已拒绝', CLOSED: '已关闭（申请人已注销）', WITHDRAWN: '已撤回'
 }
 export const APPEAL_STATUS_LABELS = {
-  PENDING: '待审核', APPROVED: '已通过', REJECTED: '已驳回', CLOSED: '已关闭（申请人已注销）'
+  PENDING: '待审核', APPROVED: '已通过', REJECTED: '已驳回', CLOSED: '已关闭（申请人已注销）', WITHDRAWN: '已撤回'
 }
 export const POLL_STATUS_LABELS = { OPEN: '进行中', CLOSED: '已结束' }
 export const SEAT_STATUS_LABELS = {

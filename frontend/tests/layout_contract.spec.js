@@ -68,7 +68,7 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     // 个人中心与我的房屋相关的函数必须被覆盖到（拆页后没有遗漏调用）
     const used = new Set(refs.map(([c, f]) => `${c}.${f}`))
     for (const must of ['meApi.profile', 'meApi.updateProfile', 'meApi.housing', 'meApi.sendCode', 'meApi.bindPhone', 'meApi.changePhone', 'meApi.setPassword', 'meApi.verifyEmail', 'meApi.cancelAccount',
-      'unitApi.certify', 'unitApi.submitAppeal', 'unitApi.createResidentApplication', 'unitApi.decideResidentApplication', 'unitApi.removeResident', 'unitApi.leaveUnit', 'unitApi.myAppeals', 'unitApi.myResidentApplications', 'unitApi.residentApplicationsToReview',
+      'unitApi.certify', 'unitApi.submitAppeal', 'unitApi.withdrawAppeal', 'unitApi.createResidentApplication', 'unitApi.withdrawResidentApplication', 'unitApi.decideResidentApplication', 'unitApi.removeResident', 'unitApi.leaveUnit', 'unitApi.myAppeals', 'unitApi.myResidentApplications', 'unitApi.residentApplicationsToReview',
       'admin.login', 'admin.users', 'admin.admins', 'admin.claims', 'admin.auditLogs', 'admin.contentServices', 'admin.promptTemplates', 'resolutionApi.list', 'claimApi.list']) {
       expect(used.has(must), must).toBe(true)
     }
@@ -100,7 +100,7 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     // 改写：meApi 基线加入 confirmRegistryMatches / dismissRegistryMatches / registryMatches（IFC-343）
     expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'userProfile', 'verifyEmail'])
     // F2（ocap_batch_1118，IFC-363）：基线集合加 unitApi.submitAppeal、resolutionApi.participants、admin.unitOptions、admin.ownerCandidates
-    expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal'])
+    expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal', 'withdrawAppeal', 'withdrawResidentApplication'])
     expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'participants', 'resubmit', 'vote', 'withdraw'])
     expect(names.admin).toContain('unitOptions')
     expect(names.admin).toContain('ownerCandidates')

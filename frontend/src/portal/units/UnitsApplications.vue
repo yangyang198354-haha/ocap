@@ -1,51 +1,36 @@
-<!-- MOD-137：我的同住人申请（上方为发起区，ADR-134、Q-IP-18=A；下方为本人已提交的申请列表） -->
+<!-- MOD-171 / IFC-392c：同住申请中心宿主；双 Tab 承载“发起申请”与“申请记录” -->
 <template>
   <div class="card">
     <h3 class="title">我的同住人申请</h3>
-    <p class="muted">申请成为同住人无需输入姓名，同住人须先有产权业主，由产权业主审批。</p>
-    <UnitCascader v-model="pickedUnitId" />
-    <div class="row" style="margin-top: 10px">
-      <el-button type="primary" :disabled="!pickedUnitId" @click="applyResident">申请成为同住人</el-button>
-    </div>
-    <p v-if="!myApplications.length" class="muted">暂无同住人申请</p>
-    <div v-for="item in myApplications" :key="item.id" class="row list-item-top">
-      <span>{{ item.unit?.specific_part }}</span>
-      <el-tag size="small">{{ statusLabel('application', item.status) }}</el-tag>
-      <span class="muted">提交 {{ formatDateTime(item.created_at) }}</span>
-      <span v-if="item.decided_at" class="muted">处理 {{ formatDateTime(item.decided_at) }}</span>
-    </div>
+    <el-tabs v-model="tab">
+      <el-tab-pane label="发起申请" name="form">
+        <UnitsApplicationForm :prefill="prefill" @submitted="onSubmitted" />
+      </el-tab-pane>
+      <el-tab-pane label="申请记录" name="records">
+        <UnitsApplicationRecords @resubmit="onResubmit" />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { ElMessage } from 'element-plus'
-import { errorText, formatDateTime } from '@/shared/format'
-import { statusLabel } from '@/shared/labels'
-import { unitApi } from '@/shared/api'
-import { useHousingStore } from '@/stores/housing'
-import UnitCascader from '../parts/UnitCascader.vue'
+import { reactive, ref } from 'vue'
+import UnitsApplicationForm from './UnitsApplicationForm.vue'
+import UnitsApplicationRecords from './UnitsApplicationRecords.vue'
 
-const store = useHousingStore()
-const { myApplications } = storeToRefs(store)
-const pickedUnitId = ref(null)
+const props = defineProps({ initialTab: { type: String, default: 'form' } })
+const tab = ref(props.initialTab === 'records' ? 'records' : 'form')
+const prefill = reactive({ unitId: null, applicantName: '', previousApplicationId: null, nonce: 0 })
 
-async function applyResident() {
-  try {
-    await unitApi.createResidentApplication({ unit_id: pickedUnitId.value })
-    ElMessage.success('申请已提交，等待产权业主审批')
-    await store.loadLists()
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
+function onSubmitted() {
+  tab.value = 'records'
 }
 
-onMounted(async () => {
-  try {
-    await store.loadLists()
-  } catch (e) {
-    ElMessage.error(errorText(e))
-  }
-})
+function onResubmit(row) {
+  prefill.unitId = row.unit?.unit_id || null
+  prefill.applicantName = row.applicant_name || ''
+  prefill.previousApplicationId = row.id
+  prefill.nonce += 1
+  tab.value = 'form'
+}
 </script>

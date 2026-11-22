@@ -53,10 +53,15 @@ export const unitApi = {
   // 一次提交（MOD-146 / IFC-363）：form 为 FormData，字段 unit_id、owner_name、files（可重复）；最多 5×10MB，故放宽超时
   submitAppeal: (form) => http.post('/appeals', form, { timeout: 120000 }),
   myAppeals: () => get('/appeals/mine'),
+  // IFC-381：撤回待审申诉（仅本人、仅 PENDING）
+  withdrawAppeal: (id) => post(`/appeals/${id}/withdraw`, {}),
   createResidentApplication: (data) => post('/resident-applications', data),
   myResidentApplications: () => get('/resident-applications/mine'),
   residentApplicationsToReview: () => get('/resident-applications/to-review'),
-  decideResidentApplication: (id, decision) => post(`/resident-applications/${id}/decision`, { decision }),
+  // IFC-386：撤回待审同住申请
+  withdrawResidentApplication: (id) => post(`/resident-applications/${id}/withdraw`, {}),
+  // options: { reject_reason?, note? }（IFC-388）
+  decideResidentApplication: (id, decision, options = {}) => post(`/resident-applications/${id}/decision`, { decision, ...options }),
   removeResident: (unitId, userId) => http.delete(`/units/${unitId}/residents/${userId}`),
   leaveUnit: (unitId) => post(`/units/${unitId}/leave`, {})
 }
@@ -168,8 +173,9 @@ const admin = {
     adminHttp.get('/admin/registry/import/template', { params: { file_type: fileType }, responseType: 'blob' }),
   importSpec: () => adminHttp.get('/admin/registry/import/spec'),
   appeals: (params) => adminHttp.get('/admin/appeals', { params }),
-  decideAppeal: (id, decision, rejectReason) =>
-    adminHttp.post(`/admin/appeals/${id}/decision`, { decision, reject_reason: rejectReason }),
+  decideAppeal: (id, decision, rejectReason, note) =>
+    adminHttp.post(`/admin/appeals/${id}/decision`,
+      { decision, reject_reason: rejectReason, ...(note ? { note } : {}) }),
   memberships: (params) => adminHttp.get('/admin/memberships', { params }),
   revokeMembership: (userId, unitId) => adminHttp.post('/admin/memberships/revoke', { user_id: userId, unit_id: unitId }),
   seats: (params) => adminHttp.get('/admin/committee/seats', { params }),

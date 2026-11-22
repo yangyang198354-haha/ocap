@@ -30,9 +30,11 @@ describe('菜单配置与高亮（unit）', () => {
       expect(nextOpenKey(PORTAL_MENU, p), p).toBe('units')
     }
     // 其他二级路径不会误高亮"我的身份与房屋"
-    for (const p of ['/units/pick', '/units/appeal', '/units/applications', '/units/appeals']) {
+    for (const p of ['/units/pick', '/units/appeal', '/units/applications']) {
       expect(resolveActive(PORTAL_MENU, p).leaf.label, p).not.toBe('我的身份与房屋')
     }
+    // 旧地址 /units/appeals 仍可路由到申诉页，但菜单不再有独立项（AC-291-03 / D-01）
+    expect(resolveActive(PORTAL_MENU, '/units/appeals').leaf).toBe(null)
   })
 
   it('TC-UNIT-931 / AC-236-01、AC-233-01、REQ-NFUNC-045：菜单文案残留数为 0——无"选择房屋""待我审批的同住人申请"二级项，无恰为"我的身份"的项', () => {
@@ -41,7 +43,7 @@ describe('菜单配置与高亮（unit）', () => {
     expect(labels.filter((l) => l === '我的身份')).toEqual([])
     expect(labels.filter((l) => l === '待我审批的同住人申请')).toEqual([])
     expect(labels.filter((l) => l === '我的身份与房屋')).toHaveLength(2) // 右上角 + 左侧二级项，同名
-    expect(UNITS.children.map((c) => c.to)).toEqual(['/units', '/units/pick', '/units/appeal', '/units/applications', '/units/appeals'])
+    expect(UNITS.children.map((c) => c.to)).toEqual(['/units', '/units/pick', '/units/appeal', '/units/applications'])
   })
 
   it('TC-UNIT-932 / AC-233-02：右上角项与左侧二级项同名，两个入口地址不同（/me/identity、/units）、均保留', () => {
@@ -55,7 +57,7 @@ describe('菜单配置与高亮（unit）', () => {
   it('TC-UNIT-933 / AC-235-01、AC-234-04：仅"我的身份与房屋"二级项带 pendingReview 角标；对所有受众可见（游客与非产权业主也看得到菜单，卡片由页面控制）', () => {
     const guestMenu = visibleMenu(PORTAL_MENU, { isCommittee: false })
     const children = guestMenu.find((n) => n.key === 'units').children
-    expect(children).toHaveLength(5)
+    expect(children).toHaveLength(4)
     expect(children.filter((c) => c.badge).map((c) => c.label)).toEqual(['我的身份与房屋'])
   })
 })

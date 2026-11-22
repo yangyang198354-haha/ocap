@@ -17,3 +17,4 @@
 ## 用户偏好与禁止项
 
 ## 待验证
+- [P-SD-043] 新增审计动作必须同步登记 `AUDIT_ACTIONS`，否则 `AuditService.record` 抛 ValueError 使接口 500 — 自记 2026-11-22 · 证据 DEF-AC-01 / audit.py:10-15

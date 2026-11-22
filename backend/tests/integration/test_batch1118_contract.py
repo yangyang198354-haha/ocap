@@ -52,7 +52,7 @@ class Batch1118ContractTests(SeatHolderBase):
         """TC-INT-1131 / AC-244-02：UnitsAppeal.vue 的 FormData 键（form.append 读取）真实以 multipart 提交 → 201 并保存 owner_name、关联文件；
         缺其中任一键 → 400（unit_id → INVALID_VALUE、owner_name → NAME_REQUIRED、files → PROOF_REQUIRED）。"""
         keys = set(re.findall(r"form\.append\('(\w+)'", text("portal/units/UnitsAppeal.vue")))
-        self.assertEqual(keys, {"unit_id", "owner_name", "files"})
+        self.assertEqual(keys, {"unit_id", "owner_name", "files", "previous_appeal_id"})
         unit = RegistryUnit.objects.create(building="3", unit_no="1", floor="1", room="190")
         user, token = self.make_user()
         client = self.client_for(token)

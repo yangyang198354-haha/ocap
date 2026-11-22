@@ -90,7 +90,7 @@ describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
     expect(wrapper.findComponent({ name: 'UnitCascader' }).exists()).toBe(true)
   })
 
-  it('TC-UNIT-523 / AC-243-01、AC-236-02（旧 AC-150-01）：选定房屋后点"申请成为同住人"只提交 {unit_id}，并提示"申请已提交，等待产权业主审批"；该按钮已从"认证产权"页迁至"我的同住人申请"页', async () => {
+  it('TC-UNIT-523 / AC-243-01、AC-236-02、AC-297-01（旧 AC-150-01）：选定房屋并填写实名后点"申请成为同住人"提交 {unit_id, applicant_name}，并提示"申请已提交，等待产权业主审批"；该按钮已从"认证产权"页迁至"我的同住人申请"页', async () => {
     // 改写：旧在 UnitsPick 上点"申请成为同住人" → 新在 UnitsApplications 上点；UnitsPick 不再有该按钮
     http.get.mockImplementation(table())
     http.post.mockResolvedValue({ id: 5, status: 'PENDING' })
@@ -102,9 +102,10 @@ describe('我的房屋 Units.vue（分区宿主 + units/*）', () => {
     const { wrapper } = await mountPage(UnitsApplications)
     wrapper.findComponent({ name: 'UnitCascader' }).vm.$emit('update:modelValue', 42)
     await flush()
+    await wrapper.find('input[placeholder="本人实名"]').setValue('张三')
     await buttonOf(wrapper, '申请成为同住人').trigger('click')
     await flush()
-    expect(http.post).toHaveBeenCalledWith('/resident-applications', { unit_id: 42 })
+    expect(http.post).toHaveBeenCalledWith('/resident-applications', { unit_id: 42, applicant_name: '张三' })
     expect(success).toHaveBeenCalledWith('申请已提交，等待产权业主审批')
   })
 

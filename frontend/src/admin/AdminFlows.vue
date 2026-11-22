@@ -186,11 +186,12 @@ function openDetail(row) {
   editForm.scope = row.scope
   editForm.mode = row.mode
   editForm.is_active = row.is_active
-  editSteps.value = (row.steps || []).map((s) => ({
+  editSteps.value = (row.steps || []).map((s, i) => ({
+    order: s.order ?? i + 1,
     name: s.name, strategy: s.strategy, approvers: (s.approvers || []).map((a) => ({ ...a }))
   }))
   if (!editSteps.value.length && row.approvers?.length) {
-    editSteps.value = [{ name: row.name, strategy: 'ANY', approvers: row.approvers.map((a) => ({ ...a })) }]
+    editSteps.value = [{ order: 1, name: row.name, strategy: 'ANY', approvers: row.approvers.map((a) => ({ ...a })) }]
   }
   showDetail.value = true
 }

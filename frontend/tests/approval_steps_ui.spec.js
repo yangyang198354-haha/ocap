@@ -108,6 +108,27 @@ describe('AdminFlows 步骤配置（US-311 / AC-316-01、AC-318-01）', () => {
     expect(payload.steps.map((s) => s.name)).toEqual(['初审', '终审'])
     expect(payload.steps[0].approver_ids).toEqual([])
   })
+
+  it('详情弹窗展示步骤序号（回归：不能丢 order）', async () => {
+    admin.flows.mockResolvedValue({
+      count: 1,
+      results: [{
+        id: 9, name: '两步流程', scope: 'RESOLUTION', mode: 'DESIGNATED', is_active: true, step_count: 2,
+        steps: [
+          { order: 1, name: '初审', strategy: 'ANY', approvers: [{ id: 2, nickname: '甲' }] },
+          { order: 2, name: '终审', strategy: 'ALL', approvers: [{ id: 3, nickname: '乙' }] }
+        ]
+      }]
+    })
+    const { wrapper } = await mountPage(AdminFlows)
+    await flush()
+    const detailButton = wrapper.findAll('button').find((b) => b.text().includes('查看详情'))
+    await detailButton.trigger('click')
+    await flush()
+    const text = document.body.textContent
+    expect(text).toContain('第 1 步')
+    expect(text).toContain('第 2 步')
+  })
 })
 
 describe('ApprovalTimeline（US-317 / AC-328-01、AC-328-03）', () => {

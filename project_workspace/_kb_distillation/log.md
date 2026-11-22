@@ -322,3 +322,11 @@
 | 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_D-1-1 | 晋升→M-TE-043 | committed |
 | 2026-11-19T00:32:00+08:00 | ocap_profile_ux-GROUP_E1-1-1 | 晋升→M-DE-044 | committed |
 | 2026-11-19T00:32:00+08:00 | ocap_batch_1118-GROUP_E2-001-2 | 晋升→M-DE-045 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_D-001-1 | 晋升→M-TE-044 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_D-001-2 | 晋升→M-TE-045 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E1-001-1 | 晋升→M-DE-048 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E1-001-2 | 晋升→M-DE-049 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E2-001-1 | 保留→P-DE-050 | committed |
+| 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E2-001-2 | 晋升→M-DE-050 | committed |
+| 2026-11-22T21:39:06+08:00 | (memory) P-DE-046 | 晋升→M-DE-046 | committed |
+| 2026-11-22T21:39:06+08:00 | (memory) P-DE-047 | 晋升→M-DE-047 | committed |

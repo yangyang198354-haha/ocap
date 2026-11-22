@@ -10,6 +10,8 @@
 - [M-TE-018] 验证“多端显示一致”时，同时断言管理端列表、房屋关系输出与 /me 读取同一存储列 — conf 0.6 · 证据 GR-D-001 / TC-INT-421 / test_specific_part_display_consistency.py · 首见 2026-11-11 · 命中 1
 - [M-TE-019] 组件测试须同时覆盖“数据未返回”和“请求失败”两态，防止加载中/失败被误显示为游客 — conf 0.6 · 证据 GR-D-001 / GD-2 / TC-WEB-503、504 · 首见 2026-11-14 · 命中 1
 - [M-TE-043] 小批次 critical path 可用一条跨模块 API 旅程替代浏览器 E2E，报告首行声明"替代"口径并单列人工验证项 — conf 0.6 · 证据 ocap_profile_ux-GROUP_D-1-1 / TC-E2E-1501 · 首见 2026-11-19 · 命中 1
+- [M-TE-044] 重命名共享常量时只改 import 不改模板会静默留下未定义引用；前端界面测试必须在模板渲染层断言文案，而不是只测常量表 — conf 0.6 · 证据 ocap_approval_flow DEF-001 / TC-INT-1304 / GR-D-001 · 首见 2026-11-22 · 命中 1
+- [M-TE-045] 判定基线失败前先确认被测文件是否本批次修改，再用 `git log -1 -- <file>` 取证，避免把预存在问题误计为新增失败 — conf 0.6 · 证据 ocap_approval_flow test_tc_int_964 / `git log -1 -- miniprogram/pages/phone/index.vue` / GR-D-001 · 首见 2026-11-22 · 命中 1
 
 ## 用户偏好与禁止项
 

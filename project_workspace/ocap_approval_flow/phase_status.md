@@ -1,4 +1,4 @@
-<phase_status project="ocap_approval_flow" mode="INCREMENTAL" created="2026-11-22T18:18:08+08:00" updated="2026-11-22T20:00:12+08:00">
+<phase_status project="ocap_approval_flow" mode="INCREMENTAL" created="2026-11-22T18:18:08+08:00" updated="2026-11-22T21:39:06+08:00">
   <request>管理后台创建审批流程的时候，采用指定负责人审批模式的时候可以指定一个或者多个负责人审批。其中一个审批同意则通过。现在增加一个需求，1. 指定多个审批负责人时，可以约定多任一负责人审批通过，或者是所有让负责人都同意才算通过。 2. 可以创建审批流程，比如第一步指定一些负责人审批， 第二步指定一些负责人审批，并且可以给这个步数（flow） 每一步约定名称。配置审批人的与或要求。 3. 有查看权限的人可以看到审批过程，审批到达每一步的时间，和谁批准了。以及批准的备注内容是什么。 先整理我的需求，拆分用户故事。我确认后再开始开发。</request>
   <profile version="1.2.0"/>
   <groups>
@@ -23,7 +23,8 @@
       <phase id="PHASE_10" status="APPROVED"/>
       <phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" environment="测试（树莓派 192.168.31.51，内网 8090 / 外网 ai-freeark.xin）"/>
+      <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" environment="测试（树莓派 192.168.31.51，内网 8090 / 外网 ai-freeark.xin）" commit="30d9f27" authorized="2026-11-22T21:30:03+08:00" authorization="提交并推送，然后部署测试环境" deployment_status="DEPLOYED_SUCCESSFULLY"/>
+    <group id="GROUP_Z" agent="kb-curator" status="APPROVED" gate_decision="PASS" retries="0"><phase id="PHASE_12" status="APPROVED"/></group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_approval_flow/requirements/requirements_spec.md" version="1.0.0" status="APPROVED" group="GROUP_A"/>
@@ -39,6 +40,9 @@
     <artifact path="project_workspace/ocap_approval_flow/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_approval_flow/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_approval_flow/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_approval_flow/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_approval_flow/delivery_report.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
+    <artifact path="project_workspace/ocap_approval_flow/knowledge_distillation_report.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
   </artifacts>
   <invocations>
     <invocation id="ocap_approval_flow-GROUP_A-001" agent="requirement-analyst" started="2026-11-22T18:18:08+08:00" finished="2026-11-22T18:20:36+08:00" result="SUCCESS"/>
@@ -46,6 +50,8 @@
     <invocation id="ocap_approval_flow-GROUP_C-001" agent="software-developer" started="2026-11-22T18:51:52+08:00" finished="2026-11-22T19:33:01+08:00" result="SUCCESS"/>
     <invocation id="ocap_approval_flow-GROUP_D-001" agent="test-engineer" started="2026-11-22T19:33:58+08:00" finished="2026-11-22T19:52:51+08:00" result="SUCCESS"/>
     <invocation id="ocap_approval_flow-GROUP_E1-001" agent="devops-engineer" started="2026-11-22T19:53:56+08:00" finished="2026-11-22T20:00:12+08:00" result="SUCCESS"/>
+    <invocation id="ocap_approval_flow-GROUP_E2-001" agent="devops-engineer" started="2026-11-22T21:30:03+08:00" finished="2026-11-22T21:36:11+08:00" result="SUCCESS"/>
+    <invocation id="ocap_approval_flow-PHASE12-001" agent="kb-curator" started="2026-11-22T21:37:18+08:00" finished="2026-11-22T21:39:06+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_approval_flow-GROUP_A-001" decision="PASS" time="2026-11-22T18:48:51+08:00">
@@ -120,6 +126,18 @@
       <criterion id="§J-E1-CO-001" result="SATISFIED">CO-001 已解决：写明小程序构建必须设 UNI_INPUT_DIR，附本批实测证据（DONE Build complete / EXIT=0 / APP_JSON_OK），未声称 CI 已验证构建。</criterion>
       <verification>PM 亲自复跑证据：frontend `npm run build -- --base=/ocap/` → `✓ built in 8.40s`，产物文案 `或签（任一通过）` 与 `审批过程` 各命中 4 个资源；miniprogram 设 UNI_INPUT_DIR 后 `DONE Build complete.`、`EXIT=0`、`APP_JSON_OK`（输出到 %TEMP%，已清理）。GROUP_D 测试基线未变。</verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_approval_flow-GROUP_E2-001" decision="PASS" time="2026-11-22T21:37:18+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_approval_flow/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="§J-E2-授权" result="SATISFIED">invocation 含 `PRODUCTION_DEPLOY_CONFIRM=true` 与环境名；用户原话“提交并推送，然后部署测试环境”已记录；环境名与计划/画像一致；计划版本 1.0.0 = 登记 APPROVED 版本；提交 30d9f27 已在 origin/main。</criterion>
+      <criterion id="§J-E2-执行" result="SATISFIED">DEPLOY-001~011 全成功，DEPLOY-012 自动项完成；每步有命令、时间、输出摘要；停机约 77 秒；无失败步骤，未触发回滚。</criterion>
+      <criterion id="§J-E2-验证" result="SATISFIED">V-01~V-11 全部通过：后端 active、日志错误 0、三表/两字段存在、回填 2=2、新路由 401、Web 200、文案与主资源命中、外网 200、小程序 app.json 与文案命中。</criterion>
+      <criterion id="§J-E2-状态一致" result="SATISFIED">最终状态 DEPLOYED_SUCCESSFULLY 与 status=SUCCESS 对应；人工 MV-01~MV-06 明确列为待用户执行，未标 PASS。</criterion>
+      <criterion id="§J-E2-凭据" result="SATISFIED">报告只记录 `.env` 哈希与“从 backend/.env 读取”，无口令、令牌或连接串。</criterion>
+      <criterion id="§J-E2-回滚可用" result="SATISFIED">锚点 TS=20261122213109 的后端/Web 快照、4 表转储、迁移计划、nginx 备份与 ocap.old 均保留；回滚安全条件实测为 0/0/0。</criterion>
+      <criterion id="§J-E2-偏差" result="SATISFIED">两处偏差已记录：DEPLOY-003 文件名笔误（目标机无变更后重跑）；PRE-07 迁移门控位置需后移至 DEPLOY-006（R-01）。</criterion>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="CL-001" group="GROUP_A" time="2026-11-22T18:18:08+08:00">
@@ -166,5 +184,14 @@
     <event time="2026-11-22T20:00:12+08:00" type="INVOCATION" actor="pm-orchestrator">devops-engineer 返回 SUCCESS；check-response=0，kb_inbox 追加 2 条提案。产出 cicd_pipeline.md 与 deployment_plan.md（0.1.0/DRAFT）。</event>
     <event time="2026-11-22T20:00:12+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 判定 PASS：DEPLOY 与 ROLLBACK 一一对应、预检/验证齐全、环境与策略符合画像 P7、无 P8 禁用操作、回滚不破坏本地状态、CO-001 已用 UNI_INPUT_DIR 实测解决。两份文档升为 1.0.0/APPROVED。GROUP_E2 保持 NOT_AUTHORIZED，等待用户当轮明确授权。</event>
     <event time="2026-11-22T20:00:12+08:00" type="RUN" actor="pm-orchestrator">E1 期间 PM 亲测 Web 构建 `✓ built in 8.40s` 与小程序构建（UNI_INPUT_DIR，输出到临时目录）成功；未执行任何 ssh 写操作、迁移或部署命令。当前 HEAD=f7316cb，本批改动未提交未推送，已写入 deployment_plan PRE-01。</event>
+    <event time="2026-11-22T21:30:03+08:00" type="AUTHORIZATION" actor="user">用户原话：“提交并推送，然后部署测试环境”。据此授权 commit、push 到 main 与部署测试环境（树莓派 192.168.31.51）。</event>
+    <event time="2026-11-22T21:30:03+08:00" type="COMMIT" actor="pm-orchestrator">提交 30d9f27（46 files, +3338/-193），已推送 origin/main（2fcb47c..30d9f27）；未提交 3 个无关既有文件与 1 个未跟踪转储。PRE-01 满足。进入 GROUP_E2。</event>
+    <event time="2026-11-22T21:31:09+08:00" type="RUN" actor="pm-orchestrator">DEPLOY-001 锚点完成：TS=20261122213109，后端/Web 快照、4 表转储、迁移基线、nginx 备份；排除项 0。</event>
+    <event time="2026-11-22T21:34:42+08:00" type="RUN" actor="pm-orchestrator">DEPLOY-006 迁移门控恰为 1 行 approval.0003_approval_steps，迁移 OK；STEP_COUNT=DESIGNATED_FLOWS=2、PENDING_DESIGNATED_NO_STATE=0、MULTI_STEP_FLOWS=0。DEPLOY-007 后端与定时器恢复 active，日志无错误。</event>
+    <event time="2026-11-22T21:36:11+08:00" type="RUN" actor="pm-orchestrator">DEPLOY-009~011 完成：Web 文件 1539、index.html 哈希一致、V-01~V-11 全通过；小程序构建成功并清理临时产物。</event>
+    <event time="2026-11-22T21:37:18+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 判定 PASS：授权、执行、验证、状态、凭据、回滚可用性均满足；最终状态 DEPLOYED_SUCCESSFULLY；人工 MV-01~MV-06 待用户。deployment_report 升为 1.0.0/APPROVED。</event>
+    <event time="2026-11-22T21:37:18+08:00" type="DELIVERY" actor="pm-orchestrator">写 delivery_report.md（1.0.0/APPROVED），项目交付；遗留 O-01~O-05 已列明。</event>
+    <event time="2026-11-22T21:39:06+08:00" type="INVOCATION" actor="pm-orchestrator">kb-curator PHASE_12 返回 SUCCESS；check-response=0；8 条候选 → 晋升 7（M-DE-046~050、M-TE-044~045）、保留 1（P-DE-050）、淘汰 0、通用候选 0；无 pending_patch。</event>
+    <event time="2026-11-22T21:39:06+08:00" type="GATE" actor="pm-orchestrator">GROUP_Z（PHASE_12）完成，无门控；knowledge_distillation_report 1.0.0/APPROVED。项目状态 DELIVERED。</event>
   </audit_log>
 </phase_status>

@@ -1,4 +1,4 @@
-<phase_status project="ocap_approval_flow" mode="INCREMENTAL" created="2026-11-22T18:18:08+08:00" updated="2026-11-22T21:39:06+08:00">
+<phase_status project="ocap_approval_flow" mode="INCREMENTAL" created="2026-11-22T18:18:08+08:00" updated="2026-11-22T21:52:00+08:00">
   <request>管理后台创建审批流程的时候，采用指定负责人审批模式的时候可以指定一个或者多个负责人审批。其中一个审批同意则通过。现在增加一个需求，1. 指定多个审批负责人时，可以约定多任一负责人审批通过，或者是所有让负责人都同意才算通过。 2. 可以创建审批流程，比如第一步指定一些负责人审批， 第二步指定一些负责人审批，并且可以给这个步数（flow） 每一步约定名称。配置审批人的与或要求。 3. 有查看权限的人可以看到审批过程，审批到达每一步的时间，和谁批准了。以及批准的备注内容是什么。 先整理我的需求，拆分用户故事。我确认后再开始开发。</request>
   <profile version="1.2.0"/>
   <groups>
@@ -193,5 +193,6 @@
     <event time="2026-11-22T21:37:18+08:00" type="DELIVERY" actor="pm-orchestrator">写 delivery_report.md（1.0.0/APPROVED），项目交付；遗留 O-01~O-05 已列明。</event>
     <event time="2026-11-22T21:39:06+08:00" type="INVOCATION" actor="pm-orchestrator">kb-curator PHASE_12 返回 SUCCESS；check-response=0；8 条候选 → 晋升 7（M-DE-046~050、M-TE-044~045）、保留 1（P-DE-050）、淘汰 0、通用候选 0；无 pending_patch。</event>
     <event time="2026-11-22T21:39:06+08:00" type="GATE" actor="pm-orchestrator">GROUP_Z（PHASE_12）完成，无门控；knowledge_distillation_report 1.0.0/APPROVED。项目状态 DELIVERED。</event>
+    <event time="2026-11-22T21:52:00+08:00" type="FIX" actor="pm-orchestrator">CI 两个 run（45027782154、45028842050）Backend job 均因 `test_tc_int_964` 失败：该测试仍读取 `miniprogram/pages/phone/index.vue`，而 f7316cb 已将其拆为包装页，实际读取逻辑在 `pages/account/panes/PhonePane.vue`。测试路径已同步修正；后端全量 `Ran 1186 tests ... OK (skipped=2)`。属测试滞后，与审批流程改动无关。</event>
   </audit_log>
 </phase_status>

@@ -85,7 +85,7 @@ class RegistryMatchRouteContractTests(PhoneMatchBase):
         self.assertIn("registry_match", reg.data)
         self.assertLessEqual({"pending", "count"}, set(reg.data["registry_match"]))
         for rel in ("frontend/src/portal/Register.vue", "frontend/src/portal/me/MePhone.vue",
-                    "miniprogram/pages/phone/index.vue"):
+                    "miniprogram/pages/account/panes/PhonePane.vue"):
             text = src(rel)
             self.assertRegex(text, r"registry_match\??\.pending", rel)
             self.assertNotIn("auto_bound", text, rel)

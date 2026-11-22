@@ -37,7 +37,7 @@
 
 | 层 | 结果 |
 |---|---|
-| 后端 | `Ran 1186 tests`（+19 新写）；仅 `test_tc_int_964` 预存在失败，零新增 |
+| 后端 | `Ran 1186 tests`（+19 新写）→ `OK (skipped=2)`；原预存在失败 `test_tc_int_964` 已随 f7316cb 页面拆分同步修复 |
 | Web 前端 | `52 files / 581 tests passed`（+13）；`npm run build` 成功 |
 | 小程序 | `21 files / 151 tests passed`（+13）；`build:mp-weixin` 设 `UNI_INPUT_DIR` 后成功 |
 | critical path | 11/11 Must Have 故事有已执行用例（100%） |

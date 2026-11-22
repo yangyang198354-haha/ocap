@@ -1,4 +1,5 @@
-<!-- MOD-180 / IFC-399：小程序“我的”页；个人设置/系统设置分组（ADR-169、REQ-FUNC-313） -->
+<!-- MOD-180 / IFC-399：小程序“我的”页；入口收敛为“个人资料/系统设置”两项（ADR-169、REQ-FUNC-313）
+     绑定手机/邮箱验证/账号注销在个人资料页内以 Tab 呈现，界面风格在系统设置页内以 Tab 呈现 -->
 <template>
   <ThemeRoot>
   <view>
@@ -14,29 +15,11 @@
       <view class="muted">手机号：{{ auth.me?.profile?.phone || '未绑定' }}</view>
     </view>
 
-    <view v-for="group in MP_USER_GROUPS" :key="group.key" class="card">
-      <view class="title">{{ group.label }}</view>
+    <view class="card">
       <view class="settings-list">
-        <view v-for="item in group.items" :key="item.key" class="settings-item" @click="onMenu(item)">
+        <view v-for="item in MP_USER_ENTRIES" :key="item.key" class="settings-item" @click="go(item.url)">
           <text>{{ item.label }}</text>
           <text class="muted" aria-hidden="true">›</text>
-        </view>
-      </view>
-
-      <view v-if="group.key === 'system'" id="theme-options" class="theme-options">
-        <view class="row">
-          <view
-            v-for="item in theme.list"
-            :key="item.key"
-            class="theme-option"
-            :class="{ 'is-selected': theme.current === item.key }"
-            :data-theme-key="item.key"
-            @click="pickTheme(item.key)"
-          >
-            <view class="theme-swatch"><view v-for="(c, i) in item.swatch" :key="i" :style="{ background: c }" /></view>
-            <text class="theme-name">{{ item.name }}</text>
-            <text v-if="theme.current === item.key" class="muted">已选</text>
-          </view>
         </view>
       </view>
     </view>
@@ -67,22 +50,10 @@ import { onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
 import { usePaging } from '@/utils/paging'
 import { useAuthStore } from '@/store/auth'
-import { useThemeStore } from '@/store/theme'
-import { MP_USER_GROUPS } from '@/utils/menu'
+import { MP_USER_ENTRIES } from '@/utils/menu'
 import ThemeRoot from '@/components/ThemeRoot.vue'
 
 const auth = useAuthStore()
-const theme = useThemeStore()
-
-// 点选即时生效；保存失败回滚并提示（AC-077-04）
-async function pickTheme(key) {
-  if (key === theme.current) return
-  try {
-    await theme.select(key)
-  } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
-  }
-}
 const housingUnits = ref([])
 const realName = ref('')
 const { items: reports, total, hasMore, loadMore, reset } = usePaging({
@@ -93,14 +64,6 @@ const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year}
 
 function go(url) {
   uni.navigateTo({ url })
-}
-
-function onMenu(item) {
-  if (item.action === 'theme') {
-    uni.pageScrollTo?.({ selector: '#theme-options' })
-    return
-  }
-  if (item.url) go(item.url)
 }
 
 function openReport(item) {
@@ -149,5 +112,4 @@ onShow(load)
   border-bottom: 1px solid var(--line); font-size: 28rpx;
 }
 .settings-item:last-child { border-bottom: 0; }
-.theme-options { margin-top: 16rpx; }
 </style>

@@ -404,7 +404,7 @@ describe('个人中心各页（US-212/213/220）', () => {
   it('TC-INT-898 / AC-302-01、AC-302-02、AC-300-01：6 个个人中心入口对应页各含自己的功能块（标题互不相同；/me/identity 改为我的身份与房屋页并以 Tab 呈现），"设置密码"页不含个人资料表单', async () => {
     http.get.mockImplementation(base())
     // 改写（ocap_navigation_ia ADR-167/168）：身份页标题由 Tab 承载；绑定手机页标题统一为“绑定手机”
-    const pages = [[UnitsIdentity, '我的身份与房屋'], [MeProfile, '个人资料'], [MePhone, '绑定手机'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销'], [MeStyle, '界面风格']]
+    const pages = [[UnitsIdentity, '我的身份与房屋'], [MeProfile, '个人资料'], [MePhone, '绑定手机'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销'], [MeStyle, '系统设置']]
     const seen = []
     for (const [comp, title] of pages) {
       document.body.innerHTML = ''
@@ -501,15 +501,16 @@ describe('个人中心各页（US-212/213/220）', () => {
     expect(buttonOf(wrapper, '保存')).toBeUndefined()
   })
 
-  it('TC-INT-904 / AC-302-01、AC-302-02、AC-303-01：窄屏"我的"总览页——个人设置 5 项 + 系统设置 1 项 + 退出登录；地址指向 /me/*；退出登录清除登录态并回 /login', async () => {
+  it('TC-INT-904 / AC-302-01、AC-302-02、AC-303-01：窄屏"我的"总览页——仅“个人资料/系统设置”2 项 + 退出登录；地址指向 /me/*；退出登录清除登录态并回 /login', async () => {
     http.get.mockImplementation(base())
     http.post.mockResolvedValue({})
     const { wrapper, router } = await mountPage(Me)
     await flush()
     const links = wrapper.findAll('nav.me-overview a')
-    expect(links.map((a) => a.find('span').text())).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格'])
-    expect(links.map((a) => a.attributes('href'))).toEqual(['/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel', '/me/style'])
-    expect(wrapper.findAll('.section-title').map((h) => h.text())).toEqual(['个人设置', '系统设置'])
+    // 改写（MOD-178）：5 项个人设置 + 界面风格下沉为页内 Tab，总览页只留 2 个入口
+    expect(links.map((a) => a.find('span').text())).toEqual(['个人资料', '系统设置'])
+    expect(links.map((a) => a.attributes('href'))).toEqual(['/me/profile', '/me/settings'])
+    expect(wrapper.findAll('.section-title')).toHaveLength(0)
     expect(wrapper.find('button.me-logout').text()).toBe('退出登录')
     await wrapper.find('button.me-logout').trigger('click')
     await flush()

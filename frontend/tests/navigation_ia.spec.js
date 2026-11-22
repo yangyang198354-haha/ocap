@@ -18,10 +18,11 @@ vi.mock('@/shared/http', () => mocked)
 import { mountPage, routeTable } from './helpers.js'
 import PortalUserMenu from '@/portal/PortalUserMenu.vue'
 import Units from '@/portal/Units.vue'
+import MeProfile from '@/portal/me/MeProfile.vue'
+import MeStyle from '@/portal/me/MeStyle.vue'
 import {
   PORTAL_MENU,
   PORTAL_USER_MENU,
-  USER_MENU_GROUPS,
   USER_MENU_TIMING
 } from '@/layout/menus'
 import { useAuthStore } from '@/stores/auth'
@@ -53,18 +54,32 @@ beforeEach(() => {
 })
 
 describe('菜单常量与动效参数（US-302/308/309）', () => {
-  it('TC-UNIT-1101 / AC-309-01、AC-302-01、AC-302-02、AC-303-01：两组菜单顺序与文案，展平后 6 项，无“手机号/我的身份与房屋/认证申诉”', () => {
-    expect(USER_MENU_GROUPS.map((g) => g.key)).toEqual(['personal', 'system'])
-    expect(USER_MENU_GROUPS.map((g) => g.label)).toEqual(['个人设置', '系统设置'])
-    expect(USER_MENU_GROUPS[0].items.map((i) => i.label)).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销'])
-    expect(USER_MENU_GROUPS[1].items.map((i) => i.label)).toEqual(['界面风格'])
-    expect(PORTAL_USER_MENU.map((i) => i.label)).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格'])
+  it('TC-UNIT-1101 / AC-309-01、AC-302-01、AC-302-02、AC-303-01：右上角仅“个人资料/系统设置”两项，业务项下沉为页内 Tab，无“手机号/认证申诉”', () => {
+    expect(PORTAL_USER_MENU.map((i) => i.label)).toEqual(['个人资料', '系统设置'])
+    expect(PORTAL_USER_MENU.map((i) => i.to)).toEqual(['/me/profile', '/me/settings'])
     const allLabels = [
       ...PORTAL_MENU.flatMap((n) => [n.label, ...(n.children || []).map((c) => c.label)]),
       ...PORTAL_USER_MENU.map((i) => i.label)
     ]
     expect(allLabels).not.toContain('手机号')
     expect(allLabels).not.toContain('认证申诉')
+    // 改写（MOD-178）：这四项不再直接出现在下拉菜单
+    for (const label of ['绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格']) {
+      expect(PORTAL_USER_MENU.map((i) => i.label)).not.toContain(label)
+    }
+  })
+
+  it('TC-INT-1106 / AC-302-01：绑定手机/设置密码/邮箱验证/账号注销是个人资料页内 Tab；界面风格是系统设置页内 Tab', async () => {
+    http.get.mockImplementation(table({
+      '/me/profile': { id: 1, nickname: '合成用户', phone: '', email: '' }, '/me/theme': { theme: null }
+    }))
+    const profile = await mountPage(MeProfile, { path: '/me/profile' })
+    await flush()
+    expect(profile.wrapper.findAll('.el-tabs__item').map((t) => t.text()))
+      .toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销'])
+    const settings = await mountPage(MeStyle, { path: '/me/settings' })
+    await flush()
+    expect(settings.wrapper.findAll('.el-tabs__item').map((t) => t.text())).toEqual(['界面风格'])
   })
 
   it('TC-UNIT-1102 / AC-308-01、AC-308-02：USER_MENU_TIMING 为 400ms 过渡 + 180ms 悬停意图', () => {

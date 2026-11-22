@@ -1,7 +1,7 @@
-<phase_status project="ocap_navigation_ia" mode="INCREMENTAL" created="2026-11-22T11:41:30+08:00" updated="2026-11-22T12:59:00+08:00">
+<phase_status project="ocap_navigation_ia" mode="INCREMENTAL" created="2026-11-22T11:41:30+08:00" updated="2026-11-22T13:30:00+08:00">
   <request time="2026-11-22T11:41:30+08:00"><![CDATA[Use Skill: sdlc-orchestrator 1.web 页面 二级菜单 认证申述不单独显示，因为“我的身份与房屋”页面已经有一个按钮进入认证申述。2. 我的身份与房屋页面“待我审批的同住人申请” 不要作为一个卡片放到下边，作为另外一个tab 放到这个页面。 3. 我的房屋作为导航栏下的一级菜单，下边依次为：我的身份与房屋， 我的认证与申述（认证申述，名字要改一下），我的同住人申请。 微信小程序的页面逻辑结构也要同步调整。 4.右上角弹出拆弹也要做整合，菜单里面第一个为个人设置，里面整合 个人资料，绑定手机（手机号，名字改一下），邮箱验证和 账号注销。然后还有一个系统设置，里面先放一个界面风格。 然后这web 个弹出菜单弹出的逻辑太快了。稍微慢一点点。 对应微信小程序页面的结构也按照这个逻辑调整一下。 先整理我的需求，拆分用户故事。然后给我确认。确认后才开始开发]]></request>
   <profile version="1.2.0"/>
-  <workspace_note>INCREMENTAL：用户已确认需求并授权开发，本批次按 A→B→C→D→E1 执行；GROUP_E2（真实部署）仍未授权，需用户单独下达部署指令。docs_root 采用本批次独立目录 project_workspace/ocap_navigation_ia/（沿用本项目既往批次约定）。</workspace_note>
+  <workspace_note>INCREMENTAL：全流程 A→E2 已完成。GROUP_E2 由用户 2026-11-22 原话“好的，提交并部署到测试环境”明确授权，部署结果为 DEPLOYED_SUCCESSFULLY；唯一偏差是 git push 因本机代理 127.0.0.1:10808 未监听失败，远端尚无提交 9fd5e3e，待用户恢复代理后推送。docs_root 采用本批次独立目录 project_workspace/ocap_navigation_ia/（沿用本项目既往批次约定）。</workspace_note>
   <groups>
     <group id="GROUP_A" agent="requirement-analyst" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_01" status="APPROVED"/><phase id="PHASE_02" status="APPROVED"/>
@@ -18,8 +18,8 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="PENDING" gate_decision="PENDING" retries="0">
-      <phase id="PHASE_11b" status="PENDING"/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
+      <phase id="PHASE_11b" status="APPROVED"/>
     </group>
   </groups>
   <artifacts>
@@ -40,6 +40,7 @@
     <artifact path="project_workspace/ocap_navigation_ia/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_navigation_ia/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_navigation_ia/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_navigation_ia/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline>project_workspace/ocap/requirements/requirements_spec.md 6.0.0、project_workspace/ocap/requirements/user_stories.md 4.0.0、project_workspace/ocap_appeal_center/requirements/requirements_spec.md 2.0.0 与 user_stories.md 2.0.0，以及现有前端/小程序代码（frontend/src/layout/menus.js、frontend/src/portal/PortalUserMenu.vue、frontend/src/portal/Units.vue、frontend/src/portal/units/*、frontend/src/router/index.js、miniprogram/pages/units/index.vue、miniprogram/pages/me/index.vue、miniprogram/pages.json），作为本次增量的已批准基线。</legacy_baseline>
   <invocations>
@@ -50,6 +51,7 @@
     <invocation id="ocap_navigation_ia-GROUP_C-2" agent="software-developer" group="GROUP_C" start="2026-11-22T12:46:00+08:00" end="2026-11-22T12:49:00+08:00" result="SUCCESS">缺陷修复模式：修复 GROUP_D 回流的 DEF-001（miniprogram/utils/confirm.js 缺 cancelAccount 确认键）；回归 frontend 575、miniprogram 147、backend 1167 全绿；开发文档升 1.1.0。</invocation>
     <invocation id="ocap_navigation_ia-GROUP_D-1" agent="test-engineer" group="GROUP_D" start="2026-11-22T12:50:00+08:00" end="2026-11-22T12:52:00+08:00" result="SUCCESS">PHASE_07/08/09：新增 15 条用例（Web 7、小程序 8）；单元 44/44、集成 197/197、E2E 19/19；critical path 覆盖率 11/11；全量回归零新增失败；DEF-001 已回流修复并复测通过，无遗留缺陷。</invocation>
     <invocation id="ocap_navigation_ia-GROUP_E1-1" agent="devops-engineer" group="GROUP_E1" start="2026-11-22T12:56:00+08:00" end="2026-11-22T12:58:00+08:00" result="SUCCESS">PHASE_10/PHASE_11a：现有 CI 无需修改；产出 cicd_pipeline.md（11 阶段）与 deployment_plan.md（4 DEPLOY + 4 ROLLBACK，0 不可逆步骤）；策略为 Web 静态目录原子交换，后端不重启、无迁移；E2 待用户单独授权。</invocation>
+    <invocation id="ocap_navigation_ia-GROUP_E2-1" agent="devops-engineer" group="GROUP_E2" start="2026-11-22T13:18:00+08:00" end="2026-11-22T13:26:00+08:00" result="SUCCESS">PHASE_11b：commit 9fd5e3e；锚点 20261122132027；DEPLOY-001~004 全部 SUCCESS；V-01~V-07 通过（200/active/0 traceback/0 Freeark 失败）；最终状态 DEPLOYED_SUCCESSFULLY。偏差：git push 因本机代理 10808 未监听失败，远端无该提交。</invocation>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_navigation_ia-GROUP_A-1" decision="PASS_WITH_CONDITIONS" time="2026-11-22T11:44:57+08:00">
@@ -148,6 +150,20 @@
       <finding id="GR-E1-001-F02" severity="MINOR">AC-308-02 的真实悬停时序仍只能人工验证（随部署后 V-08/MV-01）。</finding>
       <verification><![CDATA[PM 审阅：DEPLOY-001~004 与 ROLLBACK-001~004 一一对应且逆序；预检 11 项、验证 8 项齐全；无生产环境、无禁用技术；未执行任何 ssh 或部署命令。phase_status XML 解析通过。]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_navigation_ia-GROUP_E2-1" decision="PASS_WITH_CONDITIONS" time="2026-11-22T13:30:00+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_navigation_ia/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="E2-授权" result="SATISFIED">用户原话“好的，提交并部署到测试环境”经 PM 写入 special_instructions（PRODUCTION_DEPLOY_CONFIRM=true，环境“测试”）；授权环境名 = 计划环境名 = 画像 P7 环境名（测试，内网+外网）；计划版本 1.0.0 = 登记 APPROVED 版本。</criterion>
+      <criterion id="E2-步骤" result="SATISFIED">DEPLOY-001~004 全部执行且结果 SUCCESS，每步均有命令摘要与输出尾部；未执行任何 ROLLBACK（无需）。</criterion>
+      <criterion id="E2-验证" result="SATISFIED">V-01~V-07 全部通过：内网/外网/静态资源/SPA 回退均 200，新产物已切换，后端 active 且 TRACEBACK=0，Freeark=200 且失败单元 0；V-08 人工冒烟转 MV 清单。</criterion>
+      <criterion id="E2-状态一致" result="SATISFIED">最终状态 DEPLOYED_SUCCESSFULLY 与返回 SUCCESS 对应；报告“授权核对”一节完整；无凭据泄露。</criterion>
+      <criterion id="E2-偏差" result="SATISFIED">P-01（提交已在远端）未满足，已在报告预检表与遗留问题中如实标注，未虚报。</criterion>
+      <finding id="GR-E2-001-F01" severity="MAJOR">代码未 push：本机代理 127.0.0.1:10808 未监听，直连 Connection was reset；远端无 9fd5e3e。需用户恢复代理后执行 `git push origin main`，使远端与已部署提交一致。</finding>
+      <finding id="GR-E2-001-F02" severity="MINOR">V-08 人工冒烟（MV-01 悬停 180ms、MV-02 reduce 动效、MV-03 小程序真机三 Tab、MV-04 真机主题）尚未执行。</finding>
+      <condition>用户在代理可用后完成 `git push origin main` 并确认远端哈希为 9fd5e3e；V-08 / MV-01~MV-04 由用户人工验证。</condition>
+      <verification><![CDATA[PM 核对 deployment_report 与实际执行记录：ANCHOR_TS=20261122132027；快照 backend 30.6MB / web 28.4MB；验证输出 INT=200 INT_IP=200 EXT=200 SPA=200 ASSET=200 FREEARK=200 BACKEND=active TRACEBACK=0 FREEFAIL=0。phase_status XML 解析通过。]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification time="2026-11-22T11:45:00+08:00" question="Q1 认证申诉是否保留在二级菜单" answer="A：只保留唯一入口“我的认证与申述”，不再出现“认证申诉”文案" by="用户"/>
@@ -167,5 +183,8 @@
     <entry time="2026-11-22T12:49:00+08:00">GROUP_D 发现 DEF-001（注销确认键缺失）；PM 回流 GROUP_C-2 修复，文档升 1.1.0，回归全绿。</entry>
     <entry time="2026-11-22T12:53:00+08:00">GROUP_D 返回 SUCCESS；PM 门控 GR-D-001=PASS（单元 44、集成 197、E2E 19 全绿，critical path 100%），四份测试文档升 1.0.0/APPROVED。下一步 GROUP_E1。</entry>
     <entry time="2026-11-22T12:59:00+08:00">GROUP_E1 返回 SUCCESS；PM 门控 GR-E1-001=PASS，CI/CD 与部署计划升 1.0.0/APPROVED。GROUP_E2 未授权：等待用户单独下达部署指令；P-01（commit/push）亦需用户授权。</entry>
+    <entry time="2026-11-22T13:18:00+08:00">用户下达“好的，提交并部署到测试环境”，同时授权 commit 与 E2 部署；PM 提交 61 文件为 9fd5e3e；push 因本机代理 127.0.0.1:10808 未监听失败，未重试。</entry>
+    <entry time="2026-11-22T13:26:00+08:00">GROUP_E2 执行完成：锚点 20261122132027；DEPLOY-001~004 全成功；V-01~V-07 通过；最终状态 DEPLOYED_SUCCESSFULLY，未触发回滚。</entry>
+    <entry time="2026-11-22T13:30:00+08:00">PM 门控 GR-E2-001=PASS_WITH_CONDITIONS，deployment_report 升 1.0.0/APPROVED；条件：恢复代理后 push origin main（9fd5e3e）、人工完成 V-08/MV-01~MV-04。批次进入交付后阶段，可调用 knowledge-curator 蒸馏。</entry>
   </audit_log>
 </phase_status>

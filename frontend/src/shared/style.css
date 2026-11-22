@@ -307,15 +307,10 @@ a { color: var(--accent-text); text-decoration: none; }
   .claim-form-wrap { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: start; }
 }
 
-/* ---- MOD-175 / REQ-NFUNC-061：右上角下拉菜单 400ms 过渡与分组样式（ADR-168） ----
+/* ---- MOD-175 / REQ-NFUNC-061：右上角下拉菜单 400ms 过渡（ADR-168） ----
    popper 被 teleport 到 body，必须用全局选择器，不能放 scoped。 */
 .user-menu-popper.el-zoom-in-top-enter-active,
 .user-menu-popper.el-zoom-in-top-leave-active { transition-duration: 400ms; }
-.user-menu-popper .user-menu-group-title {
-  padding: 4px 16px 2px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em;
-  list-style: none; cursor: default;
-}
-.user-menu-popper .user-menu-separator { margin: 4px 0; border-top: 1px solid var(--line); list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   .user-menu-popper.el-zoom-in-top-enter-active,
   .user-menu-popper.el-zoom-in-top-leave-active { transition-duration: 0s; }

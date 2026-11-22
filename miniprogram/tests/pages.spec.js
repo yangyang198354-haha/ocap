@@ -220,10 +220,13 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     const { wrapper } = await mountPage(Phone)
     expect(wrapper.text()).toContain('绑定手机')
     expect(wrapper.text()).not.toContain('更换手机号')
-    wrapper.vm.phone = '13900000000'
-    wrapper.vm.code = '123456'
-    await wrapper.vm.sendCode('BIND_PHONE', wrapper.vm.phone)
-    await wrapper.vm.bind()
+    // MOD-182：手机号表单抽为 PhonePane，页面壳无内部状态，改由输入框驱动
+    await wrapper.find('input[placeholder="手机号"]').setValue('13900000000')
+    await wrapper.find('input[placeholder="验证码"]').setValue('123456')
+    await byText(wrapper, 'button', '获取验证码').trigger('click')
+    await flushPromises()
+    await byText(wrapper, 'button', '绑定').trigger('click')
+    await flushPromises()
     const posts = requests().filter((r) => r.method === 'POST')
     expect(posts[0]).toMatchObject({ path: '/me/codes', data: { purpose: 'BIND_PHONE', target: '13900000000' } })
     expect(posts[1]).toMatchObject({ path: '/me/phone/bind', data: { phone: '13900000000', code: '123456' } })
@@ -238,8 +241,11 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     const { wrapper } = await mountPage(Phone)
     expect(wrapper.text()).toContain('绑定手机')
     expect(wrapper.text()).not.toContain('更换手机号')
-    Object.assign(wrapper.vm, { oldPhone: '13800000000', newPhone: '13900000000', oldCode: '111111', newCode: '222222' })
-    await wrapper.vm.change()
+    await wrapper.find('input[placeholder="原手机号"]').setValue('13800000000')
+    await wrapper.find('input[placeholder="原号验证码"]').setValue('111111')
+    await wrapper.find('input[placeholder="新手机号"]').setValue('13900000000')
+    await wrapper.find('input[placeholder="新号验证码"]').setValue('222222')
+    await byText(wrapper, 'button', '更换').trigger('click')
     await flushPromises()
     expect(requests().find((r) => r.path === '/me/phone/change').data).toEqual({
       old_phone: '13800000000', new_phone: '13900000000', old_code: '111111', new_code: '222222' })

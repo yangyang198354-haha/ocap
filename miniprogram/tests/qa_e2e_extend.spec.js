@@ -23,7 +23,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mountPage, respondWith, requests } from './helpers.js'
-import Me from '../pages/me/index.vue'
+import Settings from '../pages/settings/index.vue'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const ME = { profile: { id: 1, nickname: '张三', phone: '138****0000' }, identities: { labels: ['户主'] } }
@@ -31,14 +31,14 @@ const ME = { profile: { id: 1, nickname: '张三', phone: '138****0000' }, ident
 describe('TC-E2E-203 小程序新增测试风格 D（AC-080-01/02）', () => {
   it('“我的”页列表由 3 变 4；选择 D 后 PUT /me/theme {theme:testd} 并应用 theme-testd；页面源码无该风格痕迹', async () => {
     respondWith({ 'GET /me': ME, 'GET /ledger/reports': { results: [] }, 'PUT /me/theme': (d) => ({ theme: d.theme }) })
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     expect(wrapper.findAll('.theme-option .theme-name').map((n) => n.text())).toEqual(['霓虹玻璃', '极光 Bento', '赛博终端', '测试风格 D'])
     await wrapper.find('[data-theme-key=testd]').trigger('click')
     await flushPromises()
     expect(requests().find((r) => r.method === 'PUT').data).toEqual({ theme: 'testd' })
     expect(wrapper.find('.theme-root').classes()).toContain('theme-testd')
     const files = fs.readdirSync(path.join(ROOT, 'pages'), { recursive: true }).filter((f) => String(f).endsWith('.vue'))
-    expect(files).toHaveLength(19)
+    expect(files).toHaveLength(25)
     for (const f of files) expect(fs.readFileSync(path.join(ROOT, 'pages', String(f)), 'utf8'), String(f)).not.toMatch(/testd|测试风格/)
   })
 })

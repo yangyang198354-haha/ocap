@@ -205,16 +205,18 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     expect(side(wrapper).findAll('.side-item.is-active .side-label').map((e) => e.text())).toEqual(['信息公开'])
     expect(side(wrapper).findAll('ul.side-sub')).toHaveLength(0)
 
-    // 6 右上角菜单：个人设置 5 项 + 系统设置 1 项 + 退出登录；进入个人资料独立页并改昵称，右上角即时更新（US-212/213、AC-302-01、AC-212-05、AC-213-01）
+    // 6 右上角菜单：个人资料 + 系统设置 + 退出登录；个人资料页内以 Tab 呈现账号相关功能（US-212/213、AC-302-01、AC-212-05、AC-213-01）
     await wrapper.find('header.topbar button.user-menu-trigger').trigger('click')
     await settle()
     expect([...document.body.querySelectorAll('.el-dropdown-menu__item')].map((e) => e.textContent.trim())).toEqual(
-      ['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格', '退出登录']
+      ['个人资料', '系统设置', '退出登录']
     )
     dropdownItem('个人资料').click()
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/profile'))
     await settle()
     expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
+    expect(wrapper.findAll('.el-tabs__item').map((t) => t.text()))
+      .toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销'])
     expect(side(wrapper).findAll('.side-item.is-active')).toHaveLength(0) // 个人中心页不高亮任何一级
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     await wrapper.find('input[placeholder="昵称"]').setValue('小红')
@@ -223,10 +225,12 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     expect(http.patch).toHaveBeenCalledWith('/me/profile', { nickname: '小红', gender: 0, birthday: null })
     expect(wrapper.find('header.topbar .user-menu-name').text()).toBe('小红')
 
-    // 7 界面风格页：选风格 C，立即生效并保存（AC-213-06、AC-222-02）
-    dropdownItem('界面风格').click()
-    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/style'))
+    // 7 系统设置页：界面风格为页内 Tab，选风格 C 立即生效并保存（AC-213-06、AC-222-02）
+    dropdownItem('系统设置').click()
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/settings'))
     await settle()
+    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['系统设置'])
+    expect(wrapper.findAll('.el-tabs__item').map((t) => t.text())).toEqual(['界面风格'])
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await settle()
     expect(html().getAttribute('data-theme')).toBe('terminal')
@@ -263,7 +267,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
 })
 
 describe('TC-E2E-802 用户端旅程：非业委会成员与窄屏', () => {
-  it('非成员只见 6 项菜单且直达 /claims 不白屏；窄屏 /me 进"我的"总览，7 项入口 + 退出登录，一次点击进入个人资料页', async () => {
+  it('非成员只见 6 项菜单且直达 /claims 不白屏；窄屏 /me 进"我的"总览，2 项入口 + 退出登录，一次点击进入个人资料页', async () => {
     const accounts = { bob: { id: 2, token: 'TB', committee: false } }
     installPortalServer(accounts)
     setViewport(false) // 窄屏（<768px）：jsdom 无 matchMedia，按窄屏
@@ -287,12 +291,12 @@ describe('TC-E2E-802 用户端旅程：非业委会成员与窄屏', () => {
     await settle()
     expect(wrapper.find('main').findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
     expect(wrapper.find('nav.sub-nav-bar .sub-nav-item.is-active').text()).toBe('我的认证与申述')
-    // 4 底部"我的" → /me 总览（窄屏不重定向）：个人设置 5 项 + 系统设置 1 项 + 退出登录（US-220、AC-302-01）
+    // 4 底部"我的" → /me 总览（窄屏不重定向）：个人资料 + 系统设置 + 退出登录（US-220、AC-302-01）
     await wrapper.findAll('nav.tabbar a').find((a) => a.text() === '我的').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me'))
     await settle()
-    expect(wrapper.findAll('nav.me-overview a')).toHaveLength(6)
-    expect(wrapper.findAll('.section-title').map((h) => h.text())).toEqual(['个人设置', '系统设置'])
+    expect(wrapper.findAll('nav.me-overview a')).toHaveLength(2)
+    expect(wrapper.findAll('.section-title')).toHaveLength(0)
     // 5 进入个人资料独立页，再点底部"我的"回到总览（AC-220-03）
     await wrapper.findAll('nav.me-overview a').find((a) => a.text().includes('个人资料')).trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/profile'))

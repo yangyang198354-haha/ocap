@@ -5,9 +5,11 @@ import { flushPromises } from '@vue/test-utils'
 import { mountPage, respondWith, requests, byText } from './helpers.js'
 import Units from '../pages/units/index.vue'
 import Me from '../pages/me/index.vue'
+import Account from '../pages/account/index.vue'
+import Settings from '../pages/settings/index.vue'
 import Email from '../pages/email/index.vue'
 import Cancel from '../pages/cancel/index.vue'
-import { MP_HOUSING_TABS, MP_USER_GROUPS } from '../utils/menu.js'
+import { MP_HOUSING_TABS, MP_USER_ENTRIES, MP_ACCOUNT_TABS } from '../utils/menu.js'
 
 const OWNED = {
   unit_id: 7, specific_part: 'A房', role: 'HEAD', role_label: '产权业主',
@@ -87,7 +89,7 @@ describe('小程序“我的房屋”三 Tab（US-304）', () => {
   })
 })
 
-describe('小程序“我的”页分组（US-305）', () => {
+describe('小程序“我的”页入口与个人资料/系统设置页（US-305）', () => {
   const meTable = {
     'GET /me': ME(),
     'GET /me/housing': HOUSING([]),
@@ -97,45 +99,58 @@ describe('小程序“我的”页分组（US-305）', () => {
     'PUT /me/theme': { theme: 'bento' }
   }
 
-  it('TC-UNIT-1101 / AC-305-01、AC-305-02、AC-309-01：分组常量为“个人设置 4 项 + 系统设置 1 项”，无“设置密码”，三 Tab 文案与 Web 一致', () => {
-    expect(MP_USER_GROUPS.map((g) => g.label)).toEqual(['个人设置', '系统设置'])
-    expect(MP_USER_GROUPS[0].items.map((i) => i.label)).toEqual(['个人资料', '绑定手机', '邮箱验证', '账号注销'])
-    expect(MP_USER_GROUPS[1].items.map((i) => i.label)).toEqual(['界面风格'])
-    const labels = MP_USER_GROUPS.flatMap((g) => g.items.map((i) => i.label))
-    expect(labels).not.toContain('手机号')
-    expect(labels).not.toContain('设置密码')
+  it('TC-UNIT-1101 / AC-305-01、AC-305-02、AC-309-01：入口常量为“个人资料/系统设置”，账号功能为个人资料页 4 个 Tab，无“设置密码”', () => {
+    expect(MP_USER_ENTRIES.map((i) => i.label)).toEqual(['个人资料', '系统设置'])
+    expect(MP_USER_ENTRIES.map((i) => i.url)).toEqual(['/pages/account/index', '/pages/settings/index'])
+    expect(MP_ACCOUNT_TABS.map((t) => t.label)).toEqual(['个人资料', '绑定手机', '邮箱验证', '账号注销'])
+    expect(MP_ACCOUNT_TABS.map((t) => t.label)).not.toContain('设置密码')
     expect(MP_HOUSING_TABS.map((t) => t.label)).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
   })
 
-  it('TC-E2E-1105 / AC-305-01、AC-305-02、AC-305-03：分组标题顺序、入口文案固定“绑定手机”、跳转目标正确', async () => {
+  it('TC-E2E-1105 / AC-305-01、AC-305-02、AC-305-03：“我的”页仅两个入口，绑定手机/邮箱验证/账号注销不再直接列出，跳转目标正确', async () => {
     respondWith(meTable)
     const { wrapper } = await mountPage(Me)
-    const titles = wrapper.findAll('.title').map((t) => t.text())
-    expect(titles.indexOf('个人设置')).toBeGreaterThan(-1)
-    expect(titles.indexOf('系统设置')).toBeGreaterThan(titles.indexOf('个人设置'))
     const settingLabels = wrapper.findAll('.settings-item').map((i) => i.find('text').text())
-    expect(settingLabels).toEqual(['个人资料', '绑定手机', '邮箱验证', '账号注销', '界面风格'])
+    expect(settingLabels).toEqual(['个人资料', '系统设置'])
     for (const [label, url] of [
-      ['个人资料', '/pages/profile-setup/index'],
-      ['绑定手机', '/pages/phone/index'],
-      ['邮箱验证', '/pages/email/index'],
-      ['账号注销', '/pages/cancel/index']
+      ['个人资料', '/pages/account/index'],
+      ['系统设置', '/pages/settings/index']
     ]) {
       uni.navigateTo.mockClear()
       await byText(wrapper, '.settings-item', label).trigger('click')
       await flushPromises()
       expect(uni.navigateTo.mock.calls[0][0]).toMatchObject({ url })
     }
+    expect(wrapper.findAll('.settings-item').some((i) => i.text().includes('绑定手机'))).toBe(false)
   })
 
-  it('TC-E2E-1106 / AC-305-04：界面风格选项在系统设置下渲染，点选调用主题保存', async () => {
+  it('TC-E2E-1106 / AC-305-04：系统设置页内“界面风格”Tab 渲染 3 个风格，点选调用主题保存', async () => {
     respondWith(meTable)
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
+    expect(wrapper.findAll('.settings-tab').map((t) => t.text())).toEqual(['界面风格'])
     expect(wrapper.findAll('.theme-option')).toHaveLength(3)
     const other = wrapper.findAll('.theme-option').find((o) => !o.classes('is-selected'))
     await other.trigger('click')
     await flushPromises()
     expect(requests().some((r) => r.method === 'PUT' && r.path === '/me/theme')).toBe(true)
+  })
+
+  it('TC-E2E-1109 / AC-305-01：个人资料页 4 个 Tab，依次显示个人资料/绑定手机/邮箱验证/账号注销功能块', async () => {
+    respondWith(meTable)
+    const { wrapper } = await mountPage(Account)
+    expect(wrapper.findAll('.account-tab').map((t) => t.text())).toEqual(['个人资料', '绑定手机', '邮箱验证', '账号注销'])
+    expect(wrapper.find('.account-tab.is-active').text()).toBe('个人资料')
+    expect(wrapper.find('input[placeholder="昵称"]').exists()).toBe(true)
+    await byText(wrapper, '.account-tab', '绑定手机').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.account-tab.is-active').text()).toBe('绑定手机')
+    expect(wrapper.text()).toContain('需要原手机号与新手机号各自的验证码')
+    await byText(wrapper, '.account-tab', '邮箱验证').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('当前邮箱')
+    await byText(wrapper, '.account-tab', '账号注销').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('确认注销')
   })
 })
 

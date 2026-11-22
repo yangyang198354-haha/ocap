@@ -6,6 +6,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountPage } from './helpers.js'
 import Login from '../pages/login/index.vue'
 import Me from '../pages/me/index.vue'
+import Settings from '../pages/settings/index.vue'
 import { useThemeStore } from '@/store/theme'
 
 let accounts
@@ -56,13 +57,14 @@ describe('TC-E2E-201 小程序旅程', () => {
     await loginAs('alice')
     expect(useThemeStore().current).toBe('bento')
     expect(uni.reLaunch).toHaveBeenLastCalledWith({ url: '/pages/index/index' })
-    // “我的”页选择 A
-    ;({ wrapper } = await mountPage(Me, { token: 'TA' }))
+    // 系统设置页选择 A
+    ;({ wrapper } = await mountPage(Settings, { token: 'TA' }))
     await wrapper.find('[data-theme-key=neon]').trigger('click')
     await flushPromises()
     expect(accounts.alice.theme).toBe('neon')
     expect(wrapper.find('.theme-root').classes()).toContain('theme-neon')
     // 退出登录后登录页仍是 A（本设备记忆）
+    ;({ wrapper } = await mountPage(Me, { token: 'TA' }))
     await wrapper.findAll('button').find((b) => b.text().includes('退出登录')).trigger('click')
     freshApp()
     ;({ wrapper } = await mountPage(Login, { token: '' }))
@@ -80,7 +82,7 @@ describe('TC-E2E-201 小程序旅程', () => {
     freshApp()
     await loginAs('alice')
     expect(useThemeStore().current).toBe('bento')
-    const { wrapper } = await mountPage(Me, { token: 'TA' })
+    const { wrapper } = await mountPage(Settings, { token: 'TA' })
     expect(wrapper.findAll('.theme-option')).toHaveLength(3)
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await flushPromises()

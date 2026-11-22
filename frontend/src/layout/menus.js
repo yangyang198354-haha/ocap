@@ -34,30 +34,12 @@ export const PORTAL_MENU = [
   { key: 'info', label: '信息公开', audience: 'all', match: ['/info'], to: '/info' }
 ]
 
-// MOD-174 / IFC-393：右上角菜单分“个人设置/系统设置”两组；文案遵循 C-363。
-export const USER_MENU_GROUPS = [
-  {
-    key: 'personal',
-    label: '个人设置',
-    items: [
-      { key: 'me.profile', label: '个人资料', to: '/me/profile' },
-      { key: 'me.phone', label: '绑定手机', to: '/me/phone' },
-      { key: 'me.password', label: '设置密码', to: '/me/password' },
-      { key: 'me.email', label: '邮箱验证', to: '/me/email' },
-      { key: 'me.cancel', label: '账号注销', to: '/me/cancel' }
-    ]
-  },
-  {
-    key: 'system',
-    label: '系统设置',
-    items: [
-      { key: 'me.style', label: '界面风格', to: '/me/style' }
-    ]
-  }
+// MOD-174 / IFC-393：右上角菜单只保留两个入口；绑定手机/设置密码/邮箱验证/账号注销
+// 改为“个人资料”页内的 Tab，界面风格改为“系统设置”页内的 Tab，不再直接出现在下拉菜单。
+export const PORTAL_USER_MENU = [
+  { key: 'me.profile', label: '个人资料', to: '/me/profile' },
+  { key: 'me.settings', label: '系统设置', to: '/me/settings' }
 ]
-
-// 供窄屏“我的”页与既有测试使用的展平视图（个人设置在前，系统设置在后）
-export const PORTAL_USER_MENU = USER_MENU_GROUPS.flatMap((group) => group.items)
 
 // MOD-175 / REQ-NFUNC-061：展开/收起 400ms；悬停意图延迟 180ms。
 export const USER_MENU_TIMING = { transitionMs: 400, hoverIntentMs: 180 }

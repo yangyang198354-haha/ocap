@@ -9,7 +9,7 @@ import { mountPage, respondWith, requests } from './helpers.js'
 import { THEMES } from '@/theme/generated/registry'
 import { useThemeStore } from '@/store/theme'
 import ThemeRoot from '../components/ThemeRoot.vue'
-import Me from '../pages/me/index.vue'
+import Settings from '../pages/settings/index.vue'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -30,10 +30,10 @@ describe('页面不含颜色字面量（ADR-029）', () => {
     }
     expect(bad).toEqual([])
   })
-  it('16 个页面根节点均套 ThemeRoot', () => {
-    // 页面目录下新增了 components/ 子目录（MOD-179 面板），它们不是页面入口，不要求 ThemeRoot
-    const pages = vueFiles(path.join(ROOT, 'pages')).filter((f) => !f.includes(`${path.sep}components${path.sep}`))
-    expect(pages).toHaveLength(16)
+  it('18 个页面根节点均套 ThemeRoot', () => {
+    // 页面目录下新增了 components/ 与 panes/ 子目录（面板组件），它们不是页面入口，不要求 ThemeRoot
+    const pages = vueFiles(path.join(ROOT, 'pages')).filter((f) => !f.includes(`${path.sep}components${path.sep}`) && !f.includes(`${path.sep}panes${path.sep}`))
+    expect(pages).toHaveLength(18)
     for (const file of pages) expect(fs.readFileSync(file, 'utf8'), file).toContain('<ThemeRoot>')
   })
 })
@@ -93,11 +93,11 @@ describe('ThemeRoot 变量注入', () => {
   })
 })
 
-describe('“我的”页风格选择（AC-077-01/04）', () => {
+describe('系统设置页风格选择（AC-077-01/04）', () => {
   const ME = { profile: { id: 1, nickname: '张三', phone: '138****0000' }, identities: { labels: ['户主'] } }
   it('列出全部启用风格；点选后 PUT /me/theme {theme} 并切换', async () => {
     respondWith({ 'GET /me': ME, 'GET /ledger/reports': { results: [] }, 'PUT /me/theme': { theme: 'neon' } })
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     expect(wrapper.findAll('.theme-option')).toHaveLength(3)
     await wrapper.find('[data-theme-key=neon]').trigger('click')
     await flushPromises()
@@ -106,7 +106,7 @@ describe('“我的”页风格选择（AC-077-01/04）', () => {
   })
   it('保存失败：回滚并 toast“保存失败”', async () => {
     respondWith({ 'GET /me': ME, 'GET /ledger/reports': { results: [] } })
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await flushPromises()
     expect(uni.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: '保存失败' }))

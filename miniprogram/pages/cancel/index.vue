@@ -1,68 +1,11 @@
-<!-- MOD-182 / IFC-401：小程序账号注销最小页面；复用后端 /me/cancel（ADR-169） -->
+<!-- MOD-182：账号注销独立页（兼容旧地址 /pages/cancel/index）；内容见 account/panes/CancelPane.vue -->
 <template>
   <ThemeRoot>
-  <view>
-    <view class="card">
-      <view class="title">账号注销</view>
-      <view class="muted">注销后账号将不可登录，历史记录保留。需输入已绑定的手机号和验证码；未绑定手机号请先绑定。</view>
-      <input v-model="phone" class="field mt-16" maxlength="11" placeholder="已绑定的手机号" />
-      <view class="row" style="margin-top: 16rpx">
-        <button size="mini" @click="sendCode">发送注销验证码</button>
-        <input v-model="code" class="field" maxlength="6" placeholder="验证码" style="flex: 1" />
-      </view>
-      <button class="btn" style="margin-top: 24rpx" @click="cancelAccount">确认注销</button>
-    </view>
-  </view>
+    <CancelPane />
   </ThemeRoot>
 </template>
 
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
-import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import { api } from '@/utils/api'
-import { confirmDanger } from '@/utils/confirm'
-import { useAuthStore } from '@/store/auth'
-
-const auth = useAuthStore()
-const phone = ref('')
-const code = ref('')
-
-function toast(title) {
-  uni.showToast({ title, icon: 'none' })
-}
-
-async function load() {
-  try {
-    await auth.fetchMe()
-  } catch (e) {
-    /* 未登录由 http 统一跳转 */
-  }
-  phone.value = auth.me?.profile?.phone || ''
-}
-
-async function sendCode() {
-  if (!/^\d{11}$/.test(phone.value)) return toast('请输入已绑定的手机号')
-  try {
-    await api.sendMeCode('CANCEL')
-    toast('验证码已发送')
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-async function cancelAccount() {
-  if (!/^\d{11}$/.test(phone.value)) return toast('请输入已绑定的手机号')
-  if (!/^\d{6}$/.test(code.value)) return toast('请输入 6 位验证码')
-  if (!(await confirmDanger('cancelAccount'))) return
-  try {
-    await api.cancelAccount(phone.value, code.value)
-    auth.clear()
-    uni.reLaunch({ url: '/pages/login/index' })
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-onShow(load)
+import CancelPane from '../account/panes/CancelPane.vue'
 </script>

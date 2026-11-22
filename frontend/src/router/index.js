@@ -25,15 +25,16 @@ const routes = [
       { path: '', name: 'home', component: () => import('@/portal/Home.vue') },
       // /me：宽屏进个人资料页，窄屏停在"我的"总览页（Q-BL-13/23；jsdom 无 matchMedia 时按窄屏）
       { path: 'me', component: () => import('@/portal/Me.vue'), beforeEnter: () => (isWideNow() ? { path: '/me/profile', replace: true } : true) },
-      { path: 'me/style', component: () => import('@/portal/me/MeStyle.vue') },
+      { path: 'me/settings', component: () => import('@/portal/me/MeStyle.vue'), props: { initialTab: 'style' } },
+      { path: 'me/style', component: () => import('@/portal/me/MeStyle.vue'), props: { initialTab: 'style' } },
       { path: 'me/identity', component: UnitsPage, props: { section: 'identity' } },
-      { path: 'me/profile', component: () => import('@/portal/me/MeProfile.vue') },
+      { path: 'me/profile', component: () => import('@/portal/me/MeProfile.vue'), props: { initialTab: 'profile' } },
       // MOD-162 / IFC-375：他人 profile 页（需登录，入口见各用户展示位）
       { path: 'users/:user_id(\\d+)/profile', component: () => import('@/portal/UserProfile.vue') },
-      { path: 'me/phone', component: () => import('@/portal/me/MePhone.vue') },
-      { path: 'me/password', component: () => import('@/portal/me/MePassword.vue') },
-      { path: 'me/email', component: () => import('@/portal/me/MeEmail.vue') },
-      { path: 'me/cancel', component: () => import('@/portal/me/MeCancel.vue') },
+      { path: 'me/phone', component: () => import('@/portal/me/MeProfile.vue'), props: { initialTab: 'phone' } },
+      { path: 'me/password', component: () => import('@/portal/me/MeProfile.vue'), props: { initialTab: 'password' } },
+      { path: 'me/email', component: () => import('@/portal/me/MeProfile.vue'), props: { initialTab: 'email' } },
+      { path: 'me/cancel', component: () => import('@/portal/me/MeProfile.vue'), props: { initialTab: 'cancel' } },
       // 旧地址 /units#appeal 重定向到对应二级页；/units#review 由 Units.vue 识别为待审批 Tab（REQ-FUNC-314、ADR-170）
       {
         path: 'units',

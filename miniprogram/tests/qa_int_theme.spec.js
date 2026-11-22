@@ -6,6 +6,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountPage, respondWith, requests } from './helpers.js'
 import Login from '../pages/login/index.vue'
 import Me from '../pages/me/index.vue'
+import Settings from '../pages/settings/index.vue'
 import { useThemeStore } from '@/store/theme'
 
 const ME = { profile: { id: 1, nickname: '张三', phone: '138****0000' }, identities: { labels: ['户主'] } }
@@ -81,11 +82,11 @@ describe('TC-INT-202 登录页（AC-079-01/02/03、AC-083-03）', () => {
   })
 })
 
-describe('TC-INT-203 “我的”页风格选择（AC-074-01、AC-077-01/04、AC-086-02）', () => {
+describe('TC-INT-203 系统设置页风格选择（AC-074-01、AC-077-01/04、AC-086-02）', () => {
   const base = { 'GET /me': ME, 'GET /ledger/reports': { results: [] } }
   it('默认（无记忆）B 选中，列表恰为 3 项且名称依次正确；来回切换发出 PUT /me/theme {theme}', async () => {
     respondWith({ ...base, 'PUT /me/theme': (d) => ({ theme: d.theme }) })
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     expect(wrapper.findAll('.theme-option').map((o) => o.find('.theme-name').text())).toEqual(['霓虹玻璃', '极光 Bento', '赛博终端'])
     expect(wrapper.find('[data-theme-key=bento]').classes()).toContain('is-selected')
     for (const key of ['neon', 'terminal', 'neon']) {
@@ -104,14 +105,14 @@ describe('TC-INT-203 “我的”页风格选择（AC-074-01、AC-077-01/04、AC
   it('设备记忆已下线 → 选中 B；列表不含下线风格', async () => {
     uni.setStorageSync('ocap_theme', 'retired-d')
     respondWith(base)
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     expect(wrapper.find('[data-theme-key=bento]').classes()).toContain('is-selected')
     expect(wrapper.find('[data-theme-key=retired-d]').exists()).toBe(false)
   })
   it('保存失败：toast“保存失败”，回滚到保存前的风格与设备记忆', async () => {
     uni.setStorageSync('ocap_theme', 'neon')
     respondWith(base)
-    const { wrapper } = await mountPage(Me)
+    const { wrapper } = await mountPage(Settings)
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await flushPromises()
     expect(uni.showToast).toHaveBeenCalledWith(expect.objectContaining({ title: '保存失败' }))

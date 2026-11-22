@@ -49,15 +49,13 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     for (const n of PORTAL_MENU) expect(Boolean(n.to) !== Boolean(n.children), n.key).toBe(true) // to 与 children 二选一
   })
 
-  it('TC-UNIT-805 / AC-302-01、AC-302-02（旧 AC-233-01、AC-212-02、AC-213-01）：个人中心分“个人设置/系统设置”两组，展平后地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
-    // 改写（ocap_navigation_ia ADR-168、REQ-FUNC-305~310）：7 项平铺 → 5 项个人设置 + 1 项系统设置
-    expect(labels(PORTAL_USER_MENU)).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格'])
-    expect(PORTAL_USER_MENU.map((i) => i.to)).toEqual(
-      ['/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel', '/me/style']
-    )
-    expect(new Set(PORTAL_USER_MENU.map((i) => i.to)).size).toBe(6)
+  it('TC-UNIT-805 / AC-302-01、AC-302-02（旧 AC-233-01、AC-212-02、AC-213-01）：右上角入口收敛为“个人资料/系统设置”两项，地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
+    // 改写（MOD-178）：绑定手机/设置密码/邮箱验证/账号注销移入个人资料页 Tab，界面风格移入系统设置页 Tab
+    expect(labels(PORTAL_USER_MENU)).toEqual(['个人资料', '系统设置'])
+    expect(PORTAL_USER_MENU.map((i) => i.to)).toEqual(['/me/profile', '/me/settings'])
+    expect(new Set(PORTAL_USER_MENU.map((i) => i.to)).size).toBe(2)
     expect(PORTAL_USER_MENU.some((i) => i.label === '退出登录')).toBe(false)
-    expect(PORTAL_USER_MENU.some((i) => i.label === '手机号' || i.label === '我的身份与房屋')).toBe(false)
+    expect(PORTAL_USER_MENU.some((i) => i.label === '绑定手机' || i.label === '手机号' || i.label === '我的身份与房屋')).toBe(false)
   })
 
   it('TC-UNIT-806 / AC-235-01（旧 AC-214-03）：仅"我的身份与房屋"带 pendingReview 角标键', () => {

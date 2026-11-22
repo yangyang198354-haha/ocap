@@ -23,9 +23,9 @@ beforeEach(() => {
 })
 
 describe('TC-E2E-202 小程序 14 页 × 三套风格逐页走查（AC-083-01/04 自动化部分）', () => {
-  it('pages.json 的 16 个页面都套 ThemeRoot：theme-<key> 类、CSS 变量、文本与风格无关、无内联颜色', async () => {
+  it('pages.json 的 18 个页面都套 ThemeRoot：theme-<key> 类、CSS 变量、文本与风格无关、无内联颜色', async () => {
     const pages = pagesJson.pages.map((p) => p.path)
-    expect(pages).toHaveLength(16)
+    expect(pages).toHaveLength(18)
     const bad = []
     const texts = {}
     for (const page of pages) {
@@ -41,8 +41,8 @@ describe('TC-E2E-202 小程序 14 页 × 三套风格逐页走查（AC-083-01/04
         else if (!root.attributes('style')?.includes('--bg:')) bad.push(`${page} ${key}: 未注入 CSS 变量`)
         const html = wrapper.html()
         const inline = [...html.matchAll(/style="([^"]*)"/g)].map((m) => m[1]).filter((s) => /#[0-9a-fA-F]{3,8}\b|rgba?\(/.test(s) && !s.startsWith('--bg:'))
-        // 风格选择器色块（我的页）是数据驱动的内联背景，豁免
-        const nonSwatch = page.includes('/me/') ? [] : inline
+        // 风格选择器色块（系统设置页；旧版在“我的”页）是数据驱动的内联背景，豁免
+        const nonSwatch = page.includes('/me/') || page.includes('/settings/') ? [] : inline
         if (nonSwatch.length) bad.push(`${page} ${key}: 内联颜色 ${nonSwatch.join('|')}`)
         const clone = wrapper.element.cloneNode(true)
         clone.querySelectorAll('.theme-option').forEach((n) => n.remove())

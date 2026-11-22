@@ -178,7 +178,7 @@ describe('TC-INT-103 个人中心风格页（AC-074-01、AC-076-01/02/03、AC-08
     const { wrapper } = await mountPage(MeStyle, { path: '/me/style' }).catch(() => ({}))
     expect(wrapper).toBeTruthy()
     const titles = wrapper.findAll('h3.title').map((h) => h.text())
-    expect(titles).toEqual(['界面风格']) // 原：风格区块在个人中心首位且同页还有其他区块；现：独立页只含风格区块
+    expect(titles).toEqual(['系统设置']) // MOD-178：界面风格下沉为系统设置页内 Tab，页面标题为“系统设置”
     const profilePage = await mountPage(MeProfile, { path: '/me/profile' })
     expect(profilePage.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
     expect(profilePage.wrapper.find('[role=radio]').exists()).toBe(false)

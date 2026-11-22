@@ -409,13 +409,14 @@ class SheetSerializer:
     def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
         user_id = (context or {}).get("user_id")
-        self.data = [sheet_view(r) if user_id is None else
-                     {**sheet_view(r), "can_void": r.status == "EFFECTIVE" and is_original_approver_of(r, user_id)}
+        self.data = [sheet_view(r, with_approval=False) if user_id is None else
+                     {**sheet_view(r, with_approval=False),
+                      "can_void": r.status == "EFFECTIVE" and is_original_approver_of(r, user_id)}
                      for r in rows]
 
 
-def sheet_view(sheet: IncomeSheet) -> dict:
-    return {
+def sheet_view(sheet: IncomeSheet, *, with_approval: bool = True) -> dict:
+    data = {
         "id": sheet.id, "title": sheet.title, "source": sheet.source,
         "period_start": sheet.period_start, "period_end": sheet.period_end,
         "total_amount": money(sheet.total_amount), "status": sheet.status,
@@ -424,6 +425,9 @@ def sheet_view(sheet: IncomeSheet) -> dict:
         "origin_id": sheet.origin_id,
         "reopened_by_id": sheet.reissued.order_by("id").values_list("id", flat=True).first(),
     }
+    if with_approval:
+        data["approval_instance_id"] = ApprovalEngine.instance_id_of("income_sheet", sheet.id)
+    return data
 
 
 def sheet_detail_view(sheet: IncomeSheet) -> dict:

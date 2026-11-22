@@ -19,3 +19,5 @@
 ## 待验证
 - [P-DE-046] ocap 测试环境 Web 静态目录是 `/home/yangyang/ocap/web/ocap`（属主 yangyang:yangyang），替换用 `ocap.new` → `ocap.old` 交换并保留旧目录；`web/dist` 是错误路径 — 自记 2026-11-21 · 证据：ocap_profile_hierarchy DEPLOY-001~004
 - [P-DE-047] 纯前端增量发布前要确认构建命令含 `VITE_API_BASE=/ocap/api/v1` 与 `--base=/ocap/`，并在产物中 grep 关键文案作为制品正确性证据 — 自记 2026-11-21 · 证据：DEPLOY-002/006 `built in 5.20s`、徽章文案命中
+- [P-DE-048] 本仓库小程序根目录即 uni-app 项目根（`manifest.json` 在 `miniprogram/`，无 `src/`），`npm run build:mp-weixin` 必须显式设 `UNI_INPUT_DIR=<repo>\miniprogram`（可配合 `UNI_OUTPUT_DIR` 输出到临时目录），否则默认查找 `src/manifest.json` 报错 — 自记 2026-11-22 · 证据：ocap_approval_flow E1 实测 `DONE Build complete.` / `EXIT=0` / `APP_JSON_OK`
+- [P-DE-049] 审批步骤迁移（0003）回滚门控：存在多步流程、`ALL` 策略、`ApprovalStepState.step_order>1` 或部署后产生的 `schema_version=2` 在办实例时，不得自动反向迁移（丢步骤数据且旧代码无法处理 v2 快照），应标 MANUAL_ROLLBACK_REQUIRED — 自记 2026-11-22 · 证据：module_design 数据迁移可逆性、deployment_plan ROLLBACK-006

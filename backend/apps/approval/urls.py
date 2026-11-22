@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .views import (
-    AdminFlowDetailView, AdminFlowListCreateView, FlowOptionListView, InstanceDecisionView, TaskListView,
+    AdminFlowDetailView, AdminFlowListCreateView, FlowOptionListView, InstanceDecisionView,
+    InstanceDetailView, TaskListView,
 )
 
 urlpatterns = [
@@ -10,4 +11,5 @@ urlpatterns = [
     path("approval/flows", FlowOptionListView.as_view()),
     path("approval/tasks", TaskListView.as_view()),
     path("approval/instances/<int:instance_id>/decision", InstanceDecisionView.as_view()),
+    path("approval/instances/<int:instance_id>", InstanceDetailView.as_view()),
 ]

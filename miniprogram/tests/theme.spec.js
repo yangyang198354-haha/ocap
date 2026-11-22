@@ -33,7 +33,7 @@ describe('页面不含颜色字面量（ADR-029）', () => {
   it('18 个页面根节点均套 ThemeRoot', () => {
     // 页面目录下新增了 components/ 与 panes/ 子目录（面板组件），它们不是页面入口，不要求 ThemeRoot
     const pages = vueFiles(path.join(ROOT, 'pages')).filter((f) => !f.includes(`${path.sep}components${path.sep}`) && !f.includes(`${path.sep}panes${path.sep}`))
-    expect(pages).toHaveLength(18)
+    expect(pages).toHaveLength(20)
     for (const file of pages) expect(fs.readFileSync(file, 'utf8'), file).toContain('<ThemeRoot>')
   })
 })

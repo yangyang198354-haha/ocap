@@ -15,11 +15,53 @@ class ApprovalFlow(models.Model):
 
 
 class FlowApprover(models.Model):
+    """审批人（deprecated，由 StepApprover 取代；保留用于回滚兜底，新代码不再写入）。"""
     flow = models.ForeignKey(ApprovalFlow, on_delete=models.CASCADE, related_name="approvers")
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="approval_flows")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["flow", "user"], name="uniq_flow_approver")]
+
+
+class ApprovalStep(models.Model):
+    """审批步骤（MOD-183）：有序、有名称、每步独立的或签/会签策略。"""
+    STRATEGIES = [("ANY", "或签"), ("ALL", "会签")]
+
+    flow = models.ForeignKey(ApprovalFlow, on_delete=models.CASCADE, related_name="steps")
+    order = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=60)
+    strategy = models.CharField(max_length=4, choices=STRATEGIES, default="ANY")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order"]
+        constraints = [models.UniqueConstraint(fields=["flow", "order"], name="uniq_flow_step_order")]
+
+
+class StepApprover(models.Model):
+    step = models.ForeignKey(ApprovalStep, on_delete=models.CASCADE, related_name="approvers")
+    user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="approval_steps")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["step", "user"], name="uniq_step_approver")]
+
+
+class ApprovalStepState(models.Model):
+    """实例侧步骤快照状态（MOD-183）：到达时间、判定结果与审批人快照。"""
+    STATUSES = [("PENDING", "未开始"), ("ACTIVE", "进行中"), ("APPROVED", "已通过"), ("REJECTED", "已拒绝")]
+
+    instance = models.ForeignKey("ApprovalInstance", on_delete=models.CASCADE, related_name="step_states")
+    step_order = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=60)
+    strategy = models.CharField(max_length=4, choices=ApprovalStep.STRATEGIES, default="ANY")
+    approver_ids = models.JSONField(default=list)
+    status = models.CharField(max_length=10, choices=STATUSES, default="PENDING")
+    reached_at = models.DateTimeField(null=True, blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["step_order"]
+        constraints = [models.UniqueConstraint(fields=["instance", "step_order"], name="uniq_instance_step")]
 
 
 class ApprovalInstance(models.Model):
@@ -38,6 +80,7 @@ class ApprovalInstance(models.Model):
     decided_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name="approval_decisions")
     pending_slot = models.SmallIntegerField(null=True, blank=True, default=1)
+    current_step_order = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -54,3 +97,6 @@ class ApprovalAction(models.Model):
     action = models.CharField(max_length=8, choices=ACTIONS)
     comment = models.CharField(max_length=500, blank=True, default="")
     acted_at = models.DateTimeField(auto_now_add=True)
+    step_state = models.ForeignKey(ApprovalStepState, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="actions")
+    step_order = models.PositiveSmallIntegerField(null=True, blank=True)

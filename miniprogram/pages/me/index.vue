@@ -37,6 +37,7 @@
 
     <view class="card">
       <button @click="go('/pages/units/index')">我的房屋</button>
+      <button v-if="auth.isCommittee" style="margin-top: 16rpx" @click="go('/pages/approvals/index')">待我审批</button>
       <button v-if="auth.isCommittee" style="margin-top: 16rpx" @click="go('/pages/claims/index')">报销 / 备用金</button>
       <button style="margin-top: 16rpx" @click="logout">退出登录</button>
     </view>

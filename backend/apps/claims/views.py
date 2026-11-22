@@ -24,8 +24,8 @@ from .models import Claim
 
 
 
-def claim_view(claim: Claim) -> dict:
-    return {
+def claim_view(claim: Claim, *, with_approval: bool = True) -> dict:
+    data = {
         "id": claim.id, "type": claim.type, "amount": money(claim.amount), "reason": claim.reason,
         "occurred_on": claim.occurred_on, "expected_usage": claim.expected_usage,
         "expected_settle_on": claim.expected_settle_on, "advance_id": claim.advance_id,
@@ -36,12 +36,15 @@ def claim_view(claim: Claim) -> dict:
         "origin_id": claim.origin_id,
         "reopened_by_id": claim.reissued.order_by("id").values_list("id", flat=True).first(),
     }
+    if with_approval:
+        data["approval_instance_id"] = ApprovalEngine.instance_id_of("claim", claim.id)
+    return data
 
 
 class ClaimSerializer:
     def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
-        self.data = [claim_view(r) for r in rows]
+        self.data = [claim_view(r, with_approval=False) for r in rows]
 
 
 def _parse_amount(raw, limit: Decimal | None = None) -> Decimal:

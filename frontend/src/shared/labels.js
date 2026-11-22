@@ -38,7 +38,12 @@ export const APPROVAL_MODE_TEXT = { DESIGNATED: '指定负责人审批', HALF_MA
 export const INCOME_STATUS_TEXT = {
   DRAFT: '草稿', PENDING: '审批中', EFFECTIVE: '已生效', REJECTED: '未通过', WITHDRAWN: '已撤回', VOID: '已作废'
 }
-
 export function textOf(table, code) {
   return table[code] || code || ''
 }
+
+// MOD-191：三端一致的步骤与动作文案
+export const STEP_STRATEGY_LABELS = { ANY: '或签（任一通过）', ALL: '会签（全部同意）' }
+export const STEP_STATUS_LABELS = { PENDING: '未开始', ACTIVE: '进行中', APPROVED: '已通过', REJECTED: '已拒绝' }
+export const APPROVAL_ACTION_LABELS = { SUBMIT: '提交', APPROVE: '通过', REJECT: '拒绝', WITHDRAW: '撤回' }
+export const APPROVAL_STATUS_LABELS = { PENDING: '待审批', APPROVED: '通过', REJECTED: '拒绝', WITHDRAWN: '已撤回' }

@@ -25,7 +25,7 @@ beforeEach(() => {
 describe('TC-E2E-202 小程序 14 页 × 三套风格逐页走查（AC-083-01/04 自动化部分）', () => {
   it('pages.json 的 18 个页面都套 ThemeRoot：theme-<key> 类、CSS 变量、文本与风格无关、无内联颜色', async () => {
     const pages = pagesJson.pages.map((p) => p.path)
-    expect(pages).toHaveLength(18)
+    expect(pages).toHaveLength(20)
     const bad = []
     const texts = {}
     for (const page of pages) {

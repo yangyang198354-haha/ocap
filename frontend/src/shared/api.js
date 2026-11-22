@@ -69,7 +69,8 @@ export const unitApi = {
 export const approvalApi = {
   flows: (scope) => get('/approval/flows', scope ? { scope } : undefined),
   tasks: (scope, params) => get('/approval/tasks', scope || params ? { ...(scope ? { scope } : {}), ...params } : undefined),
-  decide: (instanceId, action, comment) => post(`/approval/instances/${instanceId}/decision`, { action, comment })
+  decide: (instanceId, action, comment) => post(`/approval/instances/${instanceId}/decision`, { action, comment }),
+  instance: (instanceId) => get(`/approval/instances/${instanceId}`)
 }
 
 export const resolutionApi = {

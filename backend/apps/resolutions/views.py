@@ -53,6 +53,8 @@ def resolution_view(row: Resolution, *, with_content: bool = True, stats: VoteSt
     }
     if with_content:
         data["content"] = row.content
+        # 列表不逐行查审批实例，避免查询数随行数增长
+        data["approval_instance_id"] = ApprovalEngine.instance_id_of("resolution", row.id)
     if row.approval_mode == "HALF_MAJORITY":
         # ADR-141：不再输出 votes（谁投了什么）；只输出聚合票数与参与进度
         stats = stats or ResolutionService.vote_stats([row])[row.id]

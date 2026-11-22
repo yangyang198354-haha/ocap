@@ -28,6 +28,9 @@
         <el-button type="danger" @click="vote('DISAGREE')">反对</el-button>
         <el-button @click="vote('ABSTAIN')">弃权</el-button>
       </div>
+      <div class="row" v-if="item.approval_instance_id" style="margin-top: 12px">
+        <el-button size="small" @click="showTimeline = true">审批过程</el-button>
+      </div>
       <div class="row" v-if="isInitiator" style="margin-top: 12px">
         <el-button v-if="item.status === 'PENDING'" @click="withdraw">撤回</el-button>
         <el-button v-if="item.status === 'WITHDRAWN'" type="primary" @click="openResubmit">修改后重新提交</el-button>
@@ -46,6 +49,10 @@
     <div class="card" v-else>
       <el-empty description="决议不存在或无权查看" />
     </div>
+
+    <el-dialog v-model="showTimeline" title="审批过程" width="640px">
+      <ApprovalTimeline v-if="item?.approval_instance_id" :instance-id="item.approval_instance_id" />
+    </el-dialog>
 
     <el-dialog v-model="showResubmit" title="重新提交决议" width="560px">
       <el-input v-model="form.title" placeholder="标题" maxlength="200" />
@@ -74,6 +81,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { approvalApi, resolutionApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
+import ApprovalTimeline from './ApprovalTimeline.vue'
 import ParticipantList from './parts/ParticipantList.vue'
 import { apiUrl } from '@/shared/http'
 import { useAuthStore } from '@/stores/auth'
@@ -88,6 +96,7 @@ const item = ref(null)
 const participants = ref([])
 const flows = ref([])
 const showResubmit = ref(false)
+const showTimeline = ref(false)
 const form = reactive({ title: '', content: '', approval_flow_id: null, vote_deadline: null })
 
 const isInitiator = computed(() => item.value && auth.me?.profile?.id === item.value.initiator?.id)

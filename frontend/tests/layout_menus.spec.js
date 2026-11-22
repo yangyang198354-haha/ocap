@@ -35,13 +35,13 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     expect(visibleMenu(null, { isCommittee: true })).toEqual([])
   })
 
-  it('TC-UNIT-804 / AC-236-01、AC-291-01（旧 AC-214-01、AC-215-01、AC-215-02）：二级项数量——我的房屋 4、决议 3、报销 2；其余一级项无 children', () => {
+  it('TC-UNIT-804 / AC-236-01、AC-291-01（旧 AC-214-01、AC-215-01、AC-215-02）：二级项数量——我的房屋 3、决议 3、报销 2；其余一级项无 children', () => {
     const byKey = Object.fromEntries(PORTAL_MENU.map((n) => [n.key, n]))
-    // 改写：旧 6 项 → 本批合并“认证申诉/我的申诉”后 4 项（D-01）
+    // 改写（ocap_navigation_ia ADR-166/167）：4 项 → 3 项；移除“认证产权”，认证申诉改名为“我的认证与申述”
     expect(byKey.units.children.map((c) => c.label)).toEqual(
-      ['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请']
+      ['我的身份与房屋', '我的认证与申述', '我的同住人申请']
     )
-    expect(byKey.units.children.some((c) => c.label === '选择房屋' || c.label === '待我审批的同住人申请')).toBe(false)
+    expect(byKey.units.children.some((c) => c.label === '选择房屋' || c.label === '待我审批的同住人申请' || c.label === '认证产权')).toBe(false)
     expect(byKey.resolutions.children.map((c) => c.label)).toEqual(['公开决议', '我发起的', '待我表决'])
     expect(byKey.claims.children.map((c) => c.label)).toEqual(['我提交的', '待我审批'])
     const leaves = PORTAL_MENU.filter((n) => !n.children).map((n) => n.label)
@@ -49,14 +49,15 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
     for (const n of PORTAL_MENU) expect(Boolean(n.to) !== Boolean(n.children), n.key).toBe(true) // to 与 children 二选一
   })
 
-  it('TC-UNIT-805 / AC-233-01（旧 AC-212-02、AC-213-01）：个人中心 7 项按序（第 2 项改名"我的身份与房屋"，地址不变），地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
-    // 改写：旧第 2 项文案"我的身份" → "我的身份与房屋"
-    expect(labels(PORTAL_USER_MENU)).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
+  it('TC-UNIT-805 / AC-302-01、AC-302-02（旧 AC-233-01、AC-212-02、AC-213-01）：个人中心分“个人设置/系统设置”两组，展平后地址互不相同且都在 /me/ 下（退出登录为动作，不在配置内）', () => {
+    // 改写（ocap_navigation_ia ADR-168、REQ-FUNC-305~310）：7 项平铺 → 5 项个人设置 + 1 项系统设置
+    expect(labels(PORTAL_USER_MENU)).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格'])
     expect(PORTAL_USER_MENU.map((i) => i.to)).toEqual(
-      ['/me/style', '/me/identity', '/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel']
+      ['/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel', '/me/style']
     )
-    expect(new Set(PORTAL_USER_MENU.map((i) => i.to)).size).toBe(7)
+    expect(new Set(PORTAL_USER_MENU.map((i) => i.to)).size).toBe(6)
     expect(PORTAL_USER_MENU.some((i) => i.label === '退出登录')).toBe(false)
+    expect(PORTAL_USER_MENU.some((i) => i.label === '手机号' || i.label === '我的身份与房屋')).toBe(false)
   })
 
   it('TC-UNIT-806 / AC-235-01（旧 AC-214-03）：仅"我的身份与房屋"带 pendingReview 角标键', () => {
@@ -141,10 +142,10 @@ describe('isPathMatch / resolveActive / nextOpenKey', () => {
     }
   })
 
-  it('TC-UNIT-814 / AC-217-02、AC-216-04、AC-291-01：/polls/3 仍高亮"投票/调查"；/units/appeal 解析到我的房屋 › 认证申诉；旧地址 /units/appeals 不再有独立菜单项；主页只在 "/" 高亮', () => {
+  it('TC-UNIT-814 / AC-217-02、AC-216-04、AC-291-01：/polls/3 仍高亮"投票/调查"；/units/appeal 解析到我的房屋 › 我的认证与申述；旧地址 /units/appeals 不再有独立菜单项；主页只在 "/" 高亮', () => {
     expect(resolveActive(PORTAL_MENU, '/polls/3').node.label).toBe('投票/调查')
     const u = resolveActive(PORTAL_MENU, '/units/appeal')
-    expect([u.node.label, u.leaf.label]).toEqual(['我的房屋', '认证申诉'])
+    expect([u.node.label, u.leaf.label]).toEqual(['我的房屋', '我的认证与申述'])
     expect(resolveActive(PORTAL_MENU, '/units/appeals').leaf).toBe(null)
     expect(resolveActive(PORTAL_MENU, '/').node.label).toBe('主页')
     expect(resolveActive(PORTAL_MENU, '/units').leaf.label).toBe('我的身份与房屋')

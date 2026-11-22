@@ -218,7 +218,7 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
       'POST /me/codes': {}, 'POST /me/phone/bind': { merged: false, phone: '139****0000' }
     })
     const { wrapper } = await mountPage(Phone)
-    expect(wrapper.text()).toContain('绑定手机号')
+    expect(wrapper.text()).toContain('绑定手机')
     expect(wrapper.text()).not.toContain('更换手机号')
     wrapper.vm.phone = '13900000000'
     wrapper.vm.code = '123456'
@@ -236,7 +236,8 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
       'POST /me/phone/change': { merged: true, token: 'MERGED', user: { id: 2 } }
     })
     const { wrapper } = await mountPage(Phone)
-    expect(wrapper.text()).toContain('更换手机号')
+    expect(wrapper.text()).toContain('绑定手机')
+    expect(wrapper.text()).not.toContain('更换手机号')
     Object.assign(wrapper.vm, { oldPhone: '13800000000', newPhone: '13900000000', oldCode: '111111', newCode: '222222' })
     await wrapper.vm.change()
     await flushPromises()

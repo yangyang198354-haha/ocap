@@ -29,35 +29,36 @@ describe('菜单配置与高亮（unit）', () => {
       expect(active.node.key, p).toBe('units')
       expect(nextOpenKey(PORTAL_MENU, p), p).toBe('units')
     }
-    // 其他二级路径不会误高亮"我的身份与房屋"
+    // 其他二级路径不会误高亮"我的身份与房屋"（/units/pick 已无独立二级项，leaf 为 null）
     for (const p of ['/units/pick', '/units/appeal', '/units/applications']) {
-      expect(resolveActive(PORTAL_MENU, p).leaf.label, p).not.toBe('我的身份与房屋')
+      expect(resolveActive(PORTAL_MENU, p).leaf?.label, p).not.toBe('我的身份与房屋')
     }
     // 旧地址 /units/appeals 仍可路由到申诉页，但菜单不再有独立项（AC-291-03 / D-01）
     expect(resolveActive(PORTAL_MENU, '/units/appeals').leaf).toBe(null)
   })
 
-  it('TC-UNIT-931 / AC-236-01、AC-233-01、REQ-NFUNC-045：菜单文案残留数为 0——无"选择房屋""待我审批的同住人申请"二级项，无恰为"我的身份"的项', () => {
+  it('TC-UNIT-931 / AC-236-01、AC-233-01、REQ-NFUNC-045：菜单文案残留数为 0——无"选择房屋""待我审批的同住人申请""认证产权"二级项，无恰为"我的身份"的项', () => {
     const labels = [...PORTAL_MENU.flatMap((n) => [n.label, ...(n.children || []).map((c) => c.label)]), ...PORTAL_USER_MENU.map((i) => i.label)]
     expect(labels.filter((l) => l === '选择房屋')).toEqual([])
     expect(labels.filter((l) => l === '我的身份')).toEqual([])
     expect(labels.filter((l) => l === '待我审批的同住人申请')).toEqual([])
-    expect(labels.filter((l) => l === '我的身份与房屋')).toHaveLength(2) // 右上角 + 左侧二级项，同名
-    expect(UNITS.children.map((c) => c.to)).toEqual(['/units', '/units/pick', '/units/appeal', '/units/applications'])
+    expect(labels.filter((l) => l === '认证产权')).toEqual([])
+    expect(labels.filter((l) => l === '我的身份与房屋')).toHaveLength(1) // 仅左侧二级项；右上角菜单已移除该项
+    expect(UNITS.children.map((c) => c.to)).toEqual(['/units', '/units/appeal', '/units/applications'])
   })
 
-  it('TC-UNIT-932 / AC-233-02：右上角项与左侧二级项同名，两个入口地址不同（/me/identity、/units）、均保留', () => {
+  it('TC-UNIT-932 / AC-302-02：右上角菜单不再含"我的身份与房屋"；左侧二级项保留并兼容 /me/identity 高亮', () => {
     const userItem = PORTAL_USER_MENU.find((i) => i.key === 'me.identity')
     const sideItem = UNITS.children.find((c) => c.key === 'units.identity')
-    expect(userItem.label).toBe(sideItem.label)
-    expect([userItem.to, sideItem.to]).toEqual(['/me/identity', '/units'])
+    expect(userItem).toBeUndefined()
+    expect(sideItem.to).toBe('/units')
     expect(sideItem.activeOn).toEqual(['/me/identity'])
   })
 
-  it('TC-UNIT-933 / AC-235-01、AC-234-04：仅"我的身份与房屋"二级项带 pendingReview 角标；对所有受众可见（游客与非产权业主也看得到菜单，卡片由页面控制）', () => {
+  it('TC-UNIT-933 / AC-235-01、AC-234-04：仅"我的身份与房屋"二级项带 pendingReview 角标；对所有受众可见（游客与非产权业主也看得到菜单，页面内容由权限控制）', () => {
     const guestMenu = visibleMenu(PORTAL_MENU, { isCommittee: false })
     const children = guestMenu.find((n) => n.key === 'units').children
-    expect(children).toHaveLength(4)
+    expect(children).toHaveLength(3)
     expect(children.filter((c) => c.badge).map((c) => c.label)).toEqual(['我的身份与房屋'])
   })
 })
@@ -100,19 +101,23 @@ describe('路由（integration）', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/'))
   })
 
-  it('TC-INT-972 / AC-235-03：/units/review 与 /units#review 都到达"我的身份与房屋"页并带 #review 定位；不出现 404', async () => {
+  it('TC-INT-972 / AC-306-02：/units/review 重定向到 /units?tab=review；/units#review 仍直接打开身份页（不出现 404）', async () => {
     localStorage.setItem('ocap_token', 'tok')
-    for (const p of ['/units/review', '/units#review']) {
-      await router.push(p)
-      await flushPromises()
-      expect(router.currentRoute.value.path, p).toBe('/units')
-      expect(router.currentRoute.value.hash, p).toBe('#review')
-    }
+    await router.push('/units/review')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/units')
+    expect(router.currentRoute.value.query.tab).toBe('review')
+    await router.push('/units#review')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/units')
+    expect(router.currentRoute.value.hash).toBe('#review')
   })
 
   it('TC-INT-973 / AC-236-03：旧书签 /units/pick 仍到达"认证产权"分区；其余 /units/* 兼容路径可解析', () => {
     expect(recordOf('/units/pick').last.props.default.section).toBe('pick')
-    for (const s of ['appeal', 'applications', 'appeals']) expect(recordOf(`/units/${s}`).last.props.default.section).toBe(s)
+    for (const s of ['appeal', 'applications']) expect(recordOf(`/units/${s}`).last.props.default.section).toBe(s)
+    // /units/appeals 改为重定向到 /units/appeal?tab=mine（ADR-170）
+    expect(recordOf('/units/appeals').last.redirect).toBeTruthy()
   })
 
   it('TC-INT-974 / AC-233-03：未登录访问 /me/identity 与 /units 被带去登录页并保留 redirect（守卫仍生效）', async () => {

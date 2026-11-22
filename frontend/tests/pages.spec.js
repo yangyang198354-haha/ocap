@@ -230,7 +230,7 @@ describe('投票提交（CR-014）', () => {
 })
 
 describe('绑定 / 换绑手机号（CR-019）', () => {
-  it('TC-WEB-028 已有手机号 → 显示“更换手机号”；换绑 POST /me/phone/change，合并时换用新令牌并重取 /me', async () => {
+  it('TC-WEB-028 已有手机号 → 标题统一为“绑定手机”；换绑 POST /me/phone/change，合并时换用新令牌并重取 /me', async () => {
     http.get.mockImplementation(routeTable({
       '/me/profile': { nickname: '张三', gender: 0, phone: '138****0000', email: null },
       '/me': ME(['户主'])
@@ -239,8 +239,8 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
     const { wrapper } = await mountPage(MePhone)
     const titles = wrapper.findAll('h3').map((h) => h.text())
-    expect(titles).toContain('更换手机号')
-    expect(titles).not.toContain('绑定手机号')
+    expect(titles).toContain('绑定手机')
+    expect(titles).not.toContain('更换手机号')
     Object.assign(wrapper.vm.change, {
       oldPhone: '13800000000', newPhone: '13900000000', oldCode: '111111', newCode: '222222'
     })
@@ -254,7 +254,7 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     expect(http.get).toHaveBeenCalledWith('/me', { params: undefined })
   })
 
-  it('TC-WEB-029 无手机号（仅微信登录）→ 显示“绑定手机号”；发码 POST /me/codes，绑定 POST /me/phone/bind；未合并不换令牌', async () => {
+  it('TC-WEB-029 无手机号（仅微信登录）→ 标题统一为“绑定手机”；发码 POST /me/codes，绑定 POST /me/phone/bind；未合并不换令牌', async () => {
     http.get.mockImplementation(routeTable({
       '/me/profile': { nickname: '微信用户', gender: 0, phone: null, email: null },
       '/me': ME(['游客'])
@@ -263,7 +263,7 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
     const { wrapper } = await mountPage(MePhone)
     const titles = wrapper.findAll('h3').map((h) => h.text())
-    expect(titles).toContain('绑定手机号')
+    expect(titles).toContain('绑定手机')
     expect(titles).not.toContain('更换手机号')
     Object.assign(wrapper.vm.bind, { phone: '13900000000', code: '123456' })
     await wrapper.vm.sendBindCode()

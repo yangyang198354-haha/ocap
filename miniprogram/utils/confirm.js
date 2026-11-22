@@ -1,7 +1,8 @@
 // MOD-085 / IFC-284：不可逆操作的二次确认（取消 → false，页面不得发请求）；uni.showModal 不支持富文本，后果用换行拼接
 export const CONFIRM_TEXTS = {
   removeResident: { title: '移除同住人', consequences: ['该用户在本房屋将不再是同住人', '其在其他房屋的身份不变'] },
-  leaveUnit: { title: '退出同住人身份', consequences: ['你在本房屋将不再是同住人', '若无其他身份将回到游客'] }
+  leaveUnit: { title: '退出同住人身份', consequences: ['你在本房屋将不再是同住人', '若无其他身份将回到游客'] },
+  cancelAccount: { title: '注销账号', consequences: ['注销后账号将不可登录', '历史记录保留，操作不可撤销'] }
 }
 
 export function confirmDanger(key, vars = {}) {

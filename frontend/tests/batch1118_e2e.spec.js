@@ -153,7 +153,7 @@ describe('旅程：决议卡片进入详情并看到参与人（US-249/250/251/2
 })
 
 describe('旅程：左侧导航二级菜单（US-253）', () => {
-  it('TC-E2E-1613 / US-253：点击"我的房屋"展开 → 点击"认证申诉"导航并仅该项选中 → 点击"决议"时前一个收起 → 在二级项上按 Esc 收起并还焦点', async () => {
+  it('TC-E2E-1613 / US-253、AC-299-02：点击"我的房屋"展开 → 点击"我的认证与申述"导航并仅该项选中 → 点击"决议"时前一个收起 → 在二级项上按 Esc 收起并还焦点', async () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:p(.*)*', component: { template: '<i />' } }] })
     router.push('/')
     await router.isReady()
@@ -162,10 +162,10 @@ describe('旅程：左侧导航二级菜单（US-253）', () => {
     const toggle = (label) => w.findAll('button.side-group-toggle').find((b) => b.text().includes(label))
     await toggle('我的房屋').trigger('click')
     expect(toggle('我的房屋').attributes('aria-expanded')).toBe('true')
-    await w.findAll('.side-sub-item').find((a) => a.text().includes('认证申诉')).trigger('click')
+    await w.findAll('.side-sub-item').find((a) => a.text().includes('我的认证与申述')).trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/units/appeal')
-    expect(w.findAll('.side-sub-item.is-active').map((a) => a.text())).toEqual(['认证申诉'])
+    expect(w.findAll('.side-sub-item.is-active').map((a) => a.text())).toEqual(['我的认证与申述'])
     await toggle('决议').trigger('click')
     expect(toggle('我的房屋').attributes('aria-expanded')).toBe('false')
     expect(toggle('决议').attributes('aria-expanded')).toBe('true')

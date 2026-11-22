@@ -209,7 +209,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-888 / AC-220-01、AC-230-01、AC-230-02：窄屏结构——布局始终渲染底栏 5 项（成员）、品牌文字 .brand、二级切换条（我的房屋 5 项（旧 6 项，AC-236-04）、决议 3 项、报销 2 项、其他一级无切换条）；显隐由 CSS 控制', async () => {
+  it('TC-INT-888 / AC-220-01、AC-230-01、AC-230-02、AC-299-01：窄屏结构——布局始终渲染底栏 5 项（成员）、品牌文字 .brand、二级切换条（我的房屋 3 项、决议 3 项、报销 2 项、其他一级无切换条）；显隐由 CSS 控制', async () => {
     const barItems = async (p) => {
       const { wrapper, router } = await mountLayout(p)
       await flush()
@@ -221,7 +221,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
       return out
     }
     const units = await barItems('/units/appeal')
-    expect(units.items).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请'])
+    expect(units.items).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
     expect(units.tabs).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(units.brand).toBe('Cyber@红枫岭')
     expect((await barItems('/resolutions/todo')).items).toEqual(['公开决议', '我发起的', '待我表决'])
@@ -244,27 +244,34 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
     identity: '我的身份与房屋', pick: '认证产权', appeal: '认证申诉', applications: '我的同住人申请', appeals: '认证申诉'
   } // 改写：旧 6 个分区 → 本批 4 个分区；旧 appeals 路由复用申诉中心（默认“我的申诉”Tab）
 
-  it('TC-INT-890 / AC-214-02、AC-234-04、AC-291-01：各分区各只显示自己的卡片，其余不在页面上（游客的身份页无"待我审批"卡片）；缺省与未知分区（含已取消的 review）回退"我的身份与房屋"', async () => {
+  it('TC-INT-890 / AC-300-01、AC-300-03、AC-291-01：各分区各只显示自己的卡片；身份页以页内 Tab 呈现（游客无“待我审批”Tab）；缺省与未知分区回退身份页', async () => {
     http.get.mockImplementation(fakeGet({ '/me/housing': { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 }, '/units/options': { level: 'building', options: [] } }))
     for (const [section, title] of Object.entries(TITLES)) {
       document.body.innerHTML = ''
       const { wrapper } = await mountPage(Units, { props: { section } })
       await flush()
-      const shown = wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))
-      expect(shown, section).toEqual([title])
+      if (section === 'identity') {
+        // 改写（ocap_navigation_ia ADR-167）：身份页不再有独立 h3，标题由 Tab 承载
+        expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, '')), section).toEqual(['我的身份与房屋'])
+        expect(wrapper.find('h3.title').exists(), section).toBe(false)
+      } else {
+        const shown = wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))
+        expect(shown, section).toEqual([title])
+      }
       wrapper.unmount()
     }
+    const identityTabs = (wrapper) => wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))
     document.body.innerHTML = ''
     const def = await mountPage(Units)
     await flush()
-    expect(def.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的身份与房屋'])
+    expect(identityTabs(def.wrapper)).toEqual(['我的身份与房屋'])
     const bad = await mountPage(Units, { props: { section: 'nope' } })
     await flush()
-    expect(bad.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的身份与房屋'])
+    expect(identityTabs(bad.wrapper)).toEqual(['我的身份与房屋'])
     document.body.innerHTML = ''
     const gone = await mountPage(Units, { props: { section: 'review' } }) // 旧分区 review 已取消
     await flush()
-    expect(gone.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['我的身份与房屋'])
+    expect(identityTabs(gone.wrapper)).toEqual(['我的身份与房屋'])
   })
 
   it('TC-INT-891 / AC-214-02：同一实例在兄弟路由间切换分区（props 变化）——内容随之切换并重新挂载', async () => {
@@ -394,18 +401,21 @@ describe('个人中心各页（US-212/213/220）', () => {
     '/me/housing': { summary: { code: 'HEAD', label: '户主' }, units: [{ ...HEAD_UNIT, residents: [], pending_application_count: 0, unit_type_label: '住宅', area_display: '89.50 ㎡' }], pending_review_count: 0 }
   })
 
-  it('TC-INT-898 / AC-213-01、AC-233-02：7 个个人中心入口对应的页各只含自己的功能块（标题互不相同；旧第 2 页 MeIdentity 已删除，/me/identity 改为我的身份与房屋页，产权业主另含底部待审批卡片），"设置密码"页不含个人资料表单', async () => {
+  it('TC-INT-898 / AC-302-01、AC-302-02、AC-300-01：6 个个人中心入口对应页各含自己的功能块（标题互不相同；/me/identity 改为我的身份与房屋页并以 Tab 呈现），"设置密码"页不含个人资料表单', async () => {
     http.get.mockImplementation(base())
-    // 改写：旧第 2 页 [MeIdentity, '身份'] → [UnitsIdentity, '我的身份与房屋']（产权业主页面底部多一张"待我审批的同住人申请"卡片，AC-234-01）
-    const pages = [[MeStyle, '界面风格'], [UnitsIdentity, '我的身份与房屋'], [MeProfile, '个人资料'], [MePhone, '更换手机号'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销']]
+    // 改写（ocap_navigation_ia ADR-167/168）：身份页标题由 Tab 承载；绑定手机页标题统一为“绑定手机”
+    const pages = [[UnitsIdentity, '我的身份与房屋'], [MeProfile, '个人资料'], [MePhone, '绑定手机'], [MePassword, '设置密码'], [MeEmail, '邮箱验证'], [MeCancel, '账号注销'], [MeStyle, '界面风格']]
     const seen = []
     for (const [comp, title] of pages) {
       document.body.innerHTML = ''
       const { wrapper } = await mountPage(comp)
       await flush()
-      const expected = comp === UnitsIdentity ? [title, '待我审批的同住人申请'] : [title]
-      expect(wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, '')), title).toEqual(expected)
-      seen.push(wrapper.find('h3.title').text())
+      if (comp === UnitsIdentity) {
+        expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))).toContain('我的身份与房屋')
+      } else {
+        expect(wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, '')), title).toEqual([title])
+      }
+      seen.push(title)
       wrapper.unmount()
     }
     expect(new Set(seen).size).toBe(7)
@@ -416,11 +426,11 @@ describe('个人中心各页（US-212/213/220）', () => {
     expect(pwd.wrapper.text()).not.toContain('个人资料')
   })
 
-  it('TC-INT-899 / AC-213-03：已绑定手机号显示"更换手机号"（原号+新号两个验证码），未绑定显示"绑定手机号"，二者互斥', async () => {
+  it('TC-INT-899 / AC-302-02：绑定手机页标题统一为“绑定手机”；已绑定显示原号/新号两个验证码，未绑定不显示原号验证码', async () => {
     http.get.mockImplementation(fakeGet({ '/me/profile': { ...profile, phone: '138****0000' }, '/me': ME() }))
     const bound = await mountPage(MePhone)
     await flush()
-    expect(bound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['更换手机号'])
+    expect(bound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['绑定手机'])
     expect(bound.wrapper.find('input[placeholder="原号验证码"]').exists()).toBe(true)
     expect(bound.wrapper.find('input[placeholder="新号验证码"]').exists()).toBe(true)
     bound.wrapper.unmount()
@@ -428,7 +438,7 @@ describe('个人中心各页（US-212/213/220）', () => {
     http.get.mockImplementation(fakeGet({ '/me/profile': { ...profile, phone: null }, '/me': ME() }))
     const unbound = await mountPage(MePhone)
     await flush()
-    expect(unbound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['绑定手机号'])
+    expect(unbound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['绑定手机'])
     expect(unbound.wrapper.find('input[placeholder="原号验证码"]').exists()).toBe(false)
   })
 
@@ -491,17 +501,17 @@ describe('个人中心各页（US-212/213/220）', () => {
     expect(buttonOf(wrapper, '保存')).toBeUndefined()
   })
 
-  it('TC-INT-904 / AC-220-02、AC-220-03：窄屏"我的"总览页——7 项个人中心入口 + "退出登录"共 8 个条目，地址指向 /me/*；退出登录清除登录态并回 /login', async () => {
+  it('TC-INT-904 / AC-302-01、AC-302-02、AC-303-01：窄屏"我的"总览页——个人设置 5 项 + 系统设置 1 项 + 退出登录；地址指向 /me/*；退出登录清除登录态并回 /login', async () => {
     http.get.mockImplementation(base())
     http.post.mockResolvedValue({})
     const { wrapper, router } = await mountPage(Me)
     await flush()
     const links = wrapper.findAll('nav.me-overview a')
-    expect(links.map((a) => a.find('span').text())).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销'])
-    expect(links.map((a) => a.attributes('href'))).toEqual(['/me/style', '/me/identity', '/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel'])
-    expect(wrapper.findAll('nav.me-overview > *')).toHaveLength(8)
-    expect(wrapper.find('nav.me-overview button.me-logout').text()).toBe('退出登录')
-    await wrapper.find('nav.me-overview button.me-logout').trigger('click')
+    expect(links.map((a) => a.find('span').text())).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格'])
+    expect(links.map((a) => a.attributes('href'))).toEqual(['/me/profile', '/me/phone', '/me/password', '/me/email', '/me/cancel', '/me/style'])
+    expect(wrapper.findAll('.section-title').map((h) => h.text())).toEqual(['个人设置', '系统设置'])
+    expect(wrapper.find('button.me-logout').text()).toBe('退出登录')
+    await wrapper.find('button.me-logout').trigger('click')
     await flush()
     expect(localStorage.getItem('ocap_token')).toBeNull()
     expect(router.currentRoute.value.path).toBe('/login')

@@ -24,6 +24,9 @@ export const api = {
   setTheme: (theme) => http.put('/me/theme', { theme }),
   // 绑定/换绑手机号；遇到已属他人的手机号后端会合并账号，返回 { merged, token?, user? }
   sendMeCode: (purpose, target) => http.post('/me/codes', target ? { purpose, target } : { purpose }),
+  // MOD-182 / IFC-401：邮箱验证与账号注销（复用后端既有接口）
+  verifyEmail: (email, code) => http.post('/me/email/verify', { email, code }),
+  cancelAccount: (phone, code) => http.post('/me/cancel', { phone, code }),
   bindPhone: (phone, code) => http.post('/me/phone/bind', { phone, code }),
   changePhone: (oldPhone, newPhone, oldCode, newCode) =>
     http.post('/me/phone/change', { old_phone: oldPhone, new_phone: newPhone, old_code: oldCode, new_code: newCode }),

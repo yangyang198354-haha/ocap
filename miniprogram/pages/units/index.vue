@@ -1,124 +1,63 @@
+<!-- MOD-179 / IFC-398：小程序“我的房屋”三 Tab 宿主（身份与房屋 / 我的认证与申述 / 我的同住人申请，ADR-169） -->
 <template>
   <ThemeRoot>
   <view>
     <RegistryMatchCard ref="matchCard" @resolved="onMatchResolved" />
-    <view class="card">
-      <view class="title">我的身份与房屋</view>
-      <view class="muted">汇总身份：{{ housing.summary.label }}</view>
-      <view v-if="!housing.units.length" class="muted">暂无已认证房屋</view>
-      <view v-if="!housing.units.length" class="muted">您还没有认证任何专有部分，请先认证产权</view>
-      <view v-for="unit in housing.units" :key="unit.unit_id" class="list-item">
-        <view class="row">
-          <text>{{ unit.specific_part }}</text>
-          <text class="muted" style="margin-left: 12rpx">{{ unit.unit_type_label }} · {{ unit.area_display }}</text>
-          <text class="muted" style="margin-left: 12rpx">{{ unit.role_label }}</text>
-          <button v-if="unit.role === 'RESIDENT'" size="mini" style="margin-left: 12rpx" @click="leave(unit)">退出</button>
-        </view>
-        <view v-if="isOwner(unit)">
-          <view class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</view>
-          <view v-for="r in unit.residents" :key="r.user_id" class="row" style="margin-top: 8rpx">
-            <text>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</text>
-            <button size="mini" style="margin-left: 12rpx" @click="removeResident(unit, r)">移除</button>
-          </view>
-        </view>
-      </view>
-      <button class="btn" style="margin-top: 16rpx" @click="goCertify">认证产权</button>
-    </view>
-    <view class="card" id="certify">
-      <view class="title">认证产权</view>
-      <UnitPicker v-model="pickedUnitId" />
-      <input v-model="certifyName" class="field mt-16" maxlength="64" placeholder="请输入您本人的姓名（须与业主清册登记的姓名一致）" />
-      <button class="btn" style="margin-top: 20rpx" @click="certify">认证</button>
-      <view class="muted">您本人的姓名与当前手机号和清册登记的同一位业主一致时可立即认证；不一致或没有手机号时，请在下方输入产权人名字并上传产权证明提交申诉。如需申请成为同住人，请使用下方"我的同住人申请"。</view>
-    </view>
-    <view class="card">
-      <view class="title">认证申诉</view>
-      <view class="muted">姓名与手机号未能通过清册核对时，填写产权人名字并上传 1~5 张产权证明图片提交申诉，由管理员审核。</view>
-      <input v-model="appealOwnerName" class="field mt-16" maxlength="64" placeholder="产权人名字" />
-      <button style="margin-top: 16rpx" @click="chooseProof">{{ proofIds.length ? `已上传 ${proofIds.length} 张，继续添加` : '上传产权证明' }}</button>
-      <button v-if="proofIds.length" size="mini" style="margin-top: 16rpx" @click="proofIds = []">清空</button>
-      <button style="margin-top: 16rpx" @click="submitAppeal">提交申诉</button>
-    </view>
-    <view class="card">
-      <view class="title">我的同住人申请</view>
-      <view class="muted">申请成为同住人无需输入姓名，同住人须先有产权业主，由产权业主审批。</view>
-      <UnitPicker v-model="applyUnitId" />
-      <button style="margin-top: 16rpx" @click="applyResident">申请成为同住人</button>
-      <view v-if="!myApplications.length" class="muted">暂无同住人申请</view>
-      <view v-for="item in myApplications" :key="item.id" class="list-item">
-        <text>{{ item.unit?.specific_part }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ statusLabel('application', item.status) }}</text>
-        <view class="muted">提交 {{ formatDateTime(item.created_at) }}<text v-if="item.decided_at"> · 处理 {{ formatDateTime(item.decided_at) }}</text></view>
+    <view class="housing-tabs">
+      <view
+        v-for="t in MP_HOUSING_TABS"
+        :key="t.key"
+        class="housing-tab"
+        :class="{ 'is-active': tab === t.key }"
+        @click="tab = t.key"
+      >
+        {{ t.label }}
       </view>
     </view>
-    <view class="card">
-      <view class="title">我的申诉</view>
-      <view v-if="!myAppeals.length" class="muted">暂无申诉</view>
-      <view v-for="item in myAppeals" :key="item.id" class="list-item">
-        <text>{{ item.unit?.specific_part }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ statusLabel('appeal', item.status) }}</text>
-        <view class="muted">提交 {{ formatDateTime(item.submitted_at) }}<text v-if="item.decided_at"> · 处理 {{ formatDateTime(item.decided_at) }}</text></view>
-        <view v-if="item.status === 'REJECTED' && item.reject_reason" class="muted">驳回原因：{{ item.reject_reason }}</view>
-      </view>
-    </view>
-    <view v-if="ownsAnyUnit" class="card" id="review">
-      <view class="title">待我审批的同住人申请<text v-if="toReview.length" class="muted">（{{ toReview.length }}）</text></view>
-      <view v-if="!toReview.length" class="muted">暂无待审批的同住人申请</view>
-      <view v-for="item in toReview" :key="item.id" class="list-item">
-        <text>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</text>
-        <text class="muted" style="margin-left: 12rpx">{{ formatDateTime(item.created_at) }}</text>
-        <view class="row" style="margin-top: 8rpx">
-          <button size="mini" @click="decideResident(item.id, 'APPROVE')">通过</button>
-          <button size="mini" @click="decideResident(item.id, 'REJECT')">拒绝</button>
-        </view>
-      </view>
-    </view>
+    <IdentityPane
+      v-show="tab === 'identity'"
+      :housing="housing"
+      :owns-any-unit="ownsAnyUnit"
+      :initial-review="reviewRequested"
+      @refresh="loadHousing"
+      @appeal="onAppealRequested"
+    />
+    <AppealPane v-show="tab === 'appeal'" :prefill-name="appealPrefillName" />
+    <ResidentPane v-show="tab === 'applications'" @refresh="loadHousing" />
   </view>
   </ThemeRoot>
 </template>
 
 <script setup>
 import ThemeRoot from '@/components/ThemeRoot.vue'
-import UnitPicker from '@/components/UnitPicker.vue'
 import RegistryMatchCard from '@/components/RegistryMatchCard.vue'
+import IdentityPane from './components/IdentityPane.vue'
+import AppealPane from './components/AppealPane.vue'
+import ResidentPane from './components/ResidentPane.vue'
 import { computed, reactive, ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { api } from '@/utils/api'
-import { confirmDanger } from '@/utils/confirm'
-import { ROLE_LABELS, formatDateTime, statusLabel } from '@/utils/labels'
+import { MP_HOUSING_TABS } from '@/utils/menu'
 import { useAuthStore } from '@/store/auth'
 
 const auth = useAuthStore()
-const pickedUnitId = ref(null)
-const applyUnitId = ref(null)
-const matchCard = ref(null)
-const certifyName = ref('')
-const appealOwnerName = ref('')
-const proofIds = ref([])
-const MAX_PROOFS = 5
+const tab = ref('identity')
+const reviewRequested = ref(false)
+const appealPrefillName = ref('')
 const housing = reactive({ summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 })
-const toReview = ref([])
-const myApplications = ref([])
-const myAppeals = ref([])
 
 const isOwner = (unit) => unit.role === 'HEAD' || unit.role === 'OWNER'
-// 仅产权业主显示"待我审批"卡片（仅用于展示；权限由后端 403 把关）
+// 仅产权业主显示“待我审批”子 Tab（仅展示控制；权限由后端 403 把关）
 const ownsAnyUnit = computed(() => housing.units.some((unit) => isOwner(unit)))
-
-function goCertify() {
-  uni.pageScrollTo?.({ selector: '#certify' })
-}
 
 async function onMatchResolved() {
   await auth.fetchMe().catch(() => null)
-  await refresh()
+  await loadHousing()
 }
 
 function toast(title) {
   uni.showToast({ title, icon: 'none' })
 }
-
-const listOf = (data) => data?.results || data || []
 
 async function loadHousing() {
   try {
@@ -128,120 +67,27 @@ async function loadHousing() {
   }
 }
 
-async function loadLists() {
-  try {
-    const [review, applications, appeals] = await Promise.all([
-      api.residentApplicationsToReview(), api.myResidentApplications(), api.myAppeals()
-    ])
-    toReview.value = listOf(review)
-    myApplications.value = listOf(applications)
-    myAppeals.value = listOf(appeals)
-  } catch (e) {
-    toast(e.message)
+function onAppealRequested(name) {
+  appealPrefillName.value = typeof name === 'string' ? name : ''
+  tab.value = 'appeal'
+}
+
+onLoad((query) => {
+  const flag = String(query?.review ?? '')
+  if (flag === '1' || flag === 'true') {
+    tab.value = 'identity'
+    reviewRequested.value = true
   }
-}
+})
 
-async function refresh() {
-  await Promise.all([loadHousing(), loadLists()])
-}
-
-async function certify() {
-  if (!pickedUnitId.value) return toast('请先选择房号')
-  const name = certifyName.value.trim()
-  if (!name) return toast('请输入姓名')
-  try {
-    const result = await api.certify(pickedUnitId.value, name)
-    toast(`认证成功，身份：${ROLE_LABELS[result.role] || result.role}`)
-    await auth.fetchMe()
-    await refresh()
-  } catch (e) {
-    if (e?.code === 'OWNER_NOT_MATCHED') {
-      // 保留已选房号与姓名，姓名带入申诉；提示不含任何清册信息
-      appealOwnerName.value = name
-      return toast('姓名与手机号未能通过核对，请上传产权证明提交申诉')
-    }
-    toast(e.message)
-  }
-}
-
-async function applyResident() {
-  if (!applyUnitId.value) return toast('请先选择房号')
-  try {
-    await api.createResidentApplication({ unit_id: applyUnitId.value })
-    toast('申请已提交，等待产权业主审批')
-    await loadLists()
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-async function decideResident(id, decision) {
-  try {
-    await api.decideResidentApplication(id, decision)
-    toast('已处理')
-    await refresh()
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-async function removeResident(unit, resident) {
-  if (!(await confirmDanger('removeResident', { name: resident.nickname || resident.account_no }))) return
-  try {
-    await api.removeResident(unit.unit_id, resident.user_id)
-    toast('已移除')
-    await loadHousing()
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-async function leave(unit) {
-  if (!(await confirmDanger('leaveUnit', { name: unit.specific_part }))) return
-  try {
-    await api.leaveUnit(unit.unit_id)
-    toast('已退出')
-    await auth.fetchMe()
-    await refresh()
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-// 小程序申诉资料本批仅支持图片（OQ-06）；一次最多再选 5 - 已选数 张
-function chooseProof() {
-  const remaining = MAX_PROOFS - proofIds.value.length
-  if (remaining <= 0) return toast('最多上传 5 张产权证明')
-  uni.chooseImage({
-    count: remaining,
-    success: async ({ tempFilePaths }) => {
-      try {
-        for (const path of tempFilePaths.slice(0, remaining)) {
-          const uploaded = await api.upload(path, 'APPEAL_PROOF')
-          proofIds.value.push(uploaded.id)
-        }
-        toast('已上传')
-      } catch (e) {
-        toast(e.message)
-      }
-    }
-  })
-}
-
-async function submitAppeal() {
-  if (!pickedUnitId.value) return toast('请先选择房号')
-  const ownerName = appealOwnerName.value.trim()
-  if (!ownerName) return toast('请输入产权人名字')
-  if (!proofIds.value.length) return toast('请先上传产权证明')
-  try {
-    await api.createAppeal({ unit_id: pickedUnitId.value, owner_name: ownerName, proof_ids: [...proofIds.value] })
-    toast('申诉已提交')
-    proofIds.value = []
-    await loadLists()
-  } catch (e) {
-    toast(e.message)
-  }
-}
-
-onShow(refresh)
+onShow(loadHousing)
 </script>
+
+<style scoped>
+.housing-tabs { display: flex; gap: 8rpx; margin-bottom: 16rpx; }
+.housing-tab {
+  flex: 1; text-align: center; padding: 18rpx 0; font-size: 26rpx; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md);
+}
+.housing-tab.is-active { color: var(--accent-text); font-weight: 650; border-color: currentColor; }
+</style>

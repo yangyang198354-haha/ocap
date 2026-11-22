@@ -50,18 +50,22 @@ beforeEach(() => {
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('PortalUserMenu（US-212）', () => {
-  it('TC-INT-841 / AC-233-01（旧 AC-212-01、AC-212-02）：昵称"小明"显示在触发器；展开后依次 8 项（第 2 项改名"我的身份与房屋"），"退出登录"最后', async () => {
+  it('TC-INT-841 / AC-302-01、AC-302-02、AC-303-01：昵称"小明"显示在触发器；展开后按“个人设置→系统设置→退出登录”依次 7 项，无“手机号/我的身份与房屋”', async () => {
     localStorage.setItem('ocap_token', 'tok')
     const { wrapper } = await mountMenu(PortalUserMenu, { me: ME('小明') })
     const trigger = wrapper.find('button.user-menu-trigger')
     expect(trigger.text()).toBe('小明')
     await trigger.trigger('click')
     await flush()
-    // 改写：旧第 2 项"我的身份" → "我的身份与房屋"；菜单中不再有文案恰为"我的身份"的项
-    expect(itemTexts()).toEqual(['界面风格', '我的身份与房屋', '个人资料', '手机号', '设置密码', '邮箱验证', '账号注销', '退出登录'])
-    expect(itemTexts()).not.toContain('我的身份')
-    expect(items()).toHaveLength(8)
+    // 改写（ocap_navigation_ia REQ-FUNC-305~310）：7 项平铺 → 个人设置 5 项 + 系统设置 1 项 + 退出登录
+    expect(itemTexts()).toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销', '界面风格', '退出登录'])
+    expect(itemTexts()).not.toContain('手机号')
+    expect(itemTexts()).not.toContain('我的身份与房屋')
+    expect(items()).toHaveLength(7)
     expect(items().at(-1).textContent).toContain('退出登录')
+    // 两个分组标题可见
+    const groupTitles = [...document.body.querySelectorAll('.user-menu-group-title')].map((e) => e.textContent.trim())
+    expect(groupTitles).toEqual(['个人设置', '系统设置'])
     wrapper.unmount()
   })
 
@@ -72,11 +76,11 @@ describe('PortalUserMenu（US-212）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-843 / AC-212-04：昵称为空显示"业主"；me 未返回同样显示"业主"；菜单项仍为 8 项可用', async () => {
+  it('TC-INT-843 / AC-212-04：昵称为空显示"业主"；me 未返回同样显示"业主"；菜单项仍为 7 项可用', async () => {
     const empty = await mountMenu(PortalUserMenu, { me: ME('') })
     expect(empty.wrapper.find('.user-menu-name').text()).toBe('业主')
     expect(empty.wrapper.find('button.user-menu-trigger').attributes('title')).toBe('业主')
-    expect(items()).toHaveLength(8)
+    expect(items()).toHaveLength(7)
     empty.wrapper.unmount()
     document.body.innerHTML = ''
     const none = await mountMenu(PortalUserMenu, { me: null })

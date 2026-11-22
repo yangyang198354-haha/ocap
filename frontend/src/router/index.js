@@ -34,16 +34,18 @@ const routes = [
       { path: 'me/password', component: () => import('@/portal/me/MePassword.vue') },
       { path: 'me/email', component: () => import('@/portal/me/MeEmail.vue') },
       { path: 'me/cancel', component: () => import('@/portal/me/MeCancel.vue') },
-      // 旧地址 /units#appeal 重定向到对应二级页；/units#review 即身份页底部卡片（REQ-FUNC-215、ADR-133）
+      // 旧地址 /units#appeal 重定向到对应二级页；/units#review 由 Units.vue 识别为待审批 Tab（REQ-FUNC-314、ADR-170）
       {
         path: 'units',
         component: UnitsPage,
         props: { section: 'identity' },
         beforeEnter: (to) => (LEGACY_UNITS_HASH[to.hash] ? { path: LEGACY_UNITS_HASH[to.hash], replace: true } : true)
       },
-      // 旧地址 /units/review → 身份页并定位到底部卡片（非产权业主无该卡片，AC-235-03）
-      { path: 'units/review', redirect: { path: '/units', hash: '#review' } },
-      ...['pick', 'appeal', 'applications', 'appeals'].map((section) => ({
+      // 旧地址 /units/review → 身份页并选中“待我审批”Tab（非产权业主由页面回落到默认 Tab，AC-306-02）
+      { path: 'units/review', redirect: { path: '/units', query: { tab: 'review' } } },
+      // 旧地址 /units/appeals → 申诉中心并选中“我的申诉”Tab
+      { path: 'units/appeals', redirect: { path: '/units/appeal', query: { tab: 'mine' } } },
+      ...['pick', 'appeal', 'applications'].map((section) => ({
         path: `units/${section}`, component: UnitsPage, props: { section }
       })),
       { path: 'resolutions', component: ResolutionsPage, props: { section: 'public' } },

@@ -42,6 +42,7 @@ const subLabels = (wrapper) => side(wrapper).findAll('.side-sub-item').map((a) =
 const toggle = (wrapper, label) => side(wrapper).findAll('button.side-group-toggle').find((b) => b.text().includes(label))
 const buttonOf = (wrapper, text) => wrapper.findAll('button').find((b) => b.text().includes(text))
 const mainTitles = (wrapper) => wrapper.find('main').findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))
+const tabLabels = (wrapper) => wrapper.find('main').findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))
 
 // ---------------------------------------------------------------- 带状态的假服务端
 const POOL = (n) => Array.from({ length: n }, (_, i) => ({ unit_id: 2000 + i, specific_part: `车库B-${i + 1}`, unit_type_label: '车位', area_display: `${10 + i}.00 ㎡` }))
@@ -141,14 +142,14 @@ describe('TC-E2E-910 手机号注册 → 引导 → 确认 → 我的身份与�
     await settle()
     expect(S.confirms).toEqual([{ unit_ids: pool.slice(0, 10).map((u) => u.unit_id) }])
     expect(wrapper.find('.registry-match').exists()).toBe(false)
-    // 左侧二级菜单 5 项，且无"选择房屋"/"待我审批的同住人申请"（当前在 /units/pick，"我的房屋"已自动展开）
+    // 左侧二级菜单 3 项（ocap_navigation_ia ADR-166），且无"选择房屋"/"认证产权"（当前在 /units/pick，"我的房屋"已自动展开）
     if (toggle(wrapper, '我的房屋').attributes('aria-expanded') !== 'true') await toggle(wrapper, '我的房屋').trigger('click')
-    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '认证产权', '认证申诉', '我的同住人申请'])
-    // 两个地址同页：10 行，含类型与面积，产权业主底部有待审批卡片
+    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
+    // 两个地址同页：10 行，含类型与面积，产权业主页内有“待我审批”Tab
     for (const p of ['/me/identity', '/units']) {
       await go(p)
       expect(router.currentRoute.value.path).toBe(p)
-      expect(mainTitles(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
+      expect(tabLabels(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
       const rows = wrapper.find('main').findAll('.list-item-top')
       expect(rows, p).toHaveLength(10)
       expect(rows[0].text()).toContain('车库B-1')
@@ -183,7 +184,8 @@ describe('TC-E2E-911 选择"不是"后不再强制弹出，仍可手动认证入
     await go('/units')
     expect(wrapper.find('main').text()).toContain('您还没有认证任何专有部分，请先认证产权')
     expect(wrapper.find('main').findAll('.list-item-top')).toHaveLength(0)
-    expect(mainTitles(wrapper)).toEqual(['我的身份与房屋']) // 无待审批卡片
+    expect(mainTitles(wrapper)).toEqual([]) // 身份页标题由 Tab 承载（ADR-167）
+    expect(tabLabels(wrapper)).toEqual(['我的身份与房屋']) // 无待审批 Tab
     await go('/units/pick') // 再次进入不再弹出
     expect(wrapper.find('.registry-match').exists()).toBe(false)
     expect(mainTitles(wrapper)).toEqual(['认证产权'])
@@ -239,7 +241,9 @@ describe('TC-E2E-913 待审批：产权业主在身份页底部处理，同住�
     expect(side(wrapper).find('.side-sub-item .side-badge').element.closest('a').textContent).toContain('我的身份与房屋')
     await go('/units/review')
     expect(router.currentRoute.value.path).toBe('/units')
-    expect(mainTitles(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
+    expect(router.currentRoute.value.query.tab).toBe('review')
+    expect(tabLabels(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
+    expect(wrapper.find('#review').exists()).toBe(true)
     await buttonOf(wrapper.find('#review'), '通过').trigger('click')
     await settle()
     expect(http.post).toHaveBeenCalledWith('/resident-applications/8/decision', { decision: 'APPROVE' })
@@ -252,7 +256,7 @@ describe('TC-E2E-913 待审批：产权业主在身份页底部处理，同住�
     const resident = await mountApp()
     await go('/units/review')
     expect(router.currentRoute.value.path).toBe('/units')
-    expect(mainTitles(resident)).toEqual(['我的身份与房屋'])
+    expect(tabLabels(resident)).toEqual(['我的身份与房屋'])
     expect(resident.find('#review').exists()).toBe(false)
     await go('/')
     expect(resident.find('main').text()).not.toContain('待审批同住人申请')

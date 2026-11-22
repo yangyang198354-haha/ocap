@@ -505,6 +505,11 @@ def src_split(host: str, split_dir: str) -> str:
     return src(host) + "\n" + "\n".join(p.read_text(encoding="utf-8") for p in parts)
 
 
+def mini_units_src() -> str:
+    """小程序“我的房屋”页拆分后（MOD-179）：宿主 pages/units/index.vue + components/*.vue。"""
+    return src_split("miniprogram/pages/units/index.vue", "miniprogram/pages/units/components")
+
+
 class ProductReviewFieldContractTests(ApiTestBase):
     def setUp(self):
         super().setUp()
@@ -593,7 +598,7 @@ class ProductReviewFieldContractTests(ApiTestBase):
         web_units = src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")
         web_me = src_split("frontend/src/portal/Me.vue", "frontend/src/portal/me")
         web_home = src("frontend/src/portal/Home.vue")
-        mini_units, mini_me = src("miniprogram/pages/units/index.vue"), src("miniprogram/pages/me/index.vue")
+        mini_units, mini_me = mini_units_src(), src("miniprogram/pages/me/index.vue")
         for label, text in (("Web Units", web_units), ("Mini units", mini_units)):
             self.assertLessEqual(reads(text, ["housing"]), top | {"summary", "units"}, label)
             self.assertLessEqual(reads(text, ["housing.summary"]), {"label", "code"}, label)
@@ -639,7 +644,7 @@ class ProductReviewFieldContractTests(ApiTestBase):
         self.assertEqual(set(apps[0]["unit"]), {"unit_id", "specific_part"})
         allowed = set(apps[0]) | set(appeals[0]) | set(review[0])
         for label, text in (("Web Units", src_split("frontend/src/portal/Units.vue", "frontend/src/portal/units")),
-                            ("Mini units", src("miniprogram/pages/units/index.vue"))):
+                            ("Mini units", mini_units_src())):
             self.assertLessEqual(reads(text, ["item"]), allowed, label)
             self.assertLessEqual(reads(text, ["item.applicant"]), set(review[0]["applicant"]), label)
             self.assertLessEqual(reads(text, ["item.unit"]), set(apps[0]["unit"]), label)

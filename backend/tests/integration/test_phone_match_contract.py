@@ -99,8 +99,16 @@ class RegistryMatchRouteContractTests(PhoneMatchBase):
         unit = self.reg_unit(unit_type="RESIDENCE", area=Decimal("89.5"))
         Membership.objects.create(user=user, unit=unit, role="OWNER", source="CERTIFIED", active_slot=1)
         keys = set(self.assert_ok(self.api("get", "/me/housing", token=token)).data["units"][0])
-        for rel in ("frontend/src/portal/units/UnitsIdentity.vue", "miniprogram/pages/units/index.vue"):
-            text = src(rel)
+        # MOD-179（ocap_navigation_ia）：小程序“我的房屋”页拆为宿主 + 三个面板，字段读取在 IdentityPane 中
+        mini_paths = [
+            "miniprogram/pages/units/index.vue",
+            "miniprogram/pages/units/components/IdentityPane.vue",
+            "miniprogram/pages/units/components/AppealPane.vue",
+            "miniprogram/pages/units/components/ResidentPane.vue",
+        ]
+        sources = [("frontend/src/portal/units/UnitsIdentity.vue", src("frontend/src/portal/units/UnitsIdentity.vue"))]
+        sources.append(("miniprogram/pages/units/**", "\n".join(src(rel) for rel in mini_paths)))
+        for rel, text in sources:
             self.assertRegex(text, r"unit\.unit_type_label", rel)
             self.assertRegex(text, r"unit\.area_display", rel)
             self.assertLessEqual({"unit_type_label", "area_display"}, keys, rel)

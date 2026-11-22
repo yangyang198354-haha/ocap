@@ -36,8 +36,9 @@ const inputs = (wrapper) => ({
   owner: wrapper.findAll('input').find((i) => i.attributes('placeholder') === '产权人名字')
 })
 const certifyPosts = () => requests().filter((r) => r.method === 'POST' && r.path === '/certifications')
-const pickUnit = async (wrapper, id = 7) => {
-  wrapper.findComponent(UnitPicker).vm.$emit('update:modelValue', id)
+// MOD-179（ocap_navigation_ia）：页面拆为三个面板，UnitPicker 顺序为 认证产权(0) / 认证申诉(1) / 同住人申请(2)
+const pickUnit = async (wrapper, id = 7, index = 0) => {
+  wrapper.findAllComponents(UnitPicker)[index].vm.$emit('update:modelValue', id)
   await flushPromises()
 }
 
@@ -83,7 +84,7 @@ describe('小程序 我的房屋：姓名核对与申诉', () => {
   it('TC-MP-507 / AC-199-02、AC-201-04：申诉——产权人名字为空提示"请输入产权人名字"；有名字无资料提示"请先上传产权证明"；都不发 POST /appeals', async () => {
     respond(base())
     const { wrapper } = await mountPage(Units)
-    await pickUnit(wrapper)
+    await pickUnit(wrapper, 7, 1)
     await byText(wrapper, 'button', '提交申诉').trigger('click')
     await flushPromises()
     expect(toasts()).toContain('请输入产权人名字')
@@ -99,7 +100,7 @@ describe('小程序 我的房屋：姓名核对与申诉', () => {
     let n = 0
     uni.uploadFile.mockImplementation(({ success }) => success({ statusCode: 201, data: JSON.stringify({ id: `att-${++n}` }) }))
     const { wrapper } = await mountPage(Units)
-    await pickUnit(wrapper, 7)
+    await pickUnit(wrapper, 7, 1)
     uni.chooseImage.mockImplementation(({ success, count }) => success({ tempFilePaths: Array.from({ length: Math.min(count, 2) }, (_, i) => `/tmp/${i}.png`) }))
     await byText(wrapper, 'button', '上传产权证明').trigger('click')
     await flushPromises()

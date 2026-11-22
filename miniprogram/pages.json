@@ -13,7 +13,9 @@
     { "path": "pages/reports/detail", "style": { "navigationBarTitleText": "报表明细" } },
     { "path": "pages/info/index", "style": { "navigationBarTitleText": "信息公开" } },
     { "path": "pages/info/detail", "style": { "navigationBarTitleText": "信息公开详情" } },
-    { "path": "pages/phone/index", "style": { "navigationBarTitleText": "手机号" } }
+    { "path": "pages/phone/index", "style": { "navigationBarTitleText": "绑定手机" } },
+    { "path": "pages/email/index", "style": { "navigationBarTitleText": "邮箱验证" } },
+    { "path": "pages/cancel/index", "style": { "navigationBarTitleText": "账号注销" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

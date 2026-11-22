@@ -147,8 +147,8 @@ describe('我的身份与房屋页：房屋明细（US-232）', () => {
   })
 })
 
-describe('我的身份与房屋页：底部待审批卡片（US-234、US-235）', () => {
-  it('TC-WEB-910 / AC-234-01、AC-234-02：产权业主——页面最后一个卡片为"待我审批的同住人申请"，含 1 行与通过/拒绝；通过后提示"已处理"，行消失并显示"暂无待审批的同住人申请"', async () => {
+describe('我的身份与房屋页：待审批 Tab（US-234、US-235）', () => {
+  it('TC-WEB-910 / AC-234-01、AC-234-02、AC-300-02：产权业主——页内第二个 Tab 为“待我审批的同住人申请”，含 1 行与通过/拒绝；通过后提示“已处理”，行消失并显示“暂无待审批的同住人申请”', async () => {
     const success = vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     let pending = [REVIEW(8, 107, '1栋1单元9层902号', '合成申请人')]
     http.get.mockImplementation(table({
@@ -158,14 +158,15 @@ describe('我的身份与房屋页：底部待审批卡片（US-234、US-235）'
     http.post.mockImplementation(async (url) => { pending = []; return {} })
     const { wrapper, pinia } = await mountPage(Units, { props: { section: 'identity' } })
     await flush()
-    expect(titles(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
-    const cards = wrapper.findAll('.card')
-    expect(cards.at(-1).find('h3.title').text()).toContain('待我审批的同住人申请')
-    expect(cards.at(-1).text()).toContain('合成申请人 → 1栋1单元9层902号')
-    expect(buttonOf(cards.at(-1), '通过')).toBeTruthy()
-    expect(buttonOf(cards.at(-1), '拒绝')).toBeTruthy()
+    // 改写（ocap_navigation_ia ADR-167）：底部卡片 → 页内 Tab
+    expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
+    const review = wrapper.find('#review')
+    expect(review.exists()).toBe(true)
+    expect(review.text()).toContain('合成申请人 → 1栋1单元9层902号')
+    expect(buttonOf(review, '通过')).toBeTruthy()
+    expect(buttonOf(review, '拒绝')).toBeTruthy()
     expect(useHousingStore(pinia).pendingReviewCount).toBe(1)
-    await buttonOf(cards.at(-1), '通过').trigger('click')
+    await buttonOf(review, '通过').trigger('click')
     await flush()
     expect(http.post).toHaveBeenCalledWith('/resident-applications/8/decision', { decision: 'APPROVE' })
     expect(success).toHaveBeenCalledWith('已处理')
@@ -174,22 +175,22 @@ describe('我的身份与房屋页：底部待审批卡片（US-234、US-235）'
     expect(useHousingStore(pinia).pendingReviewCount).toBe(0)
   })
 
-  it('TC-WEB-911 / AC-234-03：产权业主但无待审批——底部卡片仍显示，内容"暂无待审批的同住人申请"', async () => {
+  it('TC-WEB-911 / AC-234-03：产权业主但无待审批——Tab 仍显示，内容“暂无待审批的同住人申请”', async () => {
     http.get.mockImplementation(table({ '/me/housing': housing([{ ...OWNED, residents: [] }]) }))
     const { wrapper } = await mountPage(Units, { props: { section: 'identity' } })
     await flush()
-    expect(titles(wrapper).at(-1)).toBe('待我审批的同住人申请')
+    expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))).toContain('待我审批的同住人申请')
     expect(wrapper.text()).toContain('暂无待审批的同住人申请')
   })
 
-  it('TC-WEB-912 / AC-234-04、REQ-NFUNC-042：游客与仅同住人——页面上没有该卡片（不是空卡片），且不请求审批列表', async () => {
+  it('TC-WEB-912 / AC-234-04、AC-300-03、REQ-NFUNC-042：游客与仅同住人——没有第二个 Tab（不是空 Tab），且不请求审批列表', async () => {
     for (const units of [[], [RESIDENT]]) {
       document.body.innerHTML = ''
       http.get.mockReset()
       http.get.mockImplementation(table({ '/me/housing': housing(units) }))
       const { wrapper } = await mountPage(Units, { props: { section: 'identity' } })
       await flush()
-      expect(titles(wrapper)).toEqual(['我的身份与房屋'])
+      expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))).toEqual(['我的身份与房屋'])
       expect(wrapper.text()).not.toContain('待我审批的同住人申请')
       expect(wrapper.text()).not.toContain('暂无待审批的同住人申请')
       expect(wrapper.find('#review').exists()).toBe(false)
@@ -226,27 +227,21 @@ describe('我的身份与房屋页：底部待审批卡片（US-234、US-235）'
     expect(wrapper.find('#review').text()).toContain('合成申请人 →')
   })
 
-  it('TC-WEB-915 / AC-235-03（定位）：访问 /units#review 的产权业主——数据加载后卡片被滚动到可视区；非产权业主无该卡片也不报错', async () => {
-    const scroll = vi.fn()
-    Element.prototype.scrollIntoView = scroll
-    try {
-      http.get.mockImplementation(table({ '/me/housing': housing([{ ...OWNED, residents: [] }], 1), '/resident-applications/to-review': [REVIEW(8, 107, 'A房', '申请人')] }))
-      const owner = await mountPage(Units, { props: { section: 'identity' }, path: '/units#review' })
-      await flush()
-      expect(scroll).toHaveBeenCalledTimes(1)
-      expect(scroll.mock.contexts[0].id).toBe('review')
-      owner.wrapper.unmount()
-      document.body.innerHTML = ''
-      scroll.mockClear()
-      http.get.mockReset()
-      http.get.mockImplementation(table({ '/me/housing': housing([RESIDENT]) }))
-      const resident = await mountPage(Units, { props: { section: 'identity' }, path: '/units#review' })
-      await flush()
-      expect(scroll).not.toHaveBeenCalled()
-      expect(resident.wrapper.find('#review').exists()).toBe(false)
-    } finally {
-      delete Element.prototype.scrollIntoView
-    }
+  it('TC-WEB-915 / AC-306-02（定位）：访问 /units#review 的产权业主——数据加载后自动选中“待我审批”Tab；非产权业主无该 Tab 也不报错', async () => {
+    http.get.mockImplementation(table({ '/me/housing': housing([{ ...OWNED, residents: [] }], 1), '/resident-applications/to-review': [REVIEW(8, 107, 'A房', '申请人')] }))
+    const owner = await mountPage(Units, { props: { section: 'identity' }, path: '/units#review' })
+    await flush()
+    // 改写（ocap_navigation_ia ADR-167）：滚动定位 → 自动切换页内 Tab
+    expect(owner.wrapper.find('.el-tabs__item.is-active').text()).toContain('待我审批')
+    expect(owner.wrapper.find('#review').exists()).toBe(true)
+    owner.wrapper.unmount()
+    document.body.innerHTML = ''
+    http.get.mockReset()
+    http.get.mockImplementation(table({ '/me/housing': housing([RESIDENT]) }))
+    const resident = await mountPage(Units, { props: { section: 'identity' }, path: '/units#review' })
+    await flush()
+    expect(resident.wrapper.find('.el-tabs__item.is-active').text()).toContain('我的身份与房屋')
+    expect(resident.wrapper.find('#review').exists()).toBe(false)
   })
 
   it('TC-WEB-916 / AC-235-02、AC-235-04：主页"待审批同住人申请：2"链接指向 /units#review；游客与同住人不显示该链接', async () => {

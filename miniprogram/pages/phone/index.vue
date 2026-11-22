@@ -2,7 +2,7 @@
   <ThemeRoot>
   <view>
     <view class="card" v-if="!hasPhone">
-      <view class="title">绑定手机号</view>
+      <view class="title">绑定手机</view>
       <view class="muted">若该手机号已注册，两个账号将合并（以该手机号原账号为主）。</view>
       <input v-model="phone" placeholder="手机号" maxlength="11" class="field mt-16" />
       <view class="row" style="margin-top: 16rpx">
@@ -12,7 +12,7 @@
       <button class="btn" style="margin-top: 24rpx" @click="bind">绑定</button>
     </view>
     <view class="card" v-else>
-      <view class="title">更换手机号</view>
+      <view class="title">绑定手机</view>
       <view class="muted">需要原手机号与新手机号各自的验证码。新手机号若已属于其他账号，两个账号将合并（以新手机号原账号为主）。</view>
       <input v-model="oldPhone" placeholder="原手机号" maxlength="11" class="field mt-16" />
       <view class="row" style="margin-top: 16rpx">

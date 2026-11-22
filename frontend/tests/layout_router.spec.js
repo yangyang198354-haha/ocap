@@ -74,13 +74,14 @@ describe('旧路径全部可解析（REQ-NFUNC-040、AC-210-03、AC-224-04）', 
 })
 
 describe('props.section（AC-214-02、AC-215-01、AC-225-02/03）', () => {
-  it('TC-INT-824 / AC-233-03、AC-236-03（旧 AC-214-02）：/units 与 /me/identity 同传 section=identity（同页）；pick/appeal/applications/appeals 各自传入对应 section；review 不再是分区（重定向）', () => {
-    // 改写：旧"6 个地址各自 section（含 review）" → 新"5 个 section + /me/identity 同页 + review 为重定向"（IFC-340）
+  it('TC-INT-824 / AC-233-03、AC-236-03（旧 AC-214-02）：/units 与 /me/identity 同传 section=identity（同页）；pick/appeal/applications 各自传入对应 section；appeals/review 为重定向', () => {
+    // 改写：ocap_navigation_ia ADR-170——/units/appeals → /units/appeal?tab=mine，/units/review → /units?tab=review
     expect(sectionOf('/units')).toBe('identity')
     expect(sectionOf('/me/identity')).toBe('identity')
     expect(recordOf('/me/identity').last.components.default).toBe(recordOf('/units').last.components.default)
-    for (const s of ['pick', 'appeal', 'applications', 'appeals']) expect(sectionOf(`/units/${s}`), s).toBe(s)
+    for (const s of ['pick', 'appeal', 'applications']) expect(sectionOf(`/units/${s}`), s).toBe(s)
     expect(recordOf('/units/review').last.redirect).toBeTruthy()
+    expect(recordOf('/units/appeals').last.redirect).toBeTruthy()
   })
 
   it('TC-INT-825 / AC-215-01、AC-215-02：决议 public/mine/todo 与报销 mine/todo', () => {
@@ -124,8 +125,8 @@ describe('导航守卫与重定向', () => {
     expect(router.currentRoute.value.query.redirect).toBe('/units')
   })
 
-  it('TC-INT-830 / AC-235-03、AC-233-03（旧 AC-221-02、REQ-FUNC-215）：/units#review 留在 /units；/units/review 重定向到 /units#review；#appeal → /units/appeal；/me/identity 不跳转；无 hash 留在 /units', async () => {
-    // 改写：旧 /units#review → /units/review；新 #review 不再映射二级页，/units/review 改为重定向到 /units#review（IFC-340）
+  it('TC-INT-830 / AC-306-02、AC-306-03（旧 AC-235-03、AC-233-03）：/units#review 留在 /units；/units/review 重定向到 /units?tab=review；#appeal → /units/appeal；/me/identity 不跳转；无 hash 留在 /units', async () => {
+    // 改写：ocap_navigation_ia ADR-170——待审批改为页内 Tab，/units/review → /units?tab=review
     localStorage.setItem('ocap_token', 'tok')
     await router.push('/units#review')
     await flushPromises()
@@ -134,7 +135,8 @@ describe('导航守卫与重定向', () => {
     await router.push('/units/review')
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/units')
-    expect(router.currentRoute.value.hash).toBe('#review')
+    expect(router.currentRoute.value.query.tab).toBe('review')
+    expect(router.currentRoute.value.hash).toBe('')
     await router.push('/me/identity')
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/me/identity')

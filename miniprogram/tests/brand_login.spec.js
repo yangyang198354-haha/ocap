@@ -35,7 +35,7 @@ describe('pages.json 标题（US-208）', () => {
     expect(titleOf('pages/polls/index')).toBe('投票/调查')
     expect(titleOf('pages/claims/index')).toBe('报销/备用金')
     expect(titleOf('pages/me/index')).toBe('我的')
-    expect(pagesJson.pages).toHaveLength(14)
+    expect(pagesJson.pages).toHaveLength(16)
     // 其余页面标题没有被误改为品牌名
     const branded = pagesJson.pages.filter((p) => p.style.navigationBarTitleText.includes('Cyber@'))
     expect(branded.map((p) => p.path)).toEqual(['pages/index/index'])

@@ -6,10 +6,9 @@ export const PORTAL_MENU = [
   {
     key: 'units', label: '我的房屋', audience: 'all', match: ['/units', '/me/identity'],
     children: [
-      // /me/identity 与 /units 同页（ADR-132）；待审批卡片并入该页底部，角标随之挂在此项（ADR-133）
+      // ADR-166/ADR-167：二级项收敛为 3 项；待审批改为身份页页内 Tab，角标仍挂在此项
       { key: 'units.identity', label: '我的身份与房屋', to: '/units', activeOn: ['/me/identity'], badge: 'pendingReview' },
-      { key: 'units.pick', label: '认证产权', to: '/units/pick' },
-      { key: 'units.appeal', label: '认证申诉', to: '/units/appeal' },
+      { key: 'units.appeal', label: '我的认证与申述', to: '/units/appeal' },
       { key: 'units.applications', label: '我的同住人申请', to: '/units/applications' }
     ]
   },
@@ -35,15 +34,33 @@ export const PORTAL_MENU = [
   { key: 'info', label: '信息公开', audience: 'all', match: ['/info'], to: '/info' }
 ]
 
-export const PORTAL_USER_MENU = [
-  { key: 'me.style', label: '界面风格', to: '/me/style' },
-  { key: 'me.identity', label: '我的身份与房屋', to: '/me/identity' },
-  { key: 'me.profile', label: '个人资料', to: '/me/profile' },
-  { key: 'me.phone', label: '手机号', to: '/me/phone' },
-  { key: 'me.password', label: '设置密码', to: '/me/password' },
-  { key: 'me.email', label: '邮箱验证', to: '/me/email' },
-  { key: 'me.cancel', label: '账号注销', to: '/me/cancel' }
+// MOD-174 / IFC-393：右上角菜单分“个人设置/系统设置”两组；文案遵循 C-363。
+export const USER_MENU_GROUPS = [
+  {
+    key: 'personal',
+    label: '个人设置',
+    items: [
+      { key: 'me.profile', label: '个人资料', to: '/me/profile' },
+      { key: 'me.phone', label: '绑定手机', to: '/me/phone' },
+      { key: 'me.password', label: '设置密码', to: '/me/password' },
+      { key: 'me.email', label: '邮箱验证', to: '/me/email' },
+      { key: 'me.cancel', label: '账号注销', to: '/me/cancel' }
+    ]
+  },
+  {
+    key: 'system',
+    label: '系统设置',
+    items: [
+      { key: 'me.style', label: '界面风格', to: '/me/style' }
+    ]
+  }
 ]
+
+// 供窄屏“我的”页与既有测试使用的展平视图（个人设置在前，系统设置在后）
+export const PORTAL_USER_MENU = USER_MENU_GROUPS.flatMap((group) => group.items)
+
+// MOD-175 / REQ-NFUNC-061：展开/收起 400ms；悬停意图延迟 180ms。
+export const USER_MENU_TIMING = { transitionMs: 400, hoverIntentMs: 180 }
 
 export const ADMIN_MENU = [
   { key: 'registry', label: '业主清册', audience: 'all', match: ['/admin/registry'], to: '/admin/registry' },

@@ -2,7 +2,7 @@
 <template>
   <div class="page">
     <div class="card" v-if="!profile.phone">
-      <h3 class="title">绑定手机号</h3>
+      <h3 class="title">绑定手机</h3>
       <p class="muted">仅微信登录的账号需要先绑定手机号才能做业主认证、注销等操作。若该手机号已注册，两个账号将合并（以该手机号原账号为主）。</p>
       <div class="row">
         <el-input v-model="bind.phone" placeholder="手机号" maxlength="11" style="max-width: 180px" />
@@ -13,7 +13,7 @@
     </div>
 
     <div class="card" v-else>
-      <h3 class="title">更换手机号</h3>
+      <h3 class="title">绑定手机</h3>
       <p class="muted">需要原手机号和新手机号各自的验证码。新手机号若已属于其他账号，两个账号将合并（以新手机号原账号为主，身份取高）。</p>
       <div class="row">
         <el-input v-model="change.oldPhone" placeholder="原手机号" maxlength="11" style="max-width: 160px" />

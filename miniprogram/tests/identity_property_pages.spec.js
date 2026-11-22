@@ -82,7 +82,7 @@ describe('我的房屋页：房屋明细与待审批卡片（US-232、US-234、U
       'POST /resident-applications/4/decision': () => { pending = []; return {} }
     }))
     const { wrapper } = await mountPage(Units)
-    expect(titles(wrapper).at(-1)).toBe('待我审批的同住人申请')
+    expect(titles(wrapper)).toContain('待我审批的同住人申请')
     expect(wrapper.find('#review').text()).toContain('申请人甲 → 1栋1单元9层902号')
     await byText(wrapper.find('#review'), 'button', '通过').trigger('click')
     await flushPromises()
@@ -116,7 +116,7 @@ describe('认证产权卡片与同住人申请（US-236、US-238、US-242、US-2
     await flushPromises()
     expect(toasts()).toContain('请先选择房号')
     expect(requests().filter((r) => r.path === '/resident-applications' && r.method === 'POST')).toHaveLength(0)
-    wrapper.findAllComponents(UnitPicker)[1].vm.$emit('update:modelValue', 42)
+    wrapper.findAllComponents(UnitPicker)[2].vm.$emit('update:modelValue', 42)
     await flushPromises()
     await byText(wrapper, 'button', '申请成为同住人').trigger('click')
     await flushPromises()

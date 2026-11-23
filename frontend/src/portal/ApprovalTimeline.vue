@@ -28,7 +28,7 @@
           <p v-if="action.comment" class="muted">备注：{{ action.comment }}</p>
         </div>
       </div>
-      <p v-if="!timeline.steps.length" class="muted">该审批为半数同意模式，请在决议详情查看投票结果。</p>
+      <p v-if="!timeline.steps.length" class="muted">该审批为半数以上参与者同意模式，请在决议详情查看投票结果。</p>
     </template>
   </div>
 </template>

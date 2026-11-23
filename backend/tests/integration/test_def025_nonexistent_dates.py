@@ -97,9 +97,9 @@ class Def025NonexistentDateTests(ApiTestBase):
                                                  "vote_deadline": vote_deadline}, token=self.ctoken)
 
     def test_tc_int_738_resolution_vote_deadline_nonexistent_400(self):
-        """TC-INT-738 / DEF-025：HALF_MAJORITY vote_deadline=2026-02-30T10:00 → 400 INVALID_VALUE「半数同意决议须填写投票截止时间」。"""
+        """TC-INT-738 / DEF-025：HALF_MAJORITY vote_deadline=2026-02-30T10:00 → 400 INVALID_VALUE「半数以上参与者同意的决议须填写投票截止时间」。"""
         body = self.assert_error(self._resolution("2026-02-30T10:00"), 400, "INVALID_VALUE")
-        self.assertEqual(body["message"], "半数同意决议须填写投票截止时间")
+        self.assertEqual(body["message"], "半数以上参与者同意的决议须填写投票截止时间")
 
     def test_tc_int_739_resolution_valid_still_created(self):
         """TC-INT-739 / DEF-025 正例：vote_deadline=2 天后 → 201。"""

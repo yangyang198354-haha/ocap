@@ -12,7 +12,7 @@
           <el-button>批量导入</el-button>
         </el-upload>
         <el-select v-model="flowId" placeholder="审批流程（提交时使用）" style="width: 240px">
-          <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人'}）`" :value="f.id" />
+          <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
         </el-select>
       </div>
       <div v-if="skipped.length" style="margin-top: 10px">

@@ -80,7 +80,7 @@ export const resolutionApi = {
   // 参与人列表（IFC-359）：只含昵称、头像、参与时间
   participants: (id) => get(`/resolutions/${id}/participants`),
   withdraw: (id) => post(`/resolutions/${id}/withdraw`, {}),
-  // 重新提交需带标题、正文、流程（半数同意另需 vote_deadline），后端 _validate_submission
+  // 重新提交需带标题、正文、流程（半数以上参与者同意另需 vote_deadline），后端 _validate_submission
   resubmit: (id, data) => post(`/resolutions/${id}/resubmit`, data),
   vote: (id, choice) => post(`/resolutions/${id}/votes`, { choice })
 }

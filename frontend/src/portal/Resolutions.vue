@@ -61,18 +61,18 @@
     <div class="card"><PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" /></div>
 
     <el-dialog v-model="showCreate" title="发起决议" width="560px">
-      <p v-if="limits && limits.vote_min_window_minutes" class="muted">半数同意决议：表决窗口不少于 {{ limits.vote_min_window_minutes }} 分钟</p>
+      <p v-if="limits && limits.vote_min_window_minutes" class="muted">半数以上参与者同意决议：表决窗口不少于 {{ limits.vote_min_window_minutes }} 分钟</p>
       <p v-if="originId" class="muted">重新发起自 {{ resNo(originId) }}（原决议已结束，本决议独立审批）</p>
       <el-input v-model="form.title" placeholder="标题" maxlength="200" />
       <el-input v-model="form.content" type="textarea" :rows="5" placeholder="内容" style="margin-top: 10px" />
       <el-select v-model="form.approval_flow_id" placeholder="审批流程" style="margin-top: 10px; width: 100%">
-        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人'}）`" :value="f.id" />
+        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
       </el-select>
       <el-date-picker
         v-if="needDeadline"
         v-model="form.vote_deadline"
         type="datetime"
-        placeholder="表决截止时间（半数同意必填）"
+        placeholder="表决截止时间（半数以上参与者同意必填）"
         style="margin-top: 10px; width: 100%"
       />
       <div class="row" style="margin-top: 10px">
@@ -124,7 +124,7 @@ const needDeadline = computed(() => flows.value.find((f) => f.id === form.approv
 
 // 卡片展示用：编号由 id 派生（接口无决议编号字段）；比例见 shared/voteShare
 const resNo = (id) => `R-${String(id).padStart(4, '0')}`
-const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
+const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
 const part = (item) => participationShare(item)
 
 // REQ-FUNC-278 / REQ-FUNC-280：公开决议按进行中/已结束分区；其余分区保持单列表

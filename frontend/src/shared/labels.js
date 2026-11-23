@@ -34,7 +34,7 @@ export function yesNo(value) {
 
 // REQ-FUNC-158（DEF-020）：仅 Web 使用，命名不带 _LABELS 后缀，不纳入与小程序 labels.js 的键集合对齐检查
 export const FLOW_SCOPE_TEXT = { RESOLUTION: '决议', EXPENSE: '财务（报销/备用金）', INCOME: '收入表' }
-export const APPROVAL_MODE_TEXT = { DESIGNATED: '指定负责人审批', HALF_MAJORITY: '半数人员同意' }
+export const APPROVAL_MODE_TEXT = { DESIGNATED: '指定负责人审批', HALF_MAJORITY: '半数以上参与者同意' }
 export const INCOME_STATUS_TEXT = {
   DRAFT: '草稿', PENDING: '审批中', EFFECTIVE: '已生效', REJECTED: '未通过', WITHDRAWN: '已撤回', VOID: '已作废'
 }

@@ -55,7 +55,7 @@ const { items, total, hasMore, loadMore, reset } = usePaging({
 
 // 卡片展示用：编号由 id 派生（接口无决议编号字段）；比例同 Web 的 voteShare
 const resNo = (id) => `R-${String(id).padStart(4, '0')}`
-const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
+const modeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : mode === 'DESIGNATED' ? '指定负责人' : mode)
 const share = (item) => voteShare(item.vote_counts)
 
 async function load() {

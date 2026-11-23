@@ -57,11 +57,11 @@ def _validate_flow_payload(data: dict, scope: str, mode: str, flow: ApprovalFlow
     approver_ids = data.get("approver_ids")
     if mode == "HALF_MAJORITY":
         if scope != "RESOLUTION":
-            raise ApiError("INVALID_VALUE", "仅决议可使用半数同意方式")
+            raise ApiError("INVALID_VALUE", "仅决议可使用半数以上参与者同意方式")
         # 半数同意由全体业委会成员投票判定，不设审批人；允许审批人会让决议错误地
         # 落入 /approval/tasks 待办，审批人点"同意"时又被 decide() 以 USE_VOTE_ENDPOINT 拒绝。
         if raw_steps or approver_ids:
-            raise ApiError("INVALID_VALUE", "半数同意决议由全体业委会成员投票，不得设置审批人")
+            raise ApiError("INVALID_VALUE", "半数以上参与者同意的决议由全体业委会成员投票，不得设置审批人")
         return []
 
     if raw_steps is None:

@@ -1,4 +1,5 @@
 """PHASE_08 集成测试：报销、收入、台账与投票。"""
+import io
 from datetime import date, timedelta
 from uuid import uuid4
 
@@ -173,6 +174,30 @@ class IncomeTests(ApiTestBase):
     def _import(self, token=None):
         return self.upload("/admin/income/sheets/import", {"file": self._csv()},
                            token=token or self.clerk_token)
+
+    def test_template_download_xlsx_csv_and_permissions(self):
+        """TC-INT-1603：收入表导入模板可下载 xlsx/csv；首行五列固定；仅业委会成员可用。"""
+        csv_resp = self.api("get", "/admin/income/template", {"file_type": "csv"}, token=self.clerk_token)
+        self.assertEqual(csv_resp.status_code, 200)
+        self.assertIn("text/csv", csv_resp["Content-Type"])
+        self.assertEqual(csv_resp.content.decode("utf-8-sig").strip(), "日期,金额,收入类别,来源说明,备注")
+
+        xlsx_resp = self.api("get", "/admin/income/template", {"file_type": "xlsx"}, token=self.clerk_token)
+        self.assertEqual(xlsx_resp.status_code, 200)
+        self.assertIn("spreadsheetml", xlsx_resp["Content-Type"])
+        from openpyxl import load_workbook
+
+        wb = load_workbook(io.BytesIO(xlsx_resp.content), read_only=True)
+        self.assertEqual(wb.sheetnames[:2], ["收入表", "填写说明"])
+        header = [cell.value for cell in next(wb["收入表"].iter_rows(min_row=1, max_row=1))]
+        self.assertEqual(header, ["日期", "金额", "收入类别", "来源说明", "备注"])
+        wb.close()
+
+        self.assert_error(self.api("get", "/admin/income/template", {"file_type": "pdf"},
+                                   token=self.clerk_token), 400, "INVALID_VALUE")
+        _, user_token = self.make_user()
+        self.assertEqual(self.api("get", "/admin/income/template", token=user_token).status_code, 403)
+        self.assertEqual(self.api("get", "/admin/income/template").status_code, 401)
 
     def test_import_totals_and_validation(self):
         resp = self._import()

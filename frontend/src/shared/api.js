@@ -115,6 +115,8 @@ export const incomeApi = {
   resubmit: (id, flowId) => post(`/admin/income/sheets/${id}/resubmit`, { approval_flow_id: flowId }),
   withdraw: (id) => post(`/admin/income/sheets/${id}/withdraw`, {}),
   voidSheet: (id) => post(`/admin/income/sheets/${id}/void`, {}),
+  template: (fileType = 'xlsx') =>
+    http.get('/admin/income/template', { params: { file_type: fileType }, responseType: 'blob' }),
   list: (params) => get('/income/sheets', params)
 }
 

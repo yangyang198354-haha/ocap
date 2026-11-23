@@ -275,6 +275,7 @@ async function remove(row) {
   if (!(await confirmDanger('deleteFlow', { name: row.name }))) return
   try {
     await admin.deleteFlow(row.id)
+    ElMessage.success('已删除')
     load()
   } catch (e) {
     ElMessage.error(errorText(e))

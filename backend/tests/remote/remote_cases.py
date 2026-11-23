@@ -348,7 +348,7 @@ class MutatingFlows(RemoteBase):
         self.assertEqual((after["summary"]["label"], after["units"]), ("游客", []))
 
     def test_338_ac_159_05_flow_approvers_selected_from_search(self):
-        """TC-E2E-338 / AC-159-05：管理员为审批流程添加两位现任成员 → 列表显示其昵称；添加非成员被拒；测完停用该流程（DELETE 为软停用，行由 e2e_fixture cleanup 清除）。"""
+        """TC-E2E-338 / AC-159-05：管理员为审批流程添加两位现任成员 → 列表显示其昵称；添加非成员被拒；测完删除该流程（未被引用时可物理删除）。"""
         name = R.unique("flow")
         ids = [R.ids["e2e_member"], R.ids["e2e_member2"]]
         created = self.j(R.post("/admin/approval/flows", "admin", json={"scope": "EXPENSE", "mode": "DESIGNATED",

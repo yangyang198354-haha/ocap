@@ -2,12 +2,14 @@ from django.urls import path
 
 from .views import (
     AdminSheetDetailView, AdminSheetListView, IncomeImportView, IncomeSheetDetailView,
-    IncomeSheetListView, SheetResubmitView, SheetSubmitView, SheetVoidView, SheetWithdrawView,
+    IncomeSheetListView, IncomeTemplateView, SheetResubmitView, SheetSubmitView, SheetVoidView,
+    SheetWithdrawView,
 )
 
 urlpatterns = [
     path("admin/income/sheets", AdminSheetListView.as_view()),
     path("admin/income/sheets/import", IncomeImportView.as_view()),
+    path("admin/income/template", IncomeTemplateView.as_view()),
     path("admin/income/sheets/<int:sheet_id>", AdminSheetDetailView.as_view()),
     path("admin/income/sheets/<int:sheet_id>/submit", SheetSubmitView.as_view()),
     path("admin/income/sheets/<int:sheet_id>/resubmit", SheetResubmitView.as_view()),

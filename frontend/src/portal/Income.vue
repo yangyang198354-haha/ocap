@@ -11,6 +11,7 @@
         <el-upload :show-file-list="false" :http-request="importFile" accept=".csv,.xlsx">
           <el-button>批量导入</el-button>
         </el-upload>
+        <el-button @click="downloadTemplate">下载模板</el-button>
         <el-select v-model="flowId" placeholder="审批流程（提交时使用）" style="width: 240px">
           <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
         </el-select>
@@ -158,6 +159,24 @@ async function openReissue(item) {
     voucherIds.value = []
     originId.value = item.id
     showCreate.value = true
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+async function downloadTemplate() {
+  try {
+    const blob = await incomeApi.template('xlsx')
+    saveBlob(blob, '收入表批量导入模板.xlsx')
   } catch (e) {
     ElMessage.error(errorText(e))
   }

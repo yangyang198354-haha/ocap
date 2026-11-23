@@ -198,5 +198,6 @@ external_web=200；external_asset=200；spa_fallback=200；freeark_root=200。
     <event time="2026-11-23T18:10:30+08:00" type="DEPLOY" actor="pm-orchestrator">DEPLOY-001~006 成功（锚点 20261123180449），007/008/009 跳过；最终状态 DEPLOYED_SUCCESSFULLY；验证全部通过（新接口 401、登录 400、内外网 200、无失败单元）。</event>
     <event time="2026-11-23T18:16:00+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 决策 PASS；deployment_report 1.0.0 APPROVED。功能冒烟待用户登录验证。</event>
     <event time="2026-11-23T18:16:00+08:00" type="GATE" actor="pm-orchestrator">PHASE_12 知识蒸馏完成：9 条收件箱 + 1 条记忆待验证处理，晋升 10、保留 1；GR-12-001 决策 PASS。</event>
+    <event time="2026-11-23T21:13:00+08:00" type="DEPLOY" actor="pm-orchestrator">补充部署 R-01（用户当轮授权）：修复审批时间线未返回 approvers 昵称导致“审批人 —”；锚点 20261123211247；重启后 active、Traceback=0、运行时 timeline 验证 approvers=2 且均有昵称；DEPLOYED_SUCCESSFULLY。</event>
   </audit_log>
 </phase_status>

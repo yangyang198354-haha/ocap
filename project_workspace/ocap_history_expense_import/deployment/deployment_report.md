@@ -73,3 +73,19 @@
 1. 目标机 `web/` 下存在旧目录 `ocap.old.20261122144909`（历史遗留，本次未触碰），后续可人工清理。
 2. 功能冒烟需业委会成员账号人工完成（见上）。
 3. 本次部署基于本地工作树（未提交、未推送）；如后续需按远端提交重新部署，请先提交并推送。
+
+## 补充部署 R-01：审批人显示“—”修复（2026-11-23 21:13）
+
+- 背景：待办“查看进度”弹窗的“审批人”显示“—”。定位为时间线接口只返回 `approver_ids`、未返回 `approvers` 昵称，前端 [ApprovalTimeline.vue:19] 取不到即回退“—”；与历史支出导入无关（该弹窗为收入表#1 审批，历史导入不生成审批）。
+- 授权：用户当轮明确授权部署该修复（第二次 AskUserQuestion）。
+- 变更：`backend/apps/approval/services.py` 时间线补 `approvers: [{id, nickname}]`（一次查询解析，空昵称回退“用户#N”）；`tests/integration/test_approval_flow_steps.py` 增加断言。后端全量 1218 通过。
+- 锚点：`TS=20261123211247` → `snapshots/backend-20261123211247.tar.gz`（35,989,625 B，可列出 `backend/`）。
+- 执行：上传并解包后端 → 重启 `ocap-backend`（无迁移、无依赖变更、无前端构建）。
+- 验证：
+  - `systemctl is-active ocap-backend` → `active`；近 2 分钟 `Traceback` 计数 0。
+  - 只读检查待办实例：`income_sheet` 实例 8 有 1 步、审批人 2 人（数据本身完整）。
+  - 运行时调用 `ApprovalEngine.timeline(8, approver)`：`step 1 approvers 2 all_named True`。
+  - 外网 `https://ai-freeark.xin/ocap/` → 200。
+- 结果：`DEPLOYED_SUCCESSFULLY`。用户刷新“查看进度”弹窗即可看到审批人姓名。
+- 回滚：`sudo rm -rf /home/yangyang/ocap/backend && sudo tar xzf /home/yangyang/ocap/snapshots/backend-20261123211247.tar.gz -C /home/yangyang/ocap && sudo systemctl restart ocap-backend`。
+- 备注：沙箱重置导致上次会话 SSH 密钥丢失；本次由用户重新授权新公钥（指纹核对一致），密钥仅存于本次会话 `/tmp`。

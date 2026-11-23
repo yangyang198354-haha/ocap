@@ -105,7 +105,7 @@
           <div class="field-block">
             <label class="field-label">审批流程</label>
             <el-select v-model="form.approval_flow_id" placeholder="审批流程" style="width: 100%">
-              <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人'}）`" :value="f.id" />
+              <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
             </el-select>
           </div>
         </div>
@@ -154,7 +154,7 @@
       </p>
       <el-input v-model="settle.reason" type="textarea" :rows="2" placeholder="核销说明（1~500 字）" style="margin-top: 10px" />
       <el-select v-model="settle.approval_flow_id" placeholder="审批流程" style="margin-top: 10px; width: 100%">
-        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人'}）`" :value="f.id" />
+        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
       </el-select>
       <template #footer>
         <div class="form-actions-sticky">
@@ -208,7 +208,7 @@ const settle = reactive({ advance_id: null, reimbursement_ids: [], reason: '', a
 
 const typeLabel = (t) => ({ REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销' }[t] || t)
 const selectedFlow = computed(() => flows.value.find((f) => f.id === form.approval_flow_id) || null)
-const flowModeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人')
+const flowModeText = (mode) => (mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人')
 const fileSize = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round((n || 0) / 1024))} KB`)
 
 // 金额均为后端返回的两位小数字符串，这里仅做展示用的分（整数）运算，避免浮点误差

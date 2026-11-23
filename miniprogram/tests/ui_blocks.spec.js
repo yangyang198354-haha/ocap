@@ -64,7 +64,7 @@ describe('决议卡片三段比例', () => {
     expect(cards[0].find('.vote-disagree').attributes('style')).toContain('width: 10%')
     expect(cards[0].find('.vote-abstain').attributes('style')).toContain('width: 40%')
     expect(cards[0].text()).toContain('同意 5')
-    expect(cards[0].text()).toContain('半数同意')
+    expect(cards[0].text()).toContain('半数以上参与者同意')
     expect(cards[1].find('.vote-bar').exists()).toBe(false)
     expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public', page: 1, page_size: 20 })
   })

@@ -58,13 +58,13 @@
       <el-input v-model="form.title" placeholder="标题" maxlength="200" />
       <el-input v-model="form.content" type="textarea" :rows="5" placeholder="内容" style="margin-top: 10px" />
       <el-select v-model="form.approval_flow_id" placeholder="审批流程" style="margin-top: 10px; width: 100%">
-        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数同意' : '指定负责人'}）`" :value="f.id" />
+        <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
       </el-select>
       <el-date-picker
         v-if="needDeadline"
         v-model="form.vote_deadline"
         type="datetime"
-        placeholder="表决截止时间（半数同意必填）"
+        placeholder="表决截止时间（半数以上参与者同意必填）"
         style="margin-top: 10px; width: 100%"
       />
       <template #footer>

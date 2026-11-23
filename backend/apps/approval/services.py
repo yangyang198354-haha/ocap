@@ -166,7 +166,7 @@ class ApprovalEngine:
             if instance is None:
                 raise ApiError("NOT_FOUND", "审批实例不存在", 404)
             if instance.flow_snapshot.get("mode") == "HALF_MAJORITY":
-                raise ApiError("USE_VOTE_ENDPOINT", "半数同意决议请使用投票接口", 409)
+                raise ApiError("USE_VOTE_ENDPOINT", "半数以上参与者同意的决议请使用投票接口", 409)
             if instance.status != "PENDING":
                 raise ApiError("ALREADY_DECIDED", "该审批已处理", 409)
             _ensure_states(instance)

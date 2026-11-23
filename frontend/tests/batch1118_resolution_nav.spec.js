@@ -107,13 +107,13 @@ describe('Resolutions 卡片：发起人、规则、截止、状态、进度条�
     return wrapper
   }
 
-  it('TC-UNIT-1310 / AC-249-01/02：已结束半数同意卡片显示"发起人：发起人甲 · 主任"、规则"半数同意"、"截止 2026-12-01 18:00"、"已结束"并保留"通过"结果标签（UI 既有文案为"通过/未通过"）；指定负责人无截止时间显示"指定负责人""无截止时间"，没有"截止"空白', async () => {
+  it('TC-UNIT-1310 / AC-249-01/02：已结束半数以上参与者同意卡片显示"发起人：发起人甲 · 主任"、规则"半数以上参与者同意"、"截止 2026-12-01 18:00"、"已结束"并保留"通过"结果标签（UI 既有文案为"通过/未通过"）；指定负责人无截止时间显示"指定负责人""无截止时间"，没有"截止"空白', async () => {
     const w = await mountList([
       ROW({ id: 1, status: 'APPROVED' }),
       ROW({ id: 2, status: 'APPROVED', approval_mode: 'DESIGNATED', vote_deadline: null, vote_counts: undefined, participation: null })
     ])
     const [a, b] = w.findAll('.res-card')
-    for (const t of ['发起人：发起人甲 · 主任', '半数同意', '截止 2026-12-01 18:00', '已结束', '通过']) expect(a.text(), t).toContain(t)
+    for (const t of ['发起人：发起人甲 · 主任', '半数以上参与者同意', '截止 2026-12-01 18:00', '已结束', '通过']) expect(a.text(), t).toContain(t)
     expect(a.text()).not.toContain('未通过')
     expect(a.text()).not.toContain('进行中')
     expect(b.text()).toContain('指定负责人')
@@ -165,7 +165,7 @@ describe('Resolutions 卡片：发起人、规则、截止、状态、进度条�
       document.body.innerHTML = ''
       const w = await mountList([ROW({ id: 31 })], section)
       expect(w.find('.res-card a.res-title').attributes('href')).toBe('/resolutions/31')
-      for (const t of ['发起人：发起人甲', '半数同意', '截止', '进行中']) expect(w.find('.res-card').text(), `${section} ${t}`).toContain(t)
+      for (const t of ['发起人：发起人甲', '半数以上参与者同意', '截止', '进行中']) expect(w.find('.res-card').text(), `${section} ${t}`).toContain(t)
     }
     const css = read('frontend/src/shared/style.css')
     expect(css).toMatch(/\.res-title::after,\s*\.poll-link::after\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0/)

@@ -295,7 +295,7 @@ def _validate_submission(data: dict):
         except ValueError:  # DEF-025：日期不存在（如 2026-02-30T10:00）
             deadline = None
         if deadline is None:
-            raise ApiError("INVALID_VALUE", "半数同意决议须填写投票截止时间")
+            raise ApiError("INVALID_VALUE", "半数以上参与者同意的决议须填写投票截止时间")
         if deadline.tzinfo is None:
             deadline = timezone.make_aware(deadline)
         min_minutes = int(SystemConfig.get("vote.min_window_minutes"))

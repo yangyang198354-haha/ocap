@@ -14,10 +14,10 @@
       <el-button size="small" @click="showConfig = true">修改人数与任期</el-button>
       <!-- IFC-356 / Q-B18-33=A：仅提示、不禁用任何按钮 -->
       <p v-if="hint && hint.pending_bind > 0" class="muted seat-hint">
-        当前待绑定 {{ hint.pending_bind }} 人，半数同意决议至少需 {{ hint.need_agree }} 票同意
+        当前待绑定 {{ hint.pending_bind }} 人，半数以上参与者同意决议至少需 {{ hint.need_agree }} 票同意
       </p>
       <p v-if="hint && hint.pending_bind > 0 && hint.can_pass === false" class="error-text seat-hint">
-        当前半数同意决议无法通过
+        当前半数以上参与者同意决议无法通过
       </p>
       <!-- REQ-FUNC-291：昵称/姓名/电话/专有部分搜索与业主清册一致；筛选区与主表共用列宽网格 -->
       <div class="seat-scroll">

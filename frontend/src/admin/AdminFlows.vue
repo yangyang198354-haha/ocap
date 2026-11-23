@@ -42,10 +42,10 @@
       </el-select>
       <el-select v-model="form.mode" style="width: 100%; margin-top: 8px" @change="onModeChange">
         <el-option label="指定负责人审批" value="DESIGNATED" />
-        <el-option v-if="form.scope === 'RESOLUTION'" label="半数人员同意" value="HALF_MAJORITY" />
+        <el-option v-if="form.scope === 'RESOLUTION'" label="半数以上参与者同意" value="HALF_MAJORITY" />
       </el-select>
       <div v-if="isHalfMajority" style="margin-top: 8px">
-        <p class="muted">半数同意决议由全体业委会成员投票判定，无需设置审批人。</p>
+        <p class="muted">半数以上参与者同意：由全体业委会成员投票判定，无需设置审批人。</p>
         <p class="muted">无需设置审批人</p>
       </div>
       <template v-else>
@@ -77,7 +77,7 @@
           <el-form-item label="审批方式">
             <el-select v-model="editForm.mode" :disabled="!editing" style="width: 100%">
               <el-option label="指定负责人审批" value="DESIGNATED" />
-              <el-option v-if="editForm.scope === 'RESOLUTION'" label="半数人员同意" value="HALF_MAJORITY" />
+              <el-option v-if="editForm.scope === 'RESOLUTION'" label="半数以上参与者同意" value="HALF_MAJORITY" />
             </el-select>
           </el-form-item>
           <el-form-item label="启用">
@@ -200,7 +200,7 @@ function startEdit() {
   editing.value = true
 }
 
-// 切到半数同意：清空步骤；非决议范围不支持半数同意
+// 切到半数以上参与者同意：清空步骤；非决议范围不支持该方式
 function onModeChange() {
   if (isHalfMajority.value) createSteps.value = []
 }

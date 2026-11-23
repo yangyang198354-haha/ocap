@@ -463,7 +463,7 @@ describe('管理端页面', () => {
     expect(adminHttp.delete).toHaveBeenCalledWith('/admin/approval/flows/9')
   })
 
-  it('修复问题二：新建审批流程选"半数人员同意"时隐藏审批人设置，保存不提交 approver_ids', async () => {
+  it('修复问题二：新建审批流程选"半数以上参与者同意"时隐藏审批人设置，保存不提交 approver_ids', async () => {
     const wrapper = await mountAdmin(AdminFlows, { '/admin/approval/flows': { count: 0, results: [] } })
     await buttonOf(wrapper, '新建流程').trigger('click')
     await flush()
@@ -472,7 +472,7 @@ describe('管理端页面', () => {
     wrapper.findComponent(UserPicker).vm.$emit('change', { id: 7, real_names: ['委员甲'], account_no: '1000000007', identity_label: '委员' })
     await flush()
     expect(document.body.textContent).toContain('委员甲')
-    // 切到半数同意：清空并隐藏审批人设置，显示说明
+    // 切到半数以上参与者同意：清空并隐藏审批人设置，显示说明
     const selects = wrapper.findAllComponents({ name: 'ElSelect' })
     const modeSelect = selects[selects.length - 1]
     modeSelect.vm.$emit('update:modelValue', 'HALF_MAJORITY')

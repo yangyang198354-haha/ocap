@@ -149,10 +149,10 @@ describe('AdminSeats：持有人、待绑定、冲突、提示（US-258、US-259
     expect(adminHttp.delete).toHaveBeenCalledWith('/admin/committee/seats/2')
   })
 
-  it('TC-UNIT-1412 / Q-B18-33、AC-259：config.half_majority_hint 的 pending_bind>0 时顶部提示"当前待绑定 2 人，半数同意决议至少需 3 票同意"；can_pass=false 另提示"当前半数同意决议无法通过"；仅提示不禁用任何按钮；pending_bind=0 不提示', async () => {
+  it('TC-UNIT-1412 / Q-B18-33、AC-259：config.half_majority_hint 的 pending_bind>0 时顶部提示"当前待绑定 2 人，半数以上参与者同意决议至少需 3 票同意"；can_pass=false 另提示"当前半数以上参与者同意决议无法通过"；仅提示不禁用任何按钮；pending_bind=0 不提示', async () => {
     let w = await mountSeats([PENDING], { half_majority_hint: { mode: 'ACTIVE', denominator: 4, pending_bind: 2, need_agree: 3, can_pass: false } })
-    expect(w.find('.seat-hint').text()).toBe('当前待绑定 2 人，半数同意决议至少需 3 票同意')
-    expect(w.text()).toContain('当前半数同意决议无法通过')
+    expect(w.find('.seat-hint').text()).toBe('当前待绑定 2 人，半数以上参与者同意决议至少需 3 票同意')
+    expect(w.text()).toContain('当前半数以上参与者同意决议无法通过')
     expect(w.findAll('button').filter((b) => b.attributes('disabled') !== undefined).map((b) => b.text())).not.toContain('赋予席位')
     expect(buttonOf(w, '赋予席位').attributes('disabled')).toBeUndefined()
     w.unmount()

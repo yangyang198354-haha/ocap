@@ -80,7 +80,7 @@ export const resolutionApi = {
   // 参与人列表（IFC-359）：只含昵称、头像、参与时间
   participants: (id) => get(`/resolutions/${id}/participants`),
   withdraw: (id) => post(`/resolutions/${id}/withdraw`, {}),
-  // 重新提交需带标题、正文、流程（半数同意另需 vote_deadline），后端 _validate_submission
+  // 重新提交需带标题、正文、流程（半数以上参与者同意另需 vote_deadline），后端 _validate_submission
   resubmit: (id, data) => post(`/resolutions/${id}/resubmit`, data),
   vote: (id, choice) => post(`/resolutions/${id}/votes`, { choice })
 }
@@ -115,6 +115,8 @@ export const incomeApi = {
   resubmit: (id, flowId) => post(`/admin/income/sheets/${id}/resubmit`, { approval_flow_id: flowId }),
   withdraw: (id) => post(`/admin/income/sheets/${id}/withdraw`, {}),
   voidSheet: (id) => post(`/admin/income/sheets/${id}/void`, {}),
+  template: (fileType = 'xlsx') =>
+    http.get('/admin/income/template', { params: { file_type: fileType }, responseType: 'blob' }),
   list: (params) => get('/income/sheets', params)
 }
 
@@ -194,9 +196,10 @@ const admin = {
   updateSeat: (id, data) => adminHttp.patch(`/admin/committee/seats/${id}`, data),
   deleteSeat: (id) => adminHttp.delete(`/admin/committee/seats/${id}`),
   committeeConfig: () => adminHttp.get('/admin/committee/config'),
-  // 席位授予给清册业主（MOD-152 / IFC-350/351）：逐级选房与业主候选（手机号已脱敏）
+  // 席位授予给清册业主（MOD-152 / IFC-350/351）：逐级选房、业主候选与姓名/手机号搜索（管理员可见完整手机号）
   unitOptions: (params) => adminHttp.get('/admin/registry/unit-options', { params }),
   ownerCandidates: (params) => adminHttp.get('/admin/committee/owner-candidates', { params }),
+  ownerSearch: (params) => adminHttp.get('/admin/committee/owner-search', { params }),
   updateCommitteeConfig: (data) => adminHttp.put('/admin/committee/config', data),
   flows: (params) => adminHttp.get('/admin/approval/flows', { params }),
   createFlow: (data) => adminHttp.post('/admin/approval/flows', data),

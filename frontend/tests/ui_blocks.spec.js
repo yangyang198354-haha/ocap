@@ -148,7 +148,7 @@ describe('决议卡片三段比例（AC-087-02）', () => {
     expect(widths[1]).toContain('width: 5%')
     expect(widths[2]).toContain('width: 20%')
     const text = cards[0].text()
-    for (const t of ['车库照明改造', '同意 5', '反对 1', '弃权 4', '副主任', '发起人甲', '半数同意', '截止', '已参与 10 / 20 · 50%', '进行中']) expect(text).toContain(t)
+    for (const t of ['车库照明改造', '同意 5', '反对 1', '弃权 4', '副主任', '发起人甲', '半数以上参与者同意', '截止', '已参与 10 / 20 · 50%', '进行中']) expect(text).toContain(t)
     expect(cards[1].find('.vote-bar').exists()).toBe(false)
     expect(cards[1].text()).toContain('指定负责人')
     expect(http.get).toHaveBeenCalledWith('/resolutions', { params: { scope: 'public', page: 1, page_size: 20 } })

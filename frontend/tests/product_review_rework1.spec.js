@@ -71,7 +71,7 @@ describe('DEF-020 / REQ-FUNC-158：管理端与用户端不展示内部值', () 
     const rows = wrapper.findAll('tbody tr').map((r) => r.text())
     expect(rows).toHaveLength(3)
     expect(rows[0]).toContain('决议')
-    expect(rows[0]).toContain('半数人员同意')
+    expect(rows[0]).toContain('半数以上参与者同意')
     expect(rows[1]).toContain('财务（报销/备用金）')
     expect(rows[1]).toContain('指定负责人审批')
     expect(rows[2]).toContain('收入表')
@@ -94,8 +94,8 @@ describe('DEF-020 / REQ-FUNC-158：管理端与用户端不展示内部值', () 
     expect(text).not.toMatch(/EXPENSE|RESOLUTION|T20:30|\+08:00|:45/)
   })
 
-  it('TC-UNIT-581 / REQ-FUNC-158：ResolutionDetail 审批方式为中文（半数同意与指定负责人两种）', async () => {
-    for (const [mode, label] of [['HALF_MAJORITY', '半数人员同意'], ['DESIGNATED', '指定负责人审批']]) {
+  it('TC-UNIT-581 / REQ-FUNC-158：ResolutionDetail 审批方式为中文（半数以上参与者同意与指定负责人两种）', async () => {
+    for (const [mode, label] of [['HALF_MAJORITY', '半数以上参与者同意'], ['DESIGNATED', '指定负责人审批']]) {
       document.body.innerHTML = ''
       globalThis.__routeId = '7'
       http.get.mockImplementation(routeTable({

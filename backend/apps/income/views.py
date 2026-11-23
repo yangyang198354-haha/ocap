@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
+from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -127,6 +128,52 @@ def _existing_duplicate_keys() -> set:
     rows = IncomeRecord.objects.filter(sheet__status__in=["PENDING", "EFFECTIVE"]).values_list(
         "occurred_on", "amount", "category", "source_note")
     return set(rows)
+
+
+class IncomeTemplateView(APIView):
+    """收入表批量导入模板（xlsx / csv），仅业委会成员可下载。"""
+    permission_classes = [IsIncomeMember]
+
+    def get(self, request):
+        file_type = str(request.query_params.get("file_type") or "xlsx").lower()
+        if file_type not in {"xlsx", "csv"}:
+            raise ApiError("INVALID_VALUE", "file_type 仅支持 xlsx 或 csv")
+        if file_type == "csv":
+            buffer = io.StringIO()
+            csv.writer(buffer).writerow(COLUMNS)
+            resp = HttpResponse("\ufeff" + buffer.getvalue(), content_type="text/csv; charset=utf-8")
+        else:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "收入表"
+            ws.append(COLUMNS)
+            for cell in ws[1]:
+                cell.font = Font(bold=True)
+            for column, width in {"A": 14, "B": 12, "C": 16, "D": 28, "E": 24}.items():
+                ws.column_dimensions[column].width = width
+            notes = wb.create_sheet("填写说明")
+            for line in (
+                "列顺序固定：日期、金额、收入类别、来源说明、备注；表头不可改名或删除。",
+                "日期格式 YYYY-MM-DD（也兼容 YYYY/MM/DD）；金额大于 0、最多两位小数。",
+                "收入类别 ≤32 字，来源说明 ≤200 字，备注 ≤200 字；日期、金额必填。",
+                "支持 xlsx / CSV，文件 ≤5MB、数据行 ≤5000 行。",
+                "重复行（日期+金额+收入类别+来源说明全同）会被跳过；错误行跳过并提示行号。",
+                "导入后为草稿，需选择审批流程并提交，审批通过后才生效。",
+                "示例：2026-11-01 | 100.50 | 停车费 | 10月停车收入 | （备注可空）",
+            ):
+                notes.append([line])
+            notes.column_dimensions["A"].width = 90
+            out = io.BytesIO()
+            wb.save(out)
+            resp = HttpResponse(
+                out.getvalue(),
+                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        resp["Content-Disposition"] = f'attachment; filename="income_import_template.{file_type}"'
+        return resp
 
 
 class IncomeImportView(APIView):

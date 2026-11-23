@@ -24,6 +24,47 @@ def today():
     return timezone.localdate()
 
 
+class OwnerSearchTests(SeatHolderBase):
+    def test_tc_int_1601_search_by_name_and_phone(self):
+        """TC-INT-1601：按姓名/手机号搜索清册业主；返回专有部分与完整手机号，标注已注册/已有席位；
+        姓名与手机号均支持部分匹配。"""
+        p1, p2 = next_phone(), next_phone()
+        unit_a, owner_a, _, _ = self.reg_unit(name="业主甲", phones=[p1], room="901")
+        unit_b, owner_b, _, _ = self.reg_unit(name="业主乙", phones=[p2], room="902")
+        self.pending_seat(owner_a)
+
+        resp = self.assert_ok(self.api("get", "/admin/committee/owner-search",
+                                       {"keyword": "业主"}, token=self.admin_token))
+        rows = {o["name"]: o for o in resp.data["owners"]}
+        self.assertEqual(set(rows), {"业主甲", "业主乙"})
+        self.assertEqual(rows["业主甲"]["owner_id"], owner_a.id)
+        self.assertEqual(rows["业主甲"]["phone"], p1)
+        self.assertEqual(rows["业主甲"]["unit_text"], unit_a.specific_part)
+        self.assertEqual((rows["业主甲"]["seated"], rows["业主甲"]["registered"]), (True, False))
+        self.assertEqual((rows["业主乙"]["seated"], rows["业主乙"]["registered"]), (False, False))
+
+        by_phone = self.assert_ok(self.api("get", "/admin/committee/owner-search",
+                                           {"keyword": p2}, token=self.admin_token))
+        self.assertEqual([o["name"] for o in by_phone.data["owners"]], ["业主乙"])
+        self.assertEqual(by_phone.data["owners"][0]["unit_id"], unit_b.id)
+
+    def test_tc_int_1602_search_validation_permissions_and_empty(self):
+        """TC-INT-1602：keyword 少于 2 字符 → 400 INVALID_QUERY；非管理员 403、未登录 401；无匹配返回空列表。"""
+        self.reg_unit(name="业主甲")
+        self.assert_error(self.api("get", "/admin/committee/owner-search",
+                                   {"keyword": "业"}, token=self.admin_token), 400, "INVALID_QUERY")
+        self.assert_error(self.api("get", "/admin/committee/owner-search",
+                                   {"keyword": ""}, token=self.admin_token), 400, "INVALID_QUERY")
+        _, user_token = self.make_user()
+        self.assertEqual(self.api("get", "/admin/committee/owner-search",
+                                  {"keyword": "业主"}, token=user_token).status_code, 403)
+        self.assertEqual(self.api("get", "/admin/committee/owner-search",
+                                  {"keyword": "业主"}).status_code, 401)
+        empty = self.assert_ok(self.api("get", "/admin/committee/owner-search",
+                                        {"keyword": "不存在"}, token=self.admin_token))
+        self.assertEqual(empty.data["owners"], [])
+
+
 class GrantToRegistryOwnerTests(SeatHolderBase):
     def test_tc_int_1020_grant_to_unregistered_owner_creates_pending_seat_and_audit(self):
         """TC-INT-1020 / AC-256-01、AC-258-04：授予未注册清册业主 → 201，席位 user=None、bind_state=PENDING_BIND、holder 含专有部分与姓名，

@@ -138,6 +138,10 @@ class TwoStepSequentialTests(ApprovalStepsBase):
         self.assertEqual(Resolution.objects.get(id=rid).status, "APPROVED")
         timeline = self.assert_ok(self.api("get", f"/approval/instances/{instance.id}", token=self.chair_token))
         self.assertEqual([s["status"] for s in timeline.data["steps"]], ["APPROVED", "APPROVED"])
+        # 时间线需回传审批人昵称（前端按 step.approvers 渲染），不能只回 approver_ids
+        self.assertEqual([a["id"] for a in timeline.data["steps"][0]["approvers"]], [self.a1.id])
+        self.assertEqual([a["id"] for a in timeline.data["steps"][1]["approvers"]], [self.a2.id])
+        self.assertTrue(all("nickname" in a for a in timeline.data["steps"][0]["approvers"]))
 
     def test_config_change_does_not_affect_inflight(self):
         rid = self.submit(self.flow)

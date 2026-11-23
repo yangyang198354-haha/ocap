@@ -310,6 +310,15 @@ class ApprovalEngine:
             steps = [{"order": s.step_order, "name": s.name, "strategy": s.strategy,
                       "approver_ids": list(s.approver_ids or []), "status": s.status,
                       "reached_at": s.reached_at, "decided_at": s.decided_at} for s in states]
+        step_approver_ids = {uid for step in steps for uid in step["approver_ids"]}
+        step_approvers = {u.id: u for u in User.objects.filter(id__in=step_approver_ids)}
+        for step in steps:
+            # 前端时间线按 step.approvers 显示“审批人”；只回 approver_ids 会显示为“—”
+            step["approvers"] = [
+                {"id": uid,
+                 "nickname": getattr(step_approvers.get(uid), "nickname", "") or f"用户#{uid}"}
+                for uid in step["approver_ids"]
+            ]
         actions = list(ApprovalAction.objects.filter(instance=instance).order_by("acted_at", "id"))
         actor_ids = {row.actor_id for row in actions}
         users = {u.id: u for u in User.objects.filter(id__in=actor_ids)}

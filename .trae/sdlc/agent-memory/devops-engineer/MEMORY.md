@@ -18,8 +18,9 @@
 - [M-DE-048] 本仓库小程序根目录即 uni-app 项目根（`manifest.json` 在 `miniprogram/`，无 `src/`）；`npm run build:mp-weixin` 必须显式设 `UNI_INPUT_DIR=<repo>\miniprogram`，可配合 `UNI_OUTPUT_DIR` 输出到临时目录 — conf 0.8 · 证据 ocap_approval_flow E1/E2 两次 `DONE Build complete.`、`APP_JSON_OK` · 首见 2026-11-22 · 命中 2
 - [M-DE-049] 审批步骤迁移回滚门控：存在多步流程、`ALL` 策略、`ApprovalStepState.step_order>1` 或部署后产生的 `schema_version=2` 在办实例时，不得自动反向迁移，应标 MANUAL_ROLLBACK_REQUIRED — conf 0.6 · 证据 ocap_approval_flow module_design / DEPLOY-006 实测 0/0/0 / GR-E2-001 · 首见 2026-11-22 · 命中 1
 - [M-DE-050] 目标机用 `cp -a` 叠加覆盖代码并以 tar 排除 `.env`/`venv`/`var`，可保留本地状态；迁移前 `showmigrations` 基线与相关表 `mysqldump` 是有效回滚锚点 — conf 0.6 · 证据 ocap_approval_flow DEPLOY-001/005 `.env` 哈希不变、转储 4 表 · 首见 2026-11-22 · 命中 1
+- [M-DE-051] 新增手写迁移的部署：先本地 `makemigrations --check`，目标机迁移前记录 `showmigrations --plan`；回滚顺序为迁移→代码→重启 — conf 0.6 · 证据 GR-E1-001 / DEPLOY-004 / GR-E2-001 · 首见 2026-11-23 · 命中 1
+- [M-DE-052] 迁移未进入目标机代码时，预检 `migrate --plan` 不会出现新迁移；预检只记录基线，把“恰为新迁移”门控放到代码覆盖之后 — conf 0.8 · 证据 ocap_approval_flow deployment_report R-01 / ocap_history_expense_import 预检 PENDING_COUNT=0 后 DEPLOY-004 应用 0004 · 首见 2026-11-22 · 命中 2
 
 ## 用户偏好与禁止项
 
 ## 待验证
-- [P-DE-050] 迁移尚未进入目标机代码时，预检 `migrate --plan` 不会出现新迁移；应让预检只记录基线，把“恰为新迁移 1 行”的门控放到代码覆盖之后（DEPLOY 阶段） — conf 0.6 · 证据：ocap_approval_flow deployment_report R-01 · 缺：第二批次复现

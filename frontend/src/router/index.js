@@ -57,6 +57,7 @@ const routes = [
       { path: 'claims', component: ClaimsPage, props: { section: 'mine' } },
       { path: 'claims/todo', component: ClaimsPage, props: { section: 'todo' } },
       { path: 'income', component: () => import('@/portal/Income.vue') },
+      { path: 'historical-expenses', component: () => import('@/portal/HistoricalExpenses.vue') },
       { path: 'polls', component: () => import('@/portal/Polls.vue') },
       { path: 'polls/:id', component: () => import('@/portal/PollDetail.vue') },
       { path: 'reports', component: () => import('@/portal/Reports.vue') },

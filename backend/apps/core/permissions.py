@@ -95,6 +95,9 @@ class IsIncomeMember(BasePermission):
 
     def has_permission(self, request, view) -> bool:
         if not _is_member(request.user):
+            # 管理员令牌不适用用户端业委会接口：与 IsMember 一致返回 403（AC-338-01）
+            if _is_admin(request.user):
+                raise ApiError("FORBIDDEN", "需要普通用户权限", 403)
             raise ApiError("UNAUTHORIZED", "请先登录", 401)
         from apps.committee.services import CommitteeQuery
 

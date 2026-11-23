@@ -12,6 +12,8 @@
 - [M-TE-043] 小批次 critical path 可用一条跨模块 API 旅程替代浏览器 E2E，报告首行声明"替代"口径并单列人工验证项 — conf 0.6 · 证据 ocap_profile_ux-GROUP_D-1-1 / TC-E2E-1501 · 首见 2026-11-19 · 命中 1
 - [M-TE-044] 重命名共享常量时只改 import 不改模板会静默留下未定义引用；前端界面测试必须在模板渲染层断言文案，而不是只测常量表 — conf 0.6 · 证据 ocap_approval_flow DEF-001 / TC-INT-1304 / GR-D-001 · 首见 2026-11-22 · 命中 1
 - [M-TE-045] 判定基线失败前先确认被测文件是否本批次修改，再用 `git log -1 -- <file>` 取证，避免把预存在问题误计为新增失败 — conf 0.6 · 证据 ocap_approval_flow test_tc_int_964 / `git log -1 -- miniprogram/pages/phone/index.vue` / GR-D-001 · 首见 2026-11-22 · 命中 1
+- [M-TE-046] 自定义权限类须在所有非成员分支显式区分管理员（403）与未登录（401），否则权限矩阵类 AC 会出现状态码偏差 — conf 0.6 · 证据 ocap_history_expense_import DEF-001 / AC-338-01 / TC-INT-2114 · 首见 2026-11-23 · 命中 1
+- [M-TE-047] 批量导入测试须覆盖“解析阶段上限判定”；只在后续统计行数会让读取截断掩盖超限错误 — conf 0.6 · 证据 ocap_history_expense_import CR-008 / AC-334-04 / TC-INT-2107 · 首见 2026-11-23 · 命中 1
 
 ## 用户偏好与禁止项
 

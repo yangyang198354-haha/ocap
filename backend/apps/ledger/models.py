@@ -29,6 +29,54 @@ class LedgerEntry(models.Model):
         ]
 
 
+class HistoricalExpenseBatch(models.Model):
+    """历史支出导入批次（MOD-192）：只用于上线前历史数据补录。"""
+    STATUSES = [("IMPORTED", "已导入"), ("VOIDED", "已作废")]
+
+    file_name = models.CharField(max_length=255)
+    imported_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT,
+                                    related_name="historical_expense_batches")
+    status = models.CharField(max_length=10, choices=STATUSES, default="IMPORTED")
+    total_rows = models.PositiveIntegerField(default=0)
+    imported_rows = models.PositiveIntegerField(default=0)
+    skipped_rows = models.PositiveIntegerField(default=0)
+    failed_rows = models.PositiveIntegerField(default=0)
+    total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    voided_by = models.ForeignKey("accounts.User", null=True, blank=True, on_delete=models.SET_NULL,
+                                  related_name="+")
+    voided_at = models.DateTimeField(null=True, blank=True)
+    void_reason = models.CharField(max_length=200, blank=True, default="")
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [models.Index(fields=["status", "created_at"], name="ledger_hist_status_created_idx")]
+
+
+class HistoricalExpenseRow(models.Model):
+    """历史支出导入行（MOD-193）：保留原始行与处理结果，成功行关联台账。"""
+    STATUSES = [("IMPORTED", "成功"), ("DUPLICATE", "重复"), ("ERROR", "错误")]
+
+    batch = models.ForeignKey(HistoricalExpenseBatch, on_delete=models.CASCADE, related_name="rows")
+    line_no = models.PositiveSmallIntegerField()
+    occurred_on = models.DateField(null=True, blank=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    category = models.CharField(max_length=32, blank=True, default="")
+    purpose = models.CharField(max_length=200, blank=True, default="")
+    remark = models.CharField(max_length=200, blank=True, default="")
+    status = models.CharField(max_length=10, choices=STATUSES, default="ERROR")
+    error_message = models.CharField(max_length=200, blank=True, default="")
+    ledger_entry = models.OneToOneField(LedgerEntry, null=True, blank=True, on_delete=models.SET_NULL,
+                                        related_name="historical_expense_row")
+
+    class Meta:
+        ordering = ["line_no", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["batch", "line_no"], name="uniq_hist_expense_line"),
+        ]
+        indexes = [models.Index(fields=["batch", "status"], name="ledger_hist_batch_status_idx")]
+
+
 class LedgerReport(models.Model):
     PERIOD_TYPES = [("QUARTER", "季度"), ("YEAR", "年度")]
     GEN_TYPES = [("SYSTEM", "系统"), ("MEMBER", "业委会成员")]

@@ -330,3 +330,13 @@
 | 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E2-001-2 | 晋升→M-DE-050 | committed |
 | 2026-11-22T21:39:06+08:00 | (memory) P-DE-046 | 晋升→M-DE-046 | committed |
 | 2026-11-22T21:39:06+08:00 | (memory) P-DE-047 | 晋升→M-DE-047 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_A-001-1 | 晋升→M-RA-014 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_A-001-2 | 晋升→M-RA-015 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_B-001-1 | 晋升→M-SA-030 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_B-001-2 | 晋升→M-SA-031 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_C-001-1 | 晋升→M-SD-043 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_C-001-2 | 晋升→M-SD-044 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_D-001-1 | 晋升→M-TE-046 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_D-001-2 | 晋升→M-TE-047 | committed |
+| 2026-11-23T18:15:00+08:00 | ocap_history_expense_import-GROUP_E1-001-1 | 晋升→M-DE-051 | committed |
+| 2026-11-23T18:15:00+08:00 | (memory) P-DE-050 | 晋升→M-DE-052 | committed |

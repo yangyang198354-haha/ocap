@@ -4,6 +4,7 @@
       <div class="row" style="justify-content: space-between">
         <h3 class="title" style="margin: 0">财务报表</h3>
         <div class="row" v-if="auth.isCommittee">
+          <router-link to="/historical-expenses"><el-button>历史支出导入</el-button></router-link>
           <el-select v-model="gen.period_type" style="width: 110px">
             <el-option label="季度" value="QUARTER" /><el-option label="年度" value="YEAR" />
           </el-select>

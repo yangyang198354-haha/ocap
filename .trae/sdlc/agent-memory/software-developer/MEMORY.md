@@ -13,6 +13,8 @@
 - [M-SD-026] 跨端展示字段由后端统一提供 display 文案，可避免 Web 与小程序各自实现空值与精度规则 — conf 0.6 · 证据 GR-C-001 / IFC-248 / 后端 572、前端 185、小程序 78 项通过 · 首见 2026-11-14 · 命中 1
 - [M-SD-041] 列表派生字段在批量序列化层预取关联集合（如 RegistryPhone），避免逐行 related manager 造成 N+1 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-1 / tests/integration/test_batch1118_seats.py:301 · 首见 2026-11-19 · 命中 1
 - [M-SD-042] 给隐私白名单接口加字段前先搜索测试中的反向字段断言，契约优先于便利 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-2 / CR-006 / TC-INT-1071 · 首见 2026-11-19 · 命中 1
+- [M-SD-043] 未安装 django.contrib.auth 的仓库，手写迁移外键必须写 `to="accounts.user"`，不能用 `settings.AUTH_USER_MODEL`，否则真实 migrate 抛 NameError — conf 0.6 · 证据 CR-001 / 0004 迁移 / test_migration_residency_0002 通过 · 首见 2026-11-23 · 命中 1
+- [M-SD-044] 手写迁移的 `Index(name=...)` 必须与模型 `Meta.indexes` 的显式 name 一致，否则 `makemigrations --check` 持续报 rename — conf 0.6 · 证据 CR-002 / makemigrations “No changes detected” · 首见 2026-11-23 · 命中 1
 
 ## 用户偏好与禁止项
 

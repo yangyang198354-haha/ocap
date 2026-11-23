@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from apps.core.errors import ApiError, NotFound
 from apps.core.permissions import IsAdmin
 from apps.core.serializers import page_response
-from apps.registry.models import RegistryPhone
+from apps.registry.models import RegistryOwner, RegistryPhone
 from apps.residency.models import Membership
 from apps.residency.services import MembershipService
 
@@ -281,8 +281,32 @@ class AdminSeatDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _owner_candidate_rows(owners) -> list[dict]:
+    """清册业主候选行（含席位/注册标注）；调用方须 select_related("unit") 并 prefetch_related("phones")。"""
+    owners = list(owners)
+    owner_ids = [o.id for o in owners]
+    seated_owner_ids = set(Seat.objects.filter(holder_owner_id__in=owner_ids, status="ACTIVE")
+                           .values_list("holder_owner_id", flat=True))
+    certified = {o.id: SeatBinding.certified_user_of(o) for o in owners}
+    certified_user_ids = [uid for uid in certified.values() if uid is not None]
+    seated_user_ids = set(Seat.objects.filter(user_id__in=certified_user_ids, status="ACTIVE")
+                          .values_list("user_id", flat=True))
+    rows = []
+    for owner in owners:
+        phones = [p.phone for p in owner.phones.all()]
+        user_id = certified[owner.id]
+        rows.append({
+            "owner_id": owner.id, "name": owner.name,
+            "phone": phones[0] if phones else None,
+            "unit_id": owner.unit_id, "unit_text": owner.unit.specific_part,
+            "seated": owner.id in seated_owner_ids or (user_id is not None and user_id in seated_user_ids),
+            "registered": user_id is not None,
+        })
+    return rows
+
+
 class AdminOwnerCandidatesView(APIView):
-    """IFC-350：某专有部分的清册业主候选（姓名 + 脱敏手机号），仅管理员；不返回完整手机号。"""
+    """IFC-350：某专有部分的清册业主候选（姓名 + 手机号），仅管理员。"""
     permission_classes = [IsAdmin]
 
     def get(self, request):
@@ -299,22 +323,23 @@ class AdminOwnerCandidatesView(APIView):
         if unit is None:
             raise ApiError("NOT_FOUND", "专有部分不存在", 404)
         owners = [o for o in unit.owners.all() if (o.name or "").strip()]
-        seated_owner_ids = set(Seat.objects.filter(holder_owner_id__in=[o.id for o in owners], status="ACTIVE")
-                               .values_list("holder_owner_id", flat=True))
-        certified = {o.id: SeatBinding.certified_user_of(o) for o in owners}
-        seated_user_ids = set(Seat.objects.filter(user_id__in=[u for u in certified.values() if u is not None],
-                                                  status="ACTIVE").values_list("user_id", flat=True))
-        results = []
-        for owner in owners:
-            phones = [p.phone for p in owner.phones.all()]
-            user_id = certified[owner.id]
-            results.append({
-                "owner_id": owner.id, "name": owner.name,
-                "phone": phones[0] if phones else None,
-                "seated": owner.id in seated_owner_ids or (user_id is not None and user_id in seated_user_ids),
-                "registered": user_id is not None,
-            })
-        return Response({"unit_id": unit.id, "specific_part": unit.specific_part, "owners": results})
+        return Response({"unit_id": unit.id, "specific_part": unit.specific_part,
+                         "owners": _owner_candidate_rows(owners)})
+
+
+class AdminOwnerSearchView(APIView):
+    """按姓名或手机号搜索清册业主（管理员），用于快速选择席位持有人。"""
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        keyword = str(request.query_params.get("keyword") or "").strip()
+        if len(keyword) < 2:
+            raise ApiError("INVALID_QUERY", "请输入至少 2 个字符的姓名或手机号")
+        owners = (RegistryOwner.objects
+                  .filter(Q(name__icontains=keyword) | Q(phones__phone__contains=keyword))
+                  .select_related("unit").prefetch_related("phones")
+                  .distinct().order_by("id")[:20])
+        return Response({"keyword": keyword, "owners": _owner_candidate_rows(owners)})
 
 
 class AdminCommitteeConfigView(APIView):

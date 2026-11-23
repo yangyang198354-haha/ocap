@@ -15,6 +15,9 @@ class IncomeSheet(models.Model):
     submitted_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT,
                                      related_name="income_sheets")
     total_amount = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    # MOD-193：整批收入归属账户；空值入账时解析默认账户（Q-FA-05）
+    account = models.ForeignKey("ledger.LedgerAccount", null=True, blank=True,
+                                on_delete=models.PROTECT, related_name="income_sheets")
     status = models.CharField(max_length=12, choices=STATUSES, default="DRAFT")
     revision = models.IntegerField(default=1)
     approval_instance_id = models.BigIntegerField(null=True, blank=True)

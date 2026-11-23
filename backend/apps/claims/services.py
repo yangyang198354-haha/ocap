@@ -19,7 +19,7 @@ def on_approved(subject_id: int) -> None:
         occurred_on = claim.occurred_on or claim.decided_at.date()
         LedgerService.post(direction="EXPENSE", amount=claim.amount, occurred_on=occurred_on,
                            entry_type=claim.type, summary=claim.reason, source_type="claim",
-                           source_id=claim.id, seq=0)
+                           source_id=claim.id, seq=0, account=claim.account)
         claim.ledger_posted = True
     claim.save(update_fields=["status", "decided_at", "ledger_posted", "updated_at"])
     AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="CLAIM_DECIDED",
@@ -39,7 +39,7 @@ def _approve_settlement(claim: Claim) -> None:
         LedgerService.post(direction="EXPENSE", amount=claim.amount,
                            occurred_on=claim.decided_at.date(), entry_type=claim.type,
                            summary=claim.reason, source_type="claim", source_id=claim.id,
-                           seq=0, allow_negative=True)
+                           seq=0, allow_negative=True, account=claim.account)
         claim.ledger_posted = True
 
 

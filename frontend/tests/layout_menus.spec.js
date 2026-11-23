@@ -86,9 +86,9 @@ describe('管理端菜单配置（US-224/225）', () => {
     for (const n of direct) expect(n.children).toBeUndefined()
   })
 
-  it('TC-UNIT-810 / AC-225-01、AC-225-02、AC-225-03：财务 2、账号 2、内容管理 7、审计/配置 2 个二级项', () => {
+  it('TC-UNIT-810 / AC-225-01、AC-225-02、AC-225-03：财务 3、账号 2、内容管理 7、审计/配置 2 个二级项', () => {
     const byKey = Object.fromEntries(ADMIN_MENU.map((n) => [n.key, n]))
-    expect(byKey.finance.children.map((c) => c.label)).toEqual(['报销/备用金记录', '金额上限'])
+    expect(byKey.finance.children.map((c) => c.label)).toEqual(['报销/备用金记录', '金额上限', '账户管理'])
     expect(byKey.users.children.map((c) => c.label)).toEqual(['管理员账号', '注册用户'])
     expect(byKey.audit.children.map((c) => c.label)).toEqual(['系统配置', '审计日志'])
     expect(byKey.content.children.map((c) => c.label)).toEqual([

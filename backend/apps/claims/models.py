@@ -20,6 +20,9 @@ class Claim(models.Model):
     advance_id = models.BigIntegerField(null=True, blank=True)
     settlement_id = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(max_length=12, choices=STATUSES, default="PENDING")
+    # MOD-193：单据账户；空值入账时解析默认账户（Q-FA-05）
+    account = models.ForeignKey("ledger.LedgerAccount", null=True, blank=True,
+                                on_delete=models.PROTECT, related_name="claims")
     revision = models.IntegerField(default=1)
     settle_slot = models.IntegerField(null=True, blank=True)
     ledger_posted = models.BooleanField(default=False)

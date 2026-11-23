@@ -54,7 +54,8 @@ export const ADMIN_MENU = [
     key: 'finance', label: '财务', audience: 'all', match: ['/admin/finance'],
     children: [
       { key: 'finance.claims', label: '报销/备用金记录', to: '/admin/finance' },
-      { key: 'finance.limit', label: '金额上限', to: '/admin/finance/limit' }
+      { key: 'finance.limit', label: '金额上限', to: '/admin/finance/limit' },
+      { key: 'finance.accounts', label: '账户管理', to: '/admin/finance/accounts' }
     ]
   },
   {

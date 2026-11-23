@@ -22,6 +22,7 @@ from apps.core.limits import INCOME_IMPORT_MAX_ROWS, INCOME_MANUAL_MAX_RECORDS
 from apps.core.money import money
 from apps.core.permissions import IsIncomeMember, IsMember
 from apps.core.serializers import page_response
+from apps.ledger.services import AccountService
 
 from .models import IncomeRecord, IncomeSheet
 from .services import is_original_approver_of, recalculate, void_sheet
@@ -236,11 +237,12 @@ class AdminSheetListView(APIView):
             raise ApiError("INCOME_RECORD_INVALID", "收入记录存在错误", 400, {"errors": errors[:100]})
         voucher_ids = _voucher_ids(data.get("voucher_ids"))
         origin = _origin_of(data, request.user)
+        account = AccountService.resolve_account(data.get("account_id"))
         from apps.committee.services import CommitteeQuery
 
         with transaction.atomic():
             sheet = IncomeSheet.objects.create(
-                title=data.get("title") or None, source="MANUAL",
+                title=data.get("title") or None, source="MANUAL", account=account,
                 creator_labels=",".join(CommitteeQuery.identity_labels(request.user.id)),
                 submitted_by=request.user, origin=origin)
             IncomeRecord.objects.bulk_create([IncomeRecord(sheet=sheet, **row) for row in valid])

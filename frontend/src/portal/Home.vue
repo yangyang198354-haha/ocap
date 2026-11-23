@@ -39,6 +39,28 @@
         </div>
       </section>
 
+      <section class="card home-accounts" aria-label="账户余额" @click="$router.push('/reports')">
+        <div class="card-head">
+          <h3 class="title title-flat">账户余额</h3>
+          <router-link to="/reports" class="link" @click.stop>财务报表</router-link>
+        </div>
+        <template v-if="!accountsError">
+          <div class="label">启用账户合计</div>
+          <div class="home-accounts-total mono">¥{{ accountsTotal }}</div>
+          <div v-if="accounts.length" class="home-account-list">
+            <div v-for="account in accounts" :key="account.id" class="home-account-row">
+              <span class="home-account-name">{{ account.name }}</span>
+              <b class="mono">¥{{ account.balance }}</b>
+            </div>
+          </div>
+          <p v-else class="muted">暂无账户</p>
+        </template>
+        <p v-else class="muted">
+          加载失败
+          <el-button link type="primary" size="small" @click.stop="loadAccounts">重试</el-button>
+        </p>
+      </section>
+
       <nav class="home-quick" aria-label="快捷入口">
         <div class="home-quick-title title">快捷入口</div>
         <div class="home-quick-grid">
@@ -82,7 +104,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { approvalApi, meApi, pollApi, resolutionApi } from '@/shared/api'
+import { approvalApi, accountApi, meApi, pollApi, resolutionApi } from '@/shared/api'
 import { remaining } from '@/shared/voteShare'
 import { formatDateTime } from '@/shared/format'
 import { FLOW_SCOPE_TEXT, textOf } from '@/shared/labels'
@@ -97,6 +119,22 @@ const tasks = ref(null)
 const polls = ref(null)
 const pendingReview = ref(0)
 const meError = ref(false)
+const accounts = ref([])
+const accountsTotal = ref('0.00')
+const accountsError = ref(false)
+
+async function loadAccounts() {
+  try {
+    const data = await accountApi.summary({ status: 'ENABLED', recent: 0 })
+    accounts.value = data?.accounts || []
+    accountsTotal.value = data?.total_balance ?? '0.00'
+    accountsError.value = false
+  } catch (e) {
+    accounts.value = []
+    accountsTotal.value = '0.00'
+    accountsError.value = true
+  }
+}
 
 // C-34 / ADR-080：单一最高身份取 identitySummary（与"我的"、管理端目录同口径）；加载中/失败不显示"游客"
 const identityText = computed(() => {
@@ -153,6 +191,7 @@ async function retryMe() {
 }
 
 onMounted(async () => {
+  loadAccounts()
   try {
     await auth.fetchMe()
     meError.value = false
@@ -191,3 +230,17 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.home-accounts { grid-column: span 2; cursor: pointer; }
+.home-accounts-total { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 8px; }
+.home-account-list { display: flex; flex-direction: column; }
+.home-account-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px;
+}
+.home-account-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 768px) {
+  .home-accounts-total { font-size: 34px; }
+}
+</style>

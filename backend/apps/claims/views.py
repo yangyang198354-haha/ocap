@@ -19,6 +19,7 @@ from apps.core.errors import ApiError
 from apps.core.money import money
 from apps.core.permissions import IsAdmin, IsCommitteeMember, IsIncomeMember, IsMember
 from apps.core.serializers import page_response
+from apps.ledger.services import AccountService
 
 from .models import Claim
 
@@ -124,11 +125,12 @@ class ReimbursementCreateView(APIView):
         invoice_ids = _parse_invoice_ids(data.get("invoice_ids") or [], required=True)
         flow = _flow(data, "EXPENSE")
         origin = _origin_of(data, request.user, "REIMBURSEMENT")
+        account = AccountService.resolve_account(data.get("account_id"))
         with transaction.atomic():
             claim = Claim.objects.create(type="REIMBURSEMENT", submitter=request.user,
                                          applicant_labels=_applicant_labels(request.user),
                                          amount=amount, reason=reason, occurred_on=occurred_on,
-                                         origin=origin)
+                                         account=account, origin=origin)
             AttachmentService.link(invoice_ids, linked_type="claim", linked_id=str(claim.id),
                                    purpose="INVOICE", owner=request.user)
             ApprovalEngine.submit(scope="EXPENSE", subject_type="claim", subject_id=claim.id,
@@ -162,13 +164,14 @@ class AdvanceCreateView(APIView):
             raise ApiError("INVALID_VALUE", "预计核销日期须晚于今日")
         flow = _flow(data, "EXPENSE")
         origin = _origin_of(data, request.user, "ADVANCE")
+        account = AccountService.resolve_account(data.get("account_id"))
         with transaction.atomic():
             claim = Claim.objects.create(type="ADVANCE", submitter=request.user,
                                          applicant_labels=_applicant_labels(request.user),
                                          amount=amount, reason=reason,
                                          expected_usage=expected_usage,
                                          expected_settle_on=expected_settle_on,
-                                         origin=origin)
+                                         account=account, origin=origin)
             ApprovalEngine.submit(scope="EXPENSE", subject_type="claim", subject_id=claim.id,
                                   flow_id=flow.id, submitter=request.user)
             AuditService.record(actor=AuditActor("MEMBER", request.user.id,
@@ -196,6 +199,7 @@ class SettlementCreateView(APIView):
         reimbursement_ids = data.get("reimbursement_ids") or []
         if not isinstance(reimbursement_ids, list) or not (1 <= len(reimbursement_ids) <= 50):
             raise ApiError("INVALID_VALUE", "reimbursement_ids 须为 1~50 个")
+        account = AccountService.resolve_account(data.get("account_id"))
         with transaction.atomic():
             advance = Claim.objects.filter(id=advance_id, type="ADVANCE",
                                            status="APPROVED").first()
@@ -216,7 +220,7 @@ class SettlementCreateView(APIView):
             settlement = Claim.objects.create(type="SETTLEMENT", submitter=request.user,
                                               applicant_labels=_applicant_labels(request.user),
                                               amount=amount, reason=reason,
-                                              advance_id=advance_id)
+                                              advance_id=advance_id, account=account)
             advance.settlement_id = settlement.id
             advance.save(update_fields=["settlement_id", "updated_at"])
             Claim.objects.filter(id__in=[r.id for r in reimbursements]).update(

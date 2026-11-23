@@ -271,11 +271,11 @@ describe('TC-UNIT-108 风格入口范围（AC-075-02、AC-079-03、AC-080-04、A
     for (const f of vue('frontend/src/admin')) expect(read(f), f).not.toMatch(/默认风格|新增风格|风格设置/)
     expect(read('frontend/src/shared/api.js')).toContain("adminHttp.get('/admin/me/theme')")
   })
-  it('路由：用户端 16 个页面组件、管理端 16 个页面组件均存在', () => {
+  it('路由：用户端 16 个页面组件、管理端 17 个页面组件均存在', () => {
     const router = read('frontend/src/router/index.js')
     const comps = [...router.matchAll(/import\('@\/(portal|admin)\/(\w+)\.vue'\)/g)].map((m) => `${m[1]}/${m[2]}`)
     expect(comps.filter((c) => c.startsWith('portal/')).length).toBe(18) // 17 页（新增 UserProfile）+ PortalLayout
-    expect(comps.filter((c) => c.startsWith('admin/')).length).toBe(17) // 16 页（含版式模板）+ AdminLayout
+    expect(comps.filter((c) => c.startsWith('admin/')).length).toBe(18) // 17 页（含版式模板、账户管理）+ AdminLayout
   })
 })
 

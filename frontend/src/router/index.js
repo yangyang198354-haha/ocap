@@ -78,6 +78,7 @@ const routes = [
       { path: 'flows', component: () => import('@/admin/AdminFlows.vue') },
       { path: 'finance', component: AdminFinancePage, props: { section: 'claims' } },
       { path: 'finance/limit', component: AdminFinancePage, props: { section: 'limit' } },
+      { path: 'finance/accounts', component: () => import('@/admin/AdminAccounts.vue') },
       { path: 'users', component: AdminUsersPage, props: { section: 'admins' } },
       { path: 'users/registered', component: AdminUsersPage, props: { section: 'registered' } },
       { path: 'audit', component: AdminAuditPage, props: { section: 'config' } },

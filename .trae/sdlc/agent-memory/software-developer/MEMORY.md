@@ -13,6 +13,9 @@
 - [M-SD-026] 跨端展示字段由后端统一提供 display 文案，可避免 Web 与小程序各自实现空值与精度规则 — conf 0.6 · 证据 GR-C-001 / IFC-248 / 后端 572、前端 185、小程序 78 项通过 · 首见 2026-11-14 · 命中 1
 - [M-SD-041] 列表派生字段在批量序列化层预取关联集合（如 RegistryPhone），避免逐行 related manager 造成 N+1 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-1 / tests/integration/test_batch1118_seats.py:301 · 首见 2026-11-19 · 命中 1
 - [M-SD-042] 给隐私白名单接口加字段前先搜索测试中的反向字段断言，契约优先于便利 — conf 0.6 · 证据 ocap_profile_ux-GROUP_C-1-2 / CR-006 / TC-INT-1071 · 首见 2026-11-19 · 命中 1
+- [M-SD-043] 报表链式口径用“生成时按期间起点前累计 + 作废标记覆盖期间及之后 + 生成后按期间升序重算 legacy=False 报表”，读取零计算；报表量增长时改条件批量更新 — conf 0.75 · 证据 ocap_finance_ux GR-C-001 / TC-UNIT-1404、1405 / TC-E2E-1401 · 首见 2026-11-23 · 命中 1
+- [M-SD-044] 非空外键改造时在模型 save() 对未指定外键回退默认行，可让存量脚本/直接 create 在迁移后继续工作，避免大范围改测试 — conf 0.75 · 证据 ocap_finance_ux GR-C-001 / TC-UNIT-1403 / 全量 1206 通过 · 首见 2026-11-23 · 命中 1
+- [M-SD-045] 本仓库 test_requirements_numbering 要求 REQ/US/AC/C 编号跨批次全局唯一，需求编号规划必须扫描全部 project_workspace — conf 0.9 · 证据 ocap_finance_ux SELF_CORRECTION / test_requirements_numbering.py / user_stories 1.0.1 · 首见 2026-11-23 · 命中 1
 
 ## 用户偏好与禁止项
 

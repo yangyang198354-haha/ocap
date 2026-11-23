@@ -22,7 +22,7 @@ def on_approved(subject_id: int) -> None:
         LedgerService.post(direction="INCOME", amount=record.amount,
                            occurred_on=record.occurred_on, entry_type=record.category or "INCOME",
                            summary=record.source_note, source_type="income_record",
-                           source_id=record.id, seq=0)
+                           source_id=record.id, seq=0, account=sheet.account)
     AuditService.record(actor=AuditActor("SYSTEM", None, "系统"), action="INCOME_DECIDED",
                         object_type="income_sheet", object_id=str(subject_id), result="SUCCESS",
                         detail={"status": "EFFECTIVE"})

@@ -330,3 +330,12 @@
 | 2026-11-22T21:39:06+08:00 | ocap_approval_flow-GROUP_E2-001-2 | 晋升→M-DE-050 | committed |
 | 2026-11-22T21:39:06+08:00 | (memory) P-DE-046 | 晋升→M-DE-046 | committed |
 | 2026-11-22T21:39:06+08:00 | (memory) P-DE-047 | 晋升→M-DE-047 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_C-001-1 | 晋升→M-SD-043 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_C-001-2 | 晋升→M-SD-044 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_C-001-3 | 晋升→M-SD-045 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_D-001-1 | 晋升→M-TE-046 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_D-001-2 | 晋升→M-TE-047 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_D-001-3 | 晋升→M-TE-048 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-1 | 保留→P-DE-051 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-2 | 保留→P-DE-052 | committed |
+| 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-3 | 保留→P-DE-053 | committed |

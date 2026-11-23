@@ -120,9 +120,19 @@ export const incomeApi = {
 
 export const ledgerApi = {
   reports: (params) => get('/ledger/reports', params),
-  reportDetail: (id) => get(`/ledger/reports/${id}`),
+  // params 可含 account_id：报表详情的账户视角（IFC-413 / ADR-179）
+  reportDetail: (id, accountId) =>
+    get(`/ledger/reports/${id}`, accountId ? { account_id: accountId } : undefined),
   // 手动生成限业委会成员（普通用户令牌）：{ period_type: QUARTER|YEAR, year, quarter? }
   generate: (data) => post('/ledger/reports/generate', data)
+}
+
+// 账户余额与最近流水（IFC-409）；管理端账户 CRUD（IFC-410~412）
+export const accountApi = {
+  summary: (params) => get('/ledger/accounts/summary', params),
+  adminList: (params) => adminHttp.get('/admin/ledger/accounts', { params }),
+  create: (data) => adminHttp.post('/admin/ledger/accounts', data),
+  update: (id, data) => adminHttp.patch(`/admin/ledger/accounts/${id}`, data)
 }
 
 export const pollApi = {

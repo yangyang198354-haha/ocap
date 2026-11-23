@@ -1,15 +1,161 @@
-"""台账视图（IFC-110~112）。"""
+"""台账视图（IFC-110~112、IFC-409~414）。"""
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.audit import AuditActor, AuditService
 from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
 from apps.core.money import money
-from apps.core.permissions import IsCommitteeMember, IsMember
+from apps.core.permissions import IsAdmin, IsCommitteeMember, IsMember
 from apps.core.serializers import page_response
 
-from .models import LedgerReport
-from .services import LedgerService
+from .models import LedgerAccount, LedgerReport
+from .services import AccountService, LedgerService, _aggregate, _opening_balance, _period_range
+
+
+def _recent_entry_view(entry) -> dict:
+    return {"id": entry.id, "occurred_on": str(entry.occurred_on), "direction": entry.direction,
+            "amount": money(entry.amount), "entry_type": entry.entry_type,
+            "summary": entry.summary}
+
+
+def account_view(account: LedgerAccount) -> dict:
+    return {"id": account.id, "name": account.name, "account_no": account.account_no or "",
+            "status": account.status, "is_default": account.is_default,
+            "balance": money(AccountService.balance(account))}
+
+
+class AccountSerializer:
+    def __init__(self, rows, many=False, context=None):
+        rows = rows if many else [rows]
+        self.data = [account_view(row) for row in rows]
+
+
+class AccountSummaryView(APIView):
+    """IFC-409：全部/启用账户余额与最近流水（登录用户可查看）。"""
+
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        status = request.query_params.get("status")
+        if status not in ("ENABLED", "ALL"):
+            status = "ALL"
+        try:
+            recent = int(request.query_params.get("recent", 10))
+        except (TypeError, ValueError):
+            recent = 10
+        recent = min(max(recent, 0), 20)
+        summary = AccountService.summary(status=status, recent=recent)
+        accounts = [{"id": row["id"], "name": row["name"], "account_no": row["account_no"],
+                     "status": row["status"], "is_default": row["is_default"],
+                     "balance": money(row["balance"]),
+                     "recent_entries": [_recent_entry_view(e) for e in row["recent_entries"]]}
+                    for row in summary["accounts"]]
+        return Response({"total_balance": money(summary["total_balance"]), "accounts": accounts})
+
+
+def _parse_name(raw) -> str:
+    name = str(raw if raw is not None else "").strip()
+    if not (1 <= len(name) <= 64):
+        raise ApiError("INVALID_VALUE", "名称须为 1~64 字符")
+    return name
+
+
+def _parse_account_no(raw) -> str | None:
+    value = str(raw if raw is not None else "").strip()
+    if len(value) > 32:
+        raise ApiError("INVALID_VALUE", "账户号最多 32 字符")
+    return value or None
+
+
+def _ensure_account_no_free(account_no: str | None, *, exclude_id: int | None = None) -> None:
+    if account_no is None:
+        return
+    qs = LedgerAccount.objects.filter(account_no=account_no)
+    if exclude_id is not None:
+        qs = qs.exclude(id=exclude_id)
+    if qs.exists():
+        raise ApiError("ACCOUNT_NO_EXISTS", "账户号已存在", 409)
+
+
+class AdminAccountListView(APIView):
+    """IFC-410/411：管理端账户列表与创建（仅管理员）。"""
+
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        qs = LedgerAccount.objects.all()
+        status = request.query_params.get("status")
+        if status in ("ENABLED", "DISABLED"):
+            qs = qs.filter(status=status)
+        return page_response(qs, request, AccountSerializer)
+
+    def post(self, request):
+        data = request.data or {}
+        name = _parse_name(data.get("name"))
+        account_no = _parse_account_no(data.get("account_no"))
+        _ensure_account_no_free(account_no)
+        with transaction.atomic():
+            account = LedgerAccount.objects.create(
+                name=name, account_no=account_no,
+                is_default=not LedgerAccount.objects.exists(),
+                created_by_admin_id=request.user.id)
+            AuditService.record(actor=_admin_actor(request), action="ACCOUNT_CREATED",
+                                object_type="ledger_account", object_id=str(account.id),
+                                result="SUCCESS",
+                                detail={"after": _account_snapshot(account)})
+        return Response(account_view(account), status=201)
+
+
+class AdminAccountDetailView(APIView):
+    """IFC-412：管理端编辑账户（名称/账户号/状态/默认），仅管理员。"""
+
+    permission_classes = [IsAdmin]
+
+    def patch(self, request, account_id: int):
+        account = LedgerAccount.objects.filter(id=account_id).first()
+        if account is None:
+            raise ApiError("NOT_FOUND", "账户不存在", 404)
+        data = request.data or {}
+        before = _account_snapshot(account)
+        updates = {}
+        if "name" in data:
+            updates["name"] = _parse_name(data.get("name"))
+        if "account_no" in data:
+            account_no = _parse_account_no(data.get("account_no"))
+            _ensure_account_no_free(account_no, exclude_id=account.id)
+            updates["account_no"] = account_no
+        if "status" in data:
+            status = str(data.get("status") or "")
+            if status not in ("ENABLED", "DISABLED"):
+                raise ApiError("INVALID_VALUE", "status 不合法")
+            updates["status"] = status
+        make_default = data.get("is_default")
+        with transaction.atomic():
+            if make_default is True:
+                LedgerAccount.objects.exclude(id=account.id).filter(is_default=True).update(is_default=False)
+                updates["is_default"] = True
+            elif make_default is False:
+                updates["is_default"] = False
+            if updates:
+                for field, value in updates.items():
+                    setattr(account, field, value)
+                account.save(update_fields=[*updates, "updated_at"])
+            AuditService.record(actor=_admin_actor(request), action="ACCOUNT_UPDATED",
+                                object_type="ledger_account", object_id=str(account.id),
+                                result="SUCCESS",
+                                detail={"before": before, "after": _account_snapshot(account)})
+        return Response(account_view(account))
+
+
+def _admin_actor(request) -> AuditActor:
+    return AuditActor("ADMIN", request.user.id, getattr(request.user, "username", "") or "管理员")
+
+
+def _account_snapshot(account: LedgerAccount) -> dict:
+    return {"name": account.name, "account_no": account.account_no or "",
+            "status": account.status, "is_default": account.is_default}
 
 
 class LedgerReportListView(APIView):
@@ -53,13 +199,34 @@ class LedgerReportGenerateView(APIView):
 
 
 class LedgerReportDetailView(APIView):
+    """IFC-413：报表详情；可选 account_id 查看指定账户视角（ADR-179）。"""
+
     permission_classes = [IsMember]
 
     def get(self, request, report_id: int):
         report = LedgerReport.objects.filter(id=report_id).first()
         if report is None:
             raise ApiError("NOT_FOUND", "台账不存在", 404)
-        return Response(report_detail(report))
+        account_id = request.query_params.get("account_id")
+        if account_id in (None, ""):
+            return Response(report_detail(report))
+        try:
+            account_id = int(account_id)
+        except (TypeError, ValueError):
+            raise ApiError("INVALID_VALUE", "account_id 不合法") from None
+        account = LedgerAccount.objects.filter(id=account_id).first()
+        if account is None:
+            raise ApiError("NOT_FOUND", "账户不存在", 404)
+        start, end = _period_range(report.period_type, report.year, report.quarter)
+        total_income, total_expense, detail = _aggregate(start, end, account)
+        opening = _opening_balance(start, account)
+        return Response({**report_summary(report), "legacy": False, "account_id": account.id,
+                         "total_income": money(total_income),
+                         "total_expense": money(total_expense),
+                         "balance": money(total_income - total_expense),
+                         "opening_balance": money(opening),
+                         "closing_balance": money(opening + total_income - total_expense),
+                         "detail": _mask_expense_reason(detail)})
 
 
 class ReportSerializer:
@@ -68,17 +235,27 @@ class ReportSerializer:
         self.data = [report_summary(r) for r in rows]
 
 
+def _nullable_money(value):
+    return None if value is None else money(value)
+
+
 def report_summary(report: LedgerReport) -> dict:
     return {"id": report.id, "period_type": report.period_type, "year": report.year,
             "quarter": report.quarter, "total_income": money(report.total_income),
             "total_expense": money(report.total_expense), "balance": money(report.balance),
+            "opening_balance": _nullable_money(report.opening_balance),
+            "closing_balance": _nullable_money(report.closing_balance),
+            "legacy": report.legacy,
             "stale": report.stale, "generated_at": report.generated_at}
 
 
-def report_detail(report: LedgerReport) -> dict:
-    detail = report.detail
+def _mask_expense_reason(detail):
     # ADR-091 / ocap REQ-FUNC-050 OQ-08：报表明细默认不显示支出事由（不写回数据库）
-    if not SystemConfig.get("report.show_expense_reason") and isinstance(detail, list):
-        detail = [({**row, "summary": None} if isinstance(row, dict) and row.get("direction") == "EXPENSE"
-                   else row) for row in detail]
-    return {**report_summary(report), "detail": detail}
+    if SystemConfig.get("report.show_expense_reason") or not isinstance(detail, list):
+        return detail
+    return [({**row, "summary": None} if isinstance(row, dict) and row.get("direction") == "EXPENSE"
+             else row) for row in detail]
+
+
+def report_detail(report: LedgerReport) -> dict:
+    return {**report_summary(report), "detail": _mask_expense_reason(report.detail)}

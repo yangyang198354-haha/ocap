@@ -295,7 +295,7 @@ class ApprovalEngine:
 
     @staticmethod
     def timeline(instance_id: int, viewer) -> dict:
-        from apps.accounts.models import User
+        from apps.accounts.directory import person_refs
 
         instance = (ApprovalInstance.objects.select_related("submitter")
                     .filter(id=instance_id).first())
@@ -312,25 +312,40 @@ class ApprovalEngine:
                       "reached_at": s.reached_at, "decided_at": s.decided_at} for s in states]
         actions = list(ApprovalAction.objects.filter(instance=instance).order_by("acted_at", "id"))
         actor_ids = {row.actor_id for row in actions}
-        users = {u.id: u for u in User.objects.filter(id__in=actor_ids)}
+        approver_ids = {uid for step in steps for uid in (step.get("approver_ids") or [])}
+        refs = person_refs({instance.submitter_id} | actor_ids | approver_ids)
         grouped: dict[int, list] = {}
         for row in actions:
             order = row.step_order or (steps[0]["order"] if steps else 1)
-            user = users.get(row.actor_id)
+            actor = refs.get(row.actor_id) or {
+                "id": row.actor_id, "display_name": f"用户#{row.actor_id}",
+                "real_name": "", "avatar_url": None, "account_no": "",
+            }
             grouped.setdefault(order, []).append({
                 "actor_id": row.actor_id,
-                "actor_label": getattr(user, "nickname", "") or f"用户#{row.actor_id}",
+                "actor_label": actor["display_name"],
+                "actor_avatar_url": actor["avatar_url"],
+                "actor_account_no": actor["account_no"],
                 "action": row.action,
                 "comment": row.comment,
                 "acted_at": row.acted_at,
                 "legacy": row.step_state_id is None,
             })
         for step in steps:
+            step["approvers"] = [refs.get(uid) or {
+                "id": uid, "display_name": f"用户#{uid}", "real_name": "",
+                "avatar_url": None, "account_no": "",
+            } for uid in (step.get("approver_ids") or [])]
             step["actions"] = grouped.get(step["order"], [])
+        submitter = refs.get(instance.submitter_id) or {
+            "id": instance.submitter_id, "display_name": f"用户#{instance.submitter_id}",
+            "real_name": "", "avatar_url": None, "account_no": "",
+        }
         return {
             "id": instance.id, "scope": instance.scope, "subject_type": instance.subject_type,
             "subject_id": instance.subject_id, "subject_title": subject_title(instance.subject_type,
                                                                               instance.subject_id),
+            "submitter": submitter, "submitter_label": submitter["display_name"],
             "status": instance.status, "current_step_order": instance.current_step_order,
             "submitted_at": instance.submitted_at, "decided_at": instance.decided_at,
             "steps": steps,

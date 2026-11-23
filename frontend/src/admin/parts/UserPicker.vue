@@ -10,15 +10,16 @@
       @clear="reset"
     />
     <div v-if="selected" class="user-picker-selected">
-      已选：<b>{{ selected.nickname || selected.account_no }}</b>
+      <AuthImage :src="selected.avatar_url" :alt="displayNameOf(selected)" :size="24" />
+      已选：<b>{{ displayNameOf(selected) }}</b>
       <el-tag size="small" type="info">{{ selected.identity_label }}</el-tag>
       <el-button size="small" link @click="clear">重新选择</el-button>
     </div>
     <div v-if="searched" class="user-picker-list">
       <p v-if="!candidates.length" class="muted">无匹配用户</p>
       <div v-for="c in candidates" :key="c.id" class="user-picker-item" @click="choose(c)">
-        <b>{{ c.nickname || '（无昵称）' }}</b>
-        <span v-if="c.real_names?.length" class="muted">{{ c.real_names.join('、') }}</span>
+        <AuthImage :src="c.avatar_url" :alt="displayNameOf(c)" :size="24" />
+        <b>{{ displayNameOf(c) }}</b>
         <span class="muted">{{ c.account_no }}</span>
         <span class="muted">{{ c.phone || '未绑定手机' }}</span>
         <el-tag size="small" type="info">{{ c.identity_label }}</el-tag>
@@ -41,6 +42,9 @@ import { onBeforeUnmount, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'
 import { errorText } from '@/shared/format'
+import AuthImage from '@/portal/parts/AuthImage.vue'
+
+const displayNameOf = (u) => u.real_names?.[0] || u.display_name || u.account_no || `用户#${u.id}`
 
 defineProps({
   modelValue: { type: Number, default: null },

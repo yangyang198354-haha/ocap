@@ -3,6 +3,8 @@
 分层：integration（真实 ORM + DRF 视图，仅短信等外部依赖使用 fakes）。
 溯源：US-260～US-272（REQ-FUNC-255～263、REQ-NFUNC-051/052）。
 """
+import uuid
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
@@ -229,7 +231,11 @@ class FlowDetailTests(ApiTestBase):
         flow = self.make_flow(approvers=[approver], name="原名称")
         resp = self.assert_ok(self.api("get", "/admin/approval/flows", token=admin_token))
         row = next(r for r in resp.json()["results"] if r["id"] == flow.id)
-        self.assertEqual(set(row["approvers"][0]), {"id", "nickname", "identity_label"})
+        self.assertEqual(set(row["approvers"][0]),
+                         {"id", "display_name", "real_name", "nickname", "avatar_url",
+                          "account_no", "identity_label"})
+        # 无清册实名时回退账号占位，不回退昵称（昵称可重复）
+        self.assertEqual(row["approvers"][0]["display_name"], f"用户{approver.account_no}")
 
         other, _ = self.make_user(nickname="审批乙")
         self.make_seat(other)
@@ -237,3 +243,19 @@ class FlowDetailTests(ApiTestBase):
                                        {"name": "新名称", "approver_ids": [other.id]}, token=admin_token))
         self.assertEqual(resp.json()["name"], "新名称")
         self.assertEqual([a["id"] for a in resp.json()["approvers"]], [other.id])
+
+    def test_flow_approver_shows_registry_real_name_and_avatar(self):
+        """审批人展示产权业主清册实名 + 头像，而非昵称（REQ-FUNC-292）。"""
+        _, admin_token = self.make_admin()
+        approver, _, _ = self.make_owner()
+        self.make_seat(approver)
+        approver.avatar_attachment_id = uuid.uuid4()
+        approver.save(update_fields=["avatar_attachment_id"])
+        flow = self.make_flow(approvers=[approver], name="实名审批流程")
+        row = next(r for r in self.assert_ok(
+            self.api("get", "/admin/approval/flows", token=admin_token)).json()["results"]
+            if r["id"] == flow.id)
+        approver_row = row["approvers"][0]
+        self.assertEqual(approver_row["display_name"], "业主甲")
+        self.assertEqual(approver_row["real_name"], "业主甲")
+        self.assertIn(str(approver.avatar_attachment_id), approver_row["avatar_url"])

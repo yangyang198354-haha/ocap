@@ -469,7 +469,7 @@ describe('管理端页面', () => {
     await flush()
     // 默认指定负责人：可见 UserPicker，可添加审批人
     expect(wrapper.findComponent(UserPicker).exists()).toBe(true)
-    wrapper.findComponent(UserPicker).vm.$emit('change', { id: 7, nickname: '委员甲', identity_label: '委员' })
+    wrapper.findComponent(UserPicker).vm.$emit('change', { id: 7, real_names: ['委员甲'], account_no: '1000000007', identity_label: '委员' })
     await flush()
     expect(document.body.textContent).toContain('委员甲')
     // 切到半数同意：清空并隐藏审批人设置，显示说明

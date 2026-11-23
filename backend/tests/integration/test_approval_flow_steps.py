@@ -1,5 +1,6 @@
 """GROUP_D 集成测试：多步审批、或签/会签、时间线（ocap_approval_flow）。"""
 import pathlib
+import uuid
 
 from django.urls import resolve
 
@@ -242,6 +243,31 @@ class TimelineAndValidationTests(ApprovalStepsBase):
         self.decide(instance, "APPROVE", self.t1)
         resp = self.decide(instance, "APPROVE", self.t1)
         self.assert_error(resp, 403, "FORBIDDEN")
+
+    def test_timeline_and_tasks_show_registry_real_name_and_avatar(self):
+        """提交人/审批人显示产权业主清册实名 + 头像，而不是昵称（REQ-FUNC-292）。"""
+        self.a1.avatar_attachment_id = uuid.uuid4()
+        self.a1.save(update_fields=["avatar_attachment_id"])
+        rid = self.submit(self.flow)
+        instance = self.instance_of(rid)
+        timeline = self.assert_ok(
+            self.api("get", f"/approval/instances/{instance.id}", token=self.t1)).json()
+        self.assertEqual(timeline["submitter"]["display_name"], "业主甲")
+        approver = timeline["steps"][0]["approvers"][0]
+        self.assertEqual(approver["display_name"], "业主甲")
+        self.assertIn(str(self.a1.avatar_attachment_id), approver["avatar_url"])
+
+        tasks = self.assert_ok(
+            self.api("get", "/approval/tasks?scope=RESOLUTION", token=self.t1)).json()
+        task = next(row for row in tasks["results"] if row["instance_id"] == instance.id)
+        self.assertEqual(task["submitter"]["display_name"], "业主甲")
+
+        self.assert_ok(self.decide(instance, "APPROVE", self.t1))
+        timeline = self.assert_ok(
+            self.api("get", f"/approval/instances/{instance.id}", token=self.t1)).json()
+        action = next(a for a in timeline["steps"][0]["actions"] if a["action"] == "APPROVE")
+        self.assertEqual(action["actor_label"], "业主甲")
+        self.assertIn(str(self.a1.avatar_attachment_id), action["actor_avatar_url"])
 
 
 class ClientContractTests(ApprovalStepsBase):

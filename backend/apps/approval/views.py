@@ -16,13 +16,15 @@ STRATEGIES = {"ANY", "ALL"}
 
 
 def _approver_label(user_id: int) -> dict:
-    from apps.accounts.models import User
+    from apps.accounts.directory import person_refs
     from apps.committee.services import CommitteeQuery
 
-    user = User.objects.filter(id=user_id).first()
+    ref = person_refs([user_id]).get(user_id) or {
+        "id": user_id, "display_name": f"用户#{user_id}", "real_name": "",
+        "nickname": "", "avatar_url": None, "account_no": "",
+    }
     labels = CommitteeQuery.identity_labels(user_id)
-    return {"id": user_id, "nickname": getattr(user, "nickname", "") or f"用户#{user_id}",
-            "identity_label": labels[0] if labels else "业委会成员"}
+    return {**ref, "identity_label": labels[0] if labels else "业委会成员"}
 
 
 def _step_view(step: ApprovalStep) -> dict:
@@ -196,11 +198,9 @@ class FlowOptionListView(APIView):
         return Response([{
             "id": f.id, "name": f.name, "mode": f.mode, "step_count": f.steps.count(),
             "steps": [{"order": s.order, "name": s.name, "strategy": s.strategy,
-                       "approvers": [{"id": a.user_id, "nickname": a.user.nickname}
-                                     for a in s.approvers.select_related("user")]}
+                       "approvers": [_approver_label(a.user_id) for a in s.approvers.all()]}
                       for s in f.steps.order_by("order")],
-            "approvers": [{"id": a.user_id, "nickname": a.user.nickname}
-                          for a in f.approvers.select_related("user")],
+            "approvers": [_approver_label(a.user_id) for a in f.approvers.all()],
         } for f in rows])
 
 
@@ -221,10 +221,16 @@ class TaskListView(APIView):
             if step is None or request.user.id not in (step.approver_ids or []):
                 continue
             rows.append((instance, step))
+        from apps.accounts.directory import person_refs
+
+        submitter_refs = person_refs([i.submitter_id for i, _ in rows])
         data = [{
             "instance_id": i.id, "scope": i.scope, "subject_type": i.subject_type,
             "subject_id": i.subject_id, "subject_title": subject_title(i.subject_type, i.subject_id),
-            "submitter_label": i.submitter.identity_label, "submitted_at": i.submitted_at,
+            "submitter": submitter_refs.get(i.submitter_id),
+            "submitter_label": (submitter_refs.get(i.submitter_id) or {}).get(
+                "display_name", i.submitter.identity_label),
+            "submitted_at": i.submitted_at,
             "step_order": step.step_order, "step_name": step.name, "step_strategy": step.strategy,
             "step_reached_at": step.reached_at,
         } for i, step in rows]

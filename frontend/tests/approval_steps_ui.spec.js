@@ -71,8 +71,8 @@ describe('AdminFlows 步骤配置（US-311 / AC-316-01、AC-318-01）', () => {
       results: [{
         id: 9, name: '两步流程', scope: 'RESOLUTION', mode: 'DESIGNATED', is_active: true, step_count: 2,
         steps: [
-          { order: 1, name: '初审', strategy: 'ANY', approvers: [{ id: 2, nickname: '甲' }] },
-          { order: 2, name: '终审', strategy: 'ALL', approvers: [{ id: 3, nickname: '乙' }] }
+          { order: 1, name: '初审', strategy: 'ANY', approvers: [{ id: 2, display_name: '业主乙' }] },
+          { order: 2, name: '终审', strategy: 'ALL', approvers: [{ id: 3, display_name: '业主丙' }] }
         ]
       }]
     })
@@ -115,8 +115,8 @@ describe('AdminFlows 步骤配置（US-311 / AC-316-01、AC-318-01）', () => {
       results: [{
         id: 9, name: '两步流程', scope: 'RESOLUTION', mode: 'DESIGNATED', is_active: true, step_count: 2,
         steps: [
-          { order: 1, name: '初审', strategy: 'ANY', approvers: [{ id: 2, nickname: '甲' }] },
-          { order: 2, name: '终审', strategy: 'ALL', approvers: [{ id: 3, nickname: '乙' }] }
+          { order: 1, name: '初审', strategy: 'ANY', approvers: [{ id: 2, display_name: '业主乙' }] },
+          { order: 2, name: '终审', strategy: 'ALL', approvers: [{ id: 3, display_name: '业主丙' }] }
         ]
       }]
     })
@@ -136,20 +136,24 @@ describe('ApprovalTimeline（US-317 / AC-328-01、AC-328-03）', () => {
     approvalApi.instance.mockResolvedValue({
       id: 5, subject_title: '加装电梯', status: 'PENDING', current_step_order: 2,
       submitted_at: '2026-11-22T10:00:00+08:00',
+      submitter: { id: 1, display_name: '业主甲', avatar_url: null },
       steps: [
         {
           order: 1, name: '财务初审', strategy: 'ANY', status: 'APPROVED',
           reached_at: '2026-11-22T10:00:00+08:00',
-          approvers: [{ id: 2, nickname: '甲' }],
-          actions: [{ actor_id: 2, actor_label: '甲', action: 'APPROVE', comment: '同意', acted_at: '2026-11-22T10:05:00+08:00' }]
+          approvers: [{ id: 2, display_name: '业主乙', avatar_url: null }],
+          actions: [{ actor_id: 2, actor_label: '业主乙', action: 'APPROVE', comment: '同意', acted_at: '2026-11-22T10:05:00+08:00' }]
         },
-        { order: 2, name: '主任终审', strategy: 'ALL', status: 'ACTIVE', reached_at: null, approvers: [{ id: 3, nickname: '乙' }], actions: [] }
+        { order: 2, name: '主任终审', strategy: 'ALL', status: 'ACTIVE', reached_at: null, approvers: [{ id: 3, display_name: '业主丙', avatar_url: null }], actions: [] }
       ]
     })
     const { wrapper } = await mountPage(ApprovalTimeline, { props: { instanceId: 5 } })
     await flush()
     await flush()
     const text = wrapper.text()
+    expect(text).toContain('提交人：业主甲')
+    expect(text).toContain('业主乙')
+    expect(text).toContain('业主丙')
     expect(text).toContain('财务初审')
     expect(text).toContain('第 1 步')
     expect(text).toContain('已通过')
@@ -165,6 +169,7 @@ describe('Tasks（US-313 / AC-322-01、AC-332-02）', () => {
       count: 1, page: 1, page_size: 20,
       results: [{
         instance_id: 7, scope: 'EXPENSE', subject_title: '报销单',
+        submitter: { id: 9, display_name: '业主丁', avatar_url: null }, submitter_label: '业主丁',
         submitted_at: '2026-11-22T10:00:00+08:00',
         step_order: 1, step_name: '财务初审', step_strategy: 'ANY'
       }]
@@ -174,6 +179,7 @@ describe('Tasks（US-313 / AC-322-01、AC-332-02）', () => {
     await flush()
     expect(wrapper.text()).toContain('财务初审')
     expect(wrapper.text()).toContain('或签')
+    expect(wrapper.text()).toContain('提交人：业主丁')
 
     const approve = wrapper.findAll('button').find((b) => b.text().includes('同意'))
     await approve.trigger('click')

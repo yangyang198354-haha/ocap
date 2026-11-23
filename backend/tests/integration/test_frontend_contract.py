@@ -712,9 +712,11 @@ class ProductReviewFieldContractTests(ApiTestBase):
         cand = data["results"][0]
         text = src("frontend/src/admin/parts/UserPicker.vue")
         self.assertLessEqual(reads(text, ["item", "u", "row", "c", "user"]), set(cand) | {"id"})
-        for needed in ("nickname", "account_no", "phone", "identity_label", "real_names"):
+        for needed in ("account_no", "phone", "identity_label", "real_names", "avatar_url",
+                       "display_name"):
             self.assertIn(needed, set(cand), needed)
             self.assertIn(needed, text, f"UserPicker 未读取 {needed}")
+        self.assertNotIn("nickname", text, "审批人选择不应展示昵称（可重复）")
         self.assertIn("page_size", text)
 
     def test_tc_int_495_system_config_fields_vs_admin_finance(self):

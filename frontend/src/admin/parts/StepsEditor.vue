@@ -15,18 +15,22 @@
         <el-radio label="ALL">会签（全部同意）</el-radio>
       </el-radio-group>
       <p v-for="a in step.approvers" :key="a.id" class="row" style="margin-top: 6px">
-        <b>{{ a.nickname || a.account_no }}</b>
+        <AuthImage :src="a.avatar_url" :alt="nameOf(a)" :size="28" />
+        <b>{{ nameOf(a) }}</b>
         <el-tag size="small" type="info">{{ a.identity_label || '业委会成员' }}</el-tag>
         <el-button size="small" link @click="$emit('remove-approver', index, a.id)">移除</el-button>
       </p>
-      <UserPicker :model-value="null" placeholder="搜索并添加审批人" @change="(u) => $emit('add-approver', index, u)" />
+      <UserPicker :model-value="null" placeholder="按实名搜索并添加审批人" @change="(u) => $emit('add-approver', index, u)" />
     </div>
   </div>
 </template>
 
 <script setup>
 import UserPicker from './UserPicker.vue'
+import AuthImage from '@/portal/parts/AuthImage.vue'
 
 defineProps({ steps: { type: Array, required: true } })
 defineEmits(['add', 'remove', 'move', 'add-approver', 'remove-approver'])
+
+const nameOf = (a) => a.display_name || a.real_names?.[0] || a.account_no || `用户#${a.id}`
 </script>

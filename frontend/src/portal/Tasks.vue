@@ -15,6 +15,10 @@
           <div>
             <strong>{{ task.title || task.subject_title || textOf(FLOW_SCOPE_TEXT, task.scope) }}</strong>
             <span class="muted" style="margin-left: 8px">{{ textOf(FLOW_SCOPE_TEXT, task.scope) }} · {{ formatDateTime(task.submitted_at) }}</span>
+            <div class="person-row">
+              <AuthImage :src="task.submitter?.avatar_url" :alt="task.submitter_label" :size="24" />
+              <span class="muted">提交人：{{ task.submitter?.display_name || task.submitter_label }}</span>
+            </div>
             <div class="muted">当前第 {{ task.step_order }} 步 · {{ task.step_name }}（{{ textOf(STEP_STRATEGY_LABELS, task.step_strategy) }}）</div>
           </div>
           <div class="row">
@@ -48,6 +52,7 @@ import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi } from '@/shared/api'
 import ApprovalTimeline from './ApprovalTimeline.vue'
+import AuthImage from './parts/AuthImage.vue'
 import PagerBar from '@/shared/PagerBar.vue'
 import { errorText, formatDateTime } from '@/shared/format'
 import { FLOW_SCOPE_TEXT, STEP_STRATEGY_LABELS, textOf } from '@/shared/labels'
@@ -115,3 +120,7 @@ async function submitDecision() {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.person-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+</style>

@@ -24,4 +24,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
         data["identity_label"] = identity["identity_label"]
         data["certified_units"] = certified_units(memberships=memberships)
         data["real_names"] = real_names(user=instance, memberships=memberships)
+        data["avatar_url"] = instance.avatar_url
+        # 审批等场景展示实名（无实名时回退账号），不回退昵称（昵称可重复）
+        data["display_name"] = (data["real_names"][0] if data["real_names"]
+                                else f"用户{instance.account_no}")
         return data

@@ -71,6 +71,37 @@ def real_names(*, user, memberships: Sequence[Membership]) -> list[str]:
     return names
 
 
+def person_refs(user_ids) -> dict[int, dict]:
+    """审批等业委会场景的人员展示（REQ-FUNC-292）：优先产权业主清册实名 + 头像；
+    无实名时回退账号占位，不使用昵称（昵称可重复，无法区分审批人）。"""
+    from .models import User
+
+    ids = {int(uid) for uid in user_ids if uid}
+    if not ids:
+        return {}
+    users = {user.id: user for user in User.objects.filter(id__in=ids)}
+    memberships: dict[int, list[Membership]] = {}
+    rows = (Membership.objects.filter(user_id__in=ids, ended_at__isnull=True,
+                                      role__in=("HEAD", "OWNER"))
+            .select_related("unit").prefetch_related("unit__owners__phones"))
+    for membership in rows:
+        memberships.setdefault(membership.user_id, []).append(membership)
+    refs: dict[int, dict] = {}
+    for uid in ids:
+        user = users.get(uid)
+        names = real_names(user=user, memberships=memberships.get(uid, [])) if user else []
+        fallback = f"用户{user.account_no}" if user else f"用户#{uid}"
+        refs[uid] = {
+            "id": uid,
+            "display_name": names[0] if names else fallback,
+            "real_name": names[0] if names else "",
+            "nickname": getattr(user, "nickname", "") or "",
+            "avatar_url": user.avatar_url if user else None,
+            "account_no": user.account_no if user else "",
+        }
+    return refs
+
+
 def real_name_q(q: str) -> Q:
     """IFC-246：实名搜索条件；同一 RegistryPhone 记录同时约束手机号与业主姓名。"""
     matched = Membership.objects.filter(

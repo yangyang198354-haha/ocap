@@ -22,8 +22,8 @@
 
 - 后端：1188 → **1206** 测试通过（`OK (skipped=2)`）。
 - 前端：52 → **53** 个测试文件通过。
-- 阶段：GROUP_A/B/C/D/E1 APPROVED；GROUP_E2 = BLOCKED（等待用户授权部署）；GROUP_Z/PHASE_12 完成。
-- 部署：**未执行**（未获当轮授权，且改动尚未 commit/push）。
+- 阶段：GROUP_A/B/C/D/E1/E2 APPROVED；GROUP_Z/PHASE_12 完成。
+- 部署：**已部署到测试环境**（2026-11-23 23:53，提交 `3ed5b6b`，CI success，5 个迁移应用，V-01~V-11 通过；详见 `deployment/deployment_report.md`）。
 
 ## 交付物
 
@@ -33,7 +33,7 @@
 | 架构 | `architecture/architecture_design.md`（1.0.1，ADR-178~186）、`module_design.md`（1.0.1，MOD-192~201 / IFC-409~417）、`tech_stack.md`（1.0.0） |
 | 开发 | `development/implementation_plan.md`（1.0.0）、`code_review_report.md`（1.0.1，含 DEF-001） |
 | 测试 | `testing/test_plan.md`、`unit_test_report.md`、`integration_test_report.md`、`e2e_test_report.md`（各 1.0.0） |
-| 部署 | `deployment/cicd_pipeline.md`、`deployment/deployment_plan.md`（各 1.0.0，未执行） |
+| 部署 | `deployment/cicd_pipeline.md`、`deployment/deployment_plan.md`（各 1.0.0）、`deployment/deployment_report.md`（1.0.0，已执行） |
 | 知识 | `project_workspace/_kb_distillation/distill_20261123T2350.md`、`log.md` |
 
 ## 代码改动（待用户确认后提交）
@@ -65,5 +65,5 @@
 ## 下一步
 
 - 用户确认以上遗留项后，由主会话执行 commit/push（画像 P9：子代理不执行）。
-- 部署需用户当轮明确授权测试环境；届时另起 E2 invocation（`PRODUCTION_DEPLOY_CONFIRM=true` + 环境名“测试”），按 `deployment_plan.md` 执行并写 `deployment_report.md`。
+- 部署情况：提交 `3ed5b6b` 已推送并在测试环境执行 recreate 部署；M-01 已自动化核实（198 行 / 899045.56 前后一致），M-02~M-07 待人工浏览器验证。
 - 迁移上线前完成 M-01（迁移前后流水条数与金额合计差额 0.00）。

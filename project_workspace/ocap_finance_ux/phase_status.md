@@ -1,4 +1,4 @@
-<phase_status project="ocap_finance_ux" mode="INCREMENTAL" created="2026-11-23T22:40:03+08:00" updated="2026-11-23T23:52:00+08:00">
+<phase_status project="ocap_finance_ux" mode="INCREMENTAL" created="2026-11-23T22:40:03+08:00" updated="2026-11-23T23:56:00+08:00">
   <request><![CDATA[财务报表页面用户体验需要提升，UI 需要极具视觉冲击力 。 1. 除了当前按照时间倒排季报和年报外。可以看过滤出年报和所有季度报。 2. 点击指定报告后，有动效可以看到详细。不要显示在底部。3.季度报，年报的期初期末结算要连起来。不要每个季度单独计算。 4. 增加一个账户盈余，能够基于历史收入支出表，计算出当前章鱼盈余。 后台可以创建多个账户，对每个账户进行计算。当前导入的所有收入和支出，迁移到默认的第四届业主委员会基本账户。账户号可以编辑。 主页有个卡片可以显示。导航栏，财务报表进入可以看到多个卡片，就有所有账户的余额，还有最近10笔收入支出的详细。 先整理我的需求，拆分用户故事。确认后再开始开发]]></request>
   <profile version="1.2.0"/>
   <groups>
@@ -23,8 +23,9 @@
       <phase id="PHASE_10" status="APPROVED"/>
       <phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="BLOCKED" gate_decision="PENDING" retries="0">
-      <blocked_reason>等待用户当轮明确授权测试环境部署（PRODUCTION_DEPLOY_CONFIRM=true + 环境名“测试”）；子代理不执行 commit/push。</blocked_reason>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
+      <phase id="PHASE_11b" status="APPROVED"/>
+      <note>用户当轮授权（PRODUCTION_DEPLOY_CONFIRM=true，环境=测试）；提交 3ed5b6b 已推送，CI success；5 迁移全部应用，V-01~V-11 通过；1 项计划外迁移漂移已停用保存（DEV-01）。</note>
     </group>
     <group id="GROUP_Z" agent="kb-curator" status="APPROVED" gate_decision="PASS" retries="0"><phase id="PHASE_12" status="APPROVED"/></group>
   </groups>
@@ -42,6 +43,7 @@
     <artifact path="project_workspace/ocap_finance_ux/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_finance_ux/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_finance_ux/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_finance_ux/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
     <artifact path="project_workspace/ocap_finance_ux/delivery_report.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
     <artifact path="project_workspace/_kb_distillation/distill_20261123T2350.md" version="1.0.0" status="APPROVED" group="GROUP_Z"/>
   </artifacts>
@@ -52,6 +54,7 @@
     <invocation id="ocap_finance_ux-GROUP_C-001" agent="software-developer" started="2026-11-23T22:50:58+08:00" ended="2026-11-23T23:17:30+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_finance_ux-GROUP_D-001" agent="test-engineer" started="2026-11-23T23:20:00+08:00" ended="2026-11-23T23:33:30+08:00" result="PARTIAL_SUCCESS"/>
     <invocation id="ocap_finance_ux-GROUP_E1-001" agent="devops-engineer" started="2026-11-23T23:36:00+08:00" ended="2026-11-23T23:41:00+08:00" result="SUCCESS"/>
+    <invocation id="ocap_finance_ux-GROUP_E2-001" agent="devops-engineer" started="2026-11-23T23:48:51+08:00" ended="2026-11-23T23:56:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_finance_ux-PHASE_12-001" agent="kb-curator" started="2026-11-23T23:44:00+08:00" ended="2026-11-23T23:50:00+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
@@ -218,6 +221,29 @@ $ git diff --stat（本批）
         ]]>
       </verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_finance_ux-GROUP_E2-001" decision="PASS_WITH_CONDITIONS" time="2026-11-23T23:56:00+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_finance_ux/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="E2-授权" result="SATISFIED">用户当轮「提交并部署到测试环境」；PRODUCTION_DEPLOY_CONFIRM=true + 环境=测试；部署计划 1.0.0 APPROVED。</criterion>
+      <criterion id="E2-预检" result="SATISFIED">PRE-01 推送 9f07a3a..3ed5b6b；PRE-02 CI run 45209418691 success；PRE-04~09 与记录一致。</criterion>
+      <criterion id="E2-迁移门控" result="SATISFIED">处理后 `migrate --plan` 恰 5 行且集合 = {ledger.0004/0005/0006, income.0006, claims.0005}；5 个迁移全部 OK。</criterion>
+      <criterion id="E2-验证" result="SATISFIED">V-01~V-11 全通过；M-01 迁移前后 198 行 / 899045.56 一致；`/tmp` 与快照锚点齐备。</criterion>
+      <criterion id="E2-偏差披露" result="SATISFIED">DEV-01 目标机仓库外迁移 `ledger.0004_historical_expense` 导致双 leaf，已在门控前停用保存于 snapshots，未删除；报告 §5 与 §9 记录。</criterion>
+      <condition>M-02~M-07 浏览器/管理员人工验证需回填 deployment_report §7。</condition>
+      <condition>历史支出迁移来源需与功能负责人确认后纳管或清理；确认前不得删除 snapshots 中的 `.disabled` 副本。</condition>
+      <verification>
+        <![CDATA[
+$ ssh yangyang@192.168.31.51 'systemctl is-active ocap-backend' => active
+$ migrate --noinput => ledger.0004/0005/0006, claims.0005, income.0006 均 OK
+$ shell 校验 => ACCOUNT_TABLE True / ENTRY_COL True / REPORT_COLS True / SHEET_COL True / CLAIM_COL True
+$ DEFAULT_ACCOUNTS 1 / NULL_ENTRY_ACCOUNTS 0 / ENTRY_COUNT 198 / ENTRY_SUM 899045.56 / LEGACY_REPORTS 21
+$ curl => ledger/accounts/summary=401 ledger/reports=401 admin/ledger/accounts=401
+$ curl 127.0.0.1:8090/ocap/ => 200 ; https://ai-freeark.xin/ocap/ => 200
+$ grep -rl 账户余额 web/ocap/assets => assets/Reports-BetbSteP.js
+        ]]>
+      </verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="Q-FA-01" status="ANSWERED" answered_by="用户（主会话直接答复）" answered_at="2026-11-23T22:46:37+08:00">答 A：报表仍为全组织统一口径，另提供账户筛选。</clarification>
@@ -261,5 +287,14 @@ $ git diff --stat（本批）
     <event time="2026-11-23T23:44:00+08:00" type="INVOCATION" actor="pm-orchestrator">调用 kb-curator，invocation_id=ocap_finance_ux-PHASE_12-001，PHASE_12 知识蒸馏。</event>
     <event time="2026-11-23T23:50:00+08:00" type="INVOCATION" actor="kb-curator">返回 SUCCESS：9 条候选 → 晋升 6（M-SD-043~045、M-TE-046~048）、保留 3（P-DE-051~053）、淘汰 0、通用候选 2（GC-001/GC-002 待用户确认）；无 pending_patch。</event>
     <event time="2026-11-23T23:52:00+08:00" type="DELIVERY" actor="pm-orchestrator">写 delivery_report.md（1.0.0/APPROVED）；GROUP_Z/PHASE_12 APPROVED，项目状态 DELIVERED（未部署）。遗留：账户选择器 OQ-01、F02/F03、M-01~M-07。</event>
+    <event time="2026-11-23T23:48:51+08:00" type="AUTHORIZATION" actor="用户（主会话直接授权）">「好的，提交并部署到测试环境」：授权 commit/push 与测试环境部署；PRODUCTION_DEPLOY_CONFIRM=true，环境=测试。</event>
+    <event time="2026-11-23T23:49:40+08:00" type="COMMIT" actor="pm-orchestrator">merge origin/main 后推送 main：9f07a3a..3ed5b6b（直连，禁用不可用代理）；CI run 45209418691 success。</event>
+    <event time="2026-11-23T23:50:08+08:00" type="DEPLOY" actor="devops-engineer">DEPLOY-001 锚点 ANCHOR_TS=20261123235008（backend/web tar + 5 表转储 + migplan）。</event>
+    <event time="2026-11-23T23:51:00+08:00" type="DEPLOY" actor="devops-engineer">DEPLOY-002/003 构建（built in 8.64s，dist 1705 文件）并上传暂存，两端 SHA256 一致。</event>
+    <event time="2026-11-23T23:51:28+08:00" type="DEPLOY" actor="devops-engineer">DEPLOY-004 停 ocap-backend、ocap-content-worker、ocap-run-due-jobs.timer；DEPLOY-005 覆盖后端代码，.env 哈希不变。</event>
+    <event time="2026-11-23T23:52:30+08:00" type="INCIDENT" actor="devops-engineer">DEV-01：目标机存在仓库外迁移 ledger/0004_historical_expense.py，与 0006 形成双 leaf，migrate --plan 报冲突；移至 snapshots/0004_historical_expense.py.disabled-20261123235008（保留副本）后门控恢复 5 行。</event>
+    <event time="2026-11-23T23:53:20+08:00" type="DEPLOY" actor="devops-engineer">DEPLOY-006 5 个迁移全部 OK；schema/数据校验通过；M-01 迁移前后 198 行 / 899045.56 差额 0.00；DEPLOY-007 启动 active、日志错误 0。</event>
+    <event time="2026-11-23T23:54:00+08:00" type="DEPLOY" actor="devops-engineer">DEPLOY-008 三新路由均 401；DEPLOY-009 Web 目录交换 WEB_SWAPPED（1705 文件，index.html 哈希一致）；V-09~V-11 通过。</event>
+    <event time="2026-11-23T23:56:00+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001 = PASS_WITH_CONDITIONS；PHASE_11b 与 deployment_report.md 升级 1.0.0/APPROVED；项目状态 DEPLOYED。待人工 M-02~M-07 与历史支出迁移来源确认。</event>
   </audit_log>
 </phase_status>

@@ -23,6 +23,7 @@
 
 ## 待验证
 - [P-DE-050] 迁移尚未进入目标机代码时，预检 `migrate --plan` 不会出现新迁移；应让预检只记录基线，把“恰为新迁移 1 行”的门控放到代码覆盖之后（DEPLOY 阶段） — conf 0.6 · 证据：ocap_approval_flow deployment_report R-01 · 缺：第二批次复现
-- [P-DE-051] 跨 3 app 的 5 个迁移，`migrate --plan` 门控用“行数=5 且集合相等”，不绑定顺序 — conf 0.5 · 证据：ocap_finance_ux deployment_plan PRE-07 · 缺：一次真实 E2 执行
-- [P-DE-052] 回填 + 非空列组合的回滚绑定“部署后是否新建账户/流水”只读判定，默认 MANUAL_ROLLBACK_REQUIRED — conf 0.55 · 证据：ocap_finance_ux deployment_plan ROLLBACK-006 · 缺：演练或 E2 验证
-- [P-DE-053] 纯展示 + 数据列增量沿用“快照→停服→解包→迁移→启动→静态交换”，新增测试文件无需改 CI — conf 0.5 · 证据：ocap_finance_ux cicd_pipeline / deployment_plan · 缺：本批未执行部署
+- [P-DE-051] 跨 3 app 的 5 个迁移，`migrate --plan` 门控用“行数=5 且集合相等”，不绑定顺序 — conf 0.5 · 证据：ocap_finance_ux E2 实测恰 5 行、集合一致、全部 OK · 缺：第二批次复现
+- [P-DE-052] 回填 + 非空列组合的回滚绑定“部署后是否新建账户/流水”只读判定，默认 MANUAL_ROLLBACK_REQUIRED — conf 0.55 · 证据：ocap_finance_ux deployment_plan ROLLBACK-006 / E2 迁移成功未回滚 · 缺：演练或真实回滚验证
+- [P-DE-053] 纯展示 + 数据列增量沿用“快照→停服→解包→迁移→启动→静态交换”，新增测试文件无需改 CI — conf 0.6 · 证据：ocap_finance_ux E2 全流程成功、CI success、停机约 2.5 分钟 · 缺：第二批次复现
+- [P-DE-054] 部署前必须比对目标机迁移文件与 repo：目标机残留仓库外迁移文件会与新版迁移形成双 leaf，`migrate --plan` 直接 CommandError；应停用保存（不删除）后再跑门控 — conf 0.6 · 证据：ocap_finance_ux DEV-01（ledger.0004_historical_expense）· 缺：第二次遇到时的复现

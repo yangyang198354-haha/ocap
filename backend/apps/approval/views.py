@@ -1,4 +1,5 @@
 """审批视图（IFC-080~082、IFC-402~407）。"""
+from django.db.models import ProtectedError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -177,11 +178,23 @@ class AdminFlowDetailView(APIView):
         flow = ApprovalFlow.objects.filter(id=flow_id).first()
         if flow is None:
             raise ApiError("NOT_FOUND", "流程不存在", 404)
-        flow.is_active = False
-        flow.save(update_fields=["is_active"])
+        # 物理删除；被审批记录引用时（ApprovalInstance.flow 为 PROTECT）只能停用，
+        # 否则历史审批单会失去流程归属。
+        used = ApprovalInstance.objects.filter(flow=flow).count()
+        if used:
+            raise ApiError("FLOW_IN_USE",
+                           f"该流程已被 {used} 条审批记录使用，不能删除；如不再使用，请停用该流程",
+                           409, {"count": used})
+        name = flow.name
+        try:
+            flow.delete()
+        except ProtectedError as exc:
+            raise ApiError("FLOW_IN_USE", "该流程已被审批记录使用，不能删除；如不再使用，请停用该流程",
+                           409) from exc
         AuditService.record(actor=AuditActor("ADMIN", request.user.id, request.user.username),
                             action="APPROVAL_FLOW_CHANGED", object_type="approval_flow",
-                            object_id=str(flow.id), result="SUCCESS", detail={"op": "deactivate"})
+                            object_id=str(flow_id), result="SUCCESS",
+                            detail={"op": "delete", "name": name})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

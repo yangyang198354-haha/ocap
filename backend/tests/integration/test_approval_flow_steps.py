@@ -81,6 +81,25 @@ class AdminFlowStepsTests(ApprovalStepsBase):
                         token=self.admin_token)
         self.assert_error(resp, 422, "APPROVER_NOT_COMMITTEE_MEMBER")
 
+    def test_delete_unreferenced_flow_physically(self):
+        flow = self.make_steps_flow([
+            {"name": "初审", "strategy": "ANY", "approver_ids": [self.a1.id]},
+        ])
+        self.assert_ok(self.api("delete", f"/admin/approval/flows/{flow.id}", token=self.admin_token), 204)
+        self.assertFalse(ApprovalFlow.objects.filter(id=flow.id).exists())
+        self.assertEqual(flow.steps.count(), 0)
+
+    def test_delete_flow_in_use_rejected_with_reason(self):
+        flow = self.make_steps_flow([
+            {"name": "初审", "strategy": "ANY", "approver_ids": [self.a1.id]},
+        ])
+        self.submit(flow)
+        resp = self.api("delete", f"/admin/approval/flows/{flow.id}", token=self.admin_token)
+        self.assert_error(resp, 409, "FLOW_IN_USE")
+        self.assertEqual(resp.data["details"]["count"], 1)
+        self.assertIn("停用", resp.data["message"])
+        self.assertTrue(ApprovalFlow.objects.filter(id=flow.id).exists())
+
 
 class TwoStepSequentialTests(ApprovalStepsBase):
     def setUp(self):

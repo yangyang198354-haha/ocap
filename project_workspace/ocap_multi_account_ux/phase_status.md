@@ -1,4 +1,4 @@
-<phase_status project="ocap_multi_account_ux" mode="INCREMENTAL" created="2026-11-24T22:02:33+08:00" updated="2026-11-24T23:31:20+08:00">
+<phase_status project="ocap_multi_account_ux" mode="INCREMENTAL" created="2026-11-24T22:02:33+08:00" updated="2026-11-24T23:55:40+08:00">
   <request><![CDATA[Use Skill: sdlc-orchestrator 需求增加：1，管理后台，财务-账户页面，编辑，设为默认按钮颜色和背景一样，导致看不清。需要调整UI， 2.因为引入了多账户，那么在收入逐条录入，批量导入，报销、申请备用金时，都需要选择账户，这样才能正确记账，还有收入表批量导入也是。3.历史支出导入是否需要配置审批流程并且通过审批才能入账，核实一样，如果缺失，需要走收入导入审批类似的流程。 4.财务报表也多账户余额和近期流水卡片式在左边挤在一起的。应该让多个账户从左到右排列（视浏览器屏幕宽度均匀排列,如果账户太多，可以用滚动条）。 5.因为有多个账户，财务报表默认选中的基本账户，底下的季报年报也显示这个账户的。用户可以选中不同账户的卡片，下班的季报年报对应切换。6.点击对应报表后，右上角就不要有下拉菜单选择账户了。 7. 报表的收入支出颜色要做出区分，就像账户卡片的流水一样。 先整理我的需求，拆分呈用户故事。我确认后开始开发]]></request>
   <profile version="1.3.0">docs_root=project_workspace/ocap_multi_account_ux/（增量批次工作区）；PM 已把 .trae 画像 P3/P4 的过时 greenfield 事实校正为与 .codex 1.3.0 一致的 in-repo 事实。</profile>
   <groups>
@@ -17,7 +17,7 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" gate_decision="PENDING" environment=""/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS_WITH_CONDITIONS" environment="测试"/>
   </groups>
   <artifacts>
     <artifact group="GROUP_A" phase="PHASE_01" path="project_workspace/ocap_multi_account_ux/requirements/requirements_spec.md" version="1.1.0" status="APPROVED" timestamp="2026-11-24T22:12:35+08:00"/>
@@ -33,6 +33,7 @@
     <artifact group="GROUP_D" phase="PHASE_09" path="project_workspace/ocap_multi_account_ux/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" timestamp="2026-11-24T23:21:23+08:00"/>
     <artifact group="GROUP_E1" phase="PHASE_10" path="project_workspace/ocap_multi_account_ux/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" timestamp="2026-11-24T23:31:20+08:00"/>
     <artifact group="GROUP_E1" phase="PHASE_11a" path="project_workspace/ocap_multi_account_ux/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" timestamp="2026-11-24T23:31:20+08:00"/>
+    <artifact group="GROUP_E2" phase="PHASE_11b" path="project_workspace/ocap_multi_account_ux/deployment/deployment_report.md" version="1.0.0" status="APPROVED" timestamp="2026-11-24T23:55:40+08:00"/>
   </artifacts>
   <legacy_baseline>
     <baseline path="project_workspace/ocap_finance_ux/requirements/requirements_spec.md" status="APPROVED">多账户基线需求</baseline>
@@ -45,6 +46,7 @@
     <invocation id="ocap_multi_account_ux-GROUP_C-001" agent="software-developer" group="GROUP_C" start="2026-11-24T22:22:09+08:00" end="2026-11-24T22:55:05+08:00" result="SUCCESS"/>
     <invocation id="ocap_multi_account_ux-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-24T22:55:10+08:00" end="2026-11-24T23:27:19+08:00" result="SUCCESS"/>
     <invocation id="ocap_multi_account_ux-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-24T23:27:30+08:00" end="2026-11-24T23:31:20+08:00" result="SUCCESS"/>
+    <invocation id="ocap_multi_account_ux-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-24T23:46:00+08:00" end="2026-11-24T23:55:40+08:00" result="PARTIAL_SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" group="GROUP_A" time="2026-11-24T22:06:45+08:00" reviewer="pm-orchestrator" decision="PASS_WITH_CONDITIONS" superseded="true">
@@ -194,6 +196,31 @@
 5) kb_inbox.py --check-response（invocation=ocap_multi_account_ux-GROUP_E1-001）RESPONSE_OK；--agent devops-engineer 入队 3 条 kb_proposals。
       ]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-001" group="GROUP_E2" time="2026-11-24T23:55:40+08:00" reviewer="pm-orchestrator" decision="PASS_WITH_CONDITIONS">
+      <criterion id="E2-1" result="SATISFIED">授权核对通过：用户本轮消息"提交，推送，部署"为当轮明确授权；环境名=计划=画像 P7（测试）；计划版本 1.0.0 与 phase_status 登记一致。</criterion>
+      <criterion id="E2-2" result="SATISFIED">提交与推送完成：commit c67e850（55 文件，+3948/-160）已推送到 origin/main（6bd59e1..c67e850），远端哈希与本地一致；提交范围经用户确认（仅本批相关，排除 4 项无关/本地文件）。</criterion>
+      <criterion id="E2-3" result="SATISFIED">12 步 DEPLOY 全部成功、0 失败、0 跳过；迁移门控恰 1 行 ledger.0008 且 Applying OK；schema 3 列就位、旧数据未改写（BATCH_TOTAL/NULL_ACCOUNT/STATUS 与基线一致）。</criterion>
+      <criterion id="E2-4" result="SATISFIED">部署后自动化验证 V-01～V-12 全通过：服务 active、日志 0 错误、4 路由 401、Web 首页/主 JS 200、新文案在产物、内网+外网 200、Freeark 200、小程序产物构建成功。</criterion>
+      <criterion id="E2-5" result="SATISFIED">回滚锚点完整（ANCHOR_TS=20261124234833：后端/Web 快照 + 历史支出表转储 + 迁移计划）与 web/ocap.old 保留；未触碰 .env/venv/var（.env 哈希未变）、未改 nginx/Freeark、未使用画像 P8 禁用项；报告无凭据。</criterion>
+      <criterion id="E2-6" result="PARTIAL">V-13（写入冒烟）与 M-01～M-04（视觉验收）需已登录浏览器，自动化无法执行，标记待人工；按 COND-D-01 未通过前批次不算最终成功，故最终状态 DEPLOYED_WITH_ISSUES（PARTIAL_SUCCESS），不建议回滚。</criterion>
+      <findings>
+        <finding id="GR-E2-001-F01" severity="MINOR">推送首次失败：仓库 git 配置了失效代理 socks5h://127.0.0.1:10808；用 git -c http.proxy= -c https.proxy= 临时覆盖后推送成功。建议用户修正本地代理配置。</finding>
+        <finding id="GR-E2-001-F02" severity="MINOR">GitHub Actions 由推送触发，Django 5.2 口径的 backend job 结果需用户确认（本地验证环境为 6.0.6）；若 5.2 出现差异按新缺陷回流 GROUP_C。</finding>
+        <finding id="GR-E2-001-F03" severity="MINOR">工作区残留 4 项未提交（appeal_center/navigation_ia 文档与本地 xlsx），按用户确认范围排除，不影响本次部署。</finding>
+      </findings>
+      <conditions>
+        <condition id="COND-E2-01">用户须完成 V-13 写入冒烟与 M-01～M-04 视觉验收（COND-D-01/02）；任一不通过先回流 GROUP_C 修复，确认无法快速修复再回滚。</condition>
+        <condition id="COND-E2-02">小程序上传微信体验版须用户在微信开发者工具人工确认后执行，不在自动化范围（COND-B-04）。</condition>
+        <condition id="COND-E2-03">回滚前必须先执行 ROLLBACK-006 前置只读判定（NEW_STATUS_BATCHES/PENDING_ROWS）；本次无写入冒烟数据，理论为 0，但以现场统计为准。</condition>
+        <condition id="COND-E2-04">CL-004 仍 OPEN，不扩大 Q-10 范围（沿用 COND-C-04/D-03）。</condition>
+      </conditions>
+      <verification><![CDATA[
+1) 部署报告存在：deployment/deployment_report.md 1.0.0 APPROVED；含分步执行表、验证结果表、回滚记录、遗留问题。
+2) 现场证据：commit c67e850 已推送（远端=本地）；ANCHOR_TS=20261124234833；后端 active（PID 1504836）、timer active；showmigrations [X] 0008；4 路由 401；Web/外网 200。
+3) 约束核对：未改 nginx/Freeark；.env 哈希 5a7f1eb5… 部署前后一致；var 未触碰；无 Docker；无凭据泄露。
+4) 停机窗口：ocap-backend 23:51:47 停 → 23:53:25 起，约 1 分 38 秒。
+      ]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="CL-001" asker="用户" answered_by="用户" time="2026-11-24T22:02:33+08:00">用户要求：先整理需求并拆分为用户故事，用户确认后才开始开发（GROUP_A 门控后暂停，不进入 GROUP_B）。</clarification>
@@ -226,5 +253,14 @@
     <event time="2026-11-24T23:31:20+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001：PASS_WITH_CONDITIONS（SATISFIED×6，MINOR×3，conditions×4）；GROUP_E1 与 PHASE_10/11a 置 APPROVED，两份文档升 1.0.0/APPROVED。</event>
     <event time="2026-11-24T23:31:20+08:00" type="PAUSE" actor="pm-orchestrator">GROUP_E2 保持 NOT_AUTHORIZED：未连接目标环境、未部署、未上传小程序；等待用户当轮明确授权（COND-E1-03）。</event>
     <event time="2026-11-24T23:31:20+08:00" type="KB" actor="pm-orchestrator">kb_inbox.py --check-response 通过；devops-engineer 入队 3 条 kb_proposals。</event>
+    <event time="2026-11-24T23:42:00+08:00" type="RUN" actor="pm-orchestrator">收到用户当轮授权"提交，推送，部署"（COND-E1-03）；核对环境=测试=画像 P7、计划版本 1.0.0 一致后进入 GROUP_E2；列出提交范围经用户确认（55 文件本批相关，排除 4 项无关/本地文件）。</event>
+    <event time="2026-11-24T23:45:00+08:00" type="AUDIT" actor="pm-orchestrator">提交 c67e850 feat(finance): 多账户落账与财务报表 UI 改造（+3948/-160）。</event>
+    <event time="2026-11-24T23:45:30+08:00" type="SELF_CORRECTION" actor="pm-orchestrator">git push 首次失败：仓库配置失效代理 socks5h://127.0.0.1:10808；改用 git -c http.proxy= -c https.proxy= push origin main 成功（6bd59e1..c67e850），远端哈希=本地；已记入部署报告遗留问题。</event>
+    <event time="2026-11-24T23:46:00+08:00" type="RUN" actor="pm-orchestrator">目标 192.168.31.51:22 可达、免密 sudo 确认；执行 PRE→DEPLOY-001..012。</event>
+    <event time="2026-11-24T23:53:25+08:00" type="AUDIT" actor="devops-engineer">部署完成：ANCHOR_TS=20261124234833；迁移 ledger.0008 Applying OK；旧数据未改写；后端 active（PID 1504836）、timer active；停机约 1m38s。</event>
+    <event time="2026-11-24T23:54:30+08:00" type="INVOCATION_RESULT" actor="pm-orchestrator">devops-engineer 返回 PARTIAL_SUCCESS：V-01～V-12 全通过；V-13 写入冒烟与 M-01～M-04 视觉验收待人工（COND-D-01）；小程序仅本地构建未上传；deployment_report.md 1.0.0 APPROVED。</event>
+    <event time="2026-11-24T23:55:40+08:00" type="GATE" actor="pm-orchestrator">GR-E2-001：PASS_WITH_CONDITIONS（SATISFIED×5，PARTIAL×1，MINOR×3，conditions×4）；GROUP_E2 与 PHASE_11b 置 APPROVED，最终状态 DEPLOYED_WITH_ISSUES（系统健康，不建议回滚）。</event>
+    <event time="2026-11-24T23:55:40+08:00" type="PAUSE" actor="pm-orchestrator">批次待用户完成 V-13 + M-01～M-04 人工验收、确认 GitHub CI（Django 5.2）green、人工上传小程序体验版；未通过前不判最终成功。</event>
+    <event time="2026-11-24T23:58:58+08:00" type="KB" actor="pm-orchestrator">kb_inbox.py --check-response 通过；devops-engineer 入队 3 条 kb_proposals（失效代理、ssh stdin 管道技巧、快照清理建议）。</event>
   </audit_log>
 </phase_status>

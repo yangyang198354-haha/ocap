@@ -75,6 +75,7 @@ describe('报销类型卡片', () => {
     respondWith({
       'GET /me': ME,
       'GET /approval/flows': { results: [{ id: 7, name: '报销流程' }] },
+      'GET /ledger/accounts/summary': { accounts: [{ id: 5, name: '基本账户', is_default: true }] },
       'GET /claims': { results: [] },
       'POST /claims/advances': { id: 2 }
     })
@@ -90,7 +91,7 @@ describe('报销类型卡片', () => {
     await flushPromises()
     expect(requests().find((r) => r.path === '/claims/advances').data).toEqual({
       amount: '1000.00', reason: '活动', expected_usage: '小区活动',
-      expected_settle_on: '2026-12-01', approval_flow_id: 7
+      expected_settle_on: '2026-12-01', approval_flow_id: 7, account_id: 5
     })
   })
 })

@@ -7,6 +7,7 @@
         录入后提交审批，通过后生效。<template v-if="amountMax">单笔金额上限 ¥{{ amountMax }}。</template>
       </p>
       <div class="row">
+        <AccountSelect v-model="importAccountId" placeholder="入账账户（批量导入）" style="width: 220px" />
         <el-button type="primary" @click="openCreate">逐条录入</el-button>
         <el-upload :show-file-list="false" :http-request="importFile" accept=".csv,.xlsx">
           <el-button>批量导入</el-button>
@@ -28,6 +29,7 @@
           <div>
             <strong>¥{{ item.total_amount }}</strong>
             <span class="muted" style="margin-left: 8px">{{ item.period_start }} ~ {{ item.period_end }}</span>
+            <span class="muted" style="margin-left: 8px">{{ item.account_name || '默认账户' }}</span>
             <el-tag size="small" style="margin-left: 8px">{{ textOf(INCOME_STATUS_TEXT, item.status) }}</el-tag>
           </div>
           <div class="row">
@@ -50,6 +52,11 @@
 
     <el-dialog v-model="showCreate" title="逐条录入收入" width="560px">
       <p v-if="originId" class="muted">重新发起自 #{{ originId }}（原收入表已结束，本表独立审批）</p>
+      <div class="field-block">
+        <label class="field-label">入账账户</label>
+        <AccountSelect v-model="createAccountId" placeholder="请选择入账账户" @loaded="onAccountsLoaded" />
+        <p v-if="noAccounts" class="muted">暂无可用账户</p>
+      </div>
       <div v-for="(r, i) in form.records" :key="i" class="list-item" style="padding-top: 0; margin-bottom: 8px">
         <el-date-picker v-model="r.occurred_on" type="date" value-format="YYYY-MM-DD" placeholder="日期" style="width: 100%" />
         <el-input v-model="r.amount" placeholder="金额（最多两位小数）" style="margin-top: 6px" />
@@ -67,7 +74,7 @@
       </div>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
-        <el-button type="primary" @click="create">保存为草稿</el-button>
+        <el-button type="primary" :disabled="!createAccountId" @click="create">保存为草稿</el-button>
       </template>
     </el-dialog>
 
@@ -95,6 +102,7 @@ import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, incomeApi, meApi } from '@/shared/api'
 import { apiUrl } from '@/shared/http'
 import PagerBar from '@/shared/PagerBar.vue'
+import AccountSelect from '@/shared/AccountSelect.vue'
 import { errorText, moneyText } from '@/shared/format'
 import { INCOME_STATUS_TEXT, textOf } from '@/shared/labels'
 import { confirmDanger } from '@/shared/confirm'
@@ -105,6 +113,13 @@ const limits = ref({})
 const amountMax = ref('')
 const flows = ref([])
 const flowId = ref(null)
+const importAccountId = ref(null)
+const createAccountId = ref(null)
+const noAccounts = ref(false)
+
+function onAccountsLoaded({ accounts }) {
+  noAccounts.value = !accounts.length
+}
 const skipped = ref([])
 const showCreate = ref(false)
 const showDetailDialog = ref(false)
@@ -158,6 +173,7 @@ async function openReissue(item) {
     if (!form.records.length) form.records = [newRecord()]
     voucherIds.value = []
     originId.value = item.id
+    createAccountId.value = origin.account_id || createAccountId.value
     showCreate.value = true
   } catch (e) {
     ElMessage.error(errorText(e))
@@ -193,9 +209,10 @@ async function uploadVoucher({ file }) {
 }
 
 async function create() {
+  if (!createAccountId.value) return ElMessage.warning('请选择入账账户')
   try {
     await incomeApi.create({ records: form.records, voucher_ids: voucherIds.value,
-      origin_id: originId.value || undefined })
+      account_id: createAccountId.value, origin_id: originId.value || undefined })
     showCreate.value = false
     originId.value = null
     ElMessage.success('已保存为草稿，请选择审批流程后提交')
@@ -207,8 +224,9 @@ async function create() {
 }
 
 async function importFile({ file }) {
+  if (!importAccountId.value) return ElMessage.warning('请先选择入账账户')
   try {
-    const data = await incomeApi.importFile(file)
+    const data = await incomeApi.importFile(file, importAccountId.value)
     const summary = data.import_summary || {}
     skipped.value = summary.errors || []
     if (!summary.imported) ElMessage.warning('全部行均被跳过，未创建收入表')

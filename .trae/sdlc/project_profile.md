@@ -6,7 +6,7 @@
   <author_agent>pm-orchestrator(draft)</author_agent>
   <timestamp>2026-11-07T22:12:00+08:00</timestamp>
   <project_name>ocap</project_name>
-  <version>1.2.0</version>
+  <version>1.3.0</version>
   <status>APPROVED</status>
 </file_header>
 
@@ -28,7 +28,7 @@
 - 是否入库: 是（随代码由用户确认后提交）
 
 ## P3. 代码布局
-- `code_mode`: greenfield（[REPO] 无代码、无提交）
+- `code_mode`: in-repo（代码已存在于仓库根）[REPO]
 - 代码目录（OQ-15 用户已确认，见 module_design「代码布局建议」）：
   | 组件 | 目录 | 语言 |
   |---|---|---|
@@ -36,11 +36,11 @@
   | Web 前端 | `frontend/src/`（portal / admin / shared） | Vue 3 + Vite |
   | 微信小程序 | `miniprogram/` | uni-app (Vue 3) |
   | systemd 模板 | `deploy/systemd/` | — |
-- 测试位置约定：
-  | 组件 | 新测试放在 | 命名 | 框架 |
+- 测试位置（以实际为准）：
+  | 组件 | 位置 | 命名 | 框架 |
   |---|---|---|---|
-  | 后端 | `backend/apps/<app>/tests/`、跨 app 集成 `backend/tests/integration/` | `test_*.py` | Django test runner |
-  | Web 前端 | `frontend/tests/` | `*.spec.js` | vitest |
+  | 后端 | `backend/tests/{unit,integration,e2e,smoke}/`，公共夹具 `backend/tests/support.py` | `test_*.py` | Django test runner |
+  | Web 前端 | `frontend/tests/`（vitest include `tests/**/*.spec.js`） | `*.spec.js` | vitest |
   | 小程序 | `miniprogram/tests/` | `*.spec.js` | vitest |
 - 迁移：每个 app 的 `migrations/` 手写、单 app 范围；`makemigrations --dry-run <app>` 仅辅助对照，产物不提交
 - 不可修改的目录：`.claude/**`（只读源套件）、`.trae/skills/**`、`.trae/sdlc/scripts/**`、`.trae/sdlc/suite_config.md`
@@ -51,7 +51,9 @@
 | 版本检查 | 仓库根 | `python --version`；`python -c "import django;print(django.get_version())"` | 本机 Python 3.14.6、Django 6.0.6、DRF 3.17.1（选型目标为 Django 5.2.x，本机未安装 5.2；差异记入开发报告，不自行安装/降级） |
 | 静态检查 | 仓库根 | `python -m compileall -q backend` | 无第三方 linter |
 | 后端单元/集成/E2E | `backend/` | `python manage.py test --settings=config.test_settings` | Django test runner + SQLite 内存库；测试替身 `apps/integrations/fakes.py` |
-| 前端测试 | `frontend/` | `npm test`（vitest run） | 依赖未安装时不自行 `npm install`，如实标 BLOCKED |
+| 后端分层 | `backend/` | `python manage.py test tests.unit`（integration / e2e / smoke 同理）`--settings=config.test_settings` | |
+| 前端测试 | `frontend/` | `npx vitest run --passWithNoTests` | 依赖未安装时不自行 `npm install`，如实标 BLOCKED |
+| 前端构建 | `frontend/` | `npm run build -- --base=/ocap/` | 部署前构建须带 `VITE_API_BASE=/ocap/api/v1` |
 | 小程序测试 | `miniprogram/` | `npm test`（vitest run） | 同上 |
 - 已知既有失败 / 基线来源：无（greenfield）
 - 缺依赖时的处理：如实标 BLOCKED，不安装（本机缺 `openpyxl`、阿里云短信 SDK；后者测试只用 fake）

@@ -60,6 +60,27 @@ def _opening_balance(start: date, account: LedgerAccount | None = None) -> Decim
     return (agg["income"] or Decimal("0.00")) - (agg["expense"] or Decimal("0.00"))
 
 
+def _totals_by_period(reports, account: LedgerAccount) -> dict[int, tuple[Decimal, Decimal]]:
+    """IFC-418：一次台账扫描按报表周期分桶，返回 {report.id: (收入, 支出)}（ADR-187）。"""
+    reports = list(reports)
+    if not reports:
+        return {}
+    ranges = {report.id: _period_range(report.period_type, report.year, report.quarter)
+              for report in reports}
+    start = min(item[0] for item in ranges.values())
+    end = max(item[1] for item in ranges.values())
+    totals = {report.id: [Decimal("0.00"), Decimal("0.00")] for report in reports}
+    entries = (LedgerEntry.objects.filter(status="ACTIVE", account=account, occurred_on__gte=start,
+                                          occurred_on__lte=end)
+               .values_list("occurred_on", "direction", "amount"))
+    for occurred_on, direction, amount in entries.iterator():
+        index = 0 if direction == "INCOME" else 1
+        for report_id, (period_start, period_end) in ranges.items():
+            if period_start <= occurred_on <= period_end:
+                totals[report_id][index] += amount
+    return {report_id: (values[0], values[1]) for report_id, values in totals.items()}
+
+
 class AccountService:
     """账户解析、余额与最近流水（MOD-192 / REQ-FUNC-336/337/341）。"""
 

@@ -54,6 +54,8 @@ export const api = {
   pollResult: (id) => http.get(`/polls/${id}/result`),
   // 报销 / 备用金 / 核销（与 Web 相同的后端接口）
   claims: (params) => http.get('/claims', params),
+  // 启用账户（默认账户与余额；小程序报销/备用金选择入账账户）
+  accounts: (params) => http.get('/ledger/accounts/summary', params),
   flows: (scope) => http.get('/approval/flows', { scope }),
   createReimbursement: (data) => http.post('/claims/reimbursements', data),
   createAdvance: (data) => http.post('/claims/advances', data),

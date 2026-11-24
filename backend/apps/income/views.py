@@ -6,6 +6,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import status
@@ -123,10 +124,14 @@ def duplicate_key(record: dict) -> tuple:
     return (record["occurred_on"], record["amount"], record["category"], record["source_note"])
 
 
-def _existing_duplicate_keys() -> set:
-    """已有 PENDING/EFFECTIVE 收入记录的四项键（REJECTED/WITHDRAWN/VOID 不算）。"""
-    rows = IncomeRecord.objects.filter(sheet__status__in=["PENDING", "EFFECTIVE"]).values_list(
-        "occurred_on", "amount", "category", "source_note")
+def _existing_duplicate_keys(account) -> set:
+    """同一账户（含历史未归属账户的旧表）下已有 PENDING/EFFECTIVE 记录的四项键。
+
+    多账户后重复判定按账户隔离，避免不同账户同日同额同类同说明的合法收入被误跳过。
+    """
+    rows = (IncomeRecord.objects.filter(sheet__status__in=["PENDING", "EFFECTIVE"])
+            .filter(Q(sheet__account=account) | Q(sheet__account__isnull=True))
+            .values_list("occurred_on", "amount", "category", "source_note"))
     return set(rows)
 
 
@@ -197,8 +202,9 @@ class IncomeImportView(APIView):
         except Exception as exc:
             raise ApiError("IMPORT_FILE_INVALID", "文件无法解析") from exc
         parsed = _parse_rows(rows, limit=SystemConfig.amount_max())
-        # AC-059-02：与已有 PENDING/EFFECTIVE 记录四项全同的行同样跳过
-        existing = _existing_duplicate_keys()
+        account = AccountService.resolve_account(request.data.get("account_id"))
+        # AC-059-02：与同账户已有 PENDING/EFFECTIVE 记录四项全同的行同样跳过
+        existing = _existing_duplicate_keys(account)
         kept = []
         for record, row_no in zip(parsed["records"], parsed["row_numbers"]):
             if duplicate_key(record) in existing:
@@ -219,7 +225,7 @@ class IncomeImportView(APIView):
         from apps.committee.services import CommitteeQuery
 
         with transaction.atomic():
-            sheet = IncomeSheet.objects.create(title=title, source="IMPORT",
+            sheet = IncomeSheet.objects.create(title=title, source="IMPORT", account=account,
                                                creator_labels=",".join(
                                                    CommitteeQuery.identity_labels(request.user.id)),
                                                submitted_by=request.user, origin=origin)
@@ -259,7 +265,7 @@ class AdminSheetListView(APIView):
     permission_classes = [IsIncomeMember]
 
     def get(self, request):
-        qs = IncomeSheet.objects.order_by("-created_at")
+        qs = IncomeSheet.objects.select_related("account").order_by("-created_at")
         for param in ("status",):
             value = request.query_params.get(param)
             if value:
@@ -433,7 +439,8 @@ class IncomeSheetListView(APIView):
     permission_classes = [IsMember]
 
     def get(self, request):
-        qs = IncomeSheet.objects.filter(status="EFFECTIVE").order_by("-period_start", "-id")
+        qs = (IncomeSheet.objects.select_related("account").filter(status="EFFECTIVE")
+              .order_by("-period_start", "-id"))
         period_start = request.query_params.get("period_start")
         period_end = request.query_params.get("period_end")
         if period_start:
@@ -472,6 +479,8 @@ def sheet_view(sheet: IncomeSheet, *, with_approval: bool = True) -> dict:
         "submitted_by": sheet.submitted_by_id, "created_at": sheet.created_at,
         "decided_at": sheet.decided_at,
         "origin_id": sheet.origin_id,
+        "account_id": sheet.account_id,
+        "account_name": sheet.account.name if sheet.account_id else None,
         "reopened_by_id": sheet.reissued.order_by("id").values_list("id", flat=True).first(),
     }
     if with_approval:
@@ -490,7 +499,7 @@ def sheet_detail_view(sheet: IncomeSheet) -> dict:
 
 
 def _get_sheet(sheet_id: int) -> IncomeSheet:
-    sheet = IncomeSheet.objects.filter(id=sheet_id).first()
+    sheet = IncomeSheet.objects.select_related("account").filter(id=sheet_id).first()
     if sheet is None:
         raise ApiError("NOT_FOUND", "收入表不存在", 404)
     return sheet

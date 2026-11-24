@@ -16,6 +16,9 @@
           <view class="muted">{{ typeHints[i] }}</view>
         </view>
       </view>
+      <picker :range="accountLabels" @change="pickAccount">
+        <view class="muted">入账账户：{{ accountLabels[accountIndex] || '请选择' }}</view>
+      </picker>
       <picker :range="flowLabels" @change="pickFlow">
         <view class="muted">审批流程：{{ flowLabels[flowIndex] || '请选择' }}</view>
       </picker>
@@ -88,6 +91,8 @@ const typeHints = ['已垫付费用，凭票报销', '先借后用，事后核�
 const typeIndex = ref(0)
 const flows = ref([])
 const flowIndex = ref(-1)
+const accounts = ref([])
+const accountIndex = ref(-1)
 const amount = ref('')
 const reason = ref('')
 const occurredOn = ref('')
@@ -107,6 +112,8 @@ const settle = reactive({ advanceIndex: -1, reimbursementIds: [], reason: '' })
 
 const label = (t) => ({ REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销' }[t] || t)
 const flowLabels = computed(() => flows.value.map((f) => f.name))
+const accountLabels = computed(() =>
+  accounts.value.map((a) => (a.is_default ? `${a.name}（默认）` : a.name)))
 const advanceLabels = computed(() => advances.value.map((a) => `#${a.id} ¥${a.amount} ${a.reason}`))
 
 // 金额为后端返回的两位小数字符串，这里按分（整数）计算，仅用于展示
@@ -136,6 +143,10 @@ function pickFlow(e) {
   flowIndex.value = Number(e.detail.value)
 }
 
+function pickAccount(e) {
+  accountIndex.value = Number(e.detail.value)
+}
+
 async function load() {
   try {
     if (!auth.me) await auth.fetchMe()
@@ -162,6 +173,17 @@ async function load() {
     flows.value = list.results || list || []
   } catch (e) {
     flows.value = []
+  }
+  try {
+    const data = await api.accounts({ status: 'ENABLED', recent: 0 })
+    accounts.value = data?.accounts || []
+    if (accountIndex.value < 0) {
+      const index = accounts.value.findIndex((a) => a.is_default)
+      accountIndex.value = index >= 0 ? index : (accounts.value.length ? 0 : -1)
+    }
+  } catch (e) {
+    accounts.value = []
+    accountIndex.value = -1
   }
 }
 
@@ -194,19 +216,27 @@ function chosenFlowId() {
   return flow?.id
 }
 
+function chosenAccountId() {
+  const account = accounts.value[accountIndex.value]
+  if (!account) toast('请选择入账账户')
+  return account?.id
+}
+
 async function create() {
   const flowId = chosenFlowId()
   if (!flowId) return
+  const accountId = chosenAccountId()
+  if (!accountId) return
   try {
     if (typeIndex.value === 0) {
       await api.createReimbursement({
         amount: amount.value, reason: reason.value, occurred_on: occurredOn.value,
-        invoice_ids: invoiceIds.value, approval_flow_id: flowId
+        invoice_ids: invoiceIds.value, approval_flow_id: flowId, account_id: accountId
       })
     } else {
       await api.createAdvance({
         amount: amount.value, reason: reason.value, expected_usage: expectedUsage.value,
-        expected_settle_on: expectedSettleOn.value, approval_flow_id: flowId
+        expected_settle_on: expectedSettleOn.value, approval_flow_id: flowId, account_id: accountId
       })
     }
     toast('已提交')

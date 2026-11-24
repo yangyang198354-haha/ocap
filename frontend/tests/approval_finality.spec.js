@@ -129,6 +129,7 @@ describe('US-280 收入表失败后只读留痕', () => {
       '/admin/income/sheets': { count: 1, results: [sheet(2, 'REJECTED')] },
       '/approval/flows': { results: [] },
       '/system/limits': { claim_amount_max: '1000000.00' },
+      '/ledger/accounts/summary': { accounts: [{ id: 1, name: '基本账户', is_default: true }] },
       '/admin/income/sheets/2': { ...sheet(2, 'REJECTED'), attachments: [],
         records: [{ line_no: 1, occurred_on: '2026-06-01', amount: '300.50', category: '物业费',
           source_note: '6月物业费', remark: '' }] }

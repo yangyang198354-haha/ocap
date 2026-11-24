@@ -368,4 +368,9 @@ def subject_title(subject_type: str, subject_id: int) -> str:
 
         row = IncomeSheet.objects.filter(id=subject_id).first()
         return (row.title or f"收入表#{subject_id}") if row else f"收入表#{subject_id}"
+    if subject_type == "historical_expense_batch":
+        from apps.ledger.models import HistoricalExpenseBatch
+
+        row = HistoricalExpenseBatch.objects.filter(id=subject_id).first()
+        return (row.file_name or f"历史支出导入#{subject_id}") if row else f"历史支出导入#{subject_id}"
     return f"{subject_type}#{subject_id}"

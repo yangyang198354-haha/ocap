@@ -93,7 +93,7 @@ describe('财务报表页', () => {
     const link = wrapper.findAll('button').find((b) => b.text().includes('2025 年第 1 季度'))
     await link.trigger('click')
     await flushPromises()
-    expect(http.get).toHaveBeenCalledWith('/ledger/reports/1', { params: undefined })
+    expect(http.get).toHaveBeenCalledWith('/ledger/reports/1', { params: { account_id: 1 } })
     expect(document.body.textContent).toContain('期初结余')
     expect(document.body.textContent).toContain('期末结余')
     expect(document.body.textContent).toContain('2025 年第 1 季度报表')

@@ -2,9 +2,9 @@ from django.urls import path
 
 from .views import (AccountSummaryView, AdminAccountDetailView, AdminAccountListView,
                     HistoricalExpenseBatchDetailView, HistoricalExpenseBatchListView,
-                    HistoricalExpenseBatchVoidView, HistoricalExpenseImportView,
-                    HistoricalExpenseTemplateView, LedgerReportDetailView,
-                    LedgerReportGenerateView, LedgerReportListView)
+                    HistoricalExpenseBatchVoidView, HistoricalExpenseBatchWithdrawView,
+                    HistoricalExpenseImportView, HistoricalExpenseTemplateView,
+                    LedgerReportDetailView, LedgerReportGenerateView, LedgerReportListView)
 
 urlpatterns = [
     path("ledger/accounts/summary", AccountSummaryView.as_view()),
@@ -18,4 +18,6 @@ urlpatterns = [
     path("admin/ledger/historical-expenses/batches", HistoricalExpenseBatchListView.as_view()),
     path("admin/ledger/historical-expenses/batches/<int:batch_id>", HistoricalExpenseBatchDetailView.as_view()),
     path("admin/ledger/historical-expenses/batches/<int:batch_id>/void", HistoricalExpenseBatchVoidView.as_view()),
+    path("admin/ledger/historical-expenses/batches/<int:batch_id>/withdraw",
+         HistoricalExpenseBatchWithdrawView.as_view()),
 ]

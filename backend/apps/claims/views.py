@@ -35,6 +35,8 @@ def claim_view(claim: Claim, *, with_approval: bool = True) -> dict:
         "decided_at": claim.decided_at, "submitter_id": claim.submitter_id,
         "attachments": linked_attachment_list("claim", claim.id),
         "origin_id": claim.origin_id,
+        "account_id": claim.account_id,
+        "account_name": claim.account.name if claim.account_id else None,
         "reopened_by_id": claim.reissued.order_by("id").values_list("id", flat=True).first(),
     }
     if with_approval:
@@ -234,7 +236,7 @@ class ClaimListView(APIView):
     permission_classes = [IsMember]
 
     def get(self, request):
-        qs = Claim.objects.select_related("submitter").order_by("-created_at")
+        qs = Claim.objects.select_related("submitter", "account").order_by("-created_at")
         scope = request.query_params.get("scope", "mine")
         if scope == "mine":
             qs = qs.filter(submitter=request.user)
@@ -260,7 +262,7 @@ class ClaimDetailView(APIView):
     permission_classes = [IsMember]
 
     def get(self, request, claim_id: int):
-        claim = Claim.objects.filter(id=claim_id).first()
+        claim = Claim.objects.select_related("account").filter(id=claim_id).first()
         if claim is None:
             raise ApiError("NOT_FOUND", "申请不存在", 404)
         if claim.submitter_id == request.user.id:
@@ -334,7 +336,7 @@ class AdminClaimListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        qs = Claim.objects.select_related("submitter").order_by("-created_at")
+        qs = Claim.objects.select_related("submitter", "account").order_by("-created_at")
         for param in ("type", "status"):
             value = request.query_params.get(param)
             if value:

@@ -104,9 +104,10 @@ export const incomeApi = {
   adminList: (params) => get('/admin/income/sheets', params),
   // 逐条录入：{ records: [{ occurred_on, amount, category, source_note, remark }], voucher_ids, title }
   create: (data) => post('/admin/income/sheets', data),
-  importFile: (file) => {
+  importFile: (file, accountId) => {
     const body = new FormData()
     body.append('file', file)
+    if (accountId) body.append('account_id', accountId)
     return http.post('/admin/income/sheets/import', body)
   },
   adminDetail: (id) => get(`/admin/income/sheets/${id}`),
@@ -125,15 +126,19 @@ export const historicalExpenseApi = {
     http.get('/admin/ledger/historical-expenses/template', {
       params: { file_type: fileType }, responseType: 'blob'
     }),
-  importFile: (file) => {
+  importFile: (file, { accountId, flowId } = {}) => {
     const body = new FormData()
     body.append('file', file)
+    if (accountId) body.append('account_id', accountId)
+    if (flowId) body.append('approval_flow_id', flowId)
     return http.post('/admin/ledger/historical-expenses/import', body)
   },
   batches: (params) => http.get('/admin/ledger/historical-expenses/batches', { params }),
   batchDetail: (id) => http.get(`/admin/ledger/historical-expenses/batches/${id}`),
   voidBatch: (id, reason) =>
-    http.post(`/admin/ledger/historical-expenses/batches/${id}/void`, { reason })
+    http.post(`/admin/ledger/historical-expenses/batches/${id}/void`, { reason }),
+  withdrawBatch: (id) =>
+    http.post(`/admin/ledger/historical-expenses/batches/${id}/withdraw`, {})
 }
 
 export const ledgerApi = {

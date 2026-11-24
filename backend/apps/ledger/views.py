@@ -1,5 +1,6 @@
 """台账视图（IFC-110~112、IFC-409~414）。"""
 from django.db import transaction
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -15,7 +16,8 @@ from apps.core.serializers import page_response
 
 from . import historical
 from .models import HistoricalExpenseBatch, LedgerAccount, LedgerReport
-from .services import AccountService, LedgerService, _aggregate, _opening_balance, _period_range
+from .services import (AccountService, LedgerService, _aggregate, _opening_balance, _period_range,
+                       _totals_by_period)
 
 
 def _recent_entry_view(entry) -> dict:
@@ -173,7 +175,17 @@ class LedgerReportListView(APIView):
         year = request.query_params.get("year")
         if year:
             qs = qs.filter(year=int(year))
-        return page_response(qs, request, ReportSerializer)
+        account_id = request.query_params.get("account_id")
+        if account_id in (None, ""):
+            return page_response(qs, request, ReportSerializer)
+        try:
+            account_id = int(account_id)
+        except (TypeError, ValueError):
+            raise ApiError("INVALID_VALUE", "account_id 不合法") from None
+        account = LedgerAccount.objects.filter(id=account_id).first()
+        if account is None:
+            raise ApiError("NOT_FOUND", "账户不存在", 404)
+        return page_response(qs, request, ReportSerializer, account=account)
 
 
 class LedgerReportGenerateView(APIView):
@@ -234,9 +246,18 @@ class LedgerReportDetailView(APIView):
 
 
 class ReportSerializer:
+    """IFC-418：传入 account 时按账户实时聚合覆盖金额（ADR-187）。"""
+
     def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
-        self.data = [report_summary(r) for r in rows]
+        account = (context or {}).get("account")
+        totals = _totals_by_period(rows, account) if account is not None else None
+        if totals is None:
+            self.data = [report_summary(r) for r in rows]
+        else:
+            self.data = [report_summary(r, total_income=totals[r.id][0],
+                                        total_expense=totals[r.id][1], legacy=False)
+                         for r in rows]
 
 
 def _batch_view(batch: HistoricalExpenseBatch) -> dict:
@@ -247,8 +268,19 @@ def _batch_view(batch: HistoricalExpenseBatch) -> dict:
         "status": batch.status, "total_rows": batch.total_rows,
         "imported_rows": batch.imported_rows, "skipped_rows": batch.skipped_rows,
         "failed_rows": batch.failed_rows, "total_amount": money(batch.total_amount),
+        "posted_rows": _posted_rows(batch),
+        "account_id": batch.account_id,
+        "account_name": batch.account.name if batch.account_id else None,
+        "approval_instance_id": batch.approval_instance_id, "decided_at": batch.decided_at,
         "created_at": batch.created_at, "voided_at": batch.voided_at, "void_reason": batch.void_reason,
     }
+
+
+def _posted_rows(batch) -> int:
+    annotated = getattr(batch, "posted_rows", None)
+    if annotated is not None:
+        return annotated
+    return batch.rows.filter(status="IMPORTED").count()
 
 
 def _row_view(row) -> dict:
@@ -285,8 +317,18 @@ class HistoricalExpenseImportView(APIView):
         upload = request.FILES.get("file")
         if upload is None:
             raise ApiError("FILE_REQUIRED", "缺少文件")
-        batch, errors, total_rows = historical.import_file(
-            file_name=upload.name or "historical_expense", raw=upload.read(), user=request.user)
+        data = request.data or {}
+        account = AccountService.resolve_account(data.get("account_id"))
+        flow_id = data.get("approval_flow_id")
+        if flow_id in (None, ""):
+            raise ApiError("INVALID_VALUE", "请选择审批流程")
+        try:
+            flow_id = int(flow_id)
+        except (TypeError, ValueError):
+            raise ApiError("INVALID_VALUE", "审批流程不合法") from None
+        batch, errors, total_rows = historical.create_pending_batch(
+            file_name=upload.name or "historical_expense", raw=upload.read(), user=request.user,
+            account=account, flow_id=flow_id)
         payload = {"batch": _batch_view(batch) if batch else None, "errors": errors[:100],
                    "total_rows": total_rows}
         return Response(payload, status=status.HTTP_201_CREATED if batch else status.HTTP_200_OK)
@@ -296,7 +338,9 @@ class HistoricalExpenseBatchListView(APIView):
     permission_classes = [IsIncomeMember]
 
     def get(self, request):
-        qs = HistoricalExpenseBatch.objects.select_related("imported_by").order_by("-created_at", "-id")
+        qs = (HistoricalExpenseBatch.objects.select_related("imported_by", "account")
+              .annotate(posted_rows=Count("rows", filter=Q(rows__status="IMPORTED")))
+              .order_by("-created_at", "-id"))
         return page_response(qs, request, HistoricalExpenseBatchSerializer)
 
 
@@ -304,7 +348,9 @@ class HistoricalExpenseBatchDetailView(APIView):
     permission_classes = [IsIncomeMember]
 
     def get(self, request, batch_id: int):
-        batch = HistoricalExpenseBatch.objects.select_related("imported_by").filter(id=batch_id).first()
+        batch = (HistoricalExpenseBatch.objects.select_related("imported_by", "account")
+                 .annotate(posted_rows=Count("rows", filter=Q(rows__status="IMPORTED")))
+                 .filter(id=batch_id).first())
         if batch is None:
             raise ApiError("NOT_FOUND", "导入批次不存在", 404)
         return Response({**_batch_view(batch), "rows": [_row_view(row) for row in batch.rows.all()]})
@@ -319,17 +365,30 @@ class HistoricalExpenseBatchVoidView(APIView):
         return Response({**_batch_view(batch), "rows": [_row_view(row) for row in batch.rows.all()]})
 
 
+class HistoricalExpenseBatchWithdrawView(APIView):
+    """IFC-428：提交人撤回审批中的历史支出导入批次。"""
+
+    permission_classes = [IsIncomeMember]
+
+    def post(self, request, batch_id: int):
+        batch = historical.withdraw_batch(batch_id, user=request.user)
+        return Response({**_batch_view(batch), "rows": [_row_view(row) for row in batch.rows.all()]})
+
+
 def _nullable_money(value):
     return None if value is None else money(value)
 
 
-def report_summary(report: LedgerReport) -> dict:
+def report_summary(report: LedgerReport, *, total_income=None, total_expense=None,
+                   legacy=None) -> dict:
+    income = report.total_income if total_income is None else total_income
+    expense = report.total_expense if total_expense is None else total_expense
     return {"id": report.id, "period_type": report.period_type, "year": report.year,
-            "quarter": report.quarter, "total_income": money(report.total_income),
-            "total_expense": money(report.total_expense), "balance": money(report.balance),
+            "quarter": report.quarter, "total_income": money(income),
+            "total_expense": money(expense), "balance": money(income - expense),
             "opening_balance": _nullable_money(report.opening_balance),
             "closing_balance": _nullable_money(report.closing_balance),
-            "legacy": report.legacy,
+            "legacy": report.legacy if legacy is None else legacy,
             "stale": report.stale, "generated_at": report.generated_at}
 
 

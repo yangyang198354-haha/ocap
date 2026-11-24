@@ -29,17 +29,20 @@
             <el-tag v-if="row.is_default" size="small" type="warning">默认</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="230" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="primary" :disabled="row.is_default" @click="setDefault(row)">设为默认</el-button>
-            <el-button
-              link
-              :type="row.status === 'ENABLED' ? 'danger' : 'primary'"
-              @click="toggleStatus(row)"
-            >
-              {{ row.status === 'ENABLED' ? '停用' : '启用' }}
-            </el-button>
+            <div class="row account-actions">
+              <el-button size="small" @click="openEdit(row)">编辑</el-button>
+              <el-button size="small" type="primary" plain :disabled="row.is_default" @click="setDefault(row)">设为默认</el-button>
+              <el-button
+                size="small"
+                :type="row.status === 'ENABLED' ? 'danger' : 'success'"
+                plain
+                @click="toggleStatus(row)"
+              >
+                {{ row.status === 'ENABLED' ? '停用' : '启用' }}
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -156,3 +159,8 @@ async function toggleStatus(row) {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.account-actions { gap: 6px; }
+.account-actions :deep(.el-button + .el-button) { margin-left: 0; }
+</style>

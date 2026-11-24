@@ -58,11 +58,21 @@ class HistoryExpenseTestBase(ApiTestBase):
         super().setUp()
         self.chair, self.ctoken = self.make_user(nickname="主任")
         self.make_seat(self.chair, "CHAIR")
+        self.approver, self.approver_token = self.make_user(nickname="财务委员")
+        self.make_seat(self.approver, "MEMBER")
+        self.flow = self.make_flow(scope="INCOME", mode="DESIGNATED", approvers=[self.approver])
         self.owner, self.otoken, _ = self.make_owner()
         self.admin, self.atoken = self.make_admin()
 
     def import_file(self, upload, token=None):
-        return self.upload(f"{BASE}/import", {"file": upload}, token=token or self.ctoken)
+        return self.upload(f"{BASE}/import",
+                           {"file": upload, "approval_flow_id": self.flow.id},
+                           token=token or self.ctoken)
+
+    def approve(self, batch_id, token=None):
+        batch = HistoricalExpenseBatch.objects.get(id=batch_id)
+        self.assert_ok(self.api("post", f"/approval/instances/{batch.approval_instance_id}/decision",
+                                {"action": "APPROVE"}, token=token or self.approver_token))
 
     def batches(self, token=None):
         return self.api("get", f"{BASE}/batches", token=token or self.ctoken)
@@ -100,13 +110,23 @@ class ImportTests(HistoryExpenseTestBase):
         self.assertEqual(body["batch"]["total_rows"], 3)
         self.assertEqual(body["batch"]["total_amount"], "600.50")
         batch = HistoricalExpenseBatch.objects.get(id=body["batch"]["id"])
+        # 导入后进入审批，通过前不写台账
+        self.assertEqual(batch.status, "PENDING")
+        self.assertEqual(LedgerEntry.objects.filter(source_type="historical_expense",
+                                                    source_id=batch.id).count(), 0)
+        self.assertEqual(ApprovalInstance.objects.filter(subject_type="historical_expense_batch",
+                                                         subject_id=batch.id).count(), 1)
+        self.assertTrue(AuditLog.objects.filter(action="HISTORICAL_EXPENSE_SUBMITTED",
+                                                 object_id=str(batch.id)).exists())
+        self.approve(batch.id)
         entries = LedgerEntry.objects.filter(source_type="historical_expense", source_id=batch.id)
         self.assertEqual(entries.count(), 3)
         self.assertTrue(all(e.direction == "EXPENSE" and e.status == "ACTIVE" for e in entries))
         self.assertEqual(entries.get(seq=2).occurred_on, date(2022, 7, 1))
-        # 历史导入不得污染申请/审批链路
+        # 历史导入不得污染申请链路
         self.assertEqual(Claim.objects.count(), 0)
-        self.assertEqual(ApprovalInstance.objects.count(), 0)
+        batch.refresh_from_db()
+        self.assertEqual(batch.status, "IMPORTED")
         self.assertTrue(AuditLog.objects.filter(action="HISTORICAL_EXPENSE_IMPORTED",
                                                  object_id=str(batch.id)).exists())
 
@@ -122,6 +142,7 @@ class ImportTests(HistoryExpenseTestBase):
         self.assertEqual(body["batch"]["imported_rows"], 1)
         self.assertEqual(body["batch"]["failed_rows"], 6)
         self.assertEqual([e["row"] for e in body["errors"]], [3, 4, 5, 6, 7, 8])
+        self.approve(body["batch"]["id"])
         self.assertEqual(LedgerEntry.objects.filter(source_type="historical_expense").count(), 1)
 
     def test_ac_334_02_all_invalid_creates_no_batch_or_ledger(self):
@@ -185,11 +206,13 @@ class ImportTests(HistoryExpenseTestBase):
 
 class BatchAndVoidTests(HistoryExpenseTestBase):
     def _import_three(self):
-        return self.assert_ok(self.import_file(xlsx_upload(rows=[
+        body = self.assert_ok(self.import_file(xlsx_upload(rows=[
             ["2022-07-01", "100.00", "维修", "更换钢丝绳", ""],
             ["2022-08-01", "200.00", "保洁", "月度保洁", ""],
             ["2026-09-30", "300.00", "绿化", "修剪树木", ""],
         ])), 201).json()
+        self.approve(body["batch"]["id"])
+        return body
 
     def test_ac_335_01_and_02_batch_list_and_detail(self):
         imported = self._import_three()
@@ -249,11 +272,13 @@ class BatchAndVoidTests(HistoryExpenseTestBase):
 
 class ReportIntegrationTests(HistoryExpenseTestBase):
     def _import_year(self):
-        return self.assert_ok(self.import_file(csv_upload(rows=[
+        body = self.assert_ok(self.import_file(csv_upload(rows=[
             ["2022-07-01", "100.00", "维修", "更换钢丝绳", ""],
             ["2022-08-01", "200.00", "保洁", "月度保洁", ""],
             ["2026-09-30", "300.00", "绿化", "修剪树木", ""],
         ])), 201).json()
+        self.approve(body["batch"]["id"])
+        return body
 
     def test_ac_337_01_03_report_includes_history_then_excludes_after_void(self):
         imported = self._import_year()

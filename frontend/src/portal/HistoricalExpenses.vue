@@ -1,4 +1,4 @@
-<!-- MOD-196：历史支出批量导入（仅业委会成员；写入台账，不走报销审批） -->
+<!-- MOD-210：历史支出批量导入（仅业委会成员；导入后提交审批，通过后写入台账） -->
 <template>
   <div class="page" v-if="auth.isCommittee">
     <div class="card">
@@ -7,14 +7,25 @@
         <div class="row">
           <el-button @click="downloadTemplate('xlsx')">下载 xlsx 模板</el-button>
           <el-button @click="downloadTemplate('csv')">下载 csv 模板</el-button>
-          <el-upload :show-file-list="false" :http-request="uploadFile" accept=".csv,.xlsx">
-            <el-button type="primary">批量导入</el-button>
-          </el-upload>
         </div>
       </div>
+      <div class="row" style="margin-top: 10px">
+        <AccountSelect v-model="accountId" placeholder="入账账户" style="width: 220px" />
+        <el-select v-model="flowId" placeholder="审批流程" style="width: 240px">
+          <el-option
+            v-for="f in flows"
+            :key="f.id"
+            :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`"
+            :value="f.id"
+          />
+        </el-select>
+        <el-upload :show-file-list="false" :http-request="uploadFile" accept=".csv,.xlsx">
+          <el-button type="primary">批量导入</el-button>
+        </el-upload>
+      </div>
       <p class="muted">
-        仅用于补录系统上线前的历史支出：导入后直接写入台账，不生成报销单/备用金申请，也不进入审批待办。
-        如导入有误，请整批作废后重新导入。模板列：日期、金额、支出类别、用途/事由、备注。
+        仅用于补录系统上线前的历史支出：导入后提交审批，审批通过后才写入台账，不生成报销单/备用金申请。
+        如导入有误，请撤回或等待驳回后重新导入。模板列：日期、金额、支出类别、用途/事由、备注。
       </p>
     </div>
 
@@ -26,8 +37,8 @@
       <p class="muted" style="margin-top: 8px">
         总行数 {{ result.total_rows }}；
         <template v-if="result.batch">
-          成功 {{ result.batch.imported_rows }}、重复 {{ result.batch.skipped_rows }}、失败 {{ result.batch.failed_rows }}，
-          金额合计 ¥{{ result.batch.total_amount }}
+          有效 {{ result.batch.imported_rows }}、重复 {{ result.batch.skipped_rows }}、失败 {{ result.batch.failed_rows }}，
+          金额合计 ¥{{ result.batch.total_amount }}，已提交审批
         </template>
         <template v-else>没有可导入的有效行，未创建批次</template>
       </p>
@@ -46,6 +57,9 @@
           <template #default="{ row }">{{ datetime(row.created_at) }}</template>
         </el-table-column>
         <el-table-column prop="file_name" label="文件" min-width="180" />
+        <el-table-column label="入账账户" min-width="140">
+          <template #default="{ row }">{{ row.account_name || '默认账户' }}</template>
+        </el-table-column>
         <el-table-column prop="imported_by_label" label="操作人" width="120" />
         <el-table-column prop="total_rows" label="总行数" width="80" />
         <el-table-column prop="imported_rows" label="成功" width="70" />
@@ -54,17 +68,16 @@
         <el-table-column label="金额合计" width="120">
           <template #default="{ row }">¥{{ row.total_amount }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="90">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'VOIDED' ? 'info' : 'success'" size="small">
-              {{ row.status === 'VOIDED' ? '已作废' : '已导入' }}
-            </el-tag>
+            <el-tag :type="statusTagType(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="170" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="openDetail(row)">明细</el-button>
-            <el-button v-if="row.status !== 'VOIDED'" size="small" type="danger" @click="openVoid(row)">整批作废</el-button>
+            <el-button v-if="row.status === 'PENDING'" size="small" @click="withdraw(row)">撤回</el-button>
+            <el-button v-if="row.status === 'IMPORTED'" size="small" type="danger" @click="openVoid(row)">整批作废</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -75,6 +88,7 @@
       <template v-if="detail">
         <p class="muted">
           {{ detail.file_name }} · {{ datetime(detail.created_at) }} · 操作人 {{ detail.imported_by_label }}
+          · 账户 {{ detail.account_name || '默认账户' }} · 状态 {{ statusText(detail.status) }}
           · 金额合计 ¥{{ detail.total_amount }}
           <template v-if="detail.status === 'VOIDED'"> · 已作废：{{ detail.void_reason }}</template>
         </p>
@@ -87,9 +101,7 @@
           <el-table-column prop="remark" label="备注" min-width="120" />
           <el-table-column label="结果" width="100">
             <template #default="{ row }">
-              <el-tag :type="row.status === 'IMPORTED' ? 'success' : (row.status === 'DUPLICATE' ? 'warning' : 'danger')" size="small">
-                {{ row.status === 'IMPORTED' ? '成功' : (row.status === 'DUPLICATE' ? '重复' : '错误') }}
-              </el-tag>
+              <el-tag :type="rowStatusTagType(row.status)" size="small">{{ rowStatusText(row.status) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="error_message" label="原因" min-width="150" />
@@ -114,9 +126,11 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { historicalExpenseApi } from '@/shared/api'
+import { approvalApi, historicalExpenseApi } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
+import AccountSelect from '@/shared/AccountSelect.vue'
 import { datetime, errorText } from '@/shared/format'
+import { confirmDanger } from '@/shared/confirm'
 import { usePaging } from '@/shared/usePaging'
 import { useAuthStore } from '@/stores/auth'
 
@@ -126,6 +140,9 @@ const { items, total, page, pageSize, reload, goto } = usePaging({
   fetch: (params) => historicalExpenseApi.batches(params)
 })
 const result = ref(null)
+const accountId = ref(null)
+const flowId = ref(null)
+const flows = ref([])
 const showDetail = ref(false)
 const detail = ref(null)
 const showVoid = ref(false)
@@ -151,10 +168,38 @@ async function downloadTemplate(fileType) {
 }
 
 async function uploadFile({ file }) {
+  if (!accountId.value) return ElMessage.warning('请选择入账账户')
+  if (!flowId.value) return ElMessage.warning('请选择审批流程')
   try {
-    result.value = await historicalExpenseApi.importFile(file)
-    if (result.value.batch) ElMessage.success('导入完成')
+    result.value = await historicalExpenseApi.importFile(file, {
+      accountId: accountId.value, flowId: flowId.value
+    })
+    if (result.value.batch) ElMessage.success('已导入并提交审批')
     else ElMessage.warning('没有可导入的有效行')
+    reload()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+const STATUS_TEXT = {
+  PENDING: '审批中', IMPORTED: '已入账', REJECTED: '已驳回', WITHDRAWN: '已撤回', VOIDED: '已作废'
+}
+const STATUS_TAG = {
+  PENDING: 'warning', IMPORTED: 'success', REJECTED: 'danger', WITHDRAWN: 'info', VOIDED: 'info'
+}
+const statusText = (status) => STATUS_TEXT[status] || status
+const statusTagType = (status) => STATUS_TAG[status] || 'info'
+const ROW_TEXT = { PENDING: '待入账', IMPORTED: '成功', DUPLICATE: '重复', ERROR: '错误' }
+const ROW_TAG = { PENDING: 'info', IMPORTED: 'success', DUPLICATE: 'warning', ERROR: 'danger' }
+const rowStatusText = (status) => ROW_TEXT[status] || status
+const rowStatusTagType = (status) => ROW_TAG[status] || 'info'
+
+async function withdraw(row) {
+  if (!(await confirmDanger('withdrawHistoricalExpense'))) return
+  try {
+    await historicalExpenseApi.withdrawBatch(row.id)
+    ElMessage.success('已撤回')
     reload()
   } catch (e) {
     ElMessage.error(errorText(e))
@@ -204,6 +249,12 @@ onMounted(async () => {
     await reload()
   } catch (e) {
     ElMessage.error(errorText(e))
+  }
+  try {
+    const data = await approvalApi.flows('INCOME')
+    flows.value = data.results || data || []
+  } catch (e) {
+    flows.value = []
   }
 })
 </script>

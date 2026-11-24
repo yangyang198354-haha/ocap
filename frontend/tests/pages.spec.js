@@ -102,13 +102,14 @@ describe('报销与核销表单（CR-013）', () => {
     const upload = http.post.mock.calls.find((c) => c[0] === '/attachments')
     expect(upload[1].get('purpose')).toBe('INVOICE')
     Object.assign(wrapper.vm.form, {
-      type: 'REIMBURSEMENT', amount: '300.50', reason: '购买灯泡', occurred_on: '2026-11-01', approval_flow_id: 7
+      type: 'REIMBURSEMENT', amount: '300.50', reason: '购买灯泡', occurred_on: '2026-11-01',
+      approval_flow_id: 7, account_id: 1
     })
     await wrapper.vm.create()
     await flushPromises()
     expect(http.post).toHaveBeenLastCalledWith('/claims/reimbursements', {
       amount: '300.50', reason: '购买灯泡', occurred_on: '2026-11-01',
-      invoice_ids: ['att-1'], approval_flow_id: 7
+      invoice_ids: ['att-1'], approval_flow_id: 7, account_id: 1
     })
   })
 
@@ -118,12 +119,12 @@ describe('报销与核销表单（CR-013）', () => {
     const { wrapper } = await mountPage(Claims)
     Object.assign(wrapper.vm.form, {
       type: 'ADVANCE', amount: '1000.00', reason: '活动', expected_usage: '小区活动',
-      expected_settle_on: '2026-12-01', approval_flow_id: 7
+      expected_settle_on: '2026-12-01', approval_flow_id: 7, account_id: 1
     })
     await wrapper.vm.create()
     expect(http.post).toHaveBeenLastCalledWith('/claims/advances', {
       amount: '1000.00', reason: '活动', expected_usage: '小区活动',
-      expected_settle_on: '2026-12-01', approval_flow_id: 7
+      expected_settle_on: '2026-12-01', approval_flow_id: 7, account_id: 1
     })
   })
 

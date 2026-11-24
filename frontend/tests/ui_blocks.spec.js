@@ -159,7 +159,8 @@ describe('报销表单控件（AC-087-02 / AC-081-03）', () => {
   const claimsRoutes = routeTable({
     '/me': ME,
     '/claims': { results: [] },
-    '/approval/flows': { results: [{ id: 7, name: '日常支出', mode: 'DESIGNATED' }] }
+    '/approval/flows': { results: [{ id: 7, name: '日常支出', mode: 'DESIGNATED' }] },
+    '/ledger/accounts/summary': { accounts: [{ id: 1, name: '基本账户', is_default: true }] }
   })
 
   async function openForm() {
@@ -203,7 +204,7 @@ describe('报销表单控件（AC-087-02 / AC-081-03）', () => {
     await wrapper.vm.create()
     expect(http.post).toHaveBeenLastCalledWith('/claims/reimbursements', {
       amount: '300.50', reason: '购买灯泡', occurred_on: '2026-11-01',
-      invoice_ids: ['att-1'], approval_flow_id: 7
+      invoice_ids: ['att-1'], approval_flow_id: 7, account_id: 1
     })
   })
 

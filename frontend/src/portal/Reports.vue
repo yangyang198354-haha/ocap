@@ -43,7 +43,13 @@
         <el-button link type="primary" size="small" @click="loadAccounts">重试</el-button>
       </p>
       <div v-else-if="accounts.length" class="reports-account-grid">
-        <AccountCard v-for="account in accounts" :key="account.id" :account="account" />
+        <AccountCard
+          v-for="account in accounts"
+          :key="account.id"
+          :account="account"
+          :selected="account.id === selectedAccountId"
+          @select="selectAccount(account.id)"
+        />
       </div>
       <el-empty v-else :image-size="48" description="暂无账户" />
     </section>
@@ -59,20 +65,25 @@
           <el-tag v-if="item.stale" size="small" type="warning">已过期，待重新生成</el-tag>
         </div>
         <div class="muted reports-item-totals">
-          <span>收入 ¥{{ item.total_income }}</span>
-          <span>支出 ¥{{ item.total_expense }}</span>
+          <span class="is-income">收入 ¥{{ item.total_income }}</span>
+          <span class="is-expense">支出 ¥{{ item.total_expense }}</span>
           <span>结余 ¥{{ item.balance }}</span>
         </div>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
     </section>
 
-    <ReportDetailDialog v-model="dialogVisible" :report-id="selectedId" :trigger-el="triggerEl" />
+    <ReportDetailDialog
+      v-model="dialogVisible"
+      :report-id="selectedId"
+      :account-id="selectedAccountId"
+      :trigger-el="triggerEl"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { accountApi, ledgerApi } from '@/shared/api'
 import PagerBar from '@/shared/PagerBar.vue'
@@ -93,19 +104,25 @@ const periodFilter = ref('ALL')
 const accounts = ref([])
 const totalBalance = ref('0.00')
 const accountError = ref(false)
+const selectedAccountId = ref(null)
 const dialogVisible = ref(false)
 const selectedId = ref(null)
 const triggerEl = ref(null)
 
 const { items: reports, total, page, pageSize, reload, goto, resetAndLoad } = usePaging({
   fetch: (params) => ledgerApi.reports(params),
-  filters: computed(() => (periodFilter.value === 'ALL' ? {} : { period_type: periodFilter.value }))
+  filters: computed(() => {
+    const filters = periodFilter.value === 'ALL' ? {} : { period_type: periodFilter.value }
+    if (selectedAccountId.value) filters.account_id = selectedAccountId.value
+    return filters
+  })
 })
 const gen = reactive({ period_type: 'QUARTER', year: new Date().getFullYear(), quarter: 1 })
 
 const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year} 年第 ${r.quarter} 季度`)
 
 async function loadReports() {
+  if (!selectedAccountId.value) return // AC-418-02：无可用账户时不请求列表
   try {
     await reload()
   } catch (e) {
@@ -137,10 +154,24 @@ async function loadAccounts() {
     accounts.value = data?.accounts || []
     totalBalance.value = data?.total_balance ?? '0.00'
     accountError.value = false
+    if (!accounts.value.some((a) => a.id === selectedAccountId.value)) {
+      const fallback = accounts.value.find((a) => a.is_default) || accounts.value[0]
+      selectedAccountId.value = fallback ? fallback.id : null
+    }
   } catch (e) {
     accounts.value = []
     totalBalance.value = '0.00'
     accountError.value = true
+  }
+}
+
+async function selectAccount(accountId) {
+  if (selectedAccountId.value === accountId) return
+  selectedAccountId.value = accountId
+  try {
+    await resetAndLoad()
+  } catch (e) {
+    ElMessage.error(errorText(e))
   }
 }
 
@@ -163,15 +194,10 @@ async function generate() {
   }
 }
 
-watch(
-  () => auth.me,
-  () => loadAccounts(),
-  { immediate: true }
-)
-
 onMounted(async () => {
   await auth.fetchMe().catch(() => null)
-  loadReports()
+  await loadAccounts()
+  await loadReports()
 })
 </script>
 
@@ -186,7 +212,11 @@ onMounted(async () => {
 .reports-accounts { display: flex; flex-direction: column; gap: 12px; margin: 0 0 16px; }
 .reports-accounts-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .reports-total { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
-.reports-account-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.reports-account-grid {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+.reports-account-grid > * { flex: 1 1 0; min-width: 280px; }
 .account-error { margin: 0; }
 .reports-item { display: flex; flex-direction: column; gap: 6px; }
 .reports-item-main { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -196,7 +226,6 @@ onMounted(async () => {
 }
 .reports-item-link:hover { text-decoration: underline; }
 .reports-item-totals { display: flex; flex-wrap: wrap; gap: 4px 16px; }
-@media (min-width: 768px) {
-  .reports-account-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
-}
+.reports-item-totals .is-income { color: var(--success); }
+.reports-item-totals .is-expense { color: var(--danger); }
 </style>

@@ -21,10 +21,6 @@
           <span v-if="report.legacy" class="tag is-warning">旧口径（未重算）</span>
           <span v-if="report.stale" class="tag is-warning">已过期，待重新生成</span>
         </div>
-        <el-select v-model="accountId" size="small" class="report-account-select" @change="load">
-          <el-option label="全部账户" value="" />
-          <el-option v-for="acc in accounts" :key="acc.id" :label="acc.name" :value="acc.id" />
-        </el-select>
       </div>
       <div class="report-metrics">
         <div class="report-metric">
@@ -33,11 +29,11 @@
         </div>
         <div class="report-metric">
           <span class="label">本期收入</span>
-          <b class="mono">¥{{ display(report.total_income) }}</b>
+          <b class="mono is-income">¥{{ display(report.total_income) }}</b>
         </div>
         <div class="report-metric">
           <span class="label">本期支出</span>
-          <b class="mono">¥{{ display(report.total_expense) }}</b>
+          <b class="mono is-expense">¥{{ display(report.total_expense) }}</b>
         </div>
         <div class="report-metric">
           <span class="label">期末结余</span>
@@ -48,13 +44,19 @@
         <el-table v-if="(report.detail || []).length" :data="report.detail" size="small">
           <el-table-column prop="occurred_on" label="日期" width="110" />
           <el-table-column label="方向" width="70">
-            <template #default="{ row }">{{ row.direction === 'INCOME' ? '收入' : '支出' }}</template>
+            <template #default="{ row }">
+              <span :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">
+                {{ row.direction === 'INCOME' ? '收入' : '支出' }}
+              </span>
+            </template>
           </el-table-column>
           <el-table-column label="类型" min-width="100">
             <template #default="{ row }">{{ entryTypeText(row.entry_type) }}</template>
           </el-table-column>
           <el-table-column label="金额" width="110">
-            <template #default="{ row }">¥{{ moneyText(row.amount) }}</template>
+            <template #default="{ row }">
+              <span :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">¥{{ moneyText(row.amount) }}</span>
+            </template>
           </el-table-column>
         </el-table>
         <el-empty v-else :image-size="48" description="本期暂无收支明细" />
@@ -68,19 +70,18 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { accountApi, ledgerApi } from '@/shared/api'
+import { ledgerApi } from '@/shared/api'
 import { errorText as toErrorText, moneyText } from '@/shared/format'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   reportId: { type: Number, default: null },
+  accountId: { type: Number, default: null },
   triggerEl: { type: Object, default: null }
 })
 const emit = defineEmits(['update:modelValue'])
 
 const report = ref(null)
-const accounts = ref([])
-const accountId = ref(null)
 const loading = ref(false)
 const errorText = ref('')
 const ENTRY_TYPES = { REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销', INCOME: '收入' }
@@ -101,21 +102,12 @@ function restoreFocus() {
   if (el && typeof el.focus === 'function') el.focus()
 }
 
-async function loadAccounts() {
-  try {
-    const data = await accountApi.summary({ status: 'ALL', recent: 0 })
-    accounts.value = data?.accounts || []
-  } catch (e) {
-    accounts.value = []
-  }
-}
-
 async function load() {
   if (!props.reportId) return
   loading.value = true
   errorText.value = ''
   try {
-    report.value = await ledgerApi.reportDetail(props.reportId, accountId.value || null)
+    report.value = await ledgerApi.reportDetail(props.reportId, props.accountId || null)
   } catch (e) {
     report.value = null
     errorText.value = toErrorText(e) || '报表详情加载失败'
@@ -128,10 +120,8 @@ watch(
   () => [props.modelValue, props.reportId],
   async ([visible]) => {
     if (!visible) return
-    accountId.value = ''
     report.value = null
     errorText.value = ''
-    loadAccounts()
     await load()
   }
 )
@@ -146,8 +136,7 @@ watch(
 </style>
 
 <style scoped>
-.report-toolbar { margin-bottom: 12px; }
-.report-account-select { width: 180px; }
+.report-toolbar { margin-bottom: 12px; min-height: 0; }
 .report-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .report-metric {
   display: flex; flex-direction: column; gap: 4px; padding: 10px 12px;
@@ -155,6 +144,8 @@ watch(
 }
 .report-metric b { font-size: 20px; }
 .report-metric b.is-strong { font-size: 22px; color: var(--accent-text); }
+.report-metric b.is-income, .is-income { color: var(--success); }
+.report-metric b.is-expense, .is-expense { color: var(--danger); }
 .report-detail-scroll { margin-top: 12px; max-height: 46vh; overflow-y: auto; }
 .report-error { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 .report-loading { padding: 24px 0; text-align: center; }

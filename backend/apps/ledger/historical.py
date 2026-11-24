@@ -6,6 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.core.audit import AuditActor, AuditService
@@ -137,7 +138,7 @@ def build_template(file_type: str = "xlsx") -> tuple[bytes, str]:
         "支出类别 ≤32 字，用途/事由 ≤200 字，备注 ≤200 字；日期、金额必填。",
         "支持 xlsx / CSV，文件 ≤5MB、数据行 ≤5000 行。",
         "重复行（日期+金额+支出类别+用途/事由全同）会被跳过；错误行跳过并提示行号。",
-        "导入后直接写入台账，不生成报销单或审批待办；如导入错误，请整批作废后重新导入。",
+        "导入后提交审批，审批通过后才写入台账；如导入错误，请撤回或等待驳回后重新导入。",
     ):
         notes.append([line])
     notes.column_dimensions["A"].width = 100
@@ -146,7 +147,9 @@ def build_template(file_type: str = "xlsx") -> tuple[bytes, str]:
     return out.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
-def import_file(*, file_name: str, raw: bytes, user) -> tuple[HistoricalExpenseBatch | None, list[dict], int]:
+def create_pending_batch(*, file_name: str, raw: bytes, user, account=None,
+                         flow_id: int) -> tuple[HistoricalExpenseBatch | None, list[dict], int]:
+    """IFC-424：解析文件并创建待审批批次，审批通过后才入账（MOD-208）。"""
     if len(raw) > MAX_FILE_BYTES:
         raise ApiError("FILE_TOO_LARGE", "文件超过 5 MB", 413)
     rows = _read_rows(file_name, raw)
@@ -175,7 +178,9 @@ def import_file(*, file_name: str, raw: bytes, user) -> tuple[HistoricalExpenseB
             parsed.append(result)
 
     existing = set(
-        HistoricalExpenseRow.objects.filter(status="IMPORTED", batch__status="IMPORTED")
+        HistoricalExpenseRow.objects.filter(status__in=("PENDING", "IMPORTED"),
+                                            batch__status__in=("PENDING", "IMPORTED"))
+        .filter(Q(batch__account=account) | Q(batch__account__isnull=True))
         .values_list("occurred_on", "amount", "category", "purpose")
     )
     valid = []
@@ -191,9 +196,11 @@ def import_file(*, file_name: str, raw: bytes, user) -> tuple[HistoricalExpenseB
     if not valid:
         return None, errors, len(data_rows)
 
+    from apps.approval.services import ApprovalEngine
+
     with transaction.atomic():
         batch = HistoricalExpenseBatch.objects.create(file_name=file_name[:255], imported_by=user,
-                                                      total_rows=len(data_rows))
+                                                      account=account, total_rows=len(data_rows))
         imported = 0
         total_amount = Decimal("0.00")
         error_by_line = {item["row"]: item for item in errors}
@@ -211,15 +218,9 @@ def import_file(*, file_name: str, raw: bytes, user) -> tuple[HistoricalExpenseB
                     error_message=str(error["detail"])[:200],
                 )
                 continue
-            entry = LedgerService.post(
-                direction="EXPENSE", amount=row.amount, occurred_on=row.occurred_on,
-                entry_type=row.category or "历史支出", summary=row.purpose or None,
-                source_type=SOURCE_TYPE, source_id=batch.id, seq=line_no,
-            )
             HistoricalExpenseRow.objects.create(
-                batch=batch, line_no=line_no, status="IMPORTED", occurred_on=row.occurred_on,
+                batch=batch, line_no=line_no, status="PENDING", occurred_on=row.occurred_on,
                 amount=row.amount, category=row.category, purpose=row.purpose, remark=row.remark,
-                ledger_entry=entry,
             )
             imported += 1
             total_amount += row.amount
@@ -228,17 +229,86 @@ def import_file(*, file_name: str, raw: bytes, user) -> tuple[HistoricalExpenseB
         batch.skipped_rows = duplicate_count
         batch.failed_rows = len(errors) - duplicate_count
         batch.total_amount = total_amount
-        batch.save(update_fields=["imported_rows", "skipped_rows", "failed_rows", "total_amount"])
+        instance = ApprovalEngine.submit(scope="INCOME", subject_type="historical_expense_batch",
+                                         subject_id=batch.id, flow_id=flow_id, submitter=user)
+        batch.approval_instance_id = instance.id
+        batch.save(update_fields=["imported_rows", "skipped_rows", "failed_rows", "total_amount",
+                                  "approval_instance_id"])
 
     AuditService.record(
         actor=AuditActor("MEMBER", user.id, getattr(user, "identity_label", "")),
-        action="HISTORICAL_EXPENSE_IMPORTED", object_type="historical_expense_batch",
+        action="HISTORICAL_EXPENSE_SUBMITTED", object_type="historical_expense_batch",
         object_id=str(batch.id), result="SUCCESS",
         detail={"file_name": batch.file_name, "total_rows": batch.total_rows,
                 "imported_rows": batch.imported_rows, "skipped_rows": batch.skipped_rows,
-                "failed_rows": batch.failed_rows, "total_amount": str(batch.total_amount)},
+                "failed_rows": batch.failed_rows, "total_amount": str(batch.total_amount),
+                "account_id": batch.account_id, "approval_instance_id": batch.approval_instance_id},
     )
     return batch, errors, len(data_rows)
+
+
+def on_approved(subject_id: int) -> None:
+    """IFC-425：审批通过后逐行入账；非审批中批次幂等跳过。"""
+    with transaction.atomic():
+        batch = HistoricalExpenseBatch.objects.select_for_update().filter(id=subject_id).first()
+        if batch is None or batch.status != "PENDING":
+            return
+        for row in batch.rows.filter(status="PENDING").order_by("line_no", "id"):
+            entry = LedgerService.post(
+                direction="EXPENSE", amount=row.amount, occurred_on=row.occurred_on,
+                entry_type=row.category or "历史支出", summary=row.purpose or None,
+                source_type=SOURCE_TYPE, source_id=batch.id, seq=row.line_no,
+                account=batch.account,
+            )
+            row.status = "IMPORTED"
+            row.ledger_entry = entry
+            row.save(update_fields=["status", "ledger_entry"])
+        batch.status = "IMPORTED"
+        batch.decided_at = timezone.now()
+        batch.save(update_fields=["status", "decided_at"])
+    AuditService.record(
+        actor=AuditActor("SYSTEM", None, "审批引擎"),
+        action="HISTORICAL_EXPENSE_IMPORTED", object_type="historical_expense_batch",
+        object_id=str(batch.id), result="SUCCESS",
+        detail={"file_name": batch.file_name, "imported_rows": batch.imported_rows,
+                "total_amount": str(batch.total_amount), "account_id": batch.account_id},
+    )
+
+
+def on_rejected(subject_id: int) -> None:
+    _finish(subject_id, "REJECTED", "HISTORICAL_EXPENSE_REJECTED")
+
+
+def on_withdrawn(subject_id: int) -> None:
+    _finish(subject_id, "WITHDRAWN", "HISTORICAL_EXPENSE_WITHDRAWN")
+
+
+def _finish(subject_id: int, status_value: str, action: str) -> None:
+    batch = HistoricalExpenseBatch.objects.filter(id=subject_id, status="PENDING").first()
+    if batch is None:
+        return
+    batch.status = status_value
+    batch.decided_at = timezone.now()
+    batch.save(update_fields=["status", "decided_at"])
+    AuditService.record(
+        actor=AuditActor("SYSTEM", None, "审批引擎"), action=action,
+        object_type="historical_expense_batch", object_id=str(batch.id), result="SUCCESS",
+        detail={"file_name": batch.file_name, "account_id": batch.account_id},
+    )
+
+
+def withdraw_batch(batch_id: int, *, user) -> HistoricalExpenseBatch:
+    """IFC-426：提交人撤回审批中的批次；撤回后不产生任何台账记录。"""
+    from apps.approval.services import ApprovalEngine
+
+    batch = HistoricalExpenseBatch.objects.filter(id=batch_id).first()
+    if batch is None:
+        raise ApiError("NOT_FOUND", "导入批次不存在", 404)
+    if batch.status != "PENDING" or not batch.approval_instance_id:
+        raise ApiError("INVALID_STATE", "仅审批中的批次可撤回", 409)
+    ApprovalEngine.withdraw(batch.approval_instance_id, user)
+    batch.refresh_from_db()
+    return batch
 
 
 def void_batch(batch_id: int, *, user, reason: str) -> HistoricalExpenseBatch:
@@ -250,6 +320,8 @@ def void_batch(batch_id: int, *, user, reason: str) -> HistoricalExpenseBatch:
         raise ApiError("NOT_FOUND", "导入批次不存在", 404)
     if batch.status == "VOIDED":
         raise ApiError("ALREADY_VOIDED", "该批次已作废", 409)
+    if batch.status != "IMPORTED":
+        raise ApiError("INVALID_STATE", "审批中的批次请先撤回", 409)
     with transaction.atomic():
         LedgerService.void_by_source(SOURCE_TYPE, batch.id)
         batch.status = "VOIDED"

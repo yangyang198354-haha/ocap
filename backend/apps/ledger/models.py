@@ -89,12 +89,17 @@ class LedgerReport(models.Model):
 
 class HistoricalExpenseBatch(models.Model):
     """历史支出导入批次（MOD-192）：只用于上线前历史数据补录。"""
-    STATUSES = [("IMPORTED", "已导入"), ("VOIDED", "已作废")]
+    STATUSES = [("PENDING", "审批中"), ("IMPORTED", "已入账"), ("REJECTED", "已驳回"),
+                ("WITHDRAWN", "已撤回"), ("VOIDED", "已作废")]
 
     file_name = models.CharField(max_length=255)
     imported_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT,
                                     related_name="historical_expense_batches")
-    status = models.CharField(max_length=10, choices=STATUSES, default="IMPORTED")
+    account = models.ForeignKey(LedgerAccount, null=True, blank=True, on_delete=models.PROTECT,
+                                related_name="historical_expense_batches")
+    approval_instance_id = models.BigIntegerField(null=True, blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUSES, default="PENDING")
     total_rows = models.PositiveIntegerField(default=0)
     imported_rows = models.PositiveIntegerField(default=0)
     skipped_rows = models.PositiveIntegerField(default=0)
@@ -113,7 +118,8 @@ class HistoricalExpenseBatch(models.Model):
 
 class HistoricalExpenseRow(models.Model):
     """历史支出导入行（MOD-193）：保留原始行与处理结果，成功行关联台账。"""
-    STATUSES = [("IMPORTED", "成功"), ("DUPLICATE", "重复"), ("ERROR", "错误")]
+    STATUSES = [("PENDING", "待入账"), ("IMPORTED", "成功"),
+                ("DUPLICATE", "重复"), ("ERROR", "错误")]
 
     batch = models.ForeignKey(HistoricalExpenseBatch, on_delete=models.CASCADE, related_name="rows")
     line_no = models.PositiveSmallIntegerField()

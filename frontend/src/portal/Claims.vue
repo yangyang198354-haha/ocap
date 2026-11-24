@@ -21,6 +21,7 @@
               {{ Number(item.amount) < 0 ? '多退（退回现金）' : '差额补发' }}
             </span>
             <span class="muted" style="margin-left: 8px">{{ item.reason }}</span>
+            <span v-if="item.account_name" class="muted" style="margin-left: 8px">{{ item.account_name }}</span>
             <span v-if="item.type === 'ADVANCE'" class="muted" style="margin-left: 8px">
               {{ item.settlement_id ? '已核销' : '未核销' }}
             </span>
@@ -55,6 +56,10 @@
                 <span><b>{{ t.label }}</b><small>{{ t.hint }}</small></span>
               </button>
             </div>
+          </div>
+          <div class="field-block">
+            <label class="field-label">入账账户</label>
+            <AccountSelect v-model="form.account_id" placeholder="请选择入账账户" />
           </div>
           <div class="field-block">
             <label class="field-label" for="claim-amount">金额</label>
@@ -173,6 +178,7 @@ import { approvalApi, attachmentApi, claimApi, meApi } from '@/shared/api'
 import StatusTag from './StatusTag.vue'
 import UiIcon from './UiIcon.vue'
 import PagerBar from '@/shared/PagerBar.vue'
+import AccountSelect from '@/shared/AccountSelect.vue'
 import { useAuthStore } from '@/stores/auth'
 import { errorText, moneyText } from '@/shared/format'
 import { confirmDanger } from '@/shared/confirm'
@@ -202,7 +208,7 @@ const showSettle = ref(false)
 const originId = ref(null)
 const form = reactive({
   type: 'REIMBURSEMENT', amount: '', reason: '', occurred_on: '',
-  expected_usage: '', expected_settle_on: '', approval_flow_id: null
+  expected_usage: '', expected_settle_on: '', approval_flow_id: null, account_id: null
 })
 const settle = reactive({ advance_id: null, reimbursement_ids: [], reason: '', approval_flow_id: null })
 
@@ -281,7 +287,8 @@ function openReissue(item) {
     occurred_on: item.occurred_on || '',
     expected_usage: item.expected_usage || '',
     expected_settle_on: item.expected_settle_on || '',
-    approval_flow_id: null
+    approval_flow_id: null,
+    account_id: item.account_id || null
   })
   invoiceIds.value = []
   invoiceFiles.value = []
@@ -306,18 +313,19 @@ function removeInvoice(id) {
 }
 
 async function create() {
+  if (!form.account_id) return ElMessage.warning('请选择入账账户')
   try {
     if (form.type === 'REIMBURSEMENT') {
       await claimApi.createReimbursement({
         amount: form.amount, reason: form.reason, occurred_on: form.occurred_on,
         invoice_ids: invoiceIds.value, approval_flow_id: form.approval_flow_id,
-        origin_id: originId.value || undefined
+        account_id: form.account_id, origin_id: originId.value || undefined
       })
     } else {
       await claimApi.createAdvance({
         amount: form.amount, reason: form.reason, expected_usage: form.expected_usage,
         expected_settle_on: form.expected_settle_on, approval_flow_id: form.approval_flow_id,
-        origin_id: originId.value || undefined
+        account_id: form.account_id, origin_id: originId.value || undefined
       })
     }
     showCreate.value = false

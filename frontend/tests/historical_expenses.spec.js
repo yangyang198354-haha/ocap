@@ -56,7 +56,7 @@ describe('历史支出导入页', () => {
     const text = document.body.textContent
     expect(text).toContain('2022-2026历史支出.xlsx')
     expect(text).toContain('600.00')
-    expect(text).toContain('已导入')
+    expect(text).toContain('已入账')
   })
 
   it('AC-333-01 下载模板：请求 xlsx 并触发本地保存', async () => {

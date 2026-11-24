@@ -81,6 +81,7 @@ describe('报销与核销表单（CR-013）', () => {
   const routes = {
     'GET /me': MEMBER_ME,
     'GET /approval/flows': { results: [{ id: 7, name: '报销流程' }] },
+    'GET /ledger/accounts/summary': { accounts: [{ id: 5, name: '基本账户', is_default: true }] },
     'POST /attachments': {}
   }
   const claimsList = (data) => ({
@@ -121,7 +122,7 @@ describe('报销与核销表单（CR-013）', () => {
     const post = requests().find((r) => r.path === '/claims/reimbursements')
     expect(post.data).toEqual({
       amount: '300.50', reason: '购买灯泡', occurred_on: '2026-11-01',
-      invoice_ids: ['att-1'], approval_flow_id: 7
+      invoice_ids: ['att-1'], approval_flow_id: 7, account_id: 5
     })
   })
 
@@ -146,7 +147,7 @@ describe('报销与核销表单（CR-013）', () => {
     await wrapper.vm.create()
     expect(requests().find((r) => r.path === '/claims/advances').data).toEqual({
       amount: '1000.00', reason: '活动', expected_usage: '小区活动',
-      expected_settle_on: '2026-12-01', approval_flow_id: 7
+      expected_settle_on: '2026-12-01', approval_flow_id: 7, account_id: 5
     })
   })
 

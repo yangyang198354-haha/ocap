@@ -1,5 +1,14 @@
 <template>
-  <article class="card account-card">
+  <article
+    class="card account-card"
+    :class="{ 'is-selected': selected }"
+    role="button"
+    tabindex="0"
+    :aria-pressed="selected ? 'true' : 'false'"
+    @click="emit('select', account.id)"
+    @keydown.enter.prevent="emit('select', account.id)"
+    @keydown.space.prevent="emit('select', account.id)"
+  >
     <header class="account-card-head">
       <div class="account-card-title">
         <b>{{ account.name }}</b>
@@ -27,14 +36,20 @@
 import { computed } from 'vue'
 import { moneyText } from '@/shared/format'
 
-const props = defineProps({ account: { type: Object, required: true } })
+const props = defineProps({
+  account: { type: Object, required: true },
+  selected: { type: Boolean, default: false }
+})
+const emit = defineEmits(['select'])
 const entries = computed(() => props.account.recent_entries || [])
 const ENTRY_TYPES = { REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销', INCOME: '收入' }
 const entryTypeText = (t) => ENTRY_TYPES[t] || t || '收支'
 </script>
 
 <style scoped>
-.account-card { margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; }
+.account-card { margin-bottom: 0; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+.account-card:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.account-card.is-selected { border-color: var(--accent-text); box-shadow: 0 0 0 1px var(--accent-text) inset; }
 .account-card-head { display: flex; flex-direction: column; gap: 4px; }
 .account-card-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .account-card-title b { font-size: 15px; }

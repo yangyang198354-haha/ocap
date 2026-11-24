@@ -1,0 +1,9 @@
+Host ocap
+  HostName 47.109.197.217
+  Port 57279
+  User yangyang
+  IdentityFile /workspace/.deploy/ocap_deploy_key
+  IdentitiesOnly yes
+  UserKnownHostsFile /workspace/.deploy/known_hosts
+  StrictHostKeyChecking yes
+  ProxyCommand nc -X connect -x 127.0.0.1:18080 %h %p

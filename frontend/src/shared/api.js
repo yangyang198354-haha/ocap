@@ -120,6 +120,22 @@ export const incomeApi = {
   list: (params) => get('/income/sheets', params)
 }
 
+export const historicalExpenseApi = {
+  template: (fileType = 'xlsx') =>
+    http.get('/admin/ledger/historical-expenses/template', {
+      params: { file_type: fileType }, responseType: 'blob'
+    }),
+  importFile: (file) => {
+    const body = new FormData()
+    body.append('file', file)
+    return http.post('/admin/ledger/historical-expenses/import', body)
+  },
+  batches: (params) => http.get('/admin/ledger/historical-expenses/batches', { params }),
+  batchDetail: (id) => http.get(`/admin/ledger/historical-expenses/batches/${id}`),
+  voidBatch: (id, reason) =>
+    http.post(`/admin/ledger/historical-expenses/batches/${id}/void`, { reason })
+}
+
 export const ledgerApi = {
   reports: (params) => get('/ledger/reports', params),
   // params 可含 account_id：报表详情的账户视角（IFC-413 / ADR-179）

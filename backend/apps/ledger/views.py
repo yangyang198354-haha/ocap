@@ -1,5 +1,8 @@
 """台账视图（IFC-110~112、IFC-409~414）。"""
 from django.db import transaction
+from django.http import HttpResponse
+from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -7,10 +10,11 @@ from apps.core.audit import AuditActor, AuditService
 from apps.core.config import SystemConfig
 from apps.core.errors import ApiError
 from apps.core.money import money
-from apps.core.permissions import IsAdmin, IsCommitteeMember, IsMember
+from apps.core.permissions import IsAdmin, IsCommitteeMember, IsIncomeMember, IsMember
 from apps.core.serializers import page_response
 
-from .models import LedgerAccount, LedgerReport
+from . import historical
+from .models import HistoricalExpenseBatch, LedgerAccount, LedgerReport
 from .services import AccountService, LedgerService, _aggregate, _opening_balance, _period_range
 
 
@@ -233,6 +237,86 @@ class ReportSerializer:
     def __init__(self, rows, many=False, context=None):
         rows = rows if many else [rows]
         self.data = [report_summary(r) for r in rows]
+
+
+def _batch_view(batch: HistoricalExpenseBatch) -> dict:
+    return {
+        "id": batch.id, "file_name": batch.file_name,
+        "imported_by": batch.imported_by_id,
+        "imported_by_label": getattr(batch.imported_by, "nickname", "") or f"用户#{batch.imported_by_id}",
+        "status": batch.status, "total_rows": batch.total_rows,
+        "imported_rows": batch.imported_rows, "skipped_rows": batch.skipped_rows,
+        "failed_rows": batch.failed_rows, "total_amount": money(batch.total_amount),
+        "created_at": batch.created_at, "voided_at": batch.voided_at, "void_reason": batch.void_reason,
+    }
+
+
+def _row_view(row) -> dict:
+    return {
+        "line_no": row.line_no, "occurred_on": row.occurred_on,
+        "amount": money(row.amount) if row.amount is not None else None,
+        "category": row.category, "purpose": row.purpose, "remark": row.remark,
+        "status": row.status, "error_message": row.error_message,
+    }
+
+
+class HistoricalExpenseBatchSerializer:
+    def __init__(self, rows, many=False, context=None):
+        rows = rows if many else [rows]
+        self.data = [_batch_view(row) for row in rows]
+
+
+class HistoricalExpenseTemplateView(APIView):
+    permission_classes = [IsIncomeMember]
+
+    def get(self, request):
+        file_type = str(request.query_params.get("file_type") or "xlsx").lower()
+        content, content_type = historical.build_template(file_type)
+        response = HttpResponse(content, content_type=content_type)
+        response["Content-Disposition"] = f'attachment; filename="historical_expense_template.{file_type}"'
+        return response
+
+
+class HistoricalExpenseImportView(APIView):
+    permission_classes = [IsIncomeMember]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise ApiError("FILE_REQUIRED", "缺少文件")
+        batch, errors, total_rows = historical.import_file(
+            file_name=upload.name or "historical_expense", raw=upload.read(), user=request.user)
+        payload = {"batch": _batch_view(batch) if batch else None, "errors": errors[:100],
+                   "total_rows": total_rows}
+        return Response(payload, status=status.HTTP_201_CREATED if batch else status.HTTP_200_OK)
+
+
+class HistoricalExpenseBatchListView(APIView):
+    permission_classes = [IsIncomeMember]
+
+    def get(self, request):
+        qs = HistoricalExpenseBatch.objects.select_related("imported_by").order_by("-created_at", "-id")
+        return page_response(qs, request, HistoricalExpenseBatchSerializer)
+
+
+class HistoricalExpenseBatchDetailView(APIView):
+    permission_classes = [IsIncomeMember]
+
+    def get(self, request, batch_id: int):
+        batch = HistoricalExpenseBatch.objects.select_related("imported_by").filter(id=batch_id).first()
+        if batch is None:
+            raise ApiError("NOT_FOUND", "导入批次不存在", 404)
+        return Response({**_batch_view(batch), "rows": [_row_view(row) for row in batch.rows.all()]})
+
+
+class HistoricalExpenseBatchVoidView(APIView):
+    permission_classes = [IsIncomeMember]
+
+    def post(self, request, batch_id: int):
+        batch = historical.void_batch(batch_id, user=request.user,
+                                      reason=(request.data or {}).get("reason", ""))
+        return Response({**_batch_view(batch), "rows": [_row_view(row) for row in batch.rows.all()]})
 
 
 def _nullable_money(value):

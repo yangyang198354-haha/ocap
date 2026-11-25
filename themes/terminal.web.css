@@ -1,14 +1,31 @@
-/* 风格 C 结构性差异：网格背景、等宽大写标签、角标、直角、12 栏紧凑首页、编号入口、光标、扫描线、步骤脉冲 */
+/* 风格 C 结构性差异：网格背景、等宽大写标签、四角框线、直角、12 栏紧凑首页、编号入口、光标、扫描线、步骤脉冲 */
 html[data-theme="terminal"] body {
   background:
-    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 32px 32px,
+    radial-gradient(120% 80% at 50% -12%, rgba(198,255,61,.07), transparent 62%),
+    linear-gradient(rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
     var(--bg);
+  background-attachment: fixed;
 }
-html[data-theme="terminal"] .card { position: relative; }
+/* HUD 卡片：橄榄绿细描边 + 四角框线（右下角另用 ::after 画装饰短线） */
+html[data-theme="terminal"] .card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(198,255,61,.05), rgba(198,255,61,.012) 42%), var(--surface);
+  border-color: rgba(198,255,61,.16);
+  box-shadow: none;
+}
 html[data-theme="terminal"] .card::before {
-  content: ""; position: absolute; top: -1px; left: -1px; width: 14px; height: 14px;
-  border-top: 2px solid var(--accent); border-left: 2px solid var(--accent);
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .85;
+  --frame: var(--frame-accent, var(--accent));
+  background:
+    linear-gradient(var(--frame), var(--frame)) left top / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left top / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right top / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right top / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left bottom / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left bottom / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right bottom / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right bottom / 2px 14px no-repeat;
 }
 html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
 html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
@@ -21,7 +38,7 @@ html[data-theme="terminal"] .tag-dot { border-radius: 0; }
 /* 左侧导航：等宽大写，当前项荧光描边 + "> " 前缀（除颜色外的可辨认方式） */
 html[data-theme="terminal"] .side-item, html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item { border-radius: 0; }
 html[data-theme="terminal"] .side-item.is-active, html[data-theme="terminal"] .side-sub-item.is-active, html[data-theme="terminal"] .sub-nav-item.is-active {
-  background: transparent; outline: 1px solid var(--accent); outline-offset: -1px; border-left-color: var(--accent);
+  background: rgba(198,255,61,.07); outline: 1px solid rgba(198,255,61,.45); outline-offset: -1px; border-left-color: var(--accent);
 }
 html[data-theme="terminal"] .side-item.is-active::before, html[data-theme="terminal"] .side-sub-item.is-active::before { content: "> "; white-space: pre; }
 html[data-theme="terminal"] .user-menu-trigger { border-radius: 2px; }
@@ -43,6 +60,13 @@ html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; t
 }
 html[data-theme="terminal"] .home-stat .stat-value { font-family: var(--mono); }
 /* 标题光标闪烁、Hero 扫描线 */
+html[data-theme="terminal"] .home-hero {
+  border: 1px solid rgba(198,255,61,.22);
+  background:
+    radial-gradient(90% 130% at 12% 118%, rgba(198,255,61,.20), transparent 60%),
+    linear-gradient(180deg, rgba(198,255,61,.05), transparent 46%),
+    var(--hero);
+}
 html[data-theme="terminal"] .grad-text { color: var(--accent); }
 html[data-theme="terminal"] .home-caret::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
 @keyframes ocap-blink { 50% { opacity: 0; } }
@@ -81,18 +105,18 @@ html[data-theme="terminal"] .home-poll { --card-accent: #C6FF3D; --card-tint: rg
 html[data-theme="terminal"] .home-latest { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
 html[data-theme="terminal"] .home-info { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.04); }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero) {
+  --frame-accent: var(--accent);
   background: linear-gradient(180deg, var(--card-tint, transparent), transparent 44%), var(--surface);
-  border-left: 3px solid var(--card-accent, var(--accent));
-  box-shadow: inset 0 0 0 1px rgba(198,255,61,.05);
+  border: 1px solid rgba(198,255,61,.26);
 }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero)::after {
-  content: ""; position: absolute; top: 10px; right: 14px; width: 42px; height: 1px;
+  content: ""; position: absolute; top: 8px; right: 18px; width: 34px; height: 1px;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)));
-  opacity: .7; pointer-events: none;
+  opacity: .55; pointer-events: none;
 }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero):hover {
-  box-shadow: inset 0 0 0 1px var(--card-accent, var(--accent)), 0 0 28px -10px var(--card-accent, var(--accent));
-  border-left-color: var(--card-accent, var(--accent));
+  border-color: var(--card-accent, var(--accent));
+  box-shadow: 0 0 34px -14px var(--card-accent, var(--accent)), inset 0 0 24px -18px var(--card-accent, var(--accent));
 }
 html[data-theme="terminal"] .home-grid > .card .card-icon {
   border-radius: 2px; background: transparent; color: var(--card-accent, var(--accent));

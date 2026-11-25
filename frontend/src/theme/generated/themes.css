@@ -246,8 +246,11 @@ html[data-theme="neon"] .el-button--primary:hover { filter: brightness(1.08); }
 html[data-theme="neon"] body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(520px 520px at 0% 0%, rgba(91,61,245,.45), transparent 70%),
-    radial-gradient(460px 460px at 100% 30%, rgba(14,165,198,.35), transparent 70%);
+    radial-gradient(600px 520px at 4% -4%, rgba(91,61,245,.50), transparent 70%),
+    radial-gradient(700px 420px at 46% -8%, rgba(124,92,255,.30), transparent 70%),
+    radial-gradient(520px 480px at 102% 26%, rgba(14,165,198,.34), transparent 70%),
+    radial-gradient(720px 520px at 52% 112%, rgba(58,110,255,.30), transparent 72%),
+    radial-gradient(360px 320px at 88% 94%, rgba(34,211,238,.16), transparent 70%);
   animation: ocap-float 14s ease-in-out infinite;
 }
 @keyframes ocap-float { 50% { transform: translate(40px, 30px) scale(1.06); } }
@@ -268,7 +271,18 @@ html[data-theme="neon"] .chip { background: rgba(124,92,255,.16); border-color: 
   html[data-theme="neon"] .home-latest { grid-column: span 2; }
 }
 /* Hero 流光描边 */
-html[data-theme="neon"] .home-hero { border-color: rgba(169,150,255,.35); }
+/* Hero：深靛底 + 斜向光束 + 流光描边 */
+html[data-theme="neon"] .home-hero {
+  border-color: rgba(169,150,255,.30);
+  background-color: rgba(12,10,30,.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 46px -18px rgba(124,92,255,.85), 0 30px 60px -44px #000;
+}
+html[data-theme="neon"] .home-hero-scan {
+  display: block; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(112deg, transparent 40%, rgba(190,225,255,.26) 47%, rgba(255,255,255,.16) 50%, transparent 58%),
+    radial-gradient(70% 100% at 6% 0%, rgba(124,92,255,.50), transparent 68%);
+}
 html[data-theme="neon"] .home-hero::after {
   content: ""; position: absolute; inset: -1px; border-radius: var(--radius-lg); padding: 1px; pointer-events: none;
   background: conic-gradient(from 180deg, transparent 0 70%, rgba(34,211,238,.6) 80%, transparent 90%);
@@ -285,10 +299,19 @@ html[data-theme="neon"] .type-card.is-selected { border-color: rgba(169,150,255,
 html[data-theme="neon"] .drop-zone .el-upload-dragger { border-style: dashed; border-color: rgba(169,150,255,.4); }
 html[data-theme="neon"] .claim-step.is-done .claim-step-node { background: var(--accent-bg); border-color: transparent; }
 html[data-theme="neon"] .claim-step.is-current .claim-step-node { border-color: var(--accent-2); color: var(--accent-2); box-shadow: 0 0 16px rgba(34,211,238,.5); }
-/* 左侧导航 / 用户菜单 / 登录页：玻璃侧栏（不透明纯色，兼容 data-perf=low）+ 发光指示条 */
-html[data-theme="neon"] .side { border-right-color: rgba(169,150,255,.28); box-shadow: 0 0 24px rgba(124,92,255,.18); }
+/* 左侧导航 / 用户菜单 / 登录页：深色玻璃侧栏 + 紫色发光胶囊 */
+html[data-theme="neon"] .side {
+  background: rgba(14,12,32,.72);
+  border-right-color: rgba(169,150,255,.24);
+  box-shadow: 0 0 28px rgba(124,92,255,.20), inset -1px 0 0 rgba(255,255,255,.06);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+html[data-theme="neon"][data-perf="low"] .side { background: var(--overlay); -webkit-backdrop-filter: none; backdrop-filter: none; }
 html[data-theme="neon"] .side-item.is-active, html[data-theme="neon"] .side-sub-item.is-active, html[data-theme="neon"] .sub-nav-item.is-active {
-  border-left-color: var(--accent-2); box-shadow: 0 0 16px rgba(34,211,238,.3);
+  background: linear-gradient(135deg, rgba(124,92,255,.40), rgba(124,92,255,.14));
+  border-left-color: transparent; border-radius: 12px; color: #EDEAFF;
+  box-shadow: 0 0 22px -10px rgba(124,92,255,.9), inset 0 1px 0 rgba(255,255,255,.16);
 }
 html[data-theme="neon"] .user-menu-trigger { border-color: rgba(169,150,255,.35); }
 html[data-theme="neon"] .user-menu-trigger:hover { box-shadow: 0 0 16px rgba(124,92,255,.35); }
@@ -297,7 +320,7 @@ html[data-theme="neon"] .auth-brand { text-shadow: 0 0 18px rgba(124,92,255,.55)
 html[data-theme="neon"][data-perf="low"] body::before, html[data-theme="neon"][data-perf="low"] .home-hero::after { animation: none; }
 
 /* === 角色化首页 2.0：玻璃卡 + 每卡霓虹主色 === */
-html[data-theme="neon"] .home-grid > .card { position: relative; overflow: hidden; border-color: var(--card-glow, rgba(255,255,255,.12)); }
+html[data-theme="neon"] .home-grid > .card { position: relative; overflow: hidden; border-color: rgba(169,150,255,.30); }
 html[data-theme="neon"] .home-housing { --card-accent: #7C5CFF; --card-glow: rgba(124,92,255,.45); --card-tint: rgba(124,92,255,.10); --card-icon-bg: rgba(124,92,255,.20); }
 html[data-theme="neon"] .home-review { --card-accent: #FBBF24; --card-glow: rgba(251,191,36,.35); --card-tint: rgba(251,191,36,.08); --card-icon-bg: rgba(251,191,36,.18); }
 html[data-theme="neon"] .home-votes { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.40); --card-tint: rgba(34,211,238,.09); --card-icon-bg: rgba(34,211,238,.18); }
@@ -307,23 +330,27 @@ html[data-theme="neon"] .home-poll { --card-accent: #FB7185; --card-glow: rgba(2
 html[data-theme="neon"] .home-latest { --card-accent: #60A5FA; --card-glow: rgba(96,165,250,.38); --card-tint: rgba(96,165,250,.08); --card-icon-bg: rgba(96,165,250,.18); }
 html[data-theme="neon"] .home-info { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.35); --card-tint: rgba(34,211,238,.07); --card-icon-bg: rgba(34,211,238,.16); }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero) {
-  background: linear-gradient(160deg, var(--card-tint, rgba(255,255,255,.06)), rgba(255,255,255,.015) 52%), var(--surface);
-  box-shadow: var(--inset-highlight), 0 0 0 1px var(--card-glow, rgba(255,255,255,.10)), 0 0 34px -16px var(--card-glow, rgba(124,92,255,.35));
+  background: linear-gradient(160deg, var(--card-tint, rgba(255,255,255,.06)), rgba(255,255,255,.012) 54%), rgba(13,11,28,.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 0 0 1px rgba(169,150,255,.30),
+    0 22px 46px -34px #000,
+    0 0 44px -20px var(--card-glow, rgba(124,92,255,.35));
 }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero)::before {
-  content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 2px;
+  content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 1px;
   border-radius: 0 0 999px 999px;
-  background: linear-gradient(90deg, var(--card-accent, var(--accent)), transparent 80%);
-  box-shadow: 0 0 14px var(--card-glow, var(--accent)); pointer-events: none;
+  background: linear-gradient(90deg, var(--card-accent, var(--accent)), transparent 72%);
+  opacity: .55; pointer-events: none;
 }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero):hover {
   box-shadow: var(--inset-highlight), 0 0 0 1px var(--card-accent, var(--accent)), 0 0 48px -12px var(--card-glow, rgba(124,92,255,.55));
 }
 html[data-theme="neon"] .home-grid > .card .card-icon { background: var(--card-icon-bg, rgba(255,255,255,.10)); color: var(--card-accent, var(--accent)); box-shadow: inset 0 0 0 1px var(--card-glow, transparent); }
 html[data-theme="neon"] .home-accounts-total {
-  background: linear-gradient(120deg, #C4B5FD 0%, #22D3EE 50%, #F0ABFC 100%);
+  background: linear-gradient(120deg, #FFFFFF 0%, #C4B5FD 52%, #67E8F9 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 0 18px rgba(34,211,238,.35));
+  filter: drop-shadow(0 0 20px rgba(124,92,255,.45));
 }
 html[data-theme="neon"] .home-feed-item { border-radius: 12px; padding: 10px 10px; margin: 0 -10px; transition: background .2s ease, box-shadow .2s ease; }
 html[data-theme="neon"] .home-feed-item:hover { background: rgba(124,92,255,.12); box-shadow: inset 0 0 0 1px rgba(169,150,255,.25); }
@@ -929,17 +956,34 @@ html[data-theme="terminal"] .el-button--primary {
 html[data-theme="terminal"] .el-button--primary:hover { filter: brightness(1.08); }
 
 /* themes/terminal.web.css */
-/* 风格 C 结构性差异：网格背景、等宽大写标签、角标、直角、12 栏紧凑首页、编号入口、光标、扫描线、步骤脉冲 */
+/* 风格 C 结构性差异：网格背景、等宽大写标签、四角框线、直角、12 栏紧凑首页、编号入口、光标、扫描线、步骤脉冲 */
 html[data-theme="terminal"] body {
   background:
-    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 32px 32px,
+    radial-gradient(120% 80% at 50% -12%, rgba(198,255,61,.07), transparent 62%),
+    linear-gradient(rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
     var(--bg);
+  background-attachment: fixed;
 }
-html[data-theme="terminal"] .card { position: relative; }
+/* HUD 卡片：橄榄绿细描边 + 四角框线（右下角另用 ::after 画装饰短线） */
+html[data-theme="terminal"] .card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(198,255,61,.05), rgba(198,255,61,.012) 42%), var(--surface);
+  border-color: rgba(198,255,61,.16);
+  box-shadow: none;
+}
 html[data-theme="terminal"] .card::before {
-  content: ""; position: absolute; top: -1px; left: -1px; width: 14px; height: 14px;
-  border-top: 2px solid var(--accent); border-left: 2px solid var(--accent);
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .85;
+  --frame: var(--frame-accent, var(--accent));
+  background:
+    linear-gradient(var(--frame), var(--frame)) left top / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left top / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right top / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right top / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left bottom / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) left bottom / 2px 14px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right bottom / 14px 2px no-repeat,
+    linear-gradient(var(--frame), var(--frame)) right bottom / 2px 14px no-repeat;
 }
 html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
 html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
@@ -952,7 +996,7 @@ html[data-theme="terminal"] .tag-dot { border-radius: 0; }
 /* 左侧导航：等宽大写，当前项荧光描边 + "> " 前缀（除颜色外的可辨认方式） */
 html[data-theme="terminal"] .side-item, html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item { border-radius: 0; }
 html[data-theme="terminal"] .side-item.is-active, html[data-theme="terminal"] .side-sub-item.is-active, html[data-theme="terminal"] .sub-nav-item.is-active {
-  background: transparent; outline: 1px solid var(--accent); outline-offset: -1px; border-left-color: var(--accent);
+  background: rgba(198,255,61,.07); outline: 1px solid rgba(198,255,61,.45); outline-offset: -1px; border-left-color: var(--accent);
 }
 html[data-theme="terminal"] .side-item.is-active::before, html[data-theme="terminal"] .side-sub-item.is-active::before { content: "> "; white-space: pre; }
 html[data-theme="terminal"] .user-menu-trigger { border-radius: 2px; }
@@ -974,6 +1018,13 @@ html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; t
 }
 html[data-theme="terminal"] .home-stat .stat-value { font-family: var(--mono); }
 /* 标题光标闪烁、Hero 扫描线 */
+html[data-theme="terminal"] .home-hero {
+  border: 1px solid rgba(198,255,61,.22);
+  background:
+    radial-gradient(90% 130% at 12% 118%, rgba(198,255,61,.20), transparent 60%),
+    linear-gradient(180deg, rgba(198,255,61,.05), transparent 46%),
+    var(--hero);
+}
 html[data-theme="terminal"] .grad-text { color: var(--accent); }
 html[data-theme="terminal"] .home-caret::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
 @keyframes ocap-blink { 50% { opacity: 0; } }
@@ -1012,18 +1063,18 @@ html[data-theme="terminal"] .home-poll { --card-accent: #C6FF3D; --card-tint: rg
 html[data-theme="terminal"] .home-latest { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
 html[data-theme="terminal"] .home-info { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.04); }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero) {
+  --frame-accent: var(--accent);
   background: linear-gradient(180deg, var(--card-tint, transparent), transparent 44%), var(--surface);
-  border-left: 3px solid var(--card-accent, var(--accent));
-  box-shadow: inset 0 0 0 1px rgba(198,255,61,.05);
+  border: 1px solid rgba(198,255,61,.26);
 }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero)::after {
-  content: ""; position: absolute; top: 10px; right: 14px; width: 42px; height: 1px;
+  content: ""; position: absolute; top: 8px; right: 18px; width: 34px; height: 1px;
   background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)));
-  opacity: .7; pointer-events: none;
+  opacity: .55; pointer-events: none;
 }
 html[data-theme="terminal"] .home-grid > .card:not(.home-hero):hover {
-  box-shadow: inset 0 0 0 1px var(--card-accent, var(--accent)), 0 0 28px -10px var(--card-accent, var(--accent));
-  border-left-color: var(--card-accent, var(--accent));
+  border-color: var(--card-accent, var(--accent));
+  box-shadow: 0 0 34px -14px var(--card-accent, var(--accent)), inset 0 0 24px -18px var(--card-accent, var(--accent));
 }
 html[data-theme="terminal"] .home-grid > .card .card-icon {
   border-radius: 2px; background: transparent; color: var(--card-accent, var(--accent));

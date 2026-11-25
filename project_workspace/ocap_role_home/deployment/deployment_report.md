@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>devops-engineer</author_agent>
-  <timestamp>2026-11-25T14:18:30+08:00</timestamp>
+  <timestamp>2026-11-25T18:40:00+08:00</timestamp>
   <project_name>ocap_role_home</project_name>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
   <input_files>
     <file>project_workspace/ocap_role_home/deployment/deployment_plan.md</file>
     <file>project_workspace/ocap_role_home/deployment/cicd_pipeline.md</file>
@@ -103,3 +103,19 @@ curl -s -o /dev/null -w 'ROLLBACK_HTTP=%{http_code}\n' http://127.0.0.1:8090/oca
 - 微信小程序仅完成构建验证，上传发布（体验版/正式版）不在本次范围，需用户通过微信开发者工具执行。
 - 沙箱到目标机的 SSH 通道仍不可用（`Not allowed at this time`）；后续自动部署前需修复 frp/VPS 入口或改用 GitHub Actions 部署工作流（需另行授权）。
 - 部署为“用户代执行 + PM 逐步核对”，与全自动 E2 的执行主体不同，但命令、顺序、锚点与验证项与已批准计划一致。
+
+## 2026-11-25T18:34:18 部署（Bento 极光 2.0）
+
+- 授权：用户本轮明确要求“你ssh 上去执行”，由 PM 直接建立 SSH 会话执行。
+- 源码：`main@ea6f6c0`（与 `386fbe1` 仅差 `.gitignore`）；CI run [45593559881](https://github.com/yangyang198354-haha/ocap/actions/runs/45593559881) = `success`。
+- 构建：目标机 `npm ci` + `VITE_API_BASE=/ocap/api/v1 npm run build -- --base=/ocap/`，`✓ built in 13.59s`，87 文件，入口 `index-z_LRdN1v.js`，`AURORA_OK`（`bento-aurora` 见于 `index-M7_smEnm.css`）。
+- 执行主体与通道：沙箱经 HTTP 代理 `nc -X connect -x 127.0.0.1:18080` 可连 `47.109.197.217:57279`；用户授权一次性部署密钥 `ocap-deploy-sandbox`（收回方式：删除 `~/.ssh/authorized_keys` 中对应行）。
+- 事故与恢复（已闭环）：
+  - 18:16 首次执行在 vite build 阶段 SSH 断连；18:21 目标机重启，`/tmp`（tmpfs）被清空。
+  - 随后替换步骤在 `dist` 不存在时执行，`/home/yangyang/ocap/web/ocap` 被清空，线上返回 403。
+  - 18:31 从 `snapshots/web-20261125174700.tar.gz`（89 条目，旧入口 `index-hHxI7kgN.js`）恢复，内网/外网 200。
+  - `snapshots/web-20261125181651.tar.gz`（18:29 生成，680K 级、仅 1 条目）为删除后快照，**不可用于回滚**。
+- 替换：先创建并校验快照 `snapshots/web-20261125183418.tar.gz`（680K，89 条目，含 `web/ocap/index.html`），再替换目录并 `chown yangyang:yangyang`。
+- 验证：`IN=200`、`ASSET_HTTP=200`、`SPA(/ocap/units)=200`、`OUT=200`；`ocap-backend`、`nginx` 均 `active`。
+- 回滚锚点：`snapshots/web-20261125183418.tar.gz`（替换前版本）。
+- 结论：**DEPLOYED_SUCCESSFULLY**；后端、数据库、nginx 配置均未变更。

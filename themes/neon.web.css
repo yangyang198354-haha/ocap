@@ -51,3 +51,69 @@ html[data-theme="neon"] .user-menu-trigger:hover { box-shadow: 0 0 16px rgba(124
 html[data-theme="neon"] .auth-brand { text-shadow: 0 0 18px rgba(124,92,255,.55); }
 /* 低端设备：关闭装饰动画（玻璃模糊降级见通用规则） */
 html[data-theme="neon"][data-perf="low"] body::before, html[data-theme="neon"][data-perf="low"] .home-hero::after { animation: none; }
+
+/* === 角色化首页 2.0：玻璃卡 + 每卡霓虹主色 === */
+html[data-theme="neon"] .home-grid > .card { position: relative; overflow: hidden; border-color: var(--card-glow, rgba(255,255,255,.12)); }
+html[data-theme="neon"] .home-housing { --card-accent: #7C5CFF; --card-glow: rgba(124,92,255,.45); --card-tint: rgba(124,92,255,.10); --card-icon-bg: rgba(124,92,255,.20); }
+html[data-theme="neon"] .home-review { --card-accent: #FBBF24; --card-glow: rgba(251,191,36,.35); --card-tint: rgba(251,191,36,.08); --card-icon-bg: rgba(251,191,36,.18); }
+html[data-theme="neon"] .home-votes { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.40); --card-tint: rgba(34,211,238,.09); --card-icon-bg: rgba(34,211,238,.18); }
+html[data-theme="neon"] .home-accounts { --card-accent: #34D399; --card-glow: rgba(52,211,153,.35); --card-tint: rgba(52,211,153,.08); --card-icon-bg: rgba(52,211,153,.18); }
+html[data-theme="neon"] .home-management { --card-accent: #A996FF; --card-glow: rgba(169,150,255,.40); --card-tint: rgba(169,150,255,.09); --card-icon-bg: rgba(169,150,255,.18); }
+html[data-theme="neon"] .home-poll { --card-accent: #FB7185; --card-glow: rgba(251,113,133,.38); --card-tint: rgba(251,113,133,.08); --card-icon-bg: rgba(251,113,133,.18); }
+html[data-theme="neon"] .home-latest { --card-accent: #60A5FA; --card-glow: rgba(96,165,250,.38); --card-tint: rgba(96,165,250,.08); --card-icon-bg: rgba(96,165,250,.18); }
+html[data-theme="neon"] .home-info { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.35); --card-tint: rgba(34,211,238,.07); --card-icon-bg: rgba(34,211,238,.16); }
+html[data-theme="neon"] .home-grid > .card:not(.home-hero) {
+  background: linear-gradient(160deg, var(--card-tint, rgba(255,255,255,.06)), rgba(255,255,255,.015) 52%), var(--surface);
+  box-shadow: var(--inset-highlight), 0 0 0 1px var(--card-glow, rgba(255,255,255,.10)), 0 0 34px -16px var(--card-glow, rgba(124,92,255,.35));
+}
+html[data-theme="neon"] .home-grid > .card:not(.home-hero)::before {
+  content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 2px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, var(--card-accent, var(--accent)), transparent 80%);
+  box-shadow: 0 0 14px var(--card-glow, var(--accent)); pointer-events: none;
+}
+html[data-theme="neon"] .home-grid > .card:not(.home-hero):hover {
+  box-shadow: var(--inset-highlight), 0 0 0 1px var(--card-accent, var(--accent)), 0 0 48px -12px var(--card-glow, rgba(124,92,255,.55));
+}
+html[data-theme="neon"] .home-grid > .card .card-icon { background: var(--card-icon-bg, rgba(255,255,255,.10)); color: var(--card-accent, var(--accent)); box-shadow: inset 0 0 0 1px var(--card-glow, transparent); }
+html[data-theme="neon"] .home-accounts-total {
+  background: linear-gradient(120deg, #C4B5FD 0%, #22D3EE 50%, #F0ABFC 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 18px rgba(34,211,238,.35));
+}
+html[data-theme="neon"] .home-feed-item { border-radius: 12px; padding: 10px 10px; margin: 0 -10px; transition: background .2s ease, box-shadow .2s ease; }
+html[data-theme="neon"] .home-feed-item:hover { background: rgba(124,92,255,.12); box-shadow: inset 0 0 0 1px rgba(169,150,255,.25); }
+html[data-theme="neon"] .home-feed-item .tag { background: rgba(124,92,255,.16); border-color: rgba(169,150,255,.30); }
+html[data-theme="neon"] .home-feed-item .is-representative { color: #F0ABFC; background: rgba(251,113,133,.14); }
+html[data-theme="neon"] .home-hero { background-size: 160% 160%; animation: neon-hero 18s ease-in-out infinite; }
+@keyframes neon-hero { 50% { background-position: 100% 50%; } }
+html[data-theme="neon"] .page-head { border-bottom: 0; position: relative; }
+html[data-theme="neon"] .page-head::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 999px;
+  background: linear-gradient(90deg, #7C5CFF, #22D3EE 55%, transparent);
+  box-shadow: 0 0 14px rgba(34,211,238,.45);
+}
+html[data-theme="neon"] .page-head h1 {
+  background: linear-gradient(120deg, #ECEEFA 0%, #A996FF 45%, #22D3EE 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 20px rgba(124,92,255,.35));
+}
+html[data-theme="neon"] .res-card { box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(124,92,255,.18); }
+html[data-theme="neon"] .res-card:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px rgba(34,211,238,.45), 0 0 36px -14px rgba(34,211,238,.55); }
+html[data-theme="neon"] .list-item { transition: background .2s ease, box-shadow .2s ease; }
+html[data-theme="neon"] .list-item:hover { background: rgba(124,92,255,.12); box-shadow: inset 3px 0 0 var(--accent-2); }
+html[data-theme="neon"] .el-table {
+  --el-table-border-color: rgba(255,255,255,.10);
+  --el-table-header-bg-color: rgba(124,92,255,.16);
+  --el-table-row-hover-bg-color: rgba(34,211,238,.08);
+  --el-table-bg-color: transparent;
+  border-radius: 14px; overflow: hidden;
+}
+html[data-theme="neon"] .el-table th.el-table__cell { color: #C4B5FD; font-weight: 700; letter-spacing: .04em; }
+html[data-theme="neon"] .el-table td.el-table__cell { font-variant-numeric: tabular-nums; }
+html[data-theme="neon"] .el-table tr:hover > td.el-table__cell { box-shadow: inset 0 -1px 0 rgba(34,211,238,.25); }
+html[data-theme="neon"] .reports-filter-btn.is-active { background: linear-gradient(135deg, rgba(124,92,255,.9), rgba(34,211,238,.75)); color: #fff; box-shadow: 0 0 24px rgba(34,211,238,.35); }
+html[data-theme="neon"] .reports-item { border-radius: 12px; padding: 12px 10px; margin: 0 -10px; transition: background .2s ease, box-shadow .2s ease; }
+html[data-theme="neon"] .reports-item:hover { background: rgba(124,92,255,.12); box-shadow: inset 3px 0 0 var(--accent-2); }
+html[data-theme="neon"] .reports-total { background: linear-gradient(120deg, #C4B5FD, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(34,211,238,.3)); }
+html[data-theme="neon"] .reports-accounts-head { color: #C4B5FD; font-weight: 700; }

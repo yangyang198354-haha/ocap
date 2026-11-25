@@ -23,7 +23,7 @@
           <p class="muted">共 {{ unitRows.length }} 套（点击查看明细）</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingReview'" class="card home-half" aria-label="待我处理" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'pendingReview'" class="card home-half home-review" aria-label="待我处理" :style="{ '--i': index + 1 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon is-warning"><UiIcon name="task" /></span>
@@ -34,7 +34,7 @@
           <p class="muted">有 {{ m.count }} 条同住人申请待审批</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingVotes'" class="card home-half" aria-label="待我表决" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'pendingVotes'" class="card home-half home-votes" aria-label="待我表决" :style="{ '--i': index + 1 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="vote" /></span>
@@ -101,7 +101,7 @@
           </p>
         </section>
 
-        <section v-else-if="m.key === 'management'" class="card home-half" aria-label="管理快捷" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'management'" class="card home-half home-management" aria-label="管理快捷" :style="{ '--i': index + 1 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="chart" /></span>
@@ -424,7 +424,9 @@ onMounted(async () => {
 .home-manage-icon {
   width: 40px; height: 40px; flex: none; display: grid; place-items: center;
   border-radius: 999px; background: var(--glass); color: var(--accent-text);
+  transition: transform var(--motion-base, 220ms) var(--motion-ease, ease);
 }
+.home-manage-item:hover .home-manage-icon { transform: translateY(-1px) rotate(-4deg); }
 .home-manage-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .home-manage-text b { font-size: 14px; font-weight: 600; }
 .home-manage-text small { font-size: 12px; color: var(--muted); }

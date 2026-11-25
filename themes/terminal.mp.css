@@ -13,3 +13,23 @@
 .theme-terminal .auth-art .art-c { left: 80rpx; bottom: 76rpx; width: 20rpx; height: 36rpx; background: var(--accent); }
 .theme-terminal .auth-art .art-d { left: 80rpx; top: 76rpx; color: var(--accent); font-family: var(--mono); font-size: 28rpx; }
 .theme-terminal .auth-art .art-d::before { content: "> 01 10 11 _"; }
+
+/* 角色化首页 2.0：荧光三色分区 + 终端卡片 */
+.theme-terminal .home-housing { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.05); }
+.theme-terminal .home-review { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.05); }
+.theme-terminal .home-votes { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.05); }
+.theme-terminal .home-accounts { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
+.theme-terminal .home-management { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
+.theme-terminal .home-poll { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
+.theme-terminal .home-latest { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
+.theme-terminal .home-info { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.04); }
+.theme-terminal .home-grid .card:not(.home-hero) {
+  background: linear-gradient(180deg, var(--card-tint, transparent), transparent 46%), var(--surface);
+  border-left: 6rpx solid var(--card-accent, var(--accent));
+}
+.theme-terminal .home-accounts .stat-value { color: var(--accent); text-shadow: 0 0 20rpx rgba(198,255,61,.45); font-family: var(--mono); }
+.theme-terminal .page-head { border-bottom: 0; position: relative; }
+.theme-terminal .page-head::after { content: ""; position: absolute; left: 24rpx; right: 24rpx; bottom: 0; height: 4rpx; background: repeating-linear-gradient(90deg, var(--accent) 0 24rpx, transparent 24rpx 36rpx, #FF3DBB 36rpx 60rpx, transparent 60rpx 72rpx); }
+.theme-terminal .page-title { font-family: var(--mono); letter-spacing: 1rpx; }
+.theme-terminal .page-title::before { content: "> "; color: var(--accent); }
+.theme-terminal .page-eyebrow { font-family: var(--mono); letter-spacing: 4rpx; color: var(--accent); }

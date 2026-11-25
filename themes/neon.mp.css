@@ -9,3 +9,26 @@
 .theme-neon .auth-art .art-b { right: 80rpx; top: 40rpx; width: 150rpx; height: 150rpx; border: 4rpx solid var(--accent-2); border-radius: 50%; box-shadow: 0 0 24rpx var(--accent-2); }
 .theme-neon .auth-art .art-c { left: 90rpx; top: 56rpx; width: 120rpx; height: 120rpx; border: 2rpx solid var(--accent); border-radius: 24rpx; background: var(--glass); }
 .theme-neon .auth-art .art-d { left: 52%; top: 48rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--accent-2); box-shadow: -130rpx 90rpx 0 var(--accent), 100rpx 120rpx 0 var(--accent-2); }
+
+/* 角色化首页 2.0：玻璃卡 + 每卡霓虹主色（静态，无循环动画） */
+.theme-neon .home-housing { --card-accent: #7C5CFF; --card-glow: rgba(124,92,255,.45); --card-tint: rgba(124,92,255,.10); }
+.theme-neon .home-review { --card-accent: #FBBF24; --card-glow: rgba(251,191,36,.35); --card-tint: rgba(251,191,36,.08); }
+.theme-neon .home-votes { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.40); --card-tint: rgba(34,211,238,.09); }
+.theme-neon .home-accounts { --card-accent: #34D399; --card-glow: rgba(52,211,153,.35); --card-tint: rgba(52,211,153,.08); }
+.theme-neon .home-management { --card-accent: #A996FF; --card-glow: rgba(169,150,255,.40); --card-tint: rgba(169,150,255,.09); }
+.theme-neon .home-poll { --card-accent: #FB7185; --card-glow: rgba(251,113,133,.38); --card-tint: rgba(251,113,133,.08); }
+.theme-neon .home-latest { --card-accent: #60A5FA; --card-glow: rgba(96,165,250,.38); --card-tint: rgba(96,165,250,.08); }
+.theme-neon .home-info { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.35); --card-tint: rgba(34,211,238,.07); }
+.theme-neon .home-grid .card:not(.home-hero) {
+  background: linear-gradient(160deg, var(--card-tint, rgba(255,255,255,.06)), rgba(255,255,255,.015) 52%), var(--surface);
+  border-color: var(--card-glow, rgba(255,255,255,.12));
+  box-shadow: 0 0 0 1rpx var(--card-glow, rgba(255,255,255,.12)), 0 0 36rpx -18rpx var(--card-glow, rgba(124,92,255,.35));
+}
+.theme-neon .home-accounts .stat-value {
+  background: linear-gradient(120deg, #C4B5FD, #22D3EE 50%, #F0ABFC);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 20rpx rgba(34,211,238,.35);
+}
+.theme-neon .page-head { border-bottom: 0; position: relative; }
+.theme-neon .page-head::after { content: ""; position: absolute; left: 24rpx; right: 24rpx; bottom: 0; height: 4rpx; border-radius: 999px; background: linear-gradient(90deg, #7C5CFF, #22D3EE 55%, transparent); box-shadow: 0 0 18rpx rgba(34,211,238,.45); }
+.theme-neon .page-title { background: linear-gradient(120deg, #ECEEFA, #A996FF 45%, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent; }

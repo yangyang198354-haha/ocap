@@ -199,7 +199,9 @@ a { color: var(--accent-text); text-decoration: none; }
 .card-icon {
   width: 32px; height: 32px; flex: none; display: grid; place-items: center;
   border-radius: var(--radius-sm); background: var(--glass); color: var(--accent-text);
+  transition: transform var(--motion-base, 220ms) var(--motion-ease, ease);
 }
+.card:hover .card-icon { transform: translateY(-1px) rotate(-3deg); }
 .card-icon .ui-icon { width: 18px; height: 18px; }
 .count-pill {
   display: inline-flex; align-items: center; height: 20px; padding: 0 8px; margin-left: 6px;

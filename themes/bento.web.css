@@ -79,3 +79,77 @@ html[data-theme="bento"][data-surface="admin"] .admin-bar .admin-menu-btn:hover 
   background: rgba(17,18,26,.22);
 }
 html[data-theme="bento"][data-surface="admin"] .admin-bar :focus-visible { outline-color: var(--on-hero); }
+
+/* === 角色化首页 2.0：每张卡一个主色，消除白/灰一片 === */
+html[data-theme="bento"] .home-grid > .card { position: relative; overflow: hidden; }
+html[data-theme="bento"] .home-housing { --card-accent: #4F46E5; --card-tint: rgba(79,70,229,.06); }
+html[data-theme="bento"] .home-review { --card-accent: #F59E0B; --card-tint: rgba(245,158,11,.08); }
+html[data-theme="bento"] .home-votes { --card-accent: #0D9488; --card-tint: rgba(13,148,136,.07); }
+html[data-theme="bento"] .home-accounts { --card-accent: #059669; --card-tint: rgba(5,150,105,.06); }
+html[data-theme="bento"] .home-management { --card-accent: #7C3AED; --card-tint: rgba(124,58,237,.06); }
+html[data-theme="bento"] .home-poll { --card-accent: #DB2777; --card-tint: rgba(219,39,119,.05); }
+html[data-theme="bento"] .home-latest { --card-accent: #2563EB; --card-tint: rgba(37,99,235,.05); }
+html[data-theme="bento"] .home-info { --card-accent: #0891B2; --card-tint: rgba(8,145,178,.05); }
+html[data-theme="bento"] .home-grid > .card:not(.home-hero) {
+  background: linear-gradient(180deg, var(--card-tint, transparent), transparent 44%), var(--surface);
+  border-color: var(--line);
+}
+html[data-theme="bento"] .home-grid > .card:not(.home-hero)::before {
+  content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, var(--card-accent, var(--accent)), transparent 78%);
+  opacity: .9; pointer-events: none;
+}
+html[data-theme="bento"] .home-grid > .card:not(.home-hero):hover { border-color: var(--card-accent, var(--border-strong)); }
+html[data-theme="bento"] .home-housing .card-icon { background: #ECEBFD; color: #4F46E5; }
+html[data-theme="bento"] .home-review .card-icon { background: #FFF4E5; color: #B45309; }
+html[data-theme="bento"] .home-votes .card-icon { background: #D9F6F2; color: #0F766E; }
+html[data-theme="bento"] .home-accounts .card-icon { background: #E4F8EF; color: #047857; }
+html[data-theme="bento"] .home-management .card-icon { background: #F3E8FF; color: #7C3AED; }
+html[data-theme="bento"] .home-poll .card-icon { background: #FDE7F0; color: #BE123C; }
+html[data-theme="bento"] .home-latest .card-icon { background: #E6F0FF; color: #1D4ED8; }
+html[data-theme="bento"] .home-info .card-icon { background: #DFF6FB; color: #0E7490; }
+html[data-theme="bento"] .home-accounts-total {
+  background: linear-gradient(120deg, #4F46E5 0%, #DB2777 55%, #0D9488 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+html[data-theme="bento"] .home-feed-item { border-radius: 12px; padding: 10px 10px; margin: 0 -10px; transition: background .2s ease; }
+html[data-theme="bento"] .home-feed-item:hover { background: var(--surface-tint); }
+html[data-theme="bento"] .home-feed-item .tag { background: rgba(79,70,229,.08); }
+html[data-theme="bento"] .home-feed-item .is-representative { color: #BE123C; background: rgba(255,92,138,.12); }
+html[data-theme="bento"] .home-manage-item:nth-child(2) .home-manage-icon { background: #FFE8EF; color: #BE123C; }
+html[data-theme="bento"] .home-manage-item:nth-child(3) .home-manage-icon { background: #DFF7F2; color: #047C6B; }
+html[data-theme="bento"] .home-hero::before {
+  content: ""; position: absolute; left: -50px; top: -70px; width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,211,238,.38), transparent 65%);
+  animation: bento-drift 13s ease-in-out infinite; pointer-events: none;
+}
+@keyframes bento-drift { 50% { transform: translate(34px, 26px) scale(1.08); } }
+html[data-theme="bento"] .page-head { border-bottom: 0; position: relative; }
+html[data-theme="bento"] .page-head::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; border-radius: 999px;
+  background: linear-gradient(90deg, #4F46E5, #DB2777 45%, #0D9488 75%, transparent);
+}
+html[data-theme="bento"] .page-head h1 {
+  background: linear-gradient(120deg, #11121A 0%, #4F46E5 58%, #DB2777 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+html[data-theme="bento"] .res-card { border-top: 3px solid rgba(79,70,229,.35); }
+html[data-theme="bento"] .res-card:nth-child(3n+2) { border-top-color: rgba(219,39,119,.35); }
+html[data-theme="bento"] .res-card:nth-child(3n+3) { border-top-color: rgba(13,148,136,.35); }
+html[data-theme="bento"] .list-item { transition: background .2s ease, padding-left .2s ease; }
+html[data-theme="bento"] .list-item:hover { background: var(--surface-tint); padding-left: 8px; }
+html[data-theme="bento"] .el-table {
+  --el-table-border-color: var(--line);
+  --el-table-header-bg-color: #F1F2FF;
+  --el-table-row-hover-bg-color: #F5F6FF;
+  --el-table-bg-color: transparent;
+  border-radius: 16px; overflow: hidden;
+}
+html[data-theme="bento"] .el-table th.el-table__cell { color: #4F46E5; font-weight: 700; letter-spacing: .04em; }
+html[data-theme="bento"] .el-table td.el-table__cell { font-variant-numeric: tabular-nums; }
+html[data-theme="bento"] .reports-filter-btn.is-active { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; box-shadow: 0 10px 24px -12px rgba(79,70,229,.6); }
+html[data-theme="bento"] .reports-item { border-radius: 12px; padding: 12px 10px; margin: 0 -10px; transition: background .2s ease; }
+html[data-theme="bento"] .reports-item:hover { background: var(--surface-tint); }
+html[data-theme="bento"] .reports-total { background: linear-gradient(120deg, #4F46E5, #DB2777); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html[data-theme="bento"] .reports-accounts-head { color: #4F46E5; font-weight: 700; }

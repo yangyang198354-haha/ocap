@@ -53,6 +53,29 @@ page {
 .theme-neon .auth-art .art-c { left: 90rpx; top: 56rpx; width: 120rpx; height: 120rpx; border: 2rpx solid var(--accent); border-radius: 24rpx; background: var(--glass); }
 .theme-neon .auth-art .art-d { left: 52%; top: 48rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: var(--accent-2); box-shadow: -130rpx 90rpx 0 var(--accent), 100rpx 120rpx 0 var(--accent-2); }
 
+/* 角色化首页 2.0：玻璃卡 + 每卡霓虹主色（静态，无循环动画） */
+.theme-neon .home-housing { --card-accent: #7C5CFF; --card-glow: rgba(124,92,255,.45); --card-tint: rgba(124,92,255,.10); }
+.theme-neon .home-review { --card-accent: #FBBF24; --card-glow: rgba(251,191,36,.35); --card-tint: rgba(251,191,36,.08); }
+.theme-neon .home-votes { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.40); --card-tint: rgba(34,211,238,.09); }
+.theme-neon .home-accounts { --card-accent: #34D399; --card-glow: rgba(52,211,153,.35); --card-tint: rgba(52,211,153,.08); }
+.theme-neon .home-management { --card-accent: #A996FF; --card-glow: rgba(169,150,255,.40); --card-tint: rgba(169,150,255,.09); }
+.theme-neon .home-poll { --card-accent: #FB7185; --card-glow: rgba(251,113,133,.38); --card-tint: rgba(251,113,133,.08); }
+.theme-neon .home-latest { --card-accent: #60A5FA; --card-glow: rgba(96,165,250,.38); --card-tint: rgba(96,165,250,.08); }
+.theme-neon .home-info { --card-accent: #22D3EE; --card-glow: rgba(34,211,238,.35); --card-tint: rgba(34,211,238,.07); }
+.theme-neon .home-grid .card:not(.home-hero) {
+  background: linear-gradient(160deg, var(--card-tint, rgba(255,255,255,.06)), rgba(255,255,255,.015) 52%), var(--surface);
+  border-color: var(--card-glow, rgba(255,255,255,.12));
+  box-shadow: 0 0 0 1rpx var(--card-glow, rgba(255,255,255,.12)), 0 0 36rpx -18rpx var(--card-glow, rgba(124,92,255,.35));
+}
+.theme-neon .home-accounts .stat-value {
+  background: linear-gradient(120deg, #C4B5FD, #22D3EE 50%, #F0ABFC);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 20rpx rgba(34,211,238,.35);
+}
+.theme-neon .page-head { border-bottom: 0; position: relative; }
+.theme-neon .page-head::after { content: ""; position: absolute; left: 24rpx; right: 24rpx; bottom: 0; height: 4rpx; border-radius: 999px; background: linear-gradient(90deg, #7C5CFF, #22D3EE 55%, transparent); box-shadow: 0 0 18rpx rgba(34,211,238,.45); }
+.theme-neon .page-title { background: linear-gradient(120deg, #ECEEFA, #A996FF 45%, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
 /* themes/bento.mp.css */
 /* 小程序风格 B：深浅交替数据块、大圆角入口 */
 .theme-bento .home-stat.is-odd { background: #11121A; color: #fff; }
@@ -67,6 +90,28 @@ page {
 .theme-bento .auth-art .art-b { left: 290rpx; top: 110rpx; width: 150rpx; height: 130rpx; border-radius: 32rpx; background: var(--glass); }
 .theme-bento .auth-art .art-c { right: 40rpx; bottom: 36rpx; width: 220rpx; height: 90rpx; border-radius: 32rpx; background: var(--accent-bg); }
 .theme-bento .auth-art .art-d { right: 60rpx; top: 30rpx; width: 220rpx; height: 100rpx; opacity: .7; background-image: radial-gradient(var(--on-hero) 3rpx, transparent 4rpx); background-size: 24rpx 24rpx; }
+
+/* 角色化首页 2.0：每卡主色 + 顶部色条 */
+.theme-bento .home-housing { --card-accent: #4F46E5; --card-tint: rgba(79,70,229,.06); }
+.theme-bento .home-review { --card-accent: #F59E0B; --card-tint: rgba(245,158,11,.08); }
+.theme-bento .home-votes { --card-accent: #0D9488; --card-tint: rgba(13,148,136,.07); }
+.theme-bento .home-accounts { --card-accent: #059669; --card-tint: rgba(5,150,105,.06); }
+.theme-bento .home-management { --card-accent: #7C3AED; --card-tint: rgba(124,58,237,.06); }
+.theme-bento .home-poll { --card-accent: #DB2777; --card-tint: rgba(219,39,119,.05); }
+.theme-bento .home-latest { --card-accent: #2563EB; --card-tint: rgba(37,99,235,.05); }
+.theme-bento .home-info { --card-accent: #0891B2; --card-tint: rgba(8,145,178,.05); }
+.theme-bento .home-grid .card:not(.home-hero) {
+  background: linear-gradient(180deg, var(--card-tint, transparent), transparent 46%), var(--surface);
+  border-top: 6rpx solid var(--card-accent, var(--line));
+}
+.theme-bento .home-accounts .stat-value {
+  background: linear-gradient(120deg, #4F46E5, #DB2777 55%, #0D9488);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.theme-bento .page-head { border-bottom: 0; position: relative; }
+.theme-bento .page-head::after { content: ""; position: absolute; left: 24rpx; right: 24rpx; bottom: 0; height: 4rpx; border-radius: 999px; background: linear-gradient(90deg, #4F46E5, #DB2777 45%, #0D9488 75%, transparent); }
+.theme-bento .page-title { background: linear-gradient(120deg, #11121A, #4F46E5 58%, #DB2777); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.theme-bento .home-manage-item:nth-child(2)::before { background: #FFE8EF; border-color: #FF5C8A; }
 
 /* themes/terminal.mp.css */
 /* 小程序风格 C：直角、编号入口、扫描线（静态）、等宽数据；不设循环动画 */
@@ -84,3 +129,23 @@ page {
 .theme-terminal .auth-art .art-c { left: 80rpx; bottom: 76rpx; width: 20rpx; height: 36rpx; background: var(--accent); }
 .theme-terminal .auth-art .art-d { left: 80rpx; top: 76rpx; color: var(--accent); font-family: var(--mono); font-size: 28rpx; }
 .theme-terminal .auth-art .art-d::before { content: "> 01 10 11 _"; }
+
+/* 角色化首页 2.0：荧光三色分区 + 终端卡片 */
+.theme-terminal .home-housing { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.05); }
+.theme-terminal .home-review { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.05); }
+.theme-terminal .home-votes { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.05); }
+.theme-terminal .home-accounts { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
+.theme-terminal .home-management { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
+.theme-terminal .home-poll { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
+.theme-terminal .home-latest { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
+.theme-terminal .home-info { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.04); }
+.theme-terminal .home-grid .card:not(.home-hero) {
+  background: linear-gradient(180deg, var(--card-tint, transparent), transparent 46%), var(--surface);
+  border-left: 6rpx solid var(--card-accent, var(--accent));
+}
+.theme-terminal .home-accounts .stat-value { color: var(--accent); text-shadow: 0 0 20rpx rgba(198,255,61,.45); font-family: var(--mono); }
+.theme-terminal .page-head { border-bottom: 0; position: relative; }
+.theme-terminal .page-head::after { content: ""; position: absolute; left: 24rpx; right: 24rpx; bottom: 0; height: 4rpx; background: repeating-linear-gradient(90deg, var(--accent) 0 24rpx, transparent 24rpx 36rpx, #FF3DBB 36rpx 60rpx, transparent 60rpx 72rpx); }
+.theme-terminal .page-title { font-family: var(--mono); letter-spacing: 1rpx; }
+.theme-terminal .page-title::before { content: "> "; color: var(--accent); }
+.theme-terminal .page-eyebrow { font-family: var(--mono); letter-spacing: 4rpx; color: var(--accent); }

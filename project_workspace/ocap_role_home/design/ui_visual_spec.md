@@ -305,3 +305,16 @@
 - Bento 侧栏选中态由黑色胶囊改为 accent 10% 淡染 + accent 文字（`themes/bento.web.css`）。
 - 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 14.16s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。
 - 未改动：模块顺序/可见性、接口、权限、路由、数据口径。
+
+## 14. 三主题 2.0 深化（2026-11-25）
+
+在 P0/P1 基础上按“颜色丰富、避免白/灰一片”追加：
+
+- 每张首页卡增加模块主色：房屋靛蓝、待我处理琥珀、待我表决青绿、财务翠绿、管理紫、投票玫红、决议蓝、信息公开青；用于顶部色条、图标底色、hover 描边。
+- Bento：卡片顶部 3px 渐变条 + 模块淡色底 + 财务合计三色渐变字 + 页面标题渐变 + 英雄区浮动青色光斑。
+- Neon：每卡独立霓虹主色与辉光、玻璃渐变底、财务合计紫青渐变 + 光晕、Hero 渐变缓慢位移、表格玻璃表头与青色 hover。
+- Terminal：荧光绿/品红/琥珀三色分区、卡片左侧 3px 色条、等宽标题与 `> ` 前缀、财务数字荧光、Hero 扫描线循环、表格等宽网格。
+- 内页：页面标题渐变色带、决议卡片三色顶边/左边、报表筛选激活渐变、报表条目 hover 底色、管理端表格表头着色与等宽数字。
+- 动效：卡片图标 hover 微旋转、管理动作图标位移、列表行箭头滑动、Hero 光斑/渐变/扫描线；仍受 `prefers-reduced-motion` 与 `data-perf="low"` 降级约束。
+- 小程序：同步模块色条、渐变数字、页面头渐变下划线；不使用 hover 与长循环动画。
+- 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 13.87s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。

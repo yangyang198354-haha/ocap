@@ -11,17 +11,17 @@
     </view>
 
     <block v-for="m in bodyModules" :key="m.key">
-      <view v-if="m.key === 'housing'" class="card" @click="go('/pages/units/index')">
+      <view v-if="m.key === 'housing'" class="card home-housing" @click="go('/pages/units/index')">
         <view class="title">我的房屋 · {{ unitRows.length }}</view>
         <view class="muted">共 {{ unitRows.length }} 套（点击查看明细）</view>
       </view>
 
-      <view v-else-if="m.key === 'pendingReview'" class="card" @click="go('/pages/units/index?review=1')">
+      <view v-else-if="m.key === 'pendingReview'" class="card home-review" @click="go('/pages/units/index?review=1')">
         <view class="title">待我处理 · {{ m.count }}</view>
         <view class="muted">有 {{ m.count }} 条同住人申请待审批</view>
       </view>
 
-      <view v-else-if="m.key === 'pendingVotes'" class="card">
+      <view v-else-if="m.key === 'pendingVotes'" class="card home-votes">
         <view class="title">待我表决 · {{ m.count }}</view>
         <view v-for="item in pendingVotes" :key="item.id" class="list-item"
               @click="go(`/pages/polls/detail?id=${item.id}`)">
@@ -43,7 +43,7 @@
         <view v-else-if="tasks && tasks.length" class="muted">没有更多了，共 {{ taskPaging.total.value }} 条</view>
       </view>
 
-      <view v-else-if="m.key === 'finance'" class="card">
+      <view v-else-if="m.key === 'finance'" class="card home-accounts">
         <view class="title">财务公开</view>
         <view v-if="accountsError" class="muted">
           加载失败<text class="link" @click.stop="loadAccounts"> 重试</text>
@@ -62,7 +62,7 @@
         </block>
       </view>
 
-      <view v-else-if="m.key === 'management'" class="card">
+      <view v-else-if="m.key === 'management'" class="card home-management">
         <view class="title">管理快捷</view>
         <view class="home-manage">
           <button class="home-manage-item" @click="go('/pages/claims/index')">
@@ -110,7 +110,7 @@
         </view>
       </view>
 
-      <view v-else-if="m.key === 'info'" class="card">
+      <view v-else-if="m.key === 'info'" class="card home-info">
         <view class="title">信息公开</view>
         <view v-if="!infoPosts.length" class="home-empty">
           <view class="muted">暂无公告</view>

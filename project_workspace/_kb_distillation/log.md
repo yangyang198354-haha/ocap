@@ -339,3 +339,14 @@
 | 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-1 | 保留→P-DE-051 | committed |
 | 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-2 | 保留→P-DE-052 | committed |
 | 2026-11-23T23:50:00+08:00 | ocap_finance_ux-GROUP_E1-001-3 | 保留→P-DE-053 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_B-001-1 | 晋升→M-SA-030 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_B-001-2 | 晋升→M-SA-031 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_C-001-1 | 晋升→M-SD-046 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_C-001-2 | 晋升→M-SD-047 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_D-001-1 | 合并→M-TE-043 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_D-001-2 | 晋升→M-TE-049 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_D-001-3 | 晋升→M-TE-050 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_E1-001-1 | 合并→M-DE-046 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_E1-001-2 | 晋升→M-DE-051 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_E2-002-1 | 晋升→M-DE-052 | committed |
+| 2026-11-25T14:26:00+08:00 | ocap_role_home-GROUP_E2-002-2 | 晋升→M-DE-053 | committed |

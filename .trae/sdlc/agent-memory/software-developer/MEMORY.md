@@ -16,6 +16,8 @@
 - [M-SD-043] 报表链式口径用“生成时按期间起点前累计 + 作废标记覆盖期间及之后 + 生成后按期间升序重算 legacy=False 报表”，读取零计算；报表量增长时改条件批量更新 — conf 0.75 · 证据 ocap_finance_ux GR-C-001 / TC-UNIT-1404、1405 / TC-E2E-1401 · 首见 2026-11-23 · 命中 1
 - [M-SD-044] 非空外键改造时在模型 save() 对未指定外键回退默认行，可让存量脚本/直接 create 在迁移后继续工作，避免大范围改测试 — conf 0.75 · 证据 ocap_finance_ux GR-C-001 / TC-UNIT-1403 / 全量 1206 通过 · 首见 2026-11-23 · 命中 1
 - [M-SD-045] 本仓库 test_requirements_numbering 要求 REQ/US/AC/C 编号跨批次全局唯一，需求编号规划必须扫描全部 project_workspace — conf 0.9 · 证据 ocap_finance_ux SELF_CORRECTION / test_requirements_numbering.py / user_stories 1.0.1 · 首见 2026-11-23 · 命中 1
+- [M-SD-046] uni-app HBuilderX 根目录布局的仓库直接跑 build:mp-weixin 会因默认 `src/` 报 ENOENT；用 `UNI_INPUT_DIR=.` 指向项目根 — conf 0.7 · 证据 ocap_role_home GR-C-001 / DEV-3 / 沙箱与树莓派均 `DONE Build complete.` · 首见 2026-11-25 · 命中 1
+- [M-SD-047] 重复使用同一 CSS 语义类承载不同语义卡片会让既有测试误判；角色化首页按“任务类型”区分类名可同时满足新旧断言 — conf 0.6 · 证据 ocap_role_home GR-C-001 / CR-002 / 两端全量零新增失败 · 首见 2026-11-25 · 命中 1
 
 ## 用户偏好与禁止项
 

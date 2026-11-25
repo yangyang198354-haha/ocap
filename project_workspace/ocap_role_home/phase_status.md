@@ -1,4 +1,4 @@
-<phase_status project="ocap_role_home" mode="INCREMENTAL" created="2026-11-25T12:03:24+08:00" updated="2026-11-25T13:21:30+08:00">
+<phase_status project="ocap_role_home" mode="INCREMENTAL" created="2026-11-25T12:03:24+08:00" updated="2026-11-25T14:27:00+08:00">
   <request><![CDATA[Use Skill: sdlc-orchestrator 按照上述的方案，开始整理需求，拆分用户故事。我确认后开始开发。
 2026-11-25 用户确认：q-rh-01 好；q-rh-02 不隐藏；q-rh-03 好；开始 sdlc 开发流程。
 
@@ -26,8 +26,8 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="FAILED" gate_decision="FAIL" retries="0" environment="测试环境">
-      <phase id="PHASE_11b" status="FAILED"/>
+    <group id="GROUP_E2" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="1" environment="测试环境">
+      <phase id="PHASE_11b" status="APPROVED"/>
     </group>
   </groups>
   <artifacts>
@@ -44,7 +44,8 @@
     <artifact path="project_workspace/ocap_role_home/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_role_home/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_role_home/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
-    <artifact path="project_workspace/ocap_role_home/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/ocap_role_home/deployment/deployment_report.md" version="1.1.0" status="APPROVED" group="GROUP_E2"/>
+    <artifact path="project_workspace/_kb_distillation/distill_20261125T1426.md" version="1.0.0" status="APPROVED" group="PHASE_12"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -55,6 +56,7 @@
     <invocation id="ocap_role_home-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-25T12:42:00+08:00" end="2026-11-25T13:04:30+08:00" result="SUCCESS"/>
     <invocation id="ocap_role_home-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-25T13:04:40+08:00" end="2026-11-25T13:07:00+08:00" result="SUCCESS"/>
     <invocation id="ocap_role_home-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-25T13:19:30+08:00" end="2026-11-25T13:21:20+08:00" result="FAILURE"/>
+    <invocation id="ocap_role_home-GROUP_E2-002" agent="devops-engineer" group="GROUP_E2" start="2026-11-25T13:49:50+08:00" end="2026-11-25T14:13:00+08:00" result="SUCCESS"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_role_home-GROUP_A-001" decision="PASS" time="2026-11-25T12:10:00+08:00">
@@ -185,6 +187,26 @@ nc -X connect -x 127.0.0.1:18080 47.109.197.217 57279 → SSH-2.0-OpenSSH_10.0p2
 ls /root/.ssh → 空；ssh-add -l → 无 agent；未发现可用私钥
       ]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-002" invocation_id="ocap_role_home-GROUP_E2-002" decision="PASS" time="2026-11-25T14:19:00+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_role_home/deployment/deployment_report.md" version="1.1.0"/>
+      </reviewed_files>
+      <criterion id="E2-执行" result="SATISFIED">沙箱 SSH 不可用，用户登录树莓派按 PM 提供的命令执行；构建 `✓ built in 14.96s`、`KEY_HITS=3`、`SWAP_OK`、`NEW_FILES=87`、`ENV_UNCHANGED`，入口由 `index-DmL9mAdT.js` 变为 `index-CmQu6zIY.js`。</criterion>
+      <criterion id="E2-验证" result="SATISFIED">`IN_HTTP=200`、`ASSET_HTTP=200`、`SPA_HTTP=200`、`OUT_HTTP=200`、`FREARK_HTTP=200`；`ocap-backend` 与 `nginx` 均 active。</criterion>
+      <criterion id="E2-锚点" result="SATISFIED">回滚锚点 `TS=20261125134950`，快照 `/home/yangyang/ocap/snapshots/web-20261125134950.tar.gz` 40 MB / 4009 条目，替换前创建；报告含可执行回滚命令。</criterion>
+      <criterion id="E2-范围" result="SATISFIED">仅替换 `/home/yangyang/ocap/web/ocap`；`.env` 哈希前后一致；后端未重启、无迁移、nginx 配置未改；Freeark 外网入口 200。</criterion>
+      <criterion id="E2-报告" result="SATISFIED">deployment_report.md 1.1.0 记录首次失败（无变更）、第二次分步执行、V-01~V-09、回滚方式与遗留问题；无凭据。</criterion>
+      <condition>V-09（三类账号角色化首屏人工核对）待用户执行；小程序上传发布不在范围；沙箱到目标机 SSH 通道仍需修复后才能全自动 E2。</condition>
+      <verification><![CDATA[
+Node v22.22.2 / npm 10.9.7 / 可用 14G
+✓ built in 14.96s；KEY_HITS=3；BUILD_OK
+SNAPSHOT 40M / 4009 条目；SWAP_OK；NEW_FILES=87；ENV_UNCHANGED
+/ocap/assets/index-CmQu6zIY.js
+IN_HTTP=200 ASSET_HTTP=200 SPA_HTTP=200 OUT_HTTP=200 FREARK_HTTP=200
+ocap-backend=active nginx=active
+DEPLOYED TS=20261125134950
+      ]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="Q-RH-OPEN" status="RESOLVED">用户 2026-11-25 决策：Q-RH-01 不展示参与率；Q-RH-02 不隐藏（公开类保留空态，任务类仍 0 隐藏）；Q-RH-03 游客只看账户合计与报表入口。见需求的决策记录 D-RH-01~03。</clarification>
@@ -208,5 +230,8 @@ ls /root/.ssh → 空；ssh-add -l → 无 agent；未发现可用私钥
     <event time="2026-11-25T13:17:30+08:00" type="RUN" actor="pm-orchestrator">用户新指令：提交并推送代码，等待 CI 通过后授权部署到测试环境。代码已在本地提交 5a787ec，快进推送 origin/main（9a754e4..5a787ec）。</event>
     <event time="2026-11-25T13:20:00+08:00" type="DEPLOY_AUTH" actor="user">条件授权：CI 通过后部署到测试环境。证据：GitHub Actions run 45552545821 conclusion=success，headSha=5a787ec；授权环境名=测试环境，与画像 P7 及 deployment_plan 一致。</event>
     <event time="2026-11-25T13:21:20+08:00" type="EXCEPTION" actor="devops-engineer">E2 预检失败：沙箱无内网路由（192.168.31.51:22 超时）、无 SSH 私钥/agent；外网 47.109.197.217:57279 仅可经 HTTP 代理建立 TCP 并收到 SSH banner，无法完成认证。目标机未发生任何变更，DEPLOYMENT_FAILED，无需回滚。</event>
+    <event time="2026-11-25T14:13:00+08:00" type="INVOCATION" actor="devops-engineer">ocap_role_home-GROUP_E2-002 成功：用户在树莓派代执行 PM 提供的命令；构建 5a787ec、快照 20261125134950、替换 web/ocap、内网/外网验证全部 200；最终 DEPLOYED_SUCCESSFULLY。</event>
+    <event time="2026-11-25T14:19:00+08:00" type="GATE" actor="pm-orchestrator">GR-E2-002 PASS；deployment_report.md 升为 1.1.0 APPROVED；GROUP_E2/PHASE_11b 完成；V-09 人工核对待用户执行，其余 SDLC 阶段结束。</event>
+    <event time="2026-11-25T14:26:00+08:00" type="INVOCATION" actor="kb-curator">PHASE_12：处理 ocap_role_home 11 条经验，晋升 8 / 合并 2；日志 349 条 committed；历史积压 71 条保留待下次处理。</event>
   </audit_log>
 </phase_status>

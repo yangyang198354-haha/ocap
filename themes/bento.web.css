@@ -308,3 +308,93 @@ html[data-theme="bento"][data-perf="low"] .home-q {
   backdrop-filter: none;
   background: var(--surface);
 }
+
+/* === 登录页（参考图 1：午夜紫蓝极光全屏 + 居中玻璃卡） === */
+html[data-theme="bento"] .auth-shell { display: block; position: relative; overflow: hidden; background: #060A1C; }
+html[data-theme="bento"] .auth-art {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(58% 44% at 16% 4%, rgba(124,58,237,.62), transparent 66%),
+    radial-gradient(50% 38% at 76% -2%, rgba(34,211,238,.42), transparent 68%),
+    radial-gradient(56% 42% at 84% 78%, rgba(219,39,119,.40), transparent 70%),
+    radial-gradient(38% 30% at 40% 46%, rgba(124,58,237,.28), transparent 72%),
+    radial-gradient(90% 60% at 50% 118%, #05060F 0%, transparent 70%),
+    linear-gradient(158deg, #080C24 0%, #0B1030 46%, #150B2A 100%);
+}
+html[data-theme="bento"] .auth-art::before {
+  content: ""; position: absolute; inset: -18% -8%;
+  background:
+    radial-gradient(42% 20% at 28% 30%, rgba(124,58,237,.55), transparent 70%),
+    radial-gradient(38% 16% at 66% 20%, rgba(34,211,238,.42), transparent 72%),
+    radial-gradient(44% 18% at 54% 66%, rgba(219,39,119,.34), transparent 74%);
+  filter: blur(42px) saturate(1.2);
+}
+html[data-theme="bento"] .auth-art::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255,255,255,.95) 0 2px, rgba(255,255,255,0) 42px),
+    radial-gradient(120% 58% at 50% 128%, rgba(3,5,15,.92), transparent 64%);
+}
+html[data-theme="bento"] .auth-art .bento-art { background: transparent; }
+html[data-theme="bento"] .auth-art .tile { fill: rgba(255,255,255,.08); stroke: rgba(255,255,255,.20); }
+html[data-theme="bento"] .auth-art .tile-b,
+html[data-theme="bento"] .auth-art .tile-d { fill: rgba(124,58,237,.16); stroke: rgba(167,139,250,.34); }
+html[data-theme="bento"] .auth-art .tile-e { fill: rgba(219,39,119,.16); stroke: rgba(244,114,182,.34); }
+html[data-theme="bento"] .auth-art .chip rect,
+html[data-theme="bento"] .auth-art .chip path { stroke: rgba(190,225,255,.72); }
+html[data-theme="bento"] .auth-art .dot { fill: rgba(255,255,255,.55); }
+html[data-theme="bento"] .auth-art .mono-text::before { color: rgba(220,228,255,.55); }
+html[data-theme="bento"] .auth-panel {
+  position: relative; z-index: 1; min-height: 100vh;
+  align-items: center; justify-content: center;
+  padding: 48px 24px; background: transparent;
+}
+html[data-theme="bento"] .auth-card {
+  width: 100%; max-width: 448px; padding: 34px 32px 30px;
+  border-radius: 28px;
+  background: linear-gradient(158deg, rgba(255,255,255,.13), rgba(255,255,255,.035) 56%), rgba(10,13,34,.76);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.26),
+    0 44px 100px -44px rgba(0,0,0,.92),
+    0 0 90px -46px rgba(124,58,237,.95);
+  -webkit-backdrop-filter: blur(24px) saturate(1.45);
+  backdrop-filter: blur(24px) saturate(1.45);
+  color: #ECEEFA;
+}
+html[data-theme="bento"] .auth-card .auth-brand { color: #FFFFFF; }
+html[data-theme="bento"] .auth-card .auth-sub { color: #AFB8D9; }
+html[data-theme="bento"] .auth-card .el-tabs__item { color: #A9B1CE; }
+html[data-theme="bento"] .auth-card .el-tabs__item.is-active { color: #FFFFFF; }
+html[data-theme="bento"] .auth-card .el-tabs__active-bar { background: linear-gradient(90deg, #A78BFA, #F472B6); }
+html[data-theme="bento"] .auth-card .el-tabs__nav-wrap::after { background: rgba(255,255,255,.12); }
+html[data-theme="bento"] .auth-card .el-input__wrapper { background: rgba(255,255,255,.07); box-shadow: 0 0 0 1px rgba(255,255,255,.16) inset; }
+html[data-theme="bento"] .auth-card .el-input__wrapper:hover { box-shadow: 0 0 0 1px rgba(196,181,253,.55) inset; }
+html[data-theme="bento"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px rgba(167,139,250,.9) inset, 0 0 20px -8px rgba(167,139,250,.85); }
+html[data-theme="bento"] .auth-card .el-input__inner { color: #F4F5FF; }
+html[data-theme="bento"] .auth-card .el-input__inner::placeholder { color: #8F98BA; }
+html[data-theme="bento"] .auth-card .el-input__icon { color: #9AA3C7; }
+html[data-theme="bento"] .auth-card .el-checkbox__label { color: #B7BFDA; }
+html[data-theme="bento"] .auth-card .el-checkbox__inner { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.28); }
+html[data-theme="bento"] .auth-card a { color: #B9C8FF; }
+html[data-theme="bento"] .auth-card .muted { color: #98A1C2; }
+html[data-theme="bento"] .auth-card .el-button:not(.el-button--primary) {
+  background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.22); color: #E7EAF8;
+}
+html[data-theme="bento"] .auth-card .el-button--primary {
+  --el-button-text-color: #FFFFFF; --el-button-hover-text-color: #FFFFFF; --el-button-active-text-color: #FFFFFF;
+  --el-button-bg-color: transparent; --el-button-hover-bg-color: transparent; --el-button-active-bg-color: transparent;
+  --el-button-border-color: transparent; --el-button-hover-border-color: transparent; --el-button-active-border-color: transparent;
+  background-image: linear-gradient(120deg, #8B5CF6 0%, #D946A8 52%, #4F46E5 100%);
+  border-color: transparent;
+  box-shadow: 0 18px 40px -18px rgba(217,70,168,.85), inset 0 1px 0 rgba(255,255,255,.30);
+}
+html[data-theme="bento"] .auth-card .el-button--primary:hover { filter: brightness(1.06); }
+html[data-theme="bento"][data-perf="low"] .auth-card {
+  background: rgba(12,15,38,.94);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+@media (max-width: 767.98px) {
+  html[data-theme="bento"] .auth-panel { padding: 28px 16px; justify-content: center; }
+  html[data-theme="bento"] .auth-card { padding: 26px 20px; border-radius: 24px; }
+}

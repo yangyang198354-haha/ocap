@@ -8,3 +8,15 @@
 }
 :root { --brand-font: "OcapBrand", var(--font); }
 .brand-font { font-family: var(--brand-font); }
+
+/* MOD-119：品牌标识配色（与 favicon / 小程序图标同源，不随风格切换的红枫 + 青色电路） */
+.brand-mark { flex: none; color: #E5232E; }
+.brand-mark-frame { fill: #0B1024; stroke: #232C52; stroke-width: 0.8; }
+.brand-mark-frame-gloss { fill: none; stroke: var(--brand-accent); stroke-opacity: 0.30; stroke-width: 0.6; }
+.brand-mark-leaf { fill: currentColor; stroke: #A90F1A; stroke-width: 0.35; }
+.brand-mark-stem { fill: none; stroke: #A90F1A; stroke-width: 0.9; stroke-linecap: round; }
+.brand-mark-traces {
+  fill: none; stroke: #35E6E0; stroke-width: 0.9; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 1.1px rgba(53, 230, 224, 0.85));
+}
+.brand-mark-traces circle { fill: #8CF9F4; stroke: none; filter: drop-shadow(0 0 1px rgba(140, 249, 244, 0.9)); }

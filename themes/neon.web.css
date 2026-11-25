@@ -144,3 +144,42 @@ html[data-theme="neon"] .reports-item { border-radius: 12px; padding: 12px 10px;
 html[data-theme="neon"] .reports-item:hover { background: rgba(124,92,255,.12); box-shadow: inset 3px 0 0 var(--accent-2); }
 html[data-theme="neon"] .reports-total { background: linear-gradient(120deg, #C4B5FD, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(34,211,238,.3)); }
 html[data-theme="neon"] .reports-accounts-head { color: #C4B5FD; font-weight: 700; }
+
+/* === 登录页（参考图 2：左侧巨幅红枫 + 发光紫环，右侧霓虹玻璃登录卡） === */
+html[data-theme="neon"] .auth-shell {
+  grid-template-columns: minmax(0, 1.12fr) minmax(400px, .88fr);
+  background: radial-gradient(90% 80% at 20% 20%, #12102B 0%, #07080F 70%);
+}
+html[data-theme="neon"] .auth-art .neon-art .leaf { fill: #E5232E; stroke: #FF7A84; }
+html[data-theme="neon"] .auth-art .neon-art .stem { stroke: #B3121C; }
+html[data-theme="neon"] .auth-art .neon-art .traces { stroke: #35E6E0; }
+html[data-theme="neon"] .auth-art .neon-art .traces circle { fill: #8CF9F4; }
+html[data-theme="neon"] .auth-panel { position: relative; padding: 40px clamp(20px, 4vw, 56px); }
+html[data-theme="neon"] .auth-card {
+  width: 100%; max-width: 440px; padding: 34px 32px 30px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(124,92,255,.22), rgba(34,211,238,.06) 58%), rgba(12,10,30,.74);
+  border: 1px solid rgba(169,150,255,.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    0 0 0 1px rgba(124,92,255,.18),
+    0 44px 100px -52px #000,
+    0 0 90px -46px rgba(124,92,255,.95);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+}
+html[data-theme="neon"] .auth-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0) 34%);
+}
+html[data-theme="neon"] .auth-card .auth-sub { color: #B7BDD8; }
+html[data-theme="neon"] .auth-card .el-input__wrapper { background: rgba(8,8,22,.62); box-shadow: 0 0 0 1px rgba(169,150,255,.30) inset; }
+html[data-theme="neon"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px rgba(34,211,238,.85) inset, 0 0 22px -8px rgba(34,211,238,.8); }
+html[data-theme="neon"] .auth-card .el-button:not(.el-button--primary) { background: rgba(124,92,255,.14); border-color: rgba(169,150,255,.32); color: #E4E1FA; }
+html[data-theme="neon"] .auth-card a { color: #A9D8FF; }
+html[data-theme="neon"] .auth-card .muted { color: #9BA2BE; }
+html[data-theme="neon"] .auth-panel .brand-mark { filter: drop-shadow(0 0 14px rgba(124,92,255,.55)); }
+@media (max-width: 767.98px) {
+  html[data-theme="neon"] .auth-panel { padding: 22px 16px; }
+  html[data-theme="neon"] .auth-card { padding: 26px 20px; }
+}

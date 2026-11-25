@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Cyber@红枫岭">
+  <defs>
+    <radialGradient id="ocapBg" cx="32%" cy="16%" r="92%">
+      <stop offset="0" stop-color="#22306B"/>
+      <stop offset="0.55" stop-color="#0E1436"/>
+      <stop offset="1" stop-color="#070A1C"/>
+    </radialGradient>
+    <linearGradient id="ocapLeaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF5560"/>
+      <stop offset="0.55" stop-color="#E5232E"/>
+      <stop offset="1" stop-color="#A90F1A"/>
+    </linearGradient>
+    <filter id="ocapGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.6" flood-color="#35E6E0" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#ocapBg)"/>
+  <g transform="translate(32 31.5) scale(2.05) translate(-16 -16)">
+    <path fill="url(#ocapLeaf)" stroke="#8E0E17" stroke-width="0.3"
+      d="M16 3.6 L18.4 8.6 L20.2 7.4 L19.8 11.4 L24.4 9.8 L22.4 13.8 L27.4 13.4 L24.2 16.6 L28.2 18.4 L23.6 19.4 L24.8 23.4 L20.6 21.6 L20.2 26.2 L17.2 23 L16 28.4 L14.8 23 L11.8 26.2 L11.4 21.6 L7.2 23.4 L8.4 19.4 L3.8 18.4 L7.8 16.6 L4.6 13.4 L9.6 13.8 L7.6 9.8 L12.2 11.4 L11.8 7.4 L13.6 8.6 Z"/>
+    <path fill="none" stroke="#A90F1A" stroke-width="0.9" stroke-linecap="round" d="M16 23.2 L16 29.4"/>
+    <g fill="none" stroke="#35E6E0" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" filter="url(#ocapGlow)">
+      <path d="M16 23.2 L16 12.6"/>
+      <path d="M16 17.2 L12.4 13.6 L10.6 13.6"/>
+      <path d="M16 17.2 L19.6 13.6 L21.4 13.6"/>
+      <path d="M16 19.8 L11.2 16.4 L8.4 16.4"/>
+      <path d="M16 19.8 L20.8 16.4 L23.6 16.4"/>
+      <path d="M16 12.6 L13.6 9.8"/>
+      <path d="M16 12.6 L18.4 9.8"/>
+    </g>
+    <g fill="#8CF9F4">
+      <circle cx="10.6" cy="13.6" r="0.8"/><circle cx="21.4" cy="13.6" r="0.8"/>
+      <circle cx="8.4" cy="16.4" r="0.8"/><circle cx="23.6" cy="16.4" r="0.8"/>
+      <circle cx="13.6" cy="9.8" r="0.8"/><circle cx="18.4" cy="9.8" r="0.8"/>
+    </g>
+  </g>
+</svg>

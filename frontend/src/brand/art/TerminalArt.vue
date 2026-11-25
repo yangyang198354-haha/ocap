@@ -11,27 +11,31 @@
     </defs>
     <rect class="bg" width="800" height="600" />
     <rect width="800" height="600" fill="url(#art-crt)" />
-    <!-- 装饰字符一律经 CSS 伪元素输出，不进入文本内容（三套风格的页面文本须一致） -->
-    <g class="rain">
-      <foreignObject v-for="c in rain" :key="c.id" :x="c.x" y="10" width="40" height="580">
-        <div class="rain-col" :data-t="c.text"></div>
-      </foreignObject>
-    </g>
-    <g class="window">
-      <rect class="frame" x="110" y="150" width="580" height="300" />
-      <rect class="titlebar" x="110" y="150" width="580" height="38" />
-      <circle class="dot dot-a" cx="136" cy="169" r="6" />
-      <circle class="dot dot-b" cx="158" cy="169" r="6" />
-      <circle class="dot dot-c" cx="180" cy="169" r="6" />
-      <foreignObject x="200" y="155" width="470" height="30">
-        <div class="title-text" data-t="cyber@hongfengling"></div>
-      </foreignObject>
-      <foreignObject x="140" y="205" width="520" height="150">
-        <div class="cmd" data-t="> boot cyber@hongfengling"></div>
-        <div class="cmd" data-t="> auth --mode secure"></div>
-        <div class="cmd cmd-dim" data-t="> link established ... ok"></div>
-      </foreignObject>
-      <rect class="cursor" x="140" y="362" width="16" height="28" />
+    <!-- 登录页左栏为竖长区域（slice 会裁掉左右），整体缩放居中，保证终端窗口完整可见 -->
+    <g transform="translate(400 300) scale(0.62) translate(-400 -300)">
+      <!-- 装饰字符一律经 CSS 伪元素输出，不进入文本内容（三套风格的页面文本须一致） -->
+      <g class="rain">
+        <foreignObject v-for="c in rain" :key="c.id" :x="c.x" y="10" width="40" height="580">
+          <div class="rain-col" :data-t="c.text"></div>
+        </foreignObject>
+      </g>
+      <g class="window">
+        <rect class="frame" x="110" y="150" width="580" height="300" />
+        <rect class="titlebar" x="110" y="150" width="580" height="38" />
+        <circle class="dot dot-a" cx="136" cy="169" r="6" />
+        <circle class="dot dot-b" cx="158" cy="169" r="6" />
+        <circle class="dot dot-c" cx="180" cy="169" r="6" />
+        <foreignObject x="200" y="155" width="470" height="30">
+          <div class="title-text" data-t="cyber@hongfengling"></div>
+        </foreignObject>
+        <foreignObject x="140" y="205" width="520" height="150">
+          <div class="cmd" data-t="> boot cyber@hongfengling"></div>
+          <div class="cmd" data-t="> auth --mode secure"></div>
+          <div class="cmd cmd-dim" data-t="> link established ... ok"></div>
+        </foreignObject>
+        <rect class="cursor" x="140" y="362" width="16" height="28" />
+        <rect class="underline" x="110" y="444" width="580" height="3" />
+      </g>
     </g>
     <rect width="800" height="600" fill="url(#art-scan)" />
   </svg>
@@ -61,6 +65,7 @@ const rain = [40, 720].map((x, k) => ({
 .cmd::before { content: attr(data-t); font-family: var(--mono); font-size: 22px; color: var(--accent); }
 .cmd-dim::before { color: var(--muted); }
 .cursor { fill: var(--accent); animation: term-blink 1s steps(1) infinite; }
+.underline { fill: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
 @keyframes term-blink { 50% { opacity: 0; } }
 :global(html[data-perf="low"]) .cursor { animation: none; }
 </style>

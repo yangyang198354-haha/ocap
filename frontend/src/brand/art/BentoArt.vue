@@ -1,8 +1,9 @@
-<!-- MOD-128：极光 Bento 版配图。--hero 实底 + 极光光斑 + 圆角 Bento 方块拼贴（含芯片电路线）+ 点阵 + 等宽数据条 -->
+<!-- MOD-128：极光 Bento 版配图。极光光斑 + 圆角 Bento 方块拼贴（含芯片电路线）+ 点阵 + 等宽数据条；登录页在主题样式中转为全屏背景 -->
 <template>
   <div class="bento-art">
     <span class="glow glow-a" />
     <span class="glow glow-b" />
+    <span class="glow glow-c" />
     <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="presentation" focusable="false">
       <defs>
         <pattern id="art-dots" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -39,6 +40,7 @@
 .glow { position: absolute; border-radius: 50%; opacity: 0.5; pointer-events: none; }
 .glow-a { width: 55%; padding-top: 55%; left: -12%; top: -18%; background: radial-gradient(circle, var(--accent-2), transparent 68%); }
 .glow-b { width: 45%; padding-top: 45%; right: -10%; bottom: -14%; background: radial-gradient(circle, var(--accent), transparent 68%); }
+.glow-c { width: 38%; padding-top: 38%; right: 26%; top: -14%; background: radial-gradient(circle, var(--accent), transparent 70%); opacity: 0.35; }
 .tile { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
 .tile-b, .tile-d { fill: var(--glass); }
 .tile-e { fill: var(--accent-bg); }

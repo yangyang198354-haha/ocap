@@ -13,3 +13,5 @@ project_workspace/.codex_hook_state/
 # AUTH-01 导出文件含业主姓名与手机号，不得入库（C-55，用户 2026-11-16 决定）
 registry_import_underground_parking.xlsx
 registry_import_underground_parking.csv
+# 会话上传的参考图/临时附件不入库（避免自动提交把二进制大文件带进历史）
+.uploads/

@@ -491,6 +491,27 @@ html[data-theme="bento"] .el-button--primary:hover { filter: brightness(1.08); }
 
 /* themes/bento.web.css */
 /* 风格 B 结构性差异：极光背景、胶囊导航、柔和投影、4 栏 Bento 首页、深浅交替数据块 */
+/* === 液态玻璃质感（对齐参考图）：磨砂透光 + 左上斜切高光 + 四边明暗差形成 3D 厚度 + 落地投影 ===
+   --lg-sheen 只画在卡片背景层（不覆盖内容）；--lg-rim 用 inset 画出上/左亮边与下/右暗边；
+   --lg-lift 用「贴近地面的接触阴影 + 两层渐远的柔和投影」制造悬浮感。 */
+html[data-theme="bento"] {
+  --lg-sheen:
+    radial-gradient(112% 84% at 2% -18%, rgba(255,255,255,.88) 0%, rgba(255,255,255,.16) 32%, rgba(255,255,255,0) 60%),
+    linear-gradient(118deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,.14) 100%),
+    radial-gradient(96% 76% at 104% 112%, rgba(255,255,255,.50) 0%, rgba(255,255,255,0) 57%);
+  --lg-rim:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 1px 1px 0 rgba(255,255,255,.92),
+    inset -1px 0 0 rgba(255,255,255,.46),
+    inset 0 -1px 0 rgba(255,255,255,.62),
+    inset 0 0 0 1px rgba(255,255,255,.26),
+    inset 0 -30px 44px -34px rgba(49,46,129,.42);
+  --lg-lift:
+    0 1px 1px rgba(17,18,26,.06),
+    0 3px 8px -3px rgba(49,46,129,.16),
+    0 22px 44px -26px rgba(49,46,129,.38),
+    0 40px 80px -52px rgba(49,46,129,.48);
+}
 /* 极光背景：固定光层（视口单位定位，避免 background-size 放大后颜色被推出视口）+ 60s 缓慢漂移 */
 html[data-theme="bento"] body {
   background-color: #E6EBF8;
@@ -504,12 +525,13 @@ html[data-theme="bento"] body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle 34vw at 14% 12%, rgba(79,70,229,.62), rgba(79,70,229,0) 68%),
-    radial-gradient(circle 30vw at 84% 6%, rgba(34,211,238,.55), rgba(34,211,238,0) 70%),
-    radial-gradient(circle 36vw at 82% 86%, rgba(255,92,138,.58), rgba(255,92,138,0) 70%),
-    radial-gradient(circle 26vw at 6% 84%, rgba(250,204,21,.48), rgba(250,204,21,0) 72%),
-    radial-gradient(circle 32vw at 52% 56%, rgba(168,85,247,.34), rgba(168,85,247,0) 76%),
-    linear-gradient(135deg, #EDF1FC 0%, #F8EFFA 55%, #E8F7F7 100%);
+    radial-gradient(circle 34vw at 14% 12%, rgba(79,70,229,.68), rgba(79,70,229,0) 68%),
+    radial-gradient(circle 30vw at 84% 6%, rgba(34,211,238,.60), rgba(34,211,238,0) 70%),
+    radial-gradient(circle 36vw at 82% 86%, rgba(255,92,138,.64), rgba(255,92,138,0) 70%),
+    radial-gradient(circle 26vw at 6% 84%, rgba(250,204,21,.52), rgba(250,204,21,0) 72%),
+    radial-gradient(circle 32vw at 52% 56%, rgba(168,85,247,.44), rgba(168,85,247,0) 76%),
+    radial-gradient(circle 26vw at 98% 46%, rgba(56,189,248,.40), rgba(56,189,248,0) 74%),
+    linear-gradient(135deg, #E7EAFB 0%, #F6E9F7 52%, #E4F5F7 100%);
   filter: blur(28px) saturate(1.15);
   animation: bento-aurora 60s ease-in-out infinite alternate;
   will-change: transform;
@@ -521,11 +543,11 @@ html[data-theme="bento"] body::before {
 }
 /* 左侧导航 / 窄屏切换条：玻璃拟态侧栏，当前项沿用黑色高亮胶囊（保留 3px 左侧指示条作为非颜色提示） */
 html[data-theme="bento"] .side {
-  background: rgba(255,255,255,.40);
-  border-right-color: rgba(255,255,255,.65);
-  box-shadow: 0 1px 2px rgba(17,18,26,.04), inset -1px 0 0 rgba(255,255,255,.45);
-  -webkit-backdrop-filter: blur(26px) saturate(1.5);
-  backdrop-filter: blur(26px) saturate(1.5);
+  background: rgba(255,255,255,.30);
+  border-right-color: rgba(255,255,255,.62);
+  box-shadow: 0 1px 2px rgba(17,18,26,.04), inset -1px 0 0 rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(30px) saturate(1.85);
+  backdrop-filter: blur(30px) saturate(1.85);
 }
 html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }
 html[data-theme="bento"] .side-item.is-active, html[data-theme="bento"] .side-sub-item.is-active,
@@ -542,15 +564,15 @@ html[data-theme="bento"]:not([data-surface="admin"]) .sub-nav-item.is-active {
 html[data-theme="bento"]:not([data-surface="admin"]) .side-item.is-active .side-caret,
 html[data-theme="bento"]:not([data-surface="admin"]) .side-sub-item.is-active .side-caret { color: rgba(255,255,255,.85); }
 html[data-theme="bento"] .topbar {
-  background: rgba(255,255,255,.40);
-  border-bottom-color: rgba(255,255,255,.65);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  backdrop-filter: blur(22px) saturate(1.5);
+  background: rgba(255,255,255,.34);
+  border-bottom-color: rgba(255,255,255,.62);
+  -webkit-backdrop-filter: blur(26px) saturate(1.8);
+  backdrop-filter: blur(26px) saturate(1.8);
 }
 html[data-theme="bento"] .sub-nav-bar {
-  background: rgba(255,255,255,.40);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  backdrop-filter: blur(22px) saturate(1.5);
+  background: rgba(255,255,255,.36);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
 }
 html[data-theme="bento"] .user-menu-trigger {
   background: rgba(255,255,255,.50);
@@ -569,11 +591,17 @@ html[data-theme="bento"] .home-hero::after {
 html[data-theme="bento"] .home-hero {
   border: 0;
   background-image:
+    radial-gradient(120% 92% at 6% -18%, rgba(255,255,255,.34), rgba(255,255,255,0) 58%),
     radial-gradient(58% 76% at 92% 96%, rgba(255,92,138,.58), transparent 66%),
     radial-gradient(52% 72% at 4% 2%, rgba(56,189,248,.46), transparent 70%),
     radial-gradient(64% 62% at 34% 118%, rgba(250,204,21,.28), transparent 66%),
     var(--hero);
-  box-shadow: 0 26px 60px -26px rgba(124,58,237,.62), inset 0 1px 0 rgba(255,255,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.45),
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    0 2px 6px -2px rgba(76,29,149,.36),
+    0 30px 64px -26px rgba(124,58,237,.62),
+    0 48px 96px -56px rgba(124,58,237,.5);
 }
 
 /* 4 栏 Bento：Hero 与待办各占 2x2；数据块 1x1；入口整行；投票 / 最新各 2 */
@@ -589,7 +617,14 @@ html[data-theme="bento"] .home-hero {
 /* 深浅交替数据块 */
 html[data-theme="bento"] .home-stat.is-odd { background: #11121A; color: #fff; }
 html[data-theme="bento"] .home-stat.is-odd .label, html[data-theme="bento"] .home-stat.is-odd .stat-note { color: #B7BBCB; }
-html[data-theme="bento"] .home-q { border-radius: 22px; background: rgba(255,255,255,.62); box-shadow: inset 0 1px 0 rgba(255,255,255,.85), var(--shadow); }
+html[data-theme="bento"] .home-q {
+  border-radius: 22px;
+  background: var(--lg-sheen), linear-gradient(155deg, rgba(255,255,255,.56) 0%, rgba(255,255,255,.34) 100%);
+  border-color: rgba(255,255,255,.66);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.96), inset 0 -1px 0 rgba(255,255,255,.45), 0 14px 30px -20px rgba(49,46,129,.32);
+  -webkit-backdrop-filter: blur(18px) saturate(1.85);
+  backdrop-filter: blur(18px) saturate(1.85);
+}
 html[data-theme="bento"] .home-q:nth-child(6n+1) .home-q-icon { background: #ECEBFD; color: #4F46E5; }
 html[data-theme="bento"] .home-q:nth-child(6n+2) .home-q-icon { background: #FFE8EF; color: #BE123C; }
 html[data-theme="bento"] .home-q:nth-child(6n+3) .home-q-icon { background: #DFF7F2; color: #047C6B; }
@@ -637,34 +672,33 @@ html[data-theme="bento"][data-surface="admin"] .admin-bar :focus-visible { outli
 /* === 角色化首页 2.0：每张卡一个主色，消除白/灰一片 === */
 /* 玻璃拟态卡片：半透明白 + 白描边 + 内高光，让极光从卡片底下透出来 */
 html[data-theme="bento"] .card:not(.home-hero) {
-  background: linear-gradient(160deg, rgba(255,255,255,.70), rgba(255,255,255,.46));
-  border-color: rgba(255,255,255,.78);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), var(--shadow-rest, var(--shadow));
-  -webkit-backdrop-filter: blur(20px) saturate(1.35);
-  backdrop-filter: blur(20px) saturate(1.35);
+  background: var(--lg-sheen), linear-gradient(158deg, rgba(255,255,255,.38) 0%, rgba(255,255,255,.16) 56%, rgba(255,255,255,.30) 100%);
+  border-color: rgba(255,255,255,.70);
+  box-shadow: var(--lg-rim), var(--lg-lift);
+  -webkit-backdrop-filter: blur(30px) saturate(1.95) brightness(1.04);
+  backdrop-filter: blur(30px) saturate(1.95) brightness(1.04);
 }
 html[data-theme="bento"] .home-grid > .card { position: relative; overflow: hidden; }
-html[data-theme="bento"] .home-housing { --card-accent: #4F46E5; --card-tint: rgba(79,70,229,.12); }
-html[data-theme="bento"] .home-review { --card-accent: #F59E0B; --card-tint: rgba(245,158,11,.14); }
-html[data-theme="bento"] .home-votes { --card-accent: #0D9488; --card-tint: rgba(13,148,136,.12); }
-html[data-theme="bento"] .home-accounts { --card-accent: #059669; --card-tint: rgba(5,150,105,.11); }
-html[data-theme="bento"] .home-management { --card-accent: #7C3AED; --card-tint: rgba(124,58,237,.12); }
-html[data-theme="bento"] .home-poll { --card-accent: #DB2777; --card-tint: rgba(219,39,119,.11); }
-html[data-theme="bento"] .home-latest { --card-accent: #2563EB; --card-tint: rgba(37,99,235,.11); }
-html[data-theme="bento"] .home-info { --card-accent: #0891B2; --card-tint: rgba(8,145,178,.11); }
+html[data-theme="bento"] .home-housing { --card-accent: #4F46E5; --card-tint: rgba(79,70,229,.10); }
+html[data-theme="bento"] .home-review { --card-accent: #F59E0B; --card-tint: rgba(245,158,11,.11); }
+html[data-theme="bento"] .home-votes { --card-accent: #0D9488; --card-tint: rgba(13,148,136,.10); }
+html[data-theme="bento"] .home-accounts { --card-accent: #059669; --card-tint: rgba(5,150,105,.09); }
+html[data-theme="bento"] .home-management { --card-accent: #7C3AED; --card-tint: rgba(124,58,237,.10); }
+html[data-theme="bento"] .home-poll { --card-accent: #DB2777; --card-tint: rgba(219,39,119,.09); }
+html[data-theme="bento"] .home-latest { --card-accent: #2563EB; --card-tint: rgba(37,99,235,.09); }
+html[data-theme="bento"] .home-info { --card-accent: #0891B2; --card-tint: rgba(8,145,178,.09); }
 html[data-theme="bento"] .home-grid > .card:not(.home-hero) {
-  background:
-    linear-gradient(150deg, var(--card-tint, transparent) 0%, rgba(255,255,255,.56) 44%, rgba(255,255,255,.40) 100%);
-  border-color: rgba(255,255,255,.80);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 18px 44px -24px rgba(30,27,75,.35);
-  -webkit-backdrop-filter: blur(22px) saturate(1.45);
-  backdrop-filter: blur(22px) saturate(1.45);
+  background: var(--lg-sheen), linear-gradient(150deg, var(--card-tint, transparent) 0%, rgba(255,255,255,.14) 42%, rgba(255,255,255,.32) 100%);
+  border-color: rgba(255,255,255,.74);
+  box-shadow: var(--lg-rim), var(--lg-lift);
+  -webkit-backdrop-filter: blur(32px) saturate(2) brightness(1.05);
+  backdrop-filter: blur(32px) saturate(2) brightness(1.05);
 }
 html[data-theme="bento"] .home-grid > .card:not(.home-hero)::before {
-  content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 3px;
+  content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px;
   border-radius: 0 0 999px 999px;
-  background: linear-gradient(90deg, var(--card-accent, var(--accent)), transparent 78%);
-  opacity: .9; pointer-events: none;
+  background: linear-gradient(90deg, var(--card-accent, var(--accent)) 0%, rgba(255,255,255,.85) 52%, transparent 84%);
+  opacity: .8; pointer-events: none;
 }
 html[data-theme="bento"] .home-grid > .card:not(.home-hero):hover { border-color: var(--card-accent, var(--border-strong)); }
 html[data-theme="bento"] .home-housing .card-icon { background: #ECEBFD; color: #4F46E5; }
@@ -723,11 +757,17 @@ html[data-theme="bento"] .reports-accounts-head { color: #4F46E5; font-weight: 7
 
 /* 玻璃卡悬停：保持与基础卡一致的上浮反馈 */
 html[data-theme="bento"] .card:not(.home-hero):hover {
-  border-color: rgba(255,255,255,.95);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), var(--shadow-hover, var(--shadow));
+  border-color: rgba(255,255,255,.96);
+  box-shadow: var(--lg-rim),
+    0 2px 8px -2px rgba(49,46,129,.16),
+    0 28px 56px -26px rgba(49,46,129,.44),
+    0 52px 96px -56px rgba(49,46,129,.5);
 }
 html[data-theme="bento"] .home-grid > .card:not(.home-hero):hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 24px 56px -22px rgba(49,46,129,.38);
+  box-shadow: var(--lg-rim),
+    0 2px 8px -2px rgba(49,46,129,.16),
+    0 32px 64px -26px rgba(49,46,129,.46),
+    0 56px 104px -56px rgba(49,46,129,.52);
 }
 
 /* 低端设备降级（ADR-032）：关闭极光位移，玻璃换回接近不透明底色，避免逐帧合成 */
@@ -745,10 +785,20 @@ html[data-theme="bento"][data-perf="low"] .card:not(.home-hero) {
   backdrop-filter: none;
   background: var(--surface);
 }
+html[data-theme="bento"][data-perf="low"] {
+  --lg-sheen: linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.84));
+  --lg-rim: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(255,255,255,.4);
+  --lg-lift: 0 1px 2px rgba(17,18,26,.04), 0 10px 26px -14px rgba(49,46,129,.14);
+}
 html[data-theme="bento"][data-perf="low"] .home-grid > .card:not(.home-hero) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   background: linear-gradient(155deg, var(--card-tint, transparent), var(--surface) 52%), var(--surface);
+}
+html[data-theme="bento"][data-perf="low"] .home-q {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--surface);
 }
 
 html[data-theme="terminal"] {

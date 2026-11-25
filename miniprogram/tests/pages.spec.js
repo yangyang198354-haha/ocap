@@ -34,7 +34,7 @@ describe('首页身份显示（CR-012）', () => {
     expect(text).toContain('身份：委员') // REQ-FUNC-149：汇总身份取最高一项
     expect(text).toContain('报销#1')
     expect(text).toContain('加装电梯决议')
-    expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public' })
+    expect(requests().find((r) => r.path === '/resolutions').data).toEqual({ scope: 'public', page_size: 5 })
   })
 
   it('TC-MP-015 游客：身份显示“游客”；待办接口 403 时按空处理，不抛错', async () => {
@@ -51,7 +51,7 @@ describe('首页身份显示（CR-012）', () => {
     expect(requests().some((r) => r.path === '/approval/tasks')).toBe(false)
   })
 
-  it('TC-MP-015b 成员：待办接口 403 时按空处理，不抛错', async () => {
+  it('TC-MP-015b 成员：待办接口 403 时任务卡隐藏，不抛错', async () => {
     uni.request.mockImplementation(({ url, success }) => {
       const path = url.replace('/api/v1', '')
       if (path === '/me') return success({ statusCode: 200, data: MEMBER_ME })
@@ -59,7 +59,8 @@ describe('首页身份显示（CR-012）', () => {
       return success({ statusCode: 200, data: { results: [] } })
     })
     const { wrapper } = await mountPage(Index)
-    expect(wrapper.text()).toContain('暂无审批待办')
+    expect(wrapper.find('.home-todo').exists()).toBe(false)
+    expect(wrapper.text()).toContain('管理快捷')
   })
 
   it('TC-MP-016 审批待办“同意”：POST /approval/instances/{id}/decision { action: APPROVE }', async () => {

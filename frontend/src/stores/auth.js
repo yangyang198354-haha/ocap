@@ -11,6 +11,16 @@ export const useAuthStore = defineStore('auth', {
     position: (s) => s.me?.identities?.committee?.position || '',
     // 业委会成员：主任、副主任、委员（业主代表不是业委会成员）
     isCommittee: (s) => ['CHAIR', 'VICE_CHAIR', 'MEMBER'].includes(s.me?.identities?.committee?.position),
+    // 业主代表：仅 REPRESENTATIVE（MOD-215 / IFC-436，与 CommitteeQuery.is_representative 同口径）
+    isRepresentative: (s) => s.me?.identities?.committee?.position === 'REPRESENTATIVE',
+    // 户主/产权业主房屋（HEAD/OWNER）；用于“待我处理”与是否请求 /me/housing
+    ownerUnits: (s) => (s.me?.identities?.units || []).filter((u) => u.role === 'HEAD' || u.role === 'OWNER'),
+    hasOwnerUnit() { return this.ownerUnits.length > 0 },
+    // 同住人房屋；与产权业主同版式（REQ-FUNC-367）
+    residentUnits: (s) => (s.me?.identities?.units || []).filter((u) => u.role === 'RESIDENT'),
+    hasResidentUnit() { return this.residentUnits.length > 0 },
+    // 游客：无任何房屋与席位（/me 的 is_guest 口径）
+    isGuest: (s) => Boolean(s.me?.identities?.is_guest),
     // 汇总身份（IFC-262 / IFC-282）：与管理端注册用户目录同口径
     // 无 summary 时回退到单一身份 labels（C-34：labels 恒为单元素，与 summary 同口径）
     identitySummary: (s) => s.me?.identities?.summary ?? { code: 'GUEST', label: (s.me?.identities?.labels || []).join('、') || '游客' },

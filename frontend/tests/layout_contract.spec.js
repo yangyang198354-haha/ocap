@@ -138,6 +138,12 @@ describe('请求 方法+路径 与后端路由对应', () => {
     ['member', () => api.unitApi.leaveUnit(1), 'POST', '/units/1/leave'],
     ['member', () => api.resolutionApi.list('mine', {}), 'GET', '/resolutions'],
     ['member', () => api.claimApi.list({ scope: 'todo' }), 'GET', '/claims'],
+    // ocap_role_home 首页只复用既有 api.js 函数（GR-D-001 契约）：以下为首页实际调用的方法与路径
+    ['member', () => api.approvalApi.tasks(), 'GET', '/approval/tasks'],
+    ['member', () => api.pollApi.list(), 'GET', '/polls'],
+    ['member', () => api.pollApi.detail(5), 'GET', '/polls/5'],
+    ['member', () => api.accountApi.summary({ status: 'ENABLED', recent: 0 }), 'GET', '/ledger/accounts/summary'],
+    ['member', () => api.infoApi.list({ page_size: 3 }), 'GET', '/info/posts'],
     ['member', () => api.attachmentApi.upload(new File(['x'], 'a.png'), 'AVATAR'), 'POST', '/attachments'],
     ['member', () => api.authApi.logout(), 'POST', '/auth/logout'],
     ['admin', () => api.admin.login('a', 'b'), 'POST', '/admin/auth/login'],

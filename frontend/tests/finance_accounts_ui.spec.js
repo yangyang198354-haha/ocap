@@ -115,7 +115,7 @@ describe('主页账户卡片', () => {
     }))
     const { wrapper, router } = await mountPage(Home, { path: '/' })
     await flushPromises()
-    expect(wrapper.text()).toContain('账户余额')
+    expect(wrapper.text()).toContain('财务公开')
     expect(wrapper.text()).toContain('¥100.00')
     expect(wrapper.text()).toContain('第四届业主委员会基本账户')
     const card = wrapper.find('.home-accounts')

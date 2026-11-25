@@ -109,14 +109,14 @@ describe('入口可见性与待审批提示', () => {
     expect(wrapper.findAll('button').some((b) => b.text().includes('新建申请'))).toBe(true)
   })
 
-  it('TC-UNIT-566 / AC-151-01、AC-151-04、AC-166-03：产权业主首页显示“待审批同住人申请：2”；非成员不请求待办；无待审时不显示', async () => {
+  it('TC-UNIT-566 / AC-151-01、AC-151-04、AC-166-03：产权业主首页显示“待我处理 · 2”；非成员不请求待办；无待审时不显示', async () => {
     const owner = me(null, [{ unit_id: 1, specific_part: 'A', role: 'OWNER' }], { code: 'OWNER', label: '产权业主' })
     http.get.mockImplementation(routeTable({
       '/me': owner, '/resolutions': { results: [] }, '/polls': { results: [] },
       '/me/housing': { pending_review_count: 2, units: [], summary: { code: 'OWNER', label: '产权业主' } }
     }))
     let { wrapper } = await mountPage(Home)
-    expect(wrapper.text()).toContain('待审批同住人申请：2')
+    expect(wrapper.text()).toContain('待我处理 · 2')
     expect(wrapper.text()).toContain('当前身份：产权业主')
     expect(http.get.mock.calls.some((c) => c[0] === '/approval/tasks')).toBe(false)
     document.body.innerHTML = ''
@@ -125,7 +125,7 @@ describe('入口可见性与待审批提示', () => {
       '/me/housing': { pending_review_count: 0, units: [] }
     }))
     ;({ wrapper } = await mountPage(Home))
-    expect(wrapper.text()).not.toContain('待审批同住人申请')
+    expect(wrapper.text()).not.toContain('待我处理')
   })
 
   it('TC-UNIT-567 / AC-169-01、AC-169-02：InfoDetail：请求失败显示“内容不存在或已下线”与返回列表', async () => {

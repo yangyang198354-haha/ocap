@@ -44,7 +44,7 @@ beforeEach(() => {
 })
 
 describe('首页身份显示（CR-012）', () => {
-  it('TC-WEB-017 委员：显示 identities.labels、昵称、手机号，并出现“收入表”入口', async () => {
+  it('TC-WEB-017 委员：显示 identities.labels、昵称，不再显示手机号，并出现“收入表”入口', async () => {
     http.get.mockImplementation(routeTable({
       '/me': ME(['户主', '业委会委员'], 'MEMBER', { code: 'MEMBER', label: '委员' }),
       '/resolutions': { results: [{ id: 1, title: '加装电梯决议', status: 'APPROVED' }] }
@@ -53,8 +53,9 @@ describe('首页身份显示（CR-012）', () => {
     const text = wrapper.text()
     expect(text).toContain('你好，张三')
     expect(text).toContain('当前身份：委员') // REQ-FUNC-149：汇总身份取最高一项
-    expect(text).toContain('手机号：138****0000')
+    expect(text).not.toContain('手机号')
     expect(text).toContain('加装电梯决议')
+    expect(text).toContain('业委会决议')
     expect(text).toContain('收入表')
     expect(http.get).toHaveBeenCalledWith('/resolutions', { params: { scope: 'public', page_size: 5 } })
   })

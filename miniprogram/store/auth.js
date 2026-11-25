@@ -6,6 +6,12 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     // 业委会成员：主任、副主任、委员（业主代表不是成员），与接口权限一致（IFC-262 / REQ-FUNC-146）
     isCommittee: (s) => ['CHAIR', 'VICE_CHAIR', 'MEMBER'].includes(s.me?.identities?.committee?.position),
+    // 业主代表（MOD-218 / IFC-442，与 Web 能力 getter 同口径）
+    isRepresentative: (s) => s.me?.identities?.committee?.position === 'REPRESENTATIVE',
+    // 户主/产权业主房屋；用于“待我处理”与是否请求 /me/housing
+    ownerUnits: (s) => (s.me?.identities?.units || []).filter((u) => u.role === 'HEAD' || u.role === 'OWNER'),
+    hasOwnerUnit() { return this.ownerUnits.length > 0 },
+    isGuest: (s) => Boolean(s.me?.identities?.is_guest),
     // 汇总身份（IFC-262）：与 Web、管理端目录同口径
     // 无 summary 时回退到单一身份 labels（C-34：labels 恒为单元素，与 summary 同口径）
     identitySummary: (s) => s.me?.identities?.summary ?? { code: 'GUEST', label: (s.me?.identities?.labels || []).join('、') || '游客' }

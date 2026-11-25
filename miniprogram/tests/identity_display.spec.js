@@ -39,7 +39,7 @@ describe('小程序认证房屋（US-146 / US-148）', () => {
     expect(uni.navigateTo).toHaveBeenCalledWith({ url: '/pages/units/index' })
   })
 
-  it('TC-MP-502 游客：数量 0 与空状态', async () => {
+  it('TC-MP-502 游客：不显示“我的房屋”，欢迎区提供“去认证”（AC-354-01）', async () => {
     respondWith({
       'GET /me': ME(['游客']),
       'GET /approval/tasks': { results: [] },
@@ -49,8 +49,9 @@ describe('小程序认证房屋（US-146 / US-148）', () => {
     const { wrapper } = await mountPage(Index)
     const text = wrapper.text()
     expect(text).toContain('身份：游客')
-    expect(text).toContain('共 0 套')
-    expect(text).toContain('暂无已认证房屋')
+    expect(text).not.toContain('共 0 套')
+    expect(text).not.toContain('我的房屋')
+    expect(text).toContain('去认证')
   })
 
   it('TC-MP-503 “我的”页显示单一身份，不出现“户主”', async () => {

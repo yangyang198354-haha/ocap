@@ -13,7 +13,7 @@ const ME = {
 }
 
 describe('首页语义区块', () => {
-  it('Hero / 待办 / 4 数据卡 / 7 入口 / 投票 / 最新 均渲染，数据来自现有接口', async () => {
+  it('Hero / 待办 / 管理快捷 / 投票 / 公开决议 均渲染，数据来自现有接口；不再有统计卡与快捷宫格', async () => {
     respondWith({
       'GET /me': ME,
       'GET /approval/tasks': { results: [{ instance_id: 3, scope: 'EXPENSE', subject_title: '报销#1' }] },
@@ -21,22 +21,23 @@ describe('首页语义区块', () => {
       'GET /polls': { results: [{ id: 9, title: '快递柜选址', status: 'OPEN', deadline: '2030-01-01T00:00:00Z' }, { id: 8, title: '旧调查', status: 'CLOSED' }] }
     })
     const { wrapper } = await mountPage(Index)
-    for (const cls of ['.home-hero', '.home-todo', '.home-quick', '.home-poll', '.home-latest']) {
+    for (const cls of ['.home-hero', '.home-todo', '.home-poll', '.home-latest']) {
       expect(wrapper.find(cls).exists(), cls).toBe(true)
     }
-    expect(wrapper.findAll('.home-stat')).toHaveLength(4)
-    expect(wrapper.findAll('.home-q')).toHaveLength(7)
+    expect(wrapper.findAll('.home-stat')).toHaveLength(0)
+    expect(wrapper.findAll('.home-q')).toHaveLength(0)
     expect(wrapper.find('.home-poll').text()).toContain('快递柜选址')
     expect(wrapper.find('.home-poll').text()).not.toContain('旧调查')
-    expect(wrapper.findAll('.home-stat .stat-value').map((n) => n.text())).toEqual(['1', '1', '1', '1'])
+    expect(wrapper.text()).toContain('管理快捷')
+    expect(wrapper.text()).toContain('业委会决议')
   })
 
-  it('投票 / 待办取不到时显示空态，不编造', async () => {
+  it('投票 / 待办取不到时保留空态或不渲染，不编造', async () => {
     respondWith({ 'GET /me': ME, 'GET /resolutions': { results: [] } })
     const { wrapper } = await mountPage(Index)
     expect(wrapper.find('.home-poll').text()).toContain('暂无进行中的投票')
-    expect(wrapper.find('.home-todo').text()).toContain('暂无审批待办')
-    expect(wrapper.findAll('.home-stat .stat-value').map((n) => n.text())).toEqual(['1', '—', '—', '0'])
+    expect(wrapper.find('.home-todo').exists()).toBe(false)
+    expect(wrapper.findAll('.home-stat')).toHaveLength(0)
   })
 })
 

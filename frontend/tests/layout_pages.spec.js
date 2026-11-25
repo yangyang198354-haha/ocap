@@ -229,12 +229,13 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     for (const p of ['/', '/polls', '/reports', '/info', '/tasks', '/income']) expect((await barItems(p)).items, p).toEqual([])
   }, 30000) // 同一用例内挂载布局 9 次，全量并发运行时需放宽默认 5s
 
-  it('TC-INT-889 / AC-229-03、AC-235-02：首页快捷入口"信息公开"仍指向 /info（改版不使其失效）；待审批链接改指向 /units#review（旧：/units/review）', async () => {
+  it('TC-INT-889 / AC-229-03、AC-356-01、AC-368：首页信息公开模块仍指向 /info；待我处理指向 /units；游客去认证指向 /units/pick', async () => {
     const home = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/portal/Home.vue'), 'utf8')
-    expect(home).toMatch(/label:\s*'信息公开',\s*to:\s*'\/info'/)
-    expect(home).toContain('<router-link to="/units#review" class="link">')
-    expect(home).not.toContain('to="/units/review"')
-    expect(home).toMatch(/label:\s*'认证我的房屋',\s*to:\s*'\/units\/pick'/) // AC-237-05：快捷入口指向"认证产权"页
+    expect(home).toContain('信息公开')
+    expect(home).toContain('to="/info"')
+    expect(home).toContain("to: '/units'")
+    expect(home).toContain('to="/units/pick"')
+    expect(home).not.toContain('home-q')
   })
 })
 

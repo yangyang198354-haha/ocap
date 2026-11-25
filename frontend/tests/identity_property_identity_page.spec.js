@@ -135,15 +135,13 @@ describe('我的身份与房屋页：房屋明细（US-232）', () => {
     expect(wrapper.text()).toContain('您还没有认证任何专有部分，请先认证产权')
   })
 
-  it('TC-WEB-907 / AC-232-04、AC-237-05：主页只保留"认证房屋"数量小卡片（2），无逐套明细；游客空状态显示"去认证产权"；快捷入口"认证我的房屋"指向 /units/pick', async () => {
+  it('TC-WEB-907 / AC-232-04、AC-356-01：主页“我的房屋 · 2”只展示数量，无逐套明细，可进入明细', async () => {
     const others = { results: [] }
     http.get.mockImplementation(routeTable({ '/me': ME([OWNED, RESIDENT]), '/me/housing': housing([OWNED, RESIDENT]), '/resolutions': others, '/approval/tasks': others, '/polls': others }))
     const owner = await mountPage(Home)
-    const card = owner.wrapper.findAll('section.home-stat').find((s) => s.find('.label').text() === '认证房屋')
-    expect(card.find('.stat-value').text()).toBe('2')
+    const card = owner.wrapper.findAll('section.home-half').find((s) => s.text().includes('我的房屋'))
+    expect(card.text()).toContain('我的房屋 · 2')
     expect(owner.wrapper.text()).not.toContain('902号')
-    const quick = owner.wrapper.findAll('a.home-q').find((a) => a.text().includes('认证我的房屋'))
-    expect(quick.attributes('href')).toBe('/units/pick')
   })
 })
 
@@ -244,15 +242,16 @@ describe('我的身份与房屋页：待审批 Tab（US-234、US-235）', () => 
     expect(resident.wrapper.find('#review').exists()).toBe(false)
   })
 
-  it('TC-WEB-916 / AC-235-02、AC-235-04：主页"待审批同住人申请：2"链接指向 /units#review；游客与同住人不显示该链接', async () => {
+  it('TC-WEB-916 / AC-235-02、AC-235-04、AC-368：主页“待我处理 · 2”链接指向 /units；游客与同住人不显示该卡', async () => {
     const others = { results: [] }
     const homeTable = (units, pending) => routeTable({ '/me': ME(units), '/me/housing': housing(units, pending), '/resolutions': others, '/approval/tasks': others, '/polls': others })
     http.get.mockImplementation(homeTable([OWNED], 2))
     const owner = await mountPage(Home)
     await flush()
-    const link = owner.wrapper.findAll('a').find((a) => a.text().includes('待审批同住人申请：2'))
+    expect(owner.wrapper.text()).toContain('待我处理 · 2')
+    const link = owner.wrapper.findAll('a').find((a) => a.text().includes('去处理'))
     expect(link).toBeTruthy()
-    expect(link.attributes('href')).toBe('/units#review')
+    expect(link.attributes('href')).toBe('/units')
     owner.wrapper.unmount()
     for (const units of [[], [RESIDENT]]) {
       document.body.innerHTML = ''
@@ -260,7 +259,7 @@ describe('我的身份与房屋页：待审批 Tab（US-234、US-235）', () => 
       http.get.mockImplementation(homeTable(units, 0))
       const other = await mountPage(Home)
       await flush()
-      expect(other.wrapper.text()).not.toContain('待审批同住人申请')
+      expect(other.wrapper.text()).not.toContain('待我处理')
     }
   })
 })

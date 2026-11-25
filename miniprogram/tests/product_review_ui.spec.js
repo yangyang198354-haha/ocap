@@ -104,33 +104,33 @@ describe('小程序 首页 / 我的 / 决议', () => {
     'GET /resolutions': { count: 0, results: [] }, 'GET /polls': { count: 0, results: [] }, ...over
   })
 
-  it('TC-UNIT-555 / AC-151-05、AC-151-04：产权业主首页显示"待审批同住人申请：2"并进入我的房屋待审批区；无待审时不显示', async () => {
+  it('TC-UNIT-555 / AC-151-05、AC-151-04、AC-368：产权业主首页显示“待我处理 · 2”并进入我的房屋待审批区；无待审时不显示', async () => {
     respondWith(indexTable(ME()))
     let { wrapper } = await mountPage(Index)
-    expect(wrapper.text()).toContain('待审批同住人申请：2')
-    await byText(wrapper, '.home-meta', '待审批同住人申请').trigger('click')
+    const card = wrapper.findAll('.card').find((c) => c.text().includes('待我处理 · 2'))
+    expect(card).toBeTruthy()
+    await card.trigger('click')
     expect(uni.navigateTo.mock.calls.at(-1)[0].url).toBe('/pages/units/index?review=1')
     document.body.innerHTML = ''
     respondWith(indexTable(ME(), { 'GET /me/housing': housing({ pending_review_count: 0 }) }))
     ;({ wrapper } = await mountPage(Index))
-    expect(wrapper.text()).not.toContain('待审批同住人申请')
+    expect(wrapper.text()).not.toContain('待我处理')
   })
 
-  it('TC-UNIT-556 / AC-166-01、AC-154-04、AC-166-03：非成员首页不请求待办、无待办卡与"报销"快捷入口，但仍见待审批提示；委员有待办卡', async () => {
+  it('TC-UNIT-556 / AC-166-01、AC-154-04、AC-166-03：非成员首页不请求待办、无待办卡与快捷宫格，但仍见“待我处理”；委员不请求待办时也不渲染 0 条卡', async () => {
     respondWith(indexTable(ME()))
     let { wrapper } = await mountPage(Index)
     expect(requests().some((r) => r.path === '/approval/tasks')).toBe(false)
     expect(wrapper.find('.home-todo').exists()).toBe(false)
-    const quick = wrapper.findAll('.home-q-label').map((e) => e.text())
-    expect(quick).not.toContain('报销')
-    expect(quick.join('|')).not.toMatch(/待办|报销/)
-    expect(wrapper.text()).toContain('待审批同住人申请：2')
+    expect(wrapper.findAll('.home-q-label')).toHaveLength(0)
+    expect(wrapper.text()).toContain('待我处理 · 2')
     document.body.innerHTML = ''
     respondWith(indexTable(ME('MEMBER')))
     ;({ wrapper } = await mountPage(Index))
-    expect(wrapper.find('.home-todo').exists()).toBe(true)
-    expect(wrapper.text()).toContain('暂无审批待办')
-    expect(wrapper.findAll('.home-q-label').map((e) => e.text())).toContain('报销')
+    expect(wrapper.find('.home-todo').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('暂无审批待办')
+    expect(wrapper.text()).toContain('管理快捷')
+    expect(wrapper.text()).toContain('报销 / 备用金')
     expect(requests().some((r) => r.path === '/approval/tasks')).toBe(true)
   })
 

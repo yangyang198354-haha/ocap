@@ -178,6 +178,8 @@ a { color: var(--accent-text); text-decoration: none; }
 .home-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
 .home-grid > .card, .home-grid > .home-quick { margin-bottom: 0; }
 .home-hero, .home-todo, .home-quick, .home-poll, .home-latest { grid-column: span 2; }
+/* MOD-217 / IFC-441：角色化首页模块占位（4 栏骨架由主题在 ≥768px 提供） */
+.home-half, .home-full { grid-column: span 2; }
 .home-hero { position: relative; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
 .home-hero-scan { display: none; }
 .home-hero-main { position: relative; z-index: 1; }
@@ -212,6 +214,7 @@ a { color: var(--accent-text); text-decoration: none; }
 .home-poll-btn { width: 100%; }
 @media (min-width: 768px) {
   .home-grid { gap: 18px; }
+  .home-full { grid-column: span 4; }
   .home-greeting { font-size: 30px; }
   .home-quick-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   .home-q { padding: 16px; gap: 12px; }

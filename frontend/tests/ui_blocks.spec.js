@@ -52,34 +52,34 @@ describe('首页语义区块（AC-074-02）', () => {
   })
 
   for (const theme of THEMES) {
-    it(`三套风格（${theme.key}）下首页都有 Hero / 待办 / 4 数据卡 / 快捷入口 / 投票 / 最新动态`, async () => {
+    it(`三套风格（${theme.key}）下首页按角色渲染模块且不再有统计卡与快捷宫格`, async () => {
       document.documentElement.setAttribute('data-theme', theme.key)
       http.get.mockImplementation(routes)
       const { wrapper } = await mountPage(Home)
-      for (const cls of ['.home-hero', '.home-todo', '.home-quick', '.home-poll', '.home-latest']) {
+      for (const cls of ['.home-hero', '.home-todo', '.home-accounts', '.home-poll', '.home-latest', '.home-info']) {
         expect(wrapper.find(cls).exists(), cls).toBe(true)
       }
-      expect(wrapper.findAll('.home-stat')).toHaveLength(4)
-      expect(wrapper.findAll('.home-q').length).toBeGreaterThanOrEqual(6)
+      expect(wrapper.findAll('.home-stat')).toHaveLength(0)
+      expect(wrapper.findAll('.home-q')).toHaveLength(0)
       // 真实数据：待办、进行中投票（仅 OPEN）、倒计时
       expect(wrapper.find('.home-todo').text()).toContain('报销#1')
       expect(wrapper.find('.home-poll').text()).toContain('快递柜选址')
       expect(wrapper.find('.home-poll').text()).not.toContain('旧调查')
       expect(wrapper.findAll('.home-countdown b')).toHaveLength(3)
       expect(wrapper.find('.home-hero').text()).toContain('你好，张三')
-      const stats = wrapper.findAll('.home-stat .stat-value').map((n) => n.text())
-      expect(stats).toEqual(['2', '1', '1', '2'])
+      expect(wrapper.text()).toContain('管理快捷')
+      expect(wrapper.text()).toContain('我的房屋 · 2')
       document.documentElement.removeAttribute('data-theme')
     })
   }
 
-  it('取不到的数据不编造：待办 403、投票失败 → 空态，指标显示 —', async () => {
+  it('取不到的数据不编造：待办失败、投票失败 → 任务卡隐藏，投票保留空态', async () => {
     http.get.mockImplementation(routeTable({ '/me': ME, '/resolutions': { results: [] } }))
     const { wrapper } = await mountPage(Home)
-    expect(wrapper.find('.home-todo').text()).toContain('暂无审批待办')
+    expect(wrapper.find('.home-todo').exists()).toBe(false)
     expect(wrapper.find('.home-poll').text()).toContain('暂无进行中的投票')
     expect(wrapper.find('.home-countdown').exists()).toBe(false)
-    expect(wrapper.find('.home-hero').text()).toContain('— 项审批待办')
+    expect(wrapper.find('.home-hero').text()).not.toContain('项审批待办')
   })
 
   it('首页布局差异在各风格文件中：三份 web.css 都按 html[data-theme] 定义 .home-* 布局', () => {

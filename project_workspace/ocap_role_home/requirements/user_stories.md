@@ -1,8 +1,8 @@
 <file_header>
   <author_agent>requirement-analyst</author_agent>
-  <timestamp>2026-11-25T12:08:00+08:00</timestamp>
+  <timestamp>2026-11-25T13:20:00+08:00</timestamp>
   <project_name>ocap_role_home</project_name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <input_files><file>project_workspace/ocap_role_home/requirements/requirements_spec.md</file><file>frontend/src/portal/Home.vue</file><file>miniprogram/pages/index/index.vue</file></input_files>
   <phase>PHASE_02</phase>
   <status>APPROVED</status>
@@ -26,7 +26,7 @@
 ### US-354: 游客首页只展示公开内容
 - 故事：As a 游客, I want to 先看到社区公开决议、投票与财务公开, so that 我能了解社区再决定是否认证。
 - 关联需求：REQ-FUNC-366、371、372、374；优先级：Must Have；故事点：3 [ESTIMATE]
-- AC-354-01：Given 已登录但没有任何房屋身份的游客 / When 打开 Web 首页 / Then 依次显示欢迎卡（含“去认证”）、最新公开决议、投票与调查、信息公开、财务公开；不显示“我的房屋”“待我处理”“待办审批”“管理快捷”，且不请求 `/approval/tasks`、`/me/housing`。
+- AC-354-01：Given 已登录但没有任何房屋身份的游客 / When 打开 Web 首页 / Then 依次显示欢迎卡（含“去认证”）、最新公开决议、投票与调查、信息公开、财务公开；不显示“我的房屋”“待我处理”“待办审批”“管理快捷”，且不请求 `/approval/tasks`、`/me/housing`；无进行中投票或无公开决议时对应模块保留空态文案而隐藏。
 - AC-354-02：Given 游客打开首页 / When 查看财务公开 / Then 只显示“账户合计 + 查看报表”，不显示逐账户明细；公开决议条目同时带“业委会/业主代表”来源标签。
 - AC-354-03：Given 游客打开小程序首页 / When 浏览首屏 / Then 模块顺序与 Web 一致、单列展示，底部 Tab 仍为“首页/决议/投票/我的”。
 
@@ -47,7 +47,7 @@
 ### US-357: 业主代表优先看到业主达标投票
 - 故事：As a 业主代表, I want to 在首页直接看到需要我参与的业主达标投票, so that 我不会漏掉代表表决。
 - 关联需求：REQ-FUNC-369、371；优先级：Must Have；故事点：5 [ESTIMATE]
-- AC-357-01：Given 业主代表有待参与的业主达标投票 / When 打开首页 / Then 显示“待我表决”卡，逐条显示投票标题、截止时间与参与状态；卡片中不出现财务或决议审批事项。
+- AC-357-01：Given 业主代表有待参与的业主达标投票 / When 打开首页 / Then 显示“待我表决”卡，逐条显示投票标题、截止时间与参与状态（不显示参与率）；卡片中不出现财务或决议审批事项。
 - AC-357-02：Given 某投票不是业主达标口径（如普通调查）/ When 渲染“待我表决” / Then 该投票不出现在此卡，只出现在“投票与调查”卡。
 - AC-357-03：Given 业主代表打开公开决议 / When 查看列表 / Then 同时看到业委会决议与业主代表决议，并以来源标签区分；不显示“待办审批”“管理快捷”。
 

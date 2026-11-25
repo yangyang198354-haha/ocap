@@ -128,19 +128,20 @@ describe('认证产权卡片与同住人申请（US-236、US-238、US-242、US-2
 })
 
 describe('首页（US-232 小程序部分）', () => {
-  it('TC-MP-906 / AC-232-04：首页游客显示"共 0 套"与"去认证产权"空状态；"待审批同住人申请"链接指向我的房屋页 review 定位；游客无该链接', async () => {
+  it('TC-MP-906 / AC-354-01、AC-368：游客不显示“我的房屋”但有“去认证”；产权业主“待我处理 · 2”进入我的房屋待审批区', async () => {
     const table = (units, pending) => ({ 'GET /me': ME(units), 'GET /me/housing': housing(units, pending), 'GET /approval/tasks': { results: [] }, 'GET /resolutions': { results: [] }, 'GET /polls': { results: [] } })
     respondWith(table([], 0))
     const guest = await mountPage(Index)
-    expect(guest.wrapper.text()).toContain('共 0 套')
-    expect(guest.wrapper.text()).toContain('暂无已认证房屋，去认证产权')
-    expect(guest.wrapper.text()).not.toContain('待审批同住人申请')
+    expect(guest.wrapper.text()).not.toContain('共 0 套')
+    expect(guest.wrapper.text()).not.toContain('我的房屋')
+    expect(guest.wrapper.text()).toContain('去认证')
+    expect(guest.wrapper.text()).not.toContain('待我处理')
     guest.wrapper.unmount()
     respondWith(table([OWNED], 2))
     const owner = await mountPage(Index)
-    const link = owner.wrapper.findAll('.home-meta').find((e) => e.text().includes('待审批同住人申请：2'))
-    expect(link).toBeTruthy()
-    await link.trigger('click')
+    const card = owner.wrapper.findAll('.card').find((c) => c.text().includes('待我处理 · 2'))
+    expect(card).toBeTruthy()
+    await card.trigger('click')
     expect(uni.navigateTo).toHaveBeenCalledWith({ url: '/pages/units/index?review=1' })
   })
 })

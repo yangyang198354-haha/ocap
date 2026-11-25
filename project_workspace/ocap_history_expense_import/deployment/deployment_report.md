@@ -102,3 +102,12 @@
 - 结果：`DEPLOYED_SUCCESSFULLY`。
 - 回滚：`sudo rm -rf /home/yangyang/ocap/{backend,web/ocap}` 后按 TS 解包对应快照并重启；如需撤销迁移记录可 `migrate ledger 0006 --fake`（保留表与数据）。
 - 遗留：历史支出测试文件仍使用 US-333~338/AC-333~338 编号（与需求重号无关，仅文档需求号变更）；分支 `restore/history-expense` 尚未提交/推送。
+
+## 补充部署 R-03：首页“审批待办 / 进行中的投票”可点击（2026-11-25 09:43，最终构建 index-Cwy5IprE.js）
+
+- 变更：Hero 徽章与两张数据卡加跳转——审批待办（业委会成员）→ `/tasks`；进行中的投票 → `/polls`；非委员的审批待办保持不可点。
+- 基线：基于 `origin/main`（含台账账户/多账户首页与历史支出）构建；前端 57 文件 / 607 测试通过。
+- 锚点：`TS=20261125094319` → `snapshots/web-20261125094319.tar.gz`（部署前静态目录）。
+- 说明：首次替换使用旧分支构建，发现后立即改用 `origin/main` 基线重建并再次替换；当前线上 bundle 为 `index-Cwy5IprE.js`，含 `Home-DUeJBD0k.js`（账户余额）与 `HistoricalExpenses-CWWVMmno.js`。
+- 验证：首页、bundle、`/ocap/tasks`、`/ocap/polls`、`/ocap/reports` 均 200。
+- 结果：`DEPLOYED_SUCCESSFULLY`（仅前端静态替换）。

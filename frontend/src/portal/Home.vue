@@ -13,8 +13,13 @@
           </p>
         </div>
         <div class="home-metrics">
-          <span class="chip"><b class="mono">{{ countText(tasks) }}</b> 项审批待办</span>
-          <span class="chip"><b class="mono">{{ countText(openPolls) }}</b> 项进行中的投票</span>
+          <router-link v-if="auth.isCommittee" to="/tasks" class="chip">
+            <b class="mono">{{ countText(tasks) }}</b> 项审批待办
+          </router-link>
+          <span v-else class="chip"><b class="mono">{{ countText(tasks) }}</b> 项审批待办</span>
+          <router-link to="/polls" class="chip">
+            <b class="mono">{{ countText(openPolls) }}</b> 项进行中的投票
+          </router-link>
         </div>
       </section>
 
@@ -161,8 +166,8 @@ const countdown = computed(() => {
 
 const stats = computed(() => [
   { label: '认证房屋', value: auth.me ? unitRows.value.length : '—', note: '已绑定的房屋数', to: '/units', emptyTo: auth.me && !unitRows.value.length ? '/units/pick' : null },
-  { label: '审批待办', value: countText(tasks.value), note: '待我审批的事项' },
-  { label: '进行中的投票', value: countText(openPolls.value), note: '可参与的投票 / 调查' },
+  { label: '审批待办', value: countText(tasks.value), note: '待我审批的事项', to: auth.isCommittee ? '/tasks' : null },
+  { label: '进行中的投票', value: countText(openPolls.value), note: '可参与的投票 / 调查', to: '/polls' },
   { label: '近期公开决议', value: resolutions.value.length, note: `其中 ${resolutions.value.filter((r) => r.status === 'APPROVED').length} 项已通过` }
 ])
 

@@ -119,3 +119,4 @@ curl -s -o /dev/null -w 'ROLLBACK_HTTP=%{http_code}\n' http://127.0.0.1:8090/oca
 - 验证：`IN=200`、`ASSET_HTTP=200`、`SPA(/ocap/units)=200`、`OUT=200`；`ocap-backend`、`nginx` 均 `active`。
 - 回滚锚点：`snapshots/web-20261125183418.tar.gz`（替换前版本）。
 - 结论：**DEPLOYED_SUCCESSFULLY**；后端、数据库、nginx 配置均未变更。
+- 18:51 补充部署（`654bc06`，CI [45598583708](https://github.com/yangyang198354-haha/ocap/actions/runs/45598583708) success）：实机反馈极光偏白，改为 `body::before` 固定光层（`vw` 定位 + `blur(28px)` + `transform` 漂移），卡片/侧栏降低白底、提高饱和；入口 `index-COGAkbXG.js`、CSS `index-DCl_fZ82.css`（已确认线上含 `circle 34vw` 规则）；快照 `snapshots/web-20261125185116.tar.gz`；内网/外网/SPA 均 200。

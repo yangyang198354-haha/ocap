@@ -1,10 +1,16 @@
 <template>
   <div class="page">
-    <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">投票 / 调查</h3>
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="page-eyebrow">POLLS</div>
+        <h1>投票 / 调查</h1>
+        <p class="page-desc">截止后统一汇总，结果公开</p>
+      </div>
+      <div class="page-actions">
         <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起</el-button>
       </div>
+    </div>
+    <div class="card">
       <p class="muted">截止后统一汇总；截止前任何人（含发起人）不可查看结果。</p>
     </div>
     <div class="card">

@@ -35,6 +35,13 @@
     "glass": "#F6F7FB",
     "glassLowEnd": "#FFFFFF",
     "blur": "none",
+    "borderStrong": "#D8DBE8",
+    "surfaceTint": "#F8F9FD",
+    "shadowRest": "0 1px 2px rgba(17,18,26,.04), 0 8px 24px -12px rgba(49,46,129,.12)",
+    "shadowHover": "0 2px 4px rgba(17,18,26,.05), 0 18px 44px -16px rgba(49,46,129,.22)",
+    "insetHighlight": "inset 0 1px 0 rgba(255,255,255,.8)",
+    "motionBase": "220ms",
+    "motionEase": "cubic-bezier(.2,.7,.2,1)",
     "decor": "1"
   },
   "native": {

@@ -3,6 +3,11 @@
 <template>
   <ThemeRoot>
   <view>
+    <view class="page-head">
+      <view class="page-eyebrow">ACCOUNT</view>
+      <view class="page-title">我的</view>
+      <view class="page-desc">个人资料、房屋与系统设置</view>
+    </view>
     <view class="card">
       <view class="title">{{ auth.me?.profile?.nickname || '业主' }}</view>
       <view class="profile-tags">

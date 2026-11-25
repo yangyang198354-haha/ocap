@@ -2,7 +2,7 @@
   <author_agent>ui-design-spec</author_agent>
   <timestamp>2026-11-25T15:05:00+08:00</timestamp>
   <project_name>ocap_role_home</project_name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <input_files>
     <file>frontend/src/shared/style.css</file>
     <file>frontend/src/portal/Home.vue</file>
@@ -18,7 +18,7 @@
     <file>scripts/themes/build.mjs</file>
   </input_files>
   <phase>UI_SPEC</phase>
-  <status>DRAFT</status>
+  <status>APPROVED</status>
 </file_header>
 
 # 角色化首页 UI 规范（Web + 小程序）
@@ -294,3 +294,14 @@
 | UI-Q4 | 管理快捷是否保留副文案 | Web 保留；小程序可省略，避免 3 列拥挤 |
 | UI-Q5 | 是否接受 Hero 背景缓慢循环 | Bento/Neon 可；Terminal 与低性能设备建议静态 |
 | UI-Q6 | 财务数字滚动是否引入 JS | 建议引入单文件 `requestAnimationFrame`，无新依赖；不做也可 |
+
+## 13. 实施记录（2026-11-25）
+
+已按“按推荐”落地 P0 + P1（Web 与小程序同步）；P2（财务数字滚动、截止呼吸）待下一批。
+
+- 主题令牌：`themes/*.theme.json` 新增 `borderStrong/surfaceTint/shadowRest/shadowHover/insetHighlight/motionBase/motionEase`，`scripts/themes/build.mjs` 映射为 CSS 变量，生成物已重跑。
+- Web：`.card` 内边距/描边/阴影/hover；`.card-head` 图标与 ghost 链接；`.page-head/.section-head/.toolbar`；Hero 与列表动效；管理快捷改为无边框动作块；空态加 CTA。
+- 小程序：`App.vue` 卡片/页面头/动作块 rpx 样式；首页管理快捷与空态 CTA；决议/投票/信息/我的页补 `page-head`。
+- Bento 侧栏选中态由黑色胶囊改为 accent 10% 淡染 + accent 文字（`themes/bento.web.css`）。
+- 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 14.16s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。
+- 未改动：模块顺序/可见性、接口、权限、路由、数据口径。

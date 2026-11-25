@@ -35,6 +35,13 @@
     "glass": "#1C1C1F",
     "glassLowEnd": "#111113",
     "blur": "none",
+    "borderStrong": "#3A3A40",
+    "surfaceTint": "#16161A",
+    "shadowRest": "0 0 0 1px #26262A",
+    "shadowHover": "0 0 0 1px #C6FF3D, 0 0 24px -8px rgba(198,255,61,.35)",
+    "insetHighlight": "none",
+    "motionBase": "160ms",
+    "motionEase": "cubic-bezier(.2,.8,.2,1)",
     "decor": "1"
   },
   "native": {

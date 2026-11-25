@@ -63,7 +63,7 @@ describe('口径 1~4：作用域、渐变顶栏与零回归（AC-142-01~04）', 
     expect(trigger).toMatch(/color:\s*var\(--on-hero\)/)
     expect(trigger).toMatch(/background:\s*transparent/)
     // 原：.admin-bar .topnav a.is-active 为表面色胶囊 + 强调色文字；新：侧栏当前项（黑色胶囊，与用户端 B 同款）不得缺失
-    expect(bentoWeb).toMatch(/\.side-item\.is-active[\s\S]{0,200}?\{\s*background:\s*#11121A;\s*color:\s*#fff;/)
+    expect(bentoWeb).toMatch(/\.side-item\.is-active[\s\S]{0,240}?\{\s*background:\s*rgba\(79,70,229,\.10\);\s*color:\s*var\(--accent-text\);/)
     // 原：hover 规则位于 is-active 规则之前；新：触发器 hover 规则存在且位于 focus-visible 规则之前
     expect(bentoWeb.indexOf(`${PREFIX} .admin-bar .user-menu-trigger:hover`)).toBeGreaterThan(0)
     expect(bentoWeb.indexOf(`${PREFIX} .admin-bar .user-menu-trigger:hover`))
@@ -72,7 +72,7 @@ describe('口径 1~4：作用域、渐变顶栏与零回归（AC-142-01~04）', 
 
   it('用户端 B 风格的黑色高亮胶囊原样保留（选择器由 .topnav 迁为侧栏 .side-item，.tabbar 保留）', () => {
     expect(bentoWeb).toContain('html[data-theme="bento"] .side-item.is-active')
-    expect(bentoWeb).toContain('html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }')
+    expect(bentoWeb).toContain('html[data-theme="bento"] .tabbar a.is-active { background: rgba(79,70,229,.10); color: var(--accent-text); }')
     expect(bentoWeb).toContain('html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }')
     expect(bentoWeb).not.toContain('.topnav')
   })

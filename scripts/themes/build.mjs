@@ -16,7 +16,10 @@ const VAR_NAMES = {
   successBg: '--success-bg', warningBg: '--warning-bg', dangerBg: '--danger-bg',
   hero: '--hero', onHero: '--on-hero', radiusSm: '--radius-sm', radiusMd: '--radius-md', radiusLg: '--radius-lg',
   radiusBtn: '--radius-btn', shadow: '--shadow', font: '--font', mono: '--mono',
-  glass: '--glass', glassLowEnd: '--glass-low-end', blur: '--blur', decor: '--decor'
+  glass: '--glass', glassLowEnd: '--glass-low-end', blur: '--blur', decor: '--decor',
+  borderStrong: '--border-strong', surfaceTint: '--surface-tint',
+  shadowRest: '--shadow-rest', shadowHover: '--shadow-hover', insetHighlight: '--inset-highlight',
+  motionBase: '--motion-base', motionEase: '--motion-ease'
 }
 
 /** 业务语义变量（Web 与小程序同名） */

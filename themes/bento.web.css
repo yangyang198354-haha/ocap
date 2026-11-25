@@ -11,10 +11,10 @@ html[data-theme="bento"] body {
 html[data-theme="bento"] .side { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
 html[data-theme="bento"] .side-item, html[data-theme="bento"] .side-sub-item, html[data-theme="bento"] .sub-nav-item { border-radius: 999px; }
 html[data-theme="bento"] .side-item.is-active, html[data-theme="bento"] .side-sub-item.is-active,
-html[data-theme="bento"] .sub-nav-item.is-active, html[data-theme="bento"] .tabbar a.is-active { background: #11121A; color: #fff; }
+html[data-theme="bento"] .sub-nav-item.is-active, html[data-theme="bento"] .tabbar a.is-active { background: rgba(79,70,229,.10); color: var(--accent-text); }
 html[data-theme="bento"] .user-menu-trigger { background: var(--surface); box-shadow: 0 1px 2px rgba(17,18,26,.06); }
 html[data-theme="bento"] .auth-brand { letter-spacing: -.02em; }
-html[data-theme="bento"] .card { border-color: rgba(17,18,26,.04); }
+html[data-theme="bento"] .card { border-color: var(--line); }
 html[data-theme="bento"] .chip { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); color: var(--on-hero); }
 html[data-theme="bento"] .home-hero::after {
   content: ""; position: absolute; right: -60px; bottom: -80px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none;

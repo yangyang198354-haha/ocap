@@ -40,7 +40,14 @@ export const THEMES = [
       "--glass": "rgba(255,255,255,.10)",
       "--glass-low-end": "#1B1C34",
       "--blur": "blur(16px)",
-      "--decor": "1"
+      "--decor": "1",
+      "--border-strong": "rgba(255,255,255,.18)",
+      "--surface-tint": "rgba(255,255,255,.06)",
+      "--shadow-rest": "0 0 0 1px rgba(255,255,255,.10), 0 0 32px -12px rgba(124,92,255,.35)",
+      "--shadow-hover": "0 0 0 1px rgba(169,150,255,.45), 0 0 48px -10px rgba(34,211,238,.35)",
+      "--inset-highlight": "inset 0 1px 0 rgba(255,255,255,.12)",
+      "--motion-base": "220ms",
+      "--motion-ease": "cubic-bezier(.2,.7,.2,1)"
     },
     "native": {
       "tabBar": {
@@ -96,7 +103,14 @@ export const THEMES = [
       "--glass": "#F6F7FB",
       "--glass-low-end": "#FFFFFF",
       "--blur": "none",
-      "--decor": "1"
+      "--decor": "1",
+      "--border-strong": "#D8DBE8",
+      "--surface-tint": "#F8F9FD",
+      "--shadow-rest": "0 1px 2px rgba(17,18,26,.04), 0 8px 24px -12px rgba(49,46,129,.12)",
+      "--shadow-hover": "0 2px 4px rgba(17,18,26,.05), 0 18px 44px -16px rgba(49,46,129,.22)",
+      "--inset-highlight": "inset 0 1px 0 rgba(255,255,255,.8)",
+      "--motion-base": "220ms",
+      "--motion-ease": "cubic-bezier(.2,.7,.2,1)"
     },
     "native": {
       "tabBar": {
@@ -152,7 +166,14 @@ export const THEMES = [
       "--glass": "#1C1C1F",
       "--glass-low-end": "#111113",
       "--blur": "none",
-      "--decor": "1"
+      "--decor": "1",
+      "--border-strong": "#3A3A40",
+      "--surface-tint": "#16161A",
+      "--shadow-rest": "0 0 0 1px #26262A",
+      "--shadow-hover": "0 0 0 1px #C6FF3D, 0 0 24px -8px rgba(198,255,61,.35)",
+      "--inset-highlight": "none",
+      "--motion-base": "160ms",
+      "--motion-ease": "cubic-bezier(.2,.8,.2,1)"
     },
     "native": {
       "tabBar": {

@@ -35,6 +35,13 @@
     "glass": "rgba(255,255,255,.10)",
     "glassLowEnd": "#1B1C34",
     "blur": "blur(16px)",
+    "borderStrong": "rgba(255,255,255,.18)",
+    "surfaceTint": "rgba(255,255,255,.06)",
+    "shadowRest": "0 0 0 1px rgba(255,255,255,.10), 0 0 32px -12px rgba(124,92,255,.35)",
+    "shadowHover": "0 0 0 1px rgba(169,150,255,.45), 0 0 48px -10px rgba(34,211,238,.35)",
+    "insetHighlight": "inset 0 1px 0 rgba(255,255,255,.12)",
+    "motionBase": "220ms",
+    "motionEase": "cubic-bezier(.2,.7,.2,1)",
     "decor": "1"
   },
   "native": {

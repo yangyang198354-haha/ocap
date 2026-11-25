@@ -1,7 +1,11 @@
 <template>
   <ThemeRoot>
     <view class="page">
-      <view class="title">信息公开</view>
+      <view class="page-head">
+        <view class="page-eyebrow">INFORMATION</view>
+        <view class="page-title">信息公开</view>
+        <view class="page-desc">公告、公示与小区动态</view>
+      </view>
       <view v-if="!items.length" class="muted">暂无公开信息</view>
       <view v-for="item in items" :key="item.id" class="list-item" @click="open(item)">
         <text>{{ item.title }}</text>

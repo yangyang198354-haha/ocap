@@ -1,8 +1,12 @@
 <template>
   <ThemeRoot>
   <view>
+    <view class="page-head">
+      <view class="page-eyebrow">POLLS</view>
+      <view class="page-title">投票 / 调查</view>
+      <view class="page-desc">截止后统一汇总，结果公开</view>
+    </view>
     <view class="card">
-      <view class="title">投票 / 调查</view>
       <view class="muted">截止后统一汇总，结果公开。</view>
     </view>
     <view class="card">

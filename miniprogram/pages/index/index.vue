@@ -64,15 +64,30 @@
 
       <view v-else-if="m.key === 'management'" class="card">
         <view class="title">管理快捷</view>
-        <view class="row">
-          <button size="mini" @click="go('/pages/claims/index')">报销 / 备用金</button>
-          <button size="mini" @click="go('/pages/approvals/index')">待我审批</button>
+        <view class="home-manage">
+          <button class="home-manage-item" @click="go('/pages/claims/index')">
+            <view class="home-manage-text">
+              <text class="home-manage-title">报销 / 备用金</text>
+              <text class="home-manage-sub">申请与查看</text>
+            </view>
+            <text class="home-manage-arrow">→</text>
+          </button>
+          <button class="home-manage-item" @click="go('/pages/approvals/index')">
+            <view class="home-manage-text">
+              <text class="home-manage-title">待我审批</text>
+              <text class="home-manage-sub">审批流转</text>
+            </view>
+            <text class="home-manage-arrow">→</text>
+          </button>
         </view>
       </view>
 
       <view v-else-if="m.key === 'polls'" class="card home-poll">
         <view class="title">投票与调查 · {{ openPolls ? openPolls.length : 0 }}</view>
-        <view v-if="!poll" class="muted">暂无进行中的投票</view>
+        <view v-if="!poll" class="home-empty">
+          <view class="muted">暂无进行中的投票</view>
+          <text class="link" @click="go('/pages/polls/index')">去投票 →</text>
+        </view>
         <block v-else>
           <view class="home-poll-title">{{ poll.title }}</view>
           <view class="muted">
@@ -84,7 +99,10 @@
 
       <view v-else-if="m.key === 'resolutions'" class="card home-latest">
         <view class="title">公开决议 · {{ publicFeed.length }}</view>
-        <view v-if="!publicFeed.length" class="muted">暂无公开决议</view>
+        <view v-if="!publicFeed.length" class="home-empty">
+          <view class="muted">暂无公开决议</view>
+          <text class="link" @click="go('/pages/resolutions/index')">去查看 →</text>
+        </view>
         <view v-for="item in publicFeed" :key="`${item.source}-${item.id}`" class="list-item"
               @click="go(item.source === 'REPRESENTATIVE' ? `/pages/polls/detail?id=${item.id}` : `/pages/resolutions/detail?id=${item.id}`)">
           <text>{{ item.title }}</text>
@@ -94,7 +112,10 @@
 
       <view v-else-if="m.key === 'info'" class="card">
         <view class="title">信息公开</view>
-        <view v-if="!infoPosts.length" class="muted">暂无公告</view>
+        <view v-if="!infoPosts.length" class="home-empty">
+          <view class="muted">暂无公告</view>
+          <text class="link" @click="go('/pages/info/index')">去查看 →</text>
+        </view>
         <view v-for="item in infoPosts" :key="item.id" class="list-item" @click="go(`/pages/info/detail?id=${item.id}`)">
           <text>{{ item.title }}</text>
         </view>

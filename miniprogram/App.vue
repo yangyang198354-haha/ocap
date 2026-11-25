@@ -9,7 +9,22 @@ export default {
 <style>
 @import './theme/generated/themes.scss';
 page { background: var(--bg); color: var(--text); font-size: 28rpx; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24rpx; margin: 24rpx; box-shadow: var(--shadow); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 32rpx; margin: 24rpx; box-shadow: var(--inset-highlight, none), var(--shadow-rest, var(--shadow)); }
+.page-head { padding: 8rpx 24rpx 24rpx; border-bottom: 1px solid var(--line); margin-bottom: 24rpx; }
+.page-eyebrow { font-size: 22rpx; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-text); }
+.page-title { font-size: 44rpx; line-height: 60rpx; font-weight: 700; margin-top: 8rpx; color: var(--text); }
+.page-desc { font-size: 24rpx; color: var(--muted); margin-top: 8rpx; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; margin-bottom: 20rpx; }
+.home-manage { display: flex; flex-direction: column; gap: 8rpx; }
+.home-manage-item { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 16rpx; min-height: 104rpx; border-radius: var(--radius-md); background: transparent; border: 0; text-align: left; line-height: 1.4; }
+.home-manage-item::after { border: 0; }
+.home-manage-item::before { content: ""; width: 56rpx; height: 56rpx; border-radius: 50%; background: var(--glass); border: 2rpx solid var(--border-strong, var(--line)); flex: none; }
+.home-manage-item:active { background: var(--surface-tint, var(--glass)); }
+.home-manage-text { display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.home-manage-title { font-size: 28rpx; font-weight: 600; color: var(--text); }
+.home-manage-sub { font-size: 22rpx; color: var(--muted); }
+.home-manage-arrow { margin-left: auto; color: var(--muted); }
+.home-empty { display: flex; flex-direction: column; align-items: center; gap: 8rpx; padding: 8rpx 0 16rpx; }
 .title { font-size: 34rpx; font-weight: 650; margin-bottom: 16rpx; }
 .muted { color: var(--muted); font-size: 24rpx; }
 .row { display: flex; gap: 16rpx; align-items: center; flex-wrap: wrap; }

@@ -1,8 +1,15 @@
 <template>
   <div class="page reports-page">
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="page-eyebrow">FINANCE</div>
+        <h1>财务报表</h1>
+        <p class="page-desc">季度 / 年度报表与收支明细</p>
+      </div>
+    </div>
     <section class="card reports-hero">
       <div class="row row-between">
-        <h3 class="title title-flat">财务报表</h3>
+        <h3 class="title title-flat">周期与筛选</h3>
         <div v-if="auth.isCommittee" class="row">
           <router-link to="/historical-expenses"><el-button>历史支出导入</el-button></router-link>
           <el-select v-model="gen.period_type" style="width: 110px">

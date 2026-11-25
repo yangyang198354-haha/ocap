@@ -1,10 +1,16 @@
 <template>
   <div class="page">
-    <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">业委会决议</h3>
+    <div class="page-head">
+      <div class="page-head-main">
+        <div class="page-eyebrow">RESOLUTIONS</div>
+        <h1>业委会决议</h1>
+        <p class="page-desc">公开决议与表决结果</p>
+      </div>
+      <div class="page-actions">
         <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起决议</el-button>
       </div>
+    </div>
+    <div class="card">
       <p class="section-title">{{ sectionTitle }}</p>
     </div>
 

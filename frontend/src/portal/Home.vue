@@ -1,7 +1,7 @@
 <template>
   <div class="page home">
     <div class="home-grid">
-      <section class="card hero home-hero" aria-label="欢迎">
+      <section class="card hero home-hero" aria-label="欢迎" style="--i:0">
         <span class="home-hero-scan" aria-hidden="true" />
         <div class="home-hero-main">
           <div class="label">{{ todayText }}</div>
@@ -11,27 +11,36 @@
         </div>
       </section>
 
-      <template v-for="m in bodyModules" :key="m.key">
-        <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" @click="$router.push('/units')">
+      <template v-for="(m, index) in bodyModules" :key="m.key">
+        <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': index + 1 }" @click="$router.push('/units')">
           <div class="card-head">
-            <h3 class="title title-flat">我的房屋 · {{ unitRows.length }}</h3>
-            <router-link to="/units" class="link">房屋明细</router-link>
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="home" /></span>
+              <h3 class="title title-flat">我的房屋 · {{ unitRows.length }}</h3>
+            </div>
+            <router-link to="/units" class="link card-link" @click.stop>房屋明细<span class="card-link-arrow">→</span></router-link>
           </div>
           <p class="muted">共 {{ unitRows.length }} 套（点击查看明细）</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingReview'" class="card home-half" aria-label="待我处理">
+        <section v-else-if="m.key === 'pendingReview'" class="card home-half" aria-label="待我处理" :style="{ '--i': index + 1 }">
           <div class="card-head">
-            <h3 class="title title-flat">待我处理 · {{ m.count }}</h3>
-            <router-link :to="m.to" class="link">去处理</router-link>
+            <div class="card-head-main">
+              <span class="card-icon is-warning"><UiIcon name="task" /></span>
+              <h3 class="title title-flat">待我处理 · {{ m.count }}</h3>
+            </div>
+            <router-link :to="m.to" class="link card-link">去处理<span class="card-link-arrow">→</span></router-link>
           </div>
           <p class="muted">有 {{ m.count }} 条同住人申请待审批</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingVotes'" class="card home-half" aria-label="待我表决">
+        <section v-else-if="m.key === 'pendingVotes'" class="card home-half" aria-label="待我表决" :style="{ '--i': index + 1 }">
           <div class="card-head">
-            <h3 class="title title-flat">待我表决 · {{ m.count }}</h3>
-            <router-link :to="m.to" class="link">全部</router-link>
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="vote" /></span>
+              <h3 class="title title-flat">待我表决 · {{ m.count }}</h3>
+            </div>
+            <router-link :to="m.to" class="link card-link">全部<span class="card-link-arrow">→</span></router-link>
           </div>
           <div v-for="item in pendingVotes" :key="item.id" class="todo-item is-link" @click="$router.push(`/polls/${item.id}`)">
             <span class="todo-icon"><UiIcon name="vote" /></span>
@@ -45,10 +54,13 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'pendingTasks'" class="card home-half home-todo" aria-label="待办审批">
+        <section v-else-if="m.key === 'pendingTasks'" class="card home-half home-todo" aria-label="待办审批" :style="{ '--i': index + 1 }">
           <div class="card-head">
-            <h3 class="title title-flat">待办审批 · {{ m.count }}</h3>
-            <router-link to="/tasks" class="link">全部</router-link>
+            <div class="card-head-main">
+              <span class="card-icon is-warning"><UiIcon name="task" /></span>
+              <h3 class="title title-flat">待办审批 · {{ m.count }}</h3>
+            </div>
+            <router-link to="/tasks" class="link card-link">全部<span class="card-link-arrow">→</span></router-link>
           </div>
           <div v-for="task in (tasks || []).slice(0, 3)" :key="task.instance_id"
                class="todo-item is-link" @click="$router.push('/tasks')">
@@ -60,14 +72,20 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'finance'" class="card home-half home-accounts" aria-label="财务公开" @click="$router.push('/reports')">
+        <section v-else-if="m.key === 'finance'" class="card home-half home-accounts" aria-label="财务公开" :style="{ '--i': index + 1 }" @click="$router.push('/reports')">
           <div class="card-head">
-            <h3 class="title title-flat">财务公开</h3>
-            <router-link to="/reports" class="link" @click.stop>财务报表</router-link>
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="wallet" /></span>
+              <h3 class="title title-flat">财务公开</h3>
+            </div>
+            <router-link to="/reports" class="link card-link" @click.stop>财务报表<span class="card-link-arrow">→</span></router-link>
           </div>
           <template v-if="!accountsError">
             <div class="label">启用账户合计</div>
             <div class="home-accounts-total mono">¥{{ accountsTotal }}</div>
+            <div v-if="accounts.length" class="home-finance-chips">
+              <span class="count-pill">{{ accounts.length }} 个账户</span>
+            </div>
             <div v-if="!auth.isGuest && accounts.length" class="home-account-list">
               <div v-for="account in accounts" :key="account.id" class="home-account-row">
                 <span class="home-account-name">{{ account.name }}</span>
@@ -83,19 +101,39 @@
           </p>
         </section>
 
-        <section v-else-if="m.key === 'management'" class="card home-half" aria-label="管理快捷">
-          <div class="card-head"><h3 class="title title-flat">管理快捷</h3></div>
+        <section v-else-if="m.key === 'management'" class="card home-half" aria-label="管理快捷" :style="{ '--i': index + 1 }">
+          <div class="card-head">
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="chart" /></span>
+              <h3 class="title title-flat">管理快捷</h3>
+            </div>
+          </div>
           <div class="home-manage">
-            <router-link to="/income" class="home-manage-item"><UiIcon name="income" /><span>收入表</span></router-link>
-            <router-link to="/claims" class="home-manage-item"><UiIcon name="wallet" /><span>报销 / 备用金</span></router-link>
-            <router-link to="/historical-expenses" class="home-manage-item"><UiIcon name="upload" /><span>历史支出导入</span></router-link>
+            <router-link to="/income" class="home-manage-item">
+              <span class="home-manage-icon"><UiIcon name="income" /></span>
+              <span class="home-manage-text"><b>收入表</b><small>查看与登记</small></span>
+              <span class="home-manage-arrow">→</span>
+            </router-link>
+            <router-link to="/claims" class="home-manage-item">
+              <span class="home-manage-icon"><UiIcon name="wallet" /></span>
+              <span class="home-manage-text"><b>报销 / 备用金</b><small>申请与查看</small></span>
+              <span class="home-manage-arrow">→</span>
+            </router-link>
+            <router-link to="/historical-expenses" class="home-manage-item">
+              <span class="home-manage-icon"><UiIcon name="upload" /></span>
+              <span class="home-manage-text"><b>历史支出导入</b><small>批量导入</small></span>
+              <span class="home-manage-arrow">→</span>
+            </router-link>
           </div>
         </section>
 
-        <section v-else-if="m.key === 'polls'" class="card home-full home-poll" aria-label="投票与调查">
+        <section v-else-if="m.key === 'polls'" class="card home-full home-poll" aria-label="投票与调查" :style="{ '--i': index + 1 }">
           <div class="card-head">
-            <h3 class="title title-flat">投票与调查 · {{ openPolls ? openPolls.length : 0 }}</h3>
-            <router-link to="/polls" class="link">查看全部</router-link>
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="vote" /></span>
+              <h3 class="title title-flat">投票与调查 · {{ openPolls ? openPolls.length : 0 }}</h3>
+            </div>
+            <router-link to="/polls" class="link card-link">查看全部<span class="card-link-arrow">→</span></router-link>
           </div>
           <template v-if="poll">
             <router-link :to="`/polls/${poll.id}`" class="home-poll-title">{{ poll.title }}</router-link>
@@ -110,25 +148,48 @@
             </div>
             <el-button type="primary" class="home-poll-btn" @click="$router.push(`/polls/${poll.id}`)">立即参与</el-button>
           </template>
-          <el-empty v-else :image-size="48" description="暂无进行中的投票" />
-        </section>
-
-        <section v-else-if="m.key === 'resolutions'" class="card home-full home-latest" aria-label="公开决议">
-          <div class="card-head"><h3 class="title title-flat">公开决议 · {{ publicFeed.length }}</h3><router-link to="/resolutions" class="link">查看全部</router-link></div>
-          <el-empty v-if="!publicFeed.length" :image-size="48" description="暂无公开决议" />
-          <div v-for="item in publicFeed" :key="`${item.source}-${item.id}`" class="list-item">
-            <router-link :to="item.to">{{ item.title }}</router-link>
-            <span class="tag" :class="{ 'is-warning': item.source === 'REPRESENTATIVE' }">
-              {{ item.source === 'REPRESENTATIVE' ? '业主代表决议' : '业委会决议' }}
-            </span>
+          <div v-else class="home-empty">
+            <el-empty :image-size="48" description="暂无进行中的投票" />
+            <router-link to="/polls" class="link card-link">去投票<span class="card-link-arrow">→</span></router-link>
           </div>
         </section>
 
-        <section v-else-if="m.key === 'info'" class="card home-full home-info" aria-label="信息公开">
-          <div class="card-head"><h3 class="title title-flat">信息公开</h3><router-link to="/info" class="link">查看全部</router-link></div>
-          <el-empty v-if="!infoPosts.length" :image-size="48" description="暂无公告" />
-          <div v-for="item in infoPosts" :key="item.id" class="list-item">
+        <section v-else-if="m.key === 'resolutions'" class="card home-full home-latest" aria-label="公开决议" :style="{ '--i': index + 1 }">
+          <div class="card-head">
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="doc" /></span>
+              <h3 class="title title-flat">公开决议 · {{ publicFeed.length }}</h3>
+            </div>
+            <router-link to="/resolutions" class="link card-link">查看全部<span class="card-link-arrow">→</span></router-link>
+          </div>
+          <div v-if="!publicFeed.length" class="home-empty">
+            <el-empty :image-size="48" description="暂无公开决议" />
+            <router-link to="/resolutions" class="link card-link">去查看<span class="card-link-arrow">→</span></router-link>
+          </div>
+          <div v-for="item in publicFeed" :key="`${item.source}-${item.id}`" class="list-item home-feed-item">
+            <router-link :to="item.to">{{ item.title }}</router-link>
+            <span class="tag" :class="item.source === 'REPRESENTATIVE' ? 'is-representative' : 'is-committee'">
+              {{ item.source === 'REPRESENTATIVE' ? '业主代表决议' : '业委会决议' }}
+            </span>
+            <span class="home-feed-arrow" aria-hidden="true">→</span>
+          </div>
+        </section>
+
+        <section v-else-if="m.key === 'info'" class="card home-full home-info" aria-label="信息公开" :style="{ '--i': index + 1 }">
+          <div class="card-head">
+            <div class="card-head-main">
+              <span class="card-icon"><UiIcon name="doc" /></span>
+              <h3 class="title title-flat">信息公开</h3>
+            </div>
+            <router-link to="/info" class="link card-link">查看全部<span class="card-link-arrow">→</span></router-link>
+          </div>
+          <div v-if="!infoPosts.length" class="home-empty">
+            <el-empty :image-size="48" description="暂无公告" />
+            <router-link to="/info" class="link card-link">去查看<span class="card-link-arrow">→</span></router-link>
+          </div>
+          <div v-for="item in infoPosts" :key="item.id" class="list-item home-feed-item">
             <router-link :to="`/info/${item.id}`">{{ item.title }}</router-link>
+            <span class="home-feed-arrow" aria-hidden="true">→</span>
           </div>
         </section>
       </template>
@@ -345,20 +406,43 @@ onMounted(async () => {
 .todo-item.is-link { cursor: pointer; }
 .todo-item.is-link:hover { border-color: var(--accent); }
 .home-poll-title { color: var(--text); }
-.home-accounts-total { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 8px; }
+.home-accounts-total { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 6px; }
+.home-finance-chips { display: flex; gap: 6px; margin-bottom: 6px; }
 .home-account-list { display: flex; flex-direction: column; }
 .home-account-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px;
+  padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px;
 }
 .home-account-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.home-manage { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.home-manage { display: grid; grid-template-columns: 1fr; gap: 4px; }
 .home-manage-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: var(--hit-min);
-  color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface);
+  display: flex; align-items: center; gap: 12px; padding: 10px 8px; min-height: 56px;
+  color: var(--text); border: 0; border-radius: var(--radius-md); background: transparent;
+  transition: background var(--motion-base, 220ms) var(--motion-ease, ease);
 }
+.home-manage-item:hover { background: var(--surface-tint, var(--glass)); }
+.home-manage-icon {
+  width: 40px; height: 40px; flex: none; display: grid; place-items: center;
+  border-radius: 999px; background: var(--glass); color: var(--accent-text);
+}
+.home-manage-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-manage-text b { font-size: 14px; font-weight: 600; }
+.home-manage-text small { font-size: 12px; color: var(--muted); }
+.home-manage-arrow {
+  margin-left: auto; color: var(--muted);
+  transition: transform var(--motion-base, 220ms) var(--motion-ease, ease), color var(--motion-base, 220ms) var(--motion-ease, ease);
+}
+.home-manage-item:hover .home-manage-arrow { transform: translateX(2px); color: var(--accent-text); }
+.home-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0 8px; }
+.home-feed-item { display: flex; align-items: center; gap: 10px; }
+.home-feed-item a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-feed-item .tag { flex: none; }
+.home-feed-item .home-feed-arrow { margin-left: auto; color: var(--muted); transition: transform var(--motion-base, 220ms) var(--motion-ease, ease); }
+.home-feed-item:hover .home-feed-arrow { transform: translateX(2px); color: var(--accent-text); }
+.home-feed-item .is-committee { color: var(--accent-text); background: var(--glass); }
+.home-feed-item .is-representative { color: var(--accent-2); background: var(--glass); }
+.card-icon.is-warning { color: var(--warning); }
 @media (min-width: 768px) {
-  .home-accounts-total { font-size: 34px; }
-  .home-manage { grid-template-columns: repeat(3, 1fr); }
+  .home-accounts-total { font-size: 38px; }
 }
 </style>

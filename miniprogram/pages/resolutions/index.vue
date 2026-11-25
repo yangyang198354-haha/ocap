@@ -1,8 +1,12 @@
 <template>
   <ThemeRoot>
   <view>
+    <view class="page-head">
+      <view class="page-eyebrow">RESOLUTIONS</view>
+      <view class="page-title">业委会决议</view>
+      <view class="page-desc">公开决议与表决结果</view>
+    </view>
     <view class="card">
-      <view class="title">业委会决议</view>
       <view class="muted">仅公开决议可在此查看；内部决议请登录后在 Web 端查看。</view>
     </view>
     <view v-if="!items.length" class="card">

@@ -13,15 +13,15 @@ html[data-theme="neon"] .tag { border-color: var(--glass); }
 html[data-theme="neon"] .grad-text { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 html[data-theme="neon"] .chip { background: rgba(124,92,255,.16); border-color: rgba(169,150,255,.35); color: var(--text); }
 
-/* 12 栏：Hero 8 + 待办侧栏 4；4 个数据卡各 3；入口 12；投票 5 + 最新 7 */
+/* 4 栏：与极光 bento 保持一致（Hero 与待办各 2x2；数据块 1x1；入口整行；投票 / 最新各 2） */
 @media (min-width: 768px) {
-  html[data-theme="neon"] .home-grid { grid-template-columns: repeat(12, 1fr); }
-  html[data-theme="neon"] .home-hero { grid-column: span 8; min-height: 210px; }
-  html[data-theme="neon"] .home-todo { grid-column: span 4; }
-  html[data-theme="neon"] .home-stat { grid-column: span 3; }
-  html[data-theme="neon"] .home-quick { grid-column: span 12; }
-  html[data-theme="neon"] .home-poll { grid-column: span 5; }
-  html[data-theme="neon"] .home-latest { grid-column: span 7; }
+  html[data-theme="neon"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(120px, auto); }
+  html[data-theme="neon"] .home-hero { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="neon"] .home-todo { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="neon"] .home-stat { grid-column: span 1; }
+  html[data-theme="neon"] .home-quick { grid-column: span 4; }
+  html[data-theme="neon"] .home-poll { grid-column: span 2; }
+  html[data-theme="neon"] .home-latest { grid-column: span 2; }
 }
 /* Hero 流光描边 */
 html[data-theme="neon"] .home-hero { border-color: rgba(169,150,255,.35); }

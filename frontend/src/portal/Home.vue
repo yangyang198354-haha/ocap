@@ -26,7 +26,8 @@
       <section class="card home-todo" aria-label="待办">
         <div class="card-head"><h3 class="title title-flat">待办</h3><router-link to="/tasks" class="link">全部</router-link></div>
         <el-empty v-if="!tasks || !tasks.length" :image-size="48" description="暂无审批待办" />
-        <div v-for="task in (tasks || []).slice(0, 3)" :key="task.instance_id" class="todo-item">
+        <div v-for="task in (tasks || []).slice(0, 3)" :key="task.instance_id"
+             class="todo-item is-link" @click="$router.push('/tasks')">
           <span class="todo-icon"><UiIcon name="task" /></span>
           <div class="todo-body">
             <b>{{ task.title || task.subject_title || textOf(FLOW_SCOPE_TEXT, task.scope) }}</b>
@@ -84,7 +85,7 @@
           <span v-if="poll" class="tag is-warning"><i class="tag-dot" aria-hidden="true" />{{ poll.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }}</span>
         </div>
         <template v-if="poll">
-          <b class="home-poll-title">{{ poll.title }}</b>
+          <router-link :to="`/polls/${poll.id}`" class="home-poll-title">{{ poll.title }}</router-link>
           <div v-if="countdown" class="home-countdown" aria-label="距截止">
             <div><b class="mono">{{ pad(countdown.days) }}</b><span>天</span></div>
             <div><b class="mono">{{ pad(countdown.hours) }}</b><span>时</span></div>
@@ -168,7 +169,7 @@ const stats = computed(() => [
   { label: '认证房屋', value: auth.me ? unitRows.value.length : '—', note: '已绑定的房屋数', to: '/units', emptyTo: auth.me && !unitRows.value.length ? '/units/pick' : null },
   { label: '审批待办', value: countText(tasks.value), note: '待我审批的事项', to: auth.isCommittee ? '/tasks' : null },
   { label: '进行中的投票', value: countText(openPolls.value), note: '可参与的投票 / 调查', to: '/polls' },
-  { label: '近期公开决议', value: resolutions.value.length, note: `其中 ${resolutions.value.filter((r) => r.status === 'APPROVED').length} 项已通过` }
+  { label: '近期公开决议', value: resolutions.value.length, note: `其中 ${resolutions.value.filter((r) => r.status === 'APPROVED').length} 项已通过`, to: '/resolutions' }
 ])
 
 const quick = computed(() => [
@@ -237,6 +238,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.todo-item.is-link { cursor: pointer; }
+.todo-item.is-link:hover { border-color: var(--accent); }
+.home-poll-title { color: var(--text); }
 .home-accounts { grid-column: span 2; cursor: pointer; }
 .home-accounts-total { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; margin: 4px 0 8px; }
 .home-account-list { display: flex; flex-direction: column; }

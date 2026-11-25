@@ -111,3 +111,13 @@
 - 说明：首次替换使用旧分支构建，发现后立即改用 `origin/main` 基线重建并再次替换；当前线上 bundle 为 `index-Cwy5IprE.js`，含 `Home-DUeJBD0k.js`（账户余额）与 `HistoricalExpenses-CWWVMmno.js`。
 - 验证：首页、bundle、`/ocap/tasks`、`/ocap/polls`、`/ocap/reports` 均 200。
 - 结果：`DEPLOYED_SUCCESSFULLY`（仅前端静态替换）。
+
+## 补充部署 R-04：首页卡片补链接 + 三主题布局对齐（2026-11-25 11:22）
+
+- 链接：待办条目 → `/tasks`；数据卡“近期公开决议” → `/resolutions`；投票标题 → `/polls/{id}`；其余卡片（账户余额、快捷入口、最新决议、Hero 指标）已有跳转。
+- 布局：`neon.web.css`、`terminal.web.css` 的首页网格由 12 栏改为与 `bento` 相同的 4 栏 Bento（Hero/待办 2×2、数据卡 1 栏、快捷入口整行、投票/最新各 2 栏），并重新生成 `frontend/src/theme/generated/themes.css`。
+- 测试：前端 57 文件 / 607 项通过；主题构建 `--strict --check` 通过。
+- 构建：`index-DmL9mAdT.js`。
+- 锚点：`TS=20261125112246` → `snapshots/web-20261125112246.tar.gz`。
+- 验证：外网首页、新 bundle、`/ocap/tasks`、`/ocap/polls`、`/ocap/resolutions` 均 200。
+- 结果：`DEPLOYED_SUCCESSFULLY`（仅前端）。

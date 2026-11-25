@@ -330,3 +330,14 @@
 - 小程序：`theme-root` 增加同色系静态极光多层背景（受 TC-UNIT-205 约束不使用无限循环动画），首页卡改半透明玻璃底 + 白色描边，Hero 叠加双光斑。
 - 降级：`prefers-reduced-motion` 全局关闭动画；`[data-perf="low"]` 关闭极光位移、移除 `backdrop-filter` 并回退近不透明底。
 - 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 10.73s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。
+
+### 15.1 极光层加强（2026-11-25 18:5x，实机反馈后）
+
+首版上线后实机偏白：`background-size: 148%~180%` 把径向渐变中心推出视口，残余颜色又被近白卡片盖住。改为：
+
+- 极光从 `body` 背景图改为 `body::before` 固定光层（`position: fixed; inset: -14%; z-index: -1`），光斑用 `vw` 半径定位，颜色浓度提升到 0.34~0.62，`blur(28px) saturate(1.15)`。
+- 漂移动画改为 `transform: translate3d + scale + rotate`（60s `alternate`），由合成层完成，不再逐帧重绘背景。
+- 首页卡白底降到 0.56→0.40（含 `--card-tint` 提升到 0.11~0.14），`backdrop-filter: blur(22px) saturate(1.45)`；内页 `.card` 0.70→0.46。
+- 侧栏 / 顶栏 / 窄屏切换条透明度 0.55→0.40、模糊 22~26px；Hero 增加青色与琥珀光斑。
+- 小程序 `theme-root` 去掉 148%~180% 放大，改为 100% 铺满的 5 层极光（浓度 0.28~0.50），卡片白底 0.54。
+- 降级口径不变：`[data-perf="low"]` 关动画、去模糊；`prefers-reduced-motion` 由全局 `*::before` 规则关闭。

@@ -1,4 +1,4 @@
-<phase_status project="ocap_role_home" mode="INCREMENTAL" created="2026-11-25T12:03:24+08:00" updated="2026-11-25T13:09:00+08:00">
+<phase_status project="ocap_role_home" mode="INCREMENTAL" created="2026-11-25T12:03:24+08:00" updated="2026-11-25T13:21:30+08:00">
   <request><![CDATA[Use Skill: sdlc-orchestrator 按照上述的方案，开始整理需求，拆分用户故事。我确认后开始开发。
 2026-11-25 用户确认：q-rh-01 好；q-rh-02 不隐藏；q-rh-03 好；开始 sdlc 开发流程。
 
@@ -26,7 +26,9 @@
     <group id="GROUP_E1" agent="devops-engineer" status="APPROVED" gate_decision="PASS" retries="0">
       <phase id="PHASE_10" status="APPROVED"/><phase id="PHASE_11a" status="APPROVED"/>
     </group>
-    <group id="GROUP_E2" agent="devops-engineer" status="NOT_AUTHORIZED" gate_decision="PENDING" retries="0" environment="测试环境"/>
+    <group id="GROUP_E2" agent="devops-engineer" status="FAILED" gate_decision="FAIL" retries="0" environment="测试环境">
+      <phase id="PHASE_11b" status="FAILED"/>
+    </group>
   </groups>
   <artifacts>
     <artifact path="project_workspace/ocap_role_home/requirements/requirements_spec.md" version="1.0.1" status="APPROVED" group="GROUP_A"/>
@@ -42,6 +44,7 @@
     <artifact path="project_workspace/ocap_role_home/testing/e2e_test_report.md" version="1.0.0" status="APPROVED" group="GROUP_D"/>
     <artifact path="project_workspace/ocap_role_home/deployment/cicd_pipeline.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
     <artifact path="project_workspace/ocap_role_home/deployment/deployment_plan.md" version="1.0.0" status="APPROVED" group="GROUP_E1"/>
+    <artifact path="project_workspace/ocap_role_home/deployment/deployment_report.md" version="1.0.0" status="APPROVED" group="GROUP_E2"/>
   </artifacts>
   <legacy_baseline/>
   <invocations>
@@ -51,6 +54,7 @@
     <invocation id="ocap_role_home-GROUP_C-001" agent="software-developer" group="GROUP_C" start="2026-11-25T12:21:00+08:00" end="2026-11-25T12:40:30+08:00" result="SUCCESS"/>
     <invocation id="ocap_role_home-GROUP_D-001" agent="test-engineer" group="GROUP_D" start="2026-11-25T12:42:00+08:00" end="2026-11-25T13:04:30+08:00" result="SUCCESS"/>
     <invocation id="ocap_role_home-GROUP_E1-001" agent="devops-engineer" group="GROUP_E1" start="2026-11-25T13:04:40+08:00" end="2026-11-25T13:07:00+08:00" result="SUCCESS"/>
+    <invocation id="ocap_role_home-GROUP_E2-001" agent="devops-engineer" group="GROUP_E2" start="2026-11-25T13:19:30+08:00" end="2026-11-25T13:21:20+08:00" result="FAILURE"/>
   </invocations>
   <gate_reviews>
     <gate_review id="GR-A-001" invocation_id="ocap_role_home-GROUP_A-001" decision="PASS" time="2026-11-25T12:10:00+08:00">
@@ -164,6 +168,23 @@ cd frontend && VITE_API_BASE=/ocap/api/v1 npm run build -- --base=/ocap/ → ✓
 grep 关键词 frontend/dist/assets/*.js → 3 个文件命中
       ]]></verification>
     </gate_review>
+    <gate_review id="GR-E2-001" invocation_id="ocap_role_home-GROUP_E2-001" decision="FAIL" time="2026-11-25T13:21:30+08:00">
+      <reviewed_files>
+        <file path="project_workspace/ocap_role_home/deployment/deployment_report.md" version="1.0.0"/>
+      </reviewed_files>
+      <criterion id="E2-授权核对" result="SATISFIED">报告中记录了用户条件授权来源、CI run 45552545821 success（headSha 5a787ec）、授权环境名与画像 P7/计划环境名一致、计划版本 1.0.0 APPROVED；授权判定成立。</criterion>
+      <criterion id="E2-预检" result="FAILED">内网 192.168.31.51:22 与直连外网 47.109.197.217:57279 均连接超时；经沙箱 HTTP 代理 CONNECT 可建立 TCP 并收到 SSH banner，但 ssh banner 交换超时；沙箱无 SSH 私钥、无 ssh-agent，无法完成 publickey 认证。</criterion>
+      <criterion id="E2-无变更" result="SATISFIED">预检阶段停止，未上传、未创建锚点/暂存目录、未改 nginx、未重启服务；目标机无变更，无需回滚。</criterion>
+      <criterion id="E2-报告" result="SATISFIED">deployment_report.md 1.0.0 含摘要、授权核对、分步执行、验证结果、回滚记录、当前系统状态与人工干预建议；未执行的步骤未标 SUCCESS；无凭据。</criterion>
+      <condition>最终状态 DEPLOYMENT_FAILED。重试需用户二选一：提供授权本次使用的部署私钥并确认外网通道可完成 SSH 握手，或由用户在具备内网/密钥的机器上按 deployment_plan.md 手工执行；重试前确认授权仍然有效。代码已合并到 main（5a787ec）且 CI 全绿，测试环境仍为旧版本。</condition>
+      <verification><![CDATA[
+gh run view 45552545821 → conclusion=success；三 job success；headSha=5a787ecc648aac2336b36cbfe5aa599ba1202956
+ssh 192.168.31.51:22 → Connection timed out
+ssh 47.109.197.217:57279（直连）→ Connection timed out
+nc -X connect -x 127.0.0.1:18080 47.109.197.217 57279 → SSH-2.0-OpenSSH_10.0p2 Debian-7（TCP 可达，认证不可用）
+ls /root/.ssh → 空；ssh-add -l → 无 agent；未发现可用私钥
+      ]]></verification>
+    </gate_review>
   </gate_reviews>
   <clarifications>
     <clarification id="Q-RH-OPEN" status="RESOLVED">用户 2026-11-25 决策：Q-RH-01 不展示参与率；Q-RH-02 不隐藏（公开类保留空态，任务类仍 0 隐藏）；Q-RH-03 游客只看账户合计与报表入口。见需求的决策记录 D-RH-01~03。</clarification>
@@ -184,5 +205,8 @@ grep 关键词 frontend/dist/assets/*.js → 3 个文件命中
     <event time="2026-11-25T13:07:00+08:00" type="INVOCATION" actor="devops-engineer">ocap_role_home-GROUP_E1-001 完成：现有 CI 无需修改；产出 cicd_pipeline.md 与 deployment_plan.md（recreate 静态替换、DEPLOY/ROLLBACK 各 5 步、目标环境无不可逆步骤）；未连接或修改任何目标环境，等待用户部署授权。</event>
     <event time="2026-11-25T13:07:20+08:00" type="GATE" actor="pm-orchestrator">GR-E1-001 PASS；两份部署文档升为 1.0.0 APPROVED；PM 复核主题校验退出码 0、构建 9.16s、制品关键词命中 3 个 JS；GROUP_E1 完成；E2 仍为 NOT_AUTHORIZED，需用户当轮明确授权测试环境部署。</event>
     <event time="2026-11-25T13:09:00+08:00" type="DECISION" actor="user">用户选择暂不部署：先由用户提交/推送并合并到 main，待 CI 全绿后再单独授权测试环境部署；GROUP_E2 保持 NOT_AUTHORIZED。</event>
+    <event time="2026-11-25T13:17:30+08:00" type="RUN" actor="pm-orchestrator">用户新指令：提交并推送代码，等待 CI 通过后授权部署到测试环境。代码已在本地提交 5a787ec，快进推送 origin/main（9a754e4..5a787ec）。</event>
+    <event time="2026-11-25T13:20:00+08:00" type="DEPLOY_AUTH" actor="user">条件授权：CI 通过后部署到测试环境。证据：GitHub Actions run 45552545821 conclusion=success，headSha=5a787ec；授权环境名=测试环境，与画像 P7 及 deployment_plan 一致。</event>
+    <event time="2026-11-25T13:21:20+08:00" type="EXCEPTION" actor="devops-engineer">E2 预检失败：沙箱无内网路由（192.168.31.51:22 超时）、无 SSH 私钥/agent；外网 47.109.197.217:57279 仅可经 HTTP 代理建立 TCP 并收到 SSH banner，无法完成认证。目标机未发生任何变更，DEPLOYMENT_FAILED，无需回滚。</event>
   </audit_log>
 </phase_status>

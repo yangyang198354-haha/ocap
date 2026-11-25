@@ -318,3 +318,15 @@
 - 动效：卡片图标 hover 微旋转、管理动作图标位移、列表行箭头滑动、Hero 光斑/渐变/扫描线；仍受 `prefers-reduced-motion` 与 `data-perf="low"` 降级约束。
 - 小程序：同步模块色条、渐变数字、页面头渐变下划线；不使用 hover 与长循环动画。
 - 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 13.87s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。
+
+## 15. 极光 Bento 参考图对齐（2026-11-25）
+
+按参考图（全屏蓝/青/粉/黄极光 + 玻璃卡 + 粉紫胶囊）优化 Bento：
+
+- 背景极光：`body` 改为 5 层径向柔光 + 1 层基础渐变，`background-position` 60s `alternate` 循环，缓慢飘移；颜色收敛到底色淡紫、左上靛蓝、右上青、右下粉、左下琥珀。
+- 玻璃材质：首页卡与内页 `.card` 改为半透明白（渐变 0.80→0.52 / 首页卡 0.66→0.46）+ 白色 1px 描边 + 内高光 + `backdrop-filter: blur(16~18px) saturate(1.25~1.35)`；Hero 保持渐变实底并叠加靛蓝/粉色光斑与外发光。
+- 侧栏 / 顶栏 / 窄屏切换条 / 用户菜单触发器改为玻璃面板；用户端侧栏当前项改为 `linear-gradient(135deg,#DB2777,#7C3AED)` 白字胶囊（白字对比度 ≥4.6），管理端仍为 accent 10% 淡染（ADR-075 作用域不变）。
+- 卡片图标圆角增至 12px，快捷键块同步半透明底。
+- 小程序：`theme-root` 增加同色系静态极光多层背景（受 TC-UNIT-205 约束不使用无限循环动画），首页卡改半透明玻璃底 + 白色描边，Hero 叠加双光斑。
+- 降级：`prefers-reduced-motion` 全局关闭动画；`[data-perf="low"]` 关闭极光位移、移除 `backdrop-filter` 并回退近不透明底。
+- 验证：Web `58 files / 613 tests passed`，构建 `✓ built in 10.73s`；小程序 `23 files / 157 tests passed`，`DONE Build complete.`；主题 `--strict --check` 退出码 0。

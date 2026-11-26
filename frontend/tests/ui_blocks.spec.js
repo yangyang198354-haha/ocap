@@ -89,7 +89,8 @@ describe('首页语义区块（AC-074-02）', () => {
       expect(css, t.key).toContain(`html[data-theme="${t.key}"] .home-hero`)
     }
     const bento = fs.readFileSync(path.join(ROOT, 'themes/bento.web.css'), 'utf8')
-    // hero 已从 home-grid 独立，作为视觉锚点在 grid 上方（不再有 grid-row）
+    // Hero 回到 grid 内占 2×2，宽屏下与待办卡共同填满首行
+    expect(bento).toMatch(/\.home-hero \{[^}]*grid-row: span 2/)
     expect(bento).toMatch(/\.home-todo \{[^}]*grid-column: span 2/)
     expect(bento).toContain('.home-stat.is-odd')
   })

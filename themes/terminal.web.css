@@ -48,9 +48,10 @@ html[data-theme="terminal"][data-perf="low"] .auth-brand::after { animation: non
 html[data-theme="terminal"] .chip, html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .home-q { border-radius: 2px; }
 html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: transparent; }
 
-/* 4 栏：Hero 已独立；数据块 1x1；入口整行；投票 / 最新各 2 */
+/* 4 栏：Hero 占 2×2；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
   html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
+  html[data-theme="terminal"] .home-hero { grid-column: span 2; grid-row: span 2; }
   html[data-theme="terminal"] .home-todo { grid-column: span 2; }
   html[data-theme="terminal"] .home-stat { grid-column: span 1; }
   html[data-theme="terminal"] .home-quick { grid-column: span 4; }
@@ -242,8 +243,8 @@ html[data-theme="terminal"] .home-manage-item { min-height: 78px; }
 html[data-theme="terminal"] .home-feed-item .tag { color: #e4aa3a; border-color: #a66d1d; background: transparent; }
 html[data-theme="terminal"] .home-feed-item { padding: 12px 0; }
 @media (min-width: 768px) {
-  html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 140px 140px auto; gap: 20px; }
-  html[data-theme="terminal"] .home-grid > .card { grid-column: span 1; padding: 25px; }
+  html[data-theme="terminal"] .home-grid { gap: 20px; }
+  html[data-theme="terminal"] .home-grid > .card { padding: 25px; }
   html[data-theme="terminal"] .home-housing, html[data-theme="terminal"] .home-review,
   html[data-theme="terminal"] .home-votes, html[data-theme="terminal"] .home-todo { min-height: 132px; }
   html[data-theme="terminal"] .home-accounts, html[data-theme="terminal"] .home-management { min-height: 350px; }

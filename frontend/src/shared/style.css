@@ -39,9 +39,21 @@ a { color: var(--accent-text); text-decoration: none; }
 @keyframes card-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 /* 未就绪：home-hero 与所有网格卡片透明，仅 body 极光背景可见；ready 后一次性 reveal */
 .home > .home-hero,
-.home-grid > .card { opacity: 0; }
+.home-grid > .card { opacity: 0; transform: translateY(10px); }
+/* 兜底：不管 animation 是否生效，ready 时 opacity 必须 1、位置回到终点 */
+.home.is-ready > .home-hero,
+.home.is-ready .home-grid > .card { opacity: 1; transform: none; }
 .home.is-ready > .home-hero { animation: card-rise 420ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) 60ms both; }
 .home.is-ready .home-grid > .card { animation: card-rise 380ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) both; animation-delay: calc(var(--i, 0) * 60ms); }
+/* 低端设备 / 减少动效：直接显形，不跑动画 */
+.home[data-perf="low"] > .home-hero,
+.home[data-perf="low"] .home-grid > .card,
+.home.is-ready[data-perf="low"] > .home-hero,
+.home.is-ready[data-perf="low"] .home-grid > .card,
+@media (prefers-reduced-motion: reduce) {
+  .home > .home-hero, .home-grid > .card { opacity: 1; transform: none; animation: none !important; }
+  .home.is-ready > .home-hero, .home.is-ready .home-grid > .card { animation: none !important; }
+}
 .card .el-empty { padding: 8px 0; }
 .card .el-empty__description { margin-top: 4px; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }

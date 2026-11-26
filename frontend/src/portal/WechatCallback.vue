@@ -29,6 +29,7 @@ onMounted(async () => {
   try {
     const result = await authApi.wechatExchange(String(ticket))
     auth.setAuth(result.token, result.user)
+    await auth.ensureMe().catch(() => null)
     await useThemeStore().reconcileAfterLogin()
     router.replace('/')
   } catch (e) {

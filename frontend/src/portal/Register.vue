@@ -49,6 +49,7 @@ async function submit() {
   try {
     const result = await authApi.register(form.phone, form.code)
     auth.setAuth(result.token, result.user)
+    await auth.ensureMe().catch(() => null)
     await useThemeStore().reconcileAfterLogin()
     ElMessage.success('注册成功')
     // 手机号匹配到清册专有部分：进入"认证产权"页由用户确认后绑定（REQ-FUNC-234/236）；否则进入主页

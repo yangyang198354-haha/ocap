@@ -38,7 +38,10 @@ def user_brief(user: User) -> dict:
 
 
 def auth_result(user: User, token: str, *, is_new: bool = False) -> dict:
-    return {"token": token, "user": user_brief(user), "is_new": is_new}
+    # IFC-441：登录响应直接携带 /me 的 profile/identities，前端首帧即可按真实身份渲染，避免游客态二次重排
+    from apps.identity.services import IdentityService
+
+    return {"token": token, "user": {**user_brief(user), **IdentityService.me(user)}, "is_new": is_new}
 
 
 def _check_client(payload) -> str:

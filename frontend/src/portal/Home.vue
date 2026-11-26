@@ -11,7 +11,8 @@
         </div>
       </section>
 
-      <template v-for="(m, index) in bodyModules" :key="m.key">
+      <template v-if="identityReady || meError">
+        <template v-for="(m, index) in bodyModules" :key="m.key">
         <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': index + 1 }" @click="$router.push('/units')">
           <div class="card-head">
             <div class="card-head-main">
@@ -192,6 +193,14 @@
             <span class="home-feed-arrow" aria-hidden="true">→</span>
           </div>
         </section>
+        </template>
+      </template>
+      <template v-else>
+        <section v-for="n in 5" :key="`sk-${n}`" class="card home-skeleton" :class="n === 5 ? 'home-full' : 'home-half'" :style="{ '--i': n }" aria-hidden="true">
+          <div class="sk-line sk-title" />
+          <div class="sk-line" />
+          <div class="sk-line sk-short" />
+        </section>
       </template>
     </div>
   </div>
@@ -307,6 +316,8 @@ const identityText = computed(() => {
   return meError.value ? '加载失败，请重试' : '加载中…'
 })
 const unitRows = computed(() => auth.me?.identities?.units || [])
+// IFC-441：身份未就绪时先渲染同构骨架，避免按游客档案渲染后再整体重排
+const identityReady = computed(() => Boolean(auth.me?.identities))
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -444,6 +455,16 @@ onMounted(async () => {
 .home-feed-item .is-committee { color: var(--accent-text); background: var(--glass); }
 .home-feed-item .is-representative { color: var(--accent-2); background: var(--glass); }
 .card-icon.is-warning { color: var(--warning); }
+/* 身份加载骨架：与最终 4 栏骨架同构，避免二次渲染的整页跳动 */
+.home-skeleton { min-height: 128px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.home-skeleton .sk-line { height: 12px; border-radius: 8px; background: var(--glass); animation: sk-pulse 1.4s ease-in-out infinite; }
+.home-skeleton .sk-line.sk-title { width: 42%; height: 16px; }
+.home-skeleton .sk-line.sk-short { width: 64%; }
+@keyframes sk-pulse { 50% { opacity: .45; } }
+html[data-perf="low"] .home-skeleton .sk-line { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .home-skeleton .sk-line { animation: none; }
+}
 @media (min-width: 768px) {
   .home-accounts-total { font-size: 38px; }
 }

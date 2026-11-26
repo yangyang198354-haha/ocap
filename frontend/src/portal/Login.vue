@@ -87,6 +87,8 @@ async function sendEmailCode() {
 
 async function done(result) {
   auth.setAuth(result.token, result.user)
+  // IFC-441：身份未随登录响应返回时先补齐，首页首帧即最终结构，避免游客态二次渲染
+  await auth.ensureMe().catch(() => null)
   // 先对账账号级风格再跳转，登录页保持原风格直到新账号风格就绪（ADR-027 第 4 条）
   await themeStore.reconcileAfterLogin()
   router.replace(route.query.redirect || '/')

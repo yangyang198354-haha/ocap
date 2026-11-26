@@ -49,6 +49,11 @@ export const useAuthStore = defineStore('auth', {
         this.loading = false
       }
     },
+    // 进首页前确保身份完整：登录响应若未带 identities（旧后端）则补一次 /me，只渲染一次
+    async ensureMe() {
+      if (this.me?.identities) return this.me
+      return this.fetchMe()
+    },
     async logout() {
       try {
         if (this.token) await authApi.logout()

@@ -11,7 +11,7 @@
         </div>
       </section>
 
-      <template v-if="identityReady || meError">
+      <template v-if="layoutReady || meError">
         <template v-for="(m, index) in bodyModules" :key="m.key">
         <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': index + 1 }" @click="$router.push('/units')">
           <div class="card-head">
@@ -316,8 +316,9 @@ const identityText = computed(() => {
   return meError.value ? '加载失败，请重试' : '加载中…'
 })
 const unitRows = computed(() => auth.me?.identities?.units || [])
-// IFC-441：身份未就绪时先渲染同构骨架，避免按游客档案渲染后再整体重排
-const identityReady = computed(() => Boolean(auth.me?.identities))
+// IFC-441：身份/结构未就绪时渲染同构骨架；任务类模块（待办审批/待我处理/待表决）依赖异步计数，
+// 计数返回前不渲染网格，避免卡片晚到把后面的卡片挤走
+const layoutReady = ref(false)
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -371,45 +372,52 @@ async function retryMe() {
 
 onMounted(async () => {
   loadAccounts()
+  // 兜底：个别接口异常或过慢时最多等 1.5s，避免骨架长期停留
+  const guard = setTimeout(() => { layoutReady.value = true }, 1500)
   try {
-    await auth.fetchMe()
-    meError.value = false
-  } catch (e) {
-    meError.value = true
-  }
-  const [resolutionResult, pollResult, infoResult] = await Promise.allSettled([
-    resolutionApi.list('public', { page_size: 5 }),
-    pollApi.list(),
-    infoApi.list({ page_size: 3 })
-  ])
-  resolutions.value = resolutionResult.status === 'fulfilled'
-    ? (resolutionResult.value.results || resolutionResult.value || [])
-    : []
-  polls.value = pollResult.status === 'fulfilled'
-    ? (pollResult.value.results || pollResult.value || [])
-    : null
-  infoPosts.value = infoResult.status === 'fulfilled'
-    ? (infoResult.value.results || infoResult.value || [])
-    : []
-  // 产权业主：待审批同住人申请数量（失败静默，不影响首页其他区块）；同住人不请求
-  if (auth.hasOwnerUnit) {
     try {
-      const data = await meApi.housing()
-      pendingReview.value = Number(data?.pending_review_count) || 0
+      await auth.fetchMe()
+      meError.value = false
     } catch (e) {
-      pendingReview.value = 0
+      meError.value = true
     }
-  }
-  // 仅业委会成员可访问审批待办（REQ-FUNC-157）；非委员不发起请求
-  if (auth.isCommittee) {
-    try {
-      const data = await approvalApi.tasks()
-      tasks.value = data.results || data || []
-    } catch (e) {
-      tasks.value = null
+    const [resolutionResult, pollResult, infoResult] = await Promise.allSettled([
+      resolutionApi.list('public', { page_size: 5 }),
+      pollApi.list(),
+      infoApi.list({ page_size: 3 })
+    ])
+    resolutions.value = resolutionResult.status === 'fulfilled'
+      ? (resolutionResult.value.results || resolutionResult.value || [])
+      : []
+    polls.value = pollResult.status === 'fulfilled'
+      ? (pollResult.value.results || pollResult.value || [])
+      : null
+    infoPosts.value = infoResult.status === 'fulfilled'
+      ? (infoResult.value.results || infoResult.value || [])
+      : []
+    // 产权业主：待审批同住人申请数量（失败静默，不影响首页其他区块）；同住人不请求
+    if (auth.hasOwnerUnit) {
+      try {
+        const data = await meApi.housing()
+        pendingReview.value = Number(data?.pending_review_count) || 0
+      } catch (e) {
+        pendingReview.value = 0
+      }
     }
+    // 仅业委会成员可访问审批待办（REQ-FUNC-157）；非委员不发起请求
+    if (auth.isCommittee) {
+      try {
+        const data = await approvalApi.tasks()
+        tasks.value = data.results || data || []
+      } catch (e) {
+        tasks.value = null
+      }
+    }
+    await loadRepVotes(polls.value || [])
+  } finally {
+    clearTimeout(guard)
+    layoutReady.value = true
   }
-  await loadRepVotes(polls.value || [])
 })
 </script>
 

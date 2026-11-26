@@ -100,6 +100,7 @@ a { color: var(--accent-text); text-decoration: none; }
   color: var(--accent-text); font-weight: 650; background: var(--glass); border-left-color: var(--accent);
 }
 .side-caret { flex: none; font-size: 12px; }
+.side-icon { display: none; }
 .side-sub { list-style: none; margin: 2px 0 4px; padding: 0 0 0 12px; display: flex; flex-direction: column; gap: 2px; }
 .side-sub-item {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--hit-min);
@@ -147,9 +148,15 @@ a { color: var(--accent-text); text-decoration: none; }
 .auth-art { position: relative; overflow: hidden; min-width: 0; }
 .auth-art svg { display: block; width: 100%; height: 100%; }
 .auth-panel { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 32px; box-sizing: border-box; min-width: 0; }
-.auth-brand { margin: 8px 0 0; font-size: 28px; font-weight: 700; color: var(--text); }
-.auth-sub { margin: 0 0 16px; color: var(--muted); }
+.auth-card { position: relative; width: 100%; min-width: 0; }
+.auth-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.auth-head-text { min-width: 0; }
+.auth-brand { margin: 0; font-size: 28px; font-weight: 700; line-height: 1.2; color: var(--text); }
+.auth-sub { margin: 4px 0 0; color: var(--muted); }
 .auth-form-card { margin-bottom: 0; }
+/* 表单卡并入外壳卡片（登录/注册/管理端登录共用，避免双层卡片；选择器需压过主题的 .card 规则） */
+.auth-shell .auth-card .auth-form-card.card { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.auth-shell .auth-card .auth-form-card.card:hover { transform: none; border-color: transparent; box-shadow: none; }
 
 .admin-login { max-width: 420px; padding-top: 80px; }
 .theme-swatch { width: 34px; height: 14px; flex: none; }

@@ -1,16 +1,16 @@
 <template>
-  <div class="page home">
-    <div class="home-grid">
-      <section class="card hero home-hero" aria-label="欢迎" style="--i:0">
-        <span class="home-hero-scan" aria-hidden="true" />
-        <div class="home-hero-main">
-          <div class="label">{{ todayText }}</div>
-          <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
-          <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
-          <p v-if="auth.isGuest" class="muted home-meta"><router-link to="/units/pick" class="link">去认证</router-link></p>
-        </div>
-      </section>
+  <div class="page home" :class="{ 'is-ready': ready }">
+    <section class="card hero home-hero" aria-label="欢迎" style="--i:0">
+      <span class="home-hero-scan" aria-hidden="true" />
+      <div class="home-hero-main">
+        <div class="label">{{ todayText }}</div>
+        <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
+        <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
+        <p v-if="auth.isGuest" class="muted home-meta"><router-link to="/units/pick" class="link">去认证</router-link></p>
+      </div>
+    </section>
 
+    <div class="home-grid">
       <template v-for="(m, index) in bodyModules" :key="m.key">
         <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': index + 1 }" @click="$router.push('/units')">
           <div class="card-head">
@@ -218,6 +218,8 @@ const meError = ref(false)
 const accounts = ref([])
 const accountsTotal = ref('0.00')
 const accountsError = ref(false)
+// 布局闸门：身份与关键异步数据全部回填后，再一次性 reveal 卡片，避免 guest→owner→committee 重排抖动
+const ready = ref(false)
 
 // MOD-216 / IFC-437：角色档案决定内容尾部顺序；任务类模块按固定优先级插入
 const CONTENT_ORDER = {
@@ -399,6 +401,8 @@ onMounted(async () => {
     }
   }
   await loadRepVotes(polls.value || [])
+  // 所有会影响 bodyModules 列表结构的异步流程全部 settle，开闸
+  ready.value = true
 })
 </script>
 

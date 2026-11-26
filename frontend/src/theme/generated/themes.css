@@ -260,11 +260,10 @@ html[data-theme="neon"] .tag { border-color: var(--glass); }
 html[data-theme="neon"] .grad-text { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 html[data-theme="neon"] .chip { background: rgba(124,92,255,.16); border-color: rgba(169,150,255,.35); color: var(--text); }
 
-/* 4 栏：与极光 bento 保持一致（Hero 与待办各 2x2；数据块 1x1；入口整行；投票 / 最新各 2） */
+/* 4 栏：Hero 已独立；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
   html[data-theme="neon"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
-  html[data-theme="neon"] .home-hero { grid-column: span 2; grid-row: span 2; }
-  html[data-theme="neon"] .home-todo { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="neon"] .home-todo { grid-column: span 2; }
   html[data-theme="neon"] .home-stat { grid-column: span 1; }
   html[data-theme="neon"] .home-quick { grid-column: span 4; }
   html[data-theme="neon"] .home-poll { grid-column: span 2; }
@@ -480,7 +479,6 @@ html[data-theme="neon"] .card:not(.home-hero) { background: rgba(29,28,48,.88); 
 @media (min-width: 768px) {
   html[data-theme="neon"] .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 140px 140px auto; gap: 20px; }
   html[data-theme="neon"] .home-grid > .card { grid-column: span 1; padding: 24px; }
-  html[data-theme="neon"] .home-grid > .home-hero { grid-column: 1; grid-row: span 2; min-height: 280px; }
   html[data-theme="neon"] .home-housing, html[data-theme="neon"] .home-review,
   html[data-theme="neon"] .home-votes, html[data-theme="neon"] .home-todo { min-height: 117px; }
   html[data-theme="neon"] .home-accounts, html[data-theme="neon"] .home-management { min-height: 375px; }
@@ -760,11 +758,10 @@ html[data-theme="bento"] .home-hero {
     0 48px 96px -56px rgba(124,58,237,.5);
 }
 
-/* 4 栏 Bento：Hero 与待办各占 2x2；数据块 1x1；入口整行；投票 / 最新各 2 */
+/* 4 栏 Bento：Hero 已独立；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
   html[data-theme="bento"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
-  html[data-theme="bento"] .home-hero { grid-column: span 2; grid-row: span 2; }
-  html[data-theme="bento"] .home-todo { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="bento"] .home-todo { grid-column: span 2; }
   html[data-theme="bento"] .home-stat { grid-column: span 1; }
   html[data-theme="bento"] .home-quick { grid-column: span 4; }
   html[data-theme="bento"] .home-poll { grid-column: span 2; }
@@ -1120,7 +1117,6 @@ html[data-theme="bento"] .el-table th.el-table__cell { color: #5e4bb3; letter-sp
 @media (min-width: 768px) {
   html[data-theme="bento"] .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 140px 140px auto; gap: 22px; }
   html[data-theme="bento"] .home-grid > .card { grid-column: span 1; padding: 24px; }
-  html[data-theme="bento"] .home-hero { grid-column: 1; grid-row: span 2; min-height: 280px; }
   html[data-theme="bento"] .home-housing, html[data-theme="bento"] .home-review,
   html[data-theme="bento"] .home-votes, html[data-theme="bento"] .home-todo { min-height: 128px; }
   html[data-theme="bento"] .home-accounts, html[data-theme="bento"] .home-management { min-height: 358px; }
@@ -1335,11 +1331,10 @@ html[data-theme="terminal"][data-perf="low"] .auth-brand::after { animation: non
 html[data-theme="terminal"] .chip, html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .home-q { border-radius: 2px; }
 html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: transparent; }
 
-/* 4 栏：与极光 bento 保持一致（Hero 与待办各 2x2；数据块 1x1；入口整行；投票 / 最新各 2） */
+/* 4 栏：Hero 已独立；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
   html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
-  html[data-theme="terminal"] .home-hero { grid-column: span 2; grid-row: span 2; }
-  html[data-theme="terminal"] .home-todo { grid-column: span 2; grid-row: span 2; }
+  html[data-theme="terminal"] .home-todo { grid-column: span 2; }
   html[data-theme="terminal"] .home-stat { grid-column: span 1; }
   html[data-theme="terminal"] .home-quick { grid-column: span 4; }
   html[data-theme="terminal"] .home-poll { grid-column: span 2; }
@@ -1532,7 +1527,6 @@ html[data-theme="terminal"] .home-feed-item { padding: 12px 0; }
 @media (min-width: 768px) {
   html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: 140px 140px auto; gap: 20px; }
   html[data-theme="terminal"] .home-grid > .card { grid-column: span 1; padding: 25px; }
-  html[data-theme="terminal"] .home-grid > .home-hero { grid-column: 1; grid-row: span 2; min-height: 280px; }
   html[data-theme="terminal"] .home-housing, html[data-theme="terminal"] .home-review,
   html[data-theme="terminal"] .home-votes, html[data-theme="terminal"] .home-todo { min-height: 132px; }
   html[data-theme="terminal"] .home-accounts, html[data-theme="terminal"] .home-management { min-height: 350px; }

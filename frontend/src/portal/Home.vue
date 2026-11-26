@@ -218,15 +218,20 @@ import { approvalApi, accountApi, infoApi, meApi, pollApi, resolutionApi } from 
 import { remaining } from '@/shared/voteShare'
 import { formatDateTime } from '@/shared/format'
 import { FLOW_SCOPE_TEXT, textOf } from '@/shared/labels'
+import { readIdentityCache, writeIdentityCache } from '@/shared/identityCache'
 import { useAuthStore } from '@/stores/auth'
 import UiIcon from './UiIcon.vue'
 
 const auth = useAuthStore()
+// 刷新时优先用 5 分钟内的身份+计数缓存，首帧即最终布局；随后后台请求校准
+const identityCache = auth.token ? readIdentityCache() : null
 const resolutions = ref([])
 // null 表示未取到（无权限或失败），区块显示空态；不编造数据
 const tasks = ref(null)
+const tasksCount = ref(Number(identityCache?.counts?.tasks) || 0)
+const pendingVotesCount = ref(Number(identityCache?.counts?.votes) || 0)
 const polls = ref(null)
-const pendingReview = ref(0)
+const pendingReview = ref(Number(identityCache?.counts?.pendingReview) || 0)
 const pendingVotes = ref([])
 const infoPosts = ref([])
 const meError = ref(false)
@@ -253,11 +258,11 @@ const profile = computed(() => {
 
 const taskModules = computed(() => {
   const list = []
-  if (auth.isCommittee && (tasks.value?.length || 0) > 0) {
-    list.push({ key: 'pendingTasks', kind: 'task', count: tasks.value.length, to: '/tasks' })
+  if (auth.isCommittee && tasksCount.value > 0) {
+    list.push({ key: 'pendingTasks', kind: 'task', count: tasksCount.value, to: '/tasks' })
   }
-  if (auth.isRepresentative && pendingVotes.value.length > 0) {
-    list.push({ key: 'pendingVotes', kind: 'task', count: pendingVotes.value.length, to: '/polls' })
+  if (auth.isRepresentative && pendingVotesCount.value > 0) {
+    list.push({ key: 'pendingVotes', kind: 'task', count: pendingVotesCount.value, to: '/polls' })
   }
   if (auth.hasOwnerUnit && pendingReview.value > 0) {
     list.push({ key: 'pendingReview', kind: 'task', count: pendingReview.value, to: '/units' })
@@ -323,8 +328,8 @@ const identityText = computed(() => {
 })
 const unitRows = computed(() => auth.me?.identities?.units || [])
 // IFC-441：身份/结构未就绪时渲染同构骨架；任务类模块（待办审批/待我处理/待表决）依赖异步计数，
-// 计数返回前不渲染网格，避免卡片晚到把后面的卡片挤走
-const layoutReady = ref(false)
+// 计数返回前不渲染网格，避免卡片晚到把后面的卡片挤走；有带计数的缓存时直接放行，首帧即最终布局
+const layoutReady = ref(Boolean(identityCache?.me?.identities && identityCache?.counts))
 
 const pad = (n) => String(n).padStart(2, '0')
 
@@ -365,6 +370,7 @@ async function loadRepVotes(list) {
       }
     })
     .filter(Boolean)
+  pendingVotesCount.value = pendingVotes.value.length
 }
 
 async function retryMe() {
@@ -380,12 +386,20 @@ onMounted(async () => {
   loadAccounts()
   // 兜底：各请求均有独立 catch，正常不会走到这里；仅在极端挂起时 8s 后强制放行
   const guard = setTimeout(() => { layoutReady.value = true }, 8000)
+  // 只有 /me 本次真实成功才续期缓存；后台校准失败时保留原 TTL，避免过期身份被无限延长
+  let meFresh = false
   try {
-    try {
-      await auth.fetchMe()
-      meError.value = false
-    } catch (e) {
-      meError.value = true
+    if (identityCache?.me?.identities) {
+      // 已有缓存身份：先按缓存渲染，再后台校准，不阻塞首屏
+      auth.fetchMe().then(() => { meFresh = true }).catch(() => {})
+    } else {
+      try {
+        await auth.fetchMe()
+        meFresh = true
+        meError.value = false
+      } catch (e) {
+        meError.value = true
+      }
     }
     const [resolutionResult, pollResult, infoResult] = await Promise.allSettled([
       resolutionApi.list('public', { page_size: 5 }),
@@ -418,11 +432,20 @@ onMounted(async () => {
       } catch (e) {
         tasks.value = null
       }
+      tasksCount.value = tasks.value?.length || 0
     }
     await loadRepVotes(polls.value || [])
   } finally {
     clearTimeout(guard)
     layoutReady.value = true
+    // 记录本次结构与计数，供下次刷新首帧直接渲染（5 分钟 TTL）
+    if (meFresh && auth.token && auth.me?.identities) {
+      writeIdentityCache(auth.me, {
+        pendingReview: pendingReview.value,
+        tasks: tasksCount.value,
+        votes: pendingVotesCount.value
+      })
+    }
   }
 })
 </script>

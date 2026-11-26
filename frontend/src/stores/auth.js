@@ -1,12 +1,16 @@
 import { defineStore } from 'pinia'
 import { authApi, meApi } from '@/shared/api'
 import { getToken, setToken } from '@/shared/http'
+import { clearIdentityCache, readIdentityCache, writeIdentityCache } from '@/shared/identityCache'
 
 // 并发去重：布局与页面同时需要 /me 时只发一次请求，缩短首屏身份等待
 let mePending = null
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({ token: getToken(), me: null, loading: false }),
+  state: () => {
+    const token = getToken()
+    return { token, me: token ? (readIdentityCache()?.me || null) : null, loading: false }
+  },
   getters: {
     isLogin: (s) => Boolean(s.token),
     // /me 的 identities 是对象 { is_guest, units, committee, labels }（module_design IFC-070）
@@ -34,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = token
       this.me = user || this.me
       setToken(token)
+      if (this.token && this.me?.identities) writeIdentityCache(this.me)
     },
     async fetchMe() {
       if (!this.token) return null
@@ -43,6 +48,7 @@ export const useAuthStore = defineStore('auth', {
       mePending = request
       try {
         this.me = await request
+        if (this.me?.identities) writeIdentityCache(this.me)
         return this.me
       } finally {
         mePending = null
@@ -63,6 +69,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = ''
       this.me = null
       setToken('')
+      clearIdentityCache()
     }
   }
 })

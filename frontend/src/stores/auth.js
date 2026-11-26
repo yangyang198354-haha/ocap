@@ -3,8 +3,8 @@ import { authApi, meApi } from '@/shared/api'
 import { getToken, setToken } from '@/shared/http'
 import { clearIdentityCache, readIdentityCache, writeIdentityCache } from '@/shared/identityCache'
 
-// 并发去重：布局与页面同时需要 /me 时只发一次请求，缩短首屏身份等待
-let mePending = null
+// 并发去重：同一 store 实例 /me 只发一次请求；pending 记录挂在实例上，换实例（登出/测试隔离）不会残留
+const pendingByStore = new WeakMap()
 
 export const useAuthStore = defineStore('auth', {
   state: () => {
@@ -42,16 +42,17 @@ export const useAuthStore = defineStore('auth', {
     },
     async fetchMe() {
       if (!this.token) return null
-      if (mePending) return mePending
+      const pending = pendingByStore.get(this)
+      if (pending) return pending
       this.loading = true
       const request = meApi.me()
-      mePending = request
+      pendingByStore.set(this, request)
       try {
         this.me = await request
         if (this.me?.identities) writeIdentityCache(this.me)
         return this.me
       } finally {
-        mePending = null
+        pendingByStore.delete(this)
         this.loading = false
       }
     },

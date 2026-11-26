@@ -23,7 +23,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="home" /></span>
-              <h3 class="title title-flat">我的房屋 · {{ unitRows.length }}</h3>
+              <h3 class="title title-flat">我的房屋 · <AnimatedNumber :value="unitRows.length" /></h3>
             </div>
             <router-link to="/units" class="link card-link" @click.stop>房屋明细<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -34,7 +34,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon is-warning"><UiIcon name="task" /></span>
-              <h3 class="title title-flat">待我处理 · {{ m.count }}</h3>
+              <h3 class="title title-flat">待我处理 · <AnimatedNumber :value="m.count" /></h3>
             </div>
             <router-link :to="m.to" class="link card-link">去处理<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -45,7 +45,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="vote" /></span>
-              <h3 class="title title-flat">待我表决 · {{ m.count }}</h3>
+              <h3 class="title title-flat">待我表决 · <AnimatedNumber :value="m.count" /></h3>
             </div>
             <router-link :to="m.to" class="link card-link">全部<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -65,7 +65,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon is-warning"><UiIcon name="task" /></span>
-              <h3 class="title title-flat">待办审批 · {{ m.count }}</h3>
+              <h3 class="title title-flat">待办审批 · <AnimatedNumber :value="m.count" /></h3>
             </div>
             <router-link to="/tasks" class="link card-link">全部<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -89,7 +89,7 @@
           </div>
           <template v-if="!accountsError">
             <div class="label">启用账户合计</div>
-            <div class="home-accounts-total mono">¥{{ accountsTotal }}</div>
+            <AnimatedNumber class="home-accounts-total mono" :value="accountsTotal" :decimals="2" prefix="¥" />
             <div v-if="accounts.length" class="home-finance-chips">
               <span class="count-pill">{{ accounts.length }} 个账户</span>
             </div>
@@ -138,7 +138,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="vote" /></span>
-              <h3 class="title title-flat">投票与调查 · {{ openPolls ? openPolls.length : 0 }}</h3>
+              <h3 class="title title-flat">投票与调查 · <AnimatedNumber :value="openPolls ? openPolls.length : 0" /></h3>
             </div>
             <router-link to="/polls" class="link card-link">查看全部<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -165,7 +165,7 @@
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="doc" /></span>
-              <h3 class="title title-flat">公开决议 · {{ publicFeed.length }}</h3>
+              <h3 class="title title-flat">公开决议 · <AnimatedNumber :value="publicFeed.length" /></h3>
             </div>
             <router-link to="/resolutions" class="link card-link">查看全部<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -220,6 +220,7 @@ import { formatDateTime } from '@/shared/format'
 import { FLOW_SCOPE_TEXT, textOf } from '@/shared/labels'
 import { readIdentityCache, writeIdentityCache } from '@/shared/identityCache'
 import { useAuthStore } from '@/stores/auth'
+import AnimatedNumber from './AnimatedNumber.vue'
 import UiIcon from './UiIcon.vue'
 
 const auth = useAuthStore()
@@ -504,6 +505,21 @@ html[data-perf="low"] .sk-line { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .sk-line { animation: none; }
 }
+/* 卡内文本/数字入场：整卡不再整体淡入，改由内容块 45~120ms 错峰上浮，避免两层淡入叠加 */
+.home-grid > .card { animation: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .home-grid > .card:not(.home-skeleton) > :not(.home-hero-scan) {
+    animation: content-rise 260ms var(--motion-ease, cubic-bezier(.2, .7, .2, 1)) both;
+  }
+  .home-grid > .card:not(.home-skeleton) > :not(.home-hero-scan):nth-child(2) { animation-delay: 45ms; }
+  .home-grid > .card:not(.home-skeleton) > :not(.home-hero-scan):nth-child(3) { animation-delay: 90ms; }
+  .home-grid > .card:not(.home-skeleton) > :not(.home-hero-scan):nth-child(4) { animation-delay: 120ms; }
+}
+@keyframes content-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+html[data-perf="low"] .home-grid > .card:not(.home-skeleton) > * { animation: none !important; }
 @media (min-width: 768px) {
   .home-accounts-total { font-size: 38px; }
 }

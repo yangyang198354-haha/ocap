@@ -89,8 +89,10 @@ describe('主页加载态（US-147）', () => {
     }))
     const { wrapper } = await mountPage(Home)
     const text = wrapper.text()
-    expect(text).toContain('当前身份：加载中…')
+    // 加载中改为 Hero 骨架占位，不再显示“加载中”文案，也不显示游客身份
+    expect(wrapper.find('.hero-sk-title').exists()).toBe(true)
     expect(text).not.toContain('当前身份：游客')
+    expect(text).not.toContain('你好，')
     expect(housingCardOf(wrapper)).toBeUndefined()
     expect(text).not.toContain('去认证')
   })

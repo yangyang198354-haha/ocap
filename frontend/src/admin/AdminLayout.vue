@@ -3,7 +3,7 @@
     <aside class="side admin-side">
       <router-link to="/admin" class="side-brand">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-font">{{ ADMIN_BRAND_TITLE }}</span>
+        <span class="side-brand-name brand-wordmark">{{ ADMIN_BRAND_TITLE }}</span>
       </router-link>
       <SideNav :menu="ADMIN_MENU" aria-label="管理端导航" />
     </aside>
@@ -25,7 +25,7 @@
     <el-drawer v-model="drawerOpen" direction="ltr" :with-header="false" size="min(280px, 85vw)" class="admin-drawer">
       <router-link to="/admin" class="side-brand">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-font">{{ ADMIN_BRAND_TITLE }}</span>
+        <span class="side-brand-name brand-wordmark">{{ ADMIN_BRAND_TITLE }}</span>
       </router-link>
       <SideNav :menu="ADMIN_MENU" aria-label="管理端导航（抽屉）" />
     </el-drawer>

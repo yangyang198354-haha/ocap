@@ -86,10 +86,10 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     return { wrapper, router, pinia }
   }
 
-  it('TC-INT-881 / AC-210-01、AC-212-01：业委会成员——左侧品牌位"Cyber@红枫岭"链到 /，9 个一级项；顶栏没有横排导航与"退出"按钮，只有右上角用户菜单', async () => {
+  it('TC-INT-881 / AC-210-01、AC-212-01：业委会成员——左侧品牌位"赛博@红枫岭"链到 /，9 个一级项；顶栏没有横排导航与"退出"按钮，只有右上角用户菜单', async () => {
     const { wrapper } = await mountLayout('/')
     await flush()
-    expect(wrapper.find('aside.side .side-brand').text()).toBe('Cyber@红枫岭')
+    expect(wrapper.find('aside.side .side-brand').text()).toBe('赛博@红枫岭')
     expect(wrapper.find('aside.side .side-brand').attributes('href')).toBe('/')
     expect(wrapper.findAll('aside.side .side-nav .side-item .side-label').map((e) => e.text())).toEqual(
       ['主页', '我的房屋', '决议', '投票/调查', '报销/备用金', '收入表', '财务报表', '待办', '信息公开']
@@ -223,7 +223,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
     const units = await barItems('/units/appeal')
     expect(units.items).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
     expect(units.tabs).toEqual(['首页', '决议', '投票', '报销', '我的'])
-    expect(units.brand).toBe('Cyber@红枫岭')
+    expect(units.brand).toBe('赛博@红枫岭')
     expect((await barItems('/resolutions/todo')).items).toEqual(['公开决议', '我发起的', '待我表决'])
     expect((await barItems('/claims')).items).toEqual(['我提交的', '待我审批'])
     for (const p of ['/', '/polls', '/reports', '/info', '/tasks', '/income']) expect((await barItems(p)).items, p).toEqual([])
@@ -616,9 +616,9 @@ describe('AdminLayout（US-224、231）', () => {
     return { wrapper, router, pinia }
   }
 
-  it('TC-INT-910 / AC-224-01、AC-223-01：左侧 9 个一级项；品牌位"Cyber@红枫岭 · 管理后台"链到 /admin；顶栏无横排导航与"退出"按钮；右上角菜单键仅供窄屏（按钮存在，显隐靠 CSS）', async () => {
+  it('TC-INT-910 / AC-224-01、AC-223-01：左侧 9 个一级项；品牌位"赛博@红枫岭 · 管理后台"链到 /admin；顶栏无横排导航与"退出"按钮；右上角菜单键仅供窄屏（按钮存在，显隐靠 CSS）', async () => {
     const { wrapper } = await mountAdminLayout()
-    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('Cyber@红枫岭 · 管理后台')
+    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('赛博@红枫岭 · 管理后台')
     expect(wrapper.find('aside.admin-side .side-brand').attributes('href')).toBe('/admin')
     expect(wrapper.findAll('aside.admin-side .side-nav > .side-item .side-label').map((e) => e.text())).toEqual(
       ['业主清册', '申诉', '房屋关系', '业委会席位', '审批流程', '财务', '账号', '内容管理', '审计/配置']

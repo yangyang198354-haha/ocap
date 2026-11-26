@@ -37,7 +37,23 @@ a { color: var(--accent-text); text-decoration: none; }
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 @keyframes card-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.home-grid > .card { animation: card-rise 320ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) both; animation-delay: calc(var(--i, 0) * 55ms); }
+/* 未就绪：home-hero 与所有网格卡片透明，仅 body 极光背景可见；ready 后一次性 reveal */
+.home > .home-hero,
+.home-grid > .card { opacity: 0; transform: translateY(10px); }
+/* 兜底：不管 animation 是否生效，ready 时 opacity 必须 1、位置回到终点 */
+.home.is-ready > .home-hero,
+.home.is-ready .home-grid > .card { opacity: 1; transform: none; }
+.home.is-ready > .home-hero { animation: card-rise 420ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) 60ms both; }
+.home.is-ready .home-grid > .card { animation: card-rise 380ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) both; animation-delay: calc(var(--i, 0) * 60ms); }
+/* 低端设备 / 减少动效：直接显形，不跑动画 */
+.home[data-perf="low"] > .home-hero,
+.home[data-perf="low"] .home-grid > .card,
+.home.is-ready[data-perf="low"] > .home-hero,
+.home.is-ready[data-perf="low"] .home-grid > .card,
+@media (prefers-reduced-motion: reduce) {
+  .home > .home-hero, .home-grid > .card { opacity: 1; transform: none; animation: none !important; }
+  .home.is-ready > .home-hero, .home.is-ready .home-grid > .card { animation: none !important; }
+}
 .card .el-empty { padding: 8px 0; }
 .card .el-empty__description { margin-top: 4px; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -100,6 +116,7 @@ a { color: var(--accent-text); text-decoration: none; }
   color: var(--accent-text); font-weight: 650; background: var(--glass); border-left-color: var(--accent);
 }
 .side-caret { flex: none; font-size: 12px; }
+.side-icon { display: none; }
 .side-sub { list-style: none; margin: 2px 0 4px; padding: 0 0 0 12px; display: flex; flex-direction: column; gap: 2px; }
 .side-sub-item {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--hit-min);
@@ -156,6 +173,7 @@ a { color: var(--accent-text); text-decoration: none; }
 /* 表单卡并入外壳卡片（登录/注册/管理端登录共用，避免双层卡片；选择器需压过主题的 .card 规则） */
 .auth-shell .auth-card .auth-form-card.card { padding: 0; border: 0; background: transparent; box-shadow: none; }
 .auth-shell .auth-card .auth-form-card.card:hover { transform: none; border-color: transparent; box-shadow: none; }
+.auth-art-copy { display: none; }
 
 .admin-login { max-width: 420px; padding-top: 80px; }
 .theme-swatch { width: 34px; height: 14px; flex: none; }
@@ -228,10 +246,14 @@ a { color: var(--accent-text); text-decoration: none; }
 
 .home-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
 .home-grid > .card, .home-grid > .home-quick { margin-bottom: 0; }
-.home-hero, .home-todo, .home-quick, .home-poll, .home-latest { grid-column: span 2; }
+.home-todo, .home-quick, .home-poll, .home-latest { grid-column: span 2; }
 /* MOD-217 / IFC-441：角色化首页模块占位（4 栏骨架由主题在 ≥768px 提供） */
 .home-half, .home-full { grid-column: span 2; }
-.home-hero { position: relative; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+/* hero 已从 home-grid 独立，作为视觉锚点在 grid 上方 */
+.home-hero { position: relative; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+@media (min-width: 768px) {
+  .home-hero { width: calc(50% - 6px); min-height: 320px; margin-bottom: 18px; }
+}
 .home-hero-scan { display: none; }
 .home-hero-main { position: relative; z-index: 1; }
 .home-greeting { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0; }

@@ -12,6 +12,7 @@
         :aria-current="active.node && active.node.key === node.key ? 'true' : undefined"
         @click="toggle(node.key)"
       >
+        <UiIcon class="side-icon" :name="iconFor(node.key)" />
         <span class="side-label">{{ node.label }}</span>
         <span class="side-caret" aria-hidden="true">{{ openKey === node.key ? '▾' : '▸' }}</span>
       </button>
@@ -22,6 +23,7 @@
         :class="{ 'is-active': active.node && active.node.key === node.key }"
         :aria-current="active.node && active.node.key === node.key ? 'page' : undefined"
       >
+        <UiIcon class="side-icon" :name="iconFor(node.key)" />
         <span class="side-label">{{ node.label }}</span>
       </router-link>
       <Transition name="side-sub" :css="false" @enter="onEnter" @leave="onLeave">
@@ -47,6 +49,10 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { nextOpenKey, resolveActive } from './menus'
+import UiIcon from '@/portal/UiIcon.vue'
+
+const ICONS = { home: 'home', units: 'home', resolutions: 'doc', polls: 'vote', claims: 'receipt', income: 'income', reports: 'chart', tasks: 'task', info: 'doc', registry: 'doc', appeals: 'task', memberships: 'home', seats: 'user', flows: 'chart', finance: 'wallet', users: 'user', content: 'doc', audit: 'task' }
+const iconFor = (key) => ICONS[key] || 'doc'
 
 const props = defineProps({
   menu: { type: Array, required: true },

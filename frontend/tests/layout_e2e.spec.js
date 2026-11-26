@@ -146,7 +146,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     // 1 登录页：品牌名 + neon 配图 + 无风格入口 + 静态标题（US-207、US-209、AC-207-01/03、AC-209-01/02）
     await go('/login')
     expect(html().getAttribute('data-theme')).toBe('neon')
-    expect(wrapper.find('h1.auth-brand').text()).toBe('Cyber@红枫岭')
+    expect(wrapper.find('h1.auth-brand').text()).toBe('赛博@红枫岭')
     expect(wrapper.find('.auth-art svg').classes()).toContain('neon-art')
     expect(wrapper.text()).not.toContain('业主委员会 · 登录')
     expect(wrapper.find('[role=radio]').exists()).toBe(false)
@@ -156,7 +156,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     await loginAs(wrapper, 'alice')
     expect(router.currentRoute.value.path).toBe('/')
     expect(S.logins).toEqual([{ identifier: 'alice', password: 'Ocap2026pass', remember_me: false }])
-    expect(side(wrapper).find('.side-brand').text()).toBe('Cyber@红枫岭')
+    expect(side(wrapper).find('.side-brand').text()).toBe('赛博@红枫岭')
     expect(topLabels(wrapper)).toEqual(['主页', '我的房屋', '决议', '投票/调查', '报销/备用金', '收入表', '财务报表', '待办', '信息公开'])
     expect(side(wrapper).findAll('ul.side-sub')).toHaveLength(0)
     expect(wrapper.find('header.topbar .user-menu-name').text()).toBe('小明')
@@ -348,7 +348,7 @@ describe('TC-E2E-803 管理端旅程', () => {
     expect(router.currentRoute.value.path).toBe('/admin/login')
     expect(html().getAttribute('data-theme')).toBe('terminal')
     expect(html().getAttribute('data-surface')).toBe('admin')
-    expect(wrapper.find('h1.auth-brand').text()).toBe('Cyber@红枫岭')
+    expect(wrapper.find('h1.auth-brand').text()).toBe('赛博@红枫岭')
     expect(wrapper.find('.auth-sub').text()).toBe('管理后台登录')
     expect(wrapper.find('.auth-art svg').classes()).toContain('terminal-art')
     expect(wrapper.find('[role=radio]').exists()).toBe(false)
@@ -372,7 +372,7 @@ describe('TC-E2E-803 管理端旅程', () => {
     expect(localStorage.getItem('ocap_admin_name')).toBe('admin01')
 
     // 4 管理端布局：品牌位、9 个一级、顶栏无横排导航与退出（US-223/224，AC-223-01、AC-224-01）
-    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('Cyber@红枫岭 · 管理后台')
+    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('赛博@红枫岭 · 管理后台')
     expect(wrapper.findAll('aside.admin-side .side-nav > .side-item .side-label').map((e) => e.text())).toEqual(
       ['业主清册', '申诉', '房屋关系', '业委会席位', '审批流程', '财务', '账号', '内容管理', '审计/配置']
     )

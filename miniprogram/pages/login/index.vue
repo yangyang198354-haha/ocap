@@ -9,7 +9,7 @@
   </view>
   <view class="auth-brand">
     <view class="brand-mark"></view>
-    <text class="auth-brand-name">Cyber@红枫岭</text>
+    <text class="auth-brand-name">赛博@红枫岭</text>
     <text class="auth-brand-sub">登录</text>
   </view>
   <view class="card">

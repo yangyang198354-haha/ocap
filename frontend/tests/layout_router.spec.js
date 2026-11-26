@@ -191,11 +191,11 @@ describe('导航守卫与重定向', () => {
 
   it('TC-INT-834 / AC-207-03：路由切换不设置 document.title（静态标题由 index.html 提供）', async () => {
     localStorage.setItem('ocap_token', 'tok')
-    document.title = 'Cyber@红枫岭'
+    document.title = '赛博@红枫岭'
     for (const p of ['/register', '/login', '/', '/units/review', '/me', '/admin/login']) {
       await router.push(p)
       await flushPromises()
-      expect(document.title, p).toBe('Cyber@红枫岭')
+      expect(document.title, p).toBe('赛博@红枫岭')
     }
   })
 })

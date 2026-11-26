@@ -48,9 +48,9 @@ async function visit(wrapper, p) {
   await flushPromises()
   await flushPromises()
   expect(router.currentRoute.value.path, `未能进入 ${p}`).toBe(p)
-  // 风格选择器本身的“已选”标记随风格变化，属于预期差异，比较时剔除
+  // 风格选择器与登录页左侧品牌文案随风格变化；只比较表单等业务文本
   const clone = wrapper.element.cloneNode(true)
-  clone.querySelectorAll('.theme-picker').forEach((n) => n.remove())
+  clone.querySelectorAll('.theme-picker, .auth-art-copy').forEach((n) => n.remove())
   return clone.textContent.replace(/\s+/g, ' ').trim()
 }
 function mountApp() {

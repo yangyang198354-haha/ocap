@@ -1,0 +1,18 @@
+:root { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body { min-height: 100vh; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.preview-page { min-height: 100vh; overflow: hidden; }
+.preview-logo { display: block; object-fit: contain; }
+.preview-form { width: 100%; }
+.preview-form input { width: 100%; min-width: 0; outline: none; }
+.preview-form input:focus-visible, .preview-form button:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 72px !important; }
+.password-toggle { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: inherit; }
+.password-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.preview-notice { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10; max-width: min(90vw, 440px); padding: 12px 18px; border-radius: 12px; color: #fff; background: #232033; box-shadow: 0 12px 32px #0006; text-align: center; }
+.preview-notice[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

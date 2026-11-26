@@ -30,7 +30,6 @@
         <router-link to="/register">手机号注册</router-link>
         <a v-if="wechatUrl" :href="wechatUrl">微信扫码登录</a>
       </div>
-      <p class="muted" style="margin-bottom: 0">小程序用户请在微信小程序内使用微信一键登录。</p>
     </div>
   </AuthShell>
 </template>

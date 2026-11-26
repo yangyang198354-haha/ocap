@@ -3,14 +3,14 @@
     <aside class="side">
       <router-link to="/" class="side-brand">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-font">{{ BRAND_NAME }}</span>
+        <span class="side-brand-name brand-wordmark">{{ BRAND_NAME }}</span>
       </router-link>
       <SideNav :menu="menu" :badges="{ pendingReview: housing.pendingReviewCount }" />
     </aside>
     <div class="shell-main">
       <header class="topbar">
         <div class="topbar-inner row">
-          <router-link to="/" class="brand brand-font">{{ BRAND_NAME }}</router-link>
+          <router-link to="/" class="brand brand-wordmark brand-lockup"><BrandMark :size="28" />{{ BRAND_NAME }}</router-link>
           <div class="topbar-user"><PortalUserMenu /></div>
         </div>
       </header>

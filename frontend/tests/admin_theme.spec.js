@@ -163,7 +163,7 @@ describe('口径 8~9：布局结构与构建校验（AC-139-01、AC-142-04）', 
     await router.isReady()
     const wrapper = mount(AdminLayout, { global: { plugins: [createPinia(), router, ElementPlus] } })
     await flushPromises()
-    expect(wrapper.find('.admin-side .side-brand').text()).toBe('Cyber@红枫岭 · 管理后台')
+    expect(wrapper.find('.admin-side .side-brand').text()).toBe('赛博@红枫岭 · 管理后台')
     expect(wrapper.find('.admin-bar .brand').exists()).toBe(false)
     expect(wrapper.findAll('.admin-side .side-nav .side-item')).toHaveLength(9)
     expect(wrapper.findAll('.admin-bar .topnav')).toHaveLength(0)

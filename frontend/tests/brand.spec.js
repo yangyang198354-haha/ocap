@@ -15,16 +15,16 @@ const walk = (dir, exts) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes
 const OLD_NAMES = /业主委员会\s*[·•]\s*(登录|管理后台)|<title>\s*业主委员会\s*<\/title>|navigationBarTitleText"\s*:\s*"业主委员会"/
 
 describe('产品名常量与网页标题', () => {
-  it('TC-UNIT-841 / C-67、AC-207-01：BRAND_NAME 字面为 Cyber@红枫岭（@ 半角、无空格）；管理端标题为"Cyber@红枫岭 · 管理后台"', () => {
-    expect(BRAND_NAME).toBe('Cyber@红枫岭')
-    expect(BRAND_NAME).toMatch(/^Cyber@红枫岭$/)
+  it('TC-UNIT-841 / C-67、AC-207-01：BRAND_NAME 字面为 赛博@红枫岭（@ 半角、无空格）；管理端标题为"赛博@红枫岭 · 管理后台"', () => {
+    expect(BRAND_NAME).toBe('赛博@红枫岭')
+    expect(BRAND_NAME).toMatch(/^赛博@红枫岭$/)
     expect(BRAND_NAME).not.toMatch(/\s|＠/)
-    expect(ADMIN_BRAND_TITLE).toBe('Cyber@红枫岭 · 管理后台')
+    expect(ADMIN_BRAND_TITLE).toBe('赛博@红枫岭 · 管理后台')
   })
 
-  it('TC-UNIT-842 / AC-207-03、AC-207-04：index.html 静态 <title> 为 Cyber@红枫岭（用户端与管理端共用），且源码没有任何地方改写 document.title', () => {
+  it('TC-UNIT-842 / AC-207-03、AC-207-04：index.html 静态 <title> 为 赛博@红枫岭（用户端与管理端共用），且源码没有任何地方改写 document.title', () => {
     const html = read('frontend/index.html')
-    expect(html.match(/<title>([^<]*)<\/title>/)[1]).toBe('Cyber@红枫岭')
+    expect(html.match(/<title>([^<]*)<\/title>/)[1]).toBe('赛博@红枫岭')
     expect((html.match(/<title>/g) || [])).toHaveLength(1)
     const offenders = walk('frontend/src', ['.vue', '.js']).filter((f) => /document\.title\s*=|useTitle|useHead|\.meta\.title/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')))
     expect(offenders).toEqual([])
@@ -38,12 +38,12 @@ describe('REQ-NFUNC-041：9 处用户可见产品名位置残留旧名为 0', ()
       '登录页使用 AuthShell': () => read('frontend/src/portal/Login.vue').includes('<AuthShell surface="portal" subtitle="登录">'),
       '注册页使用 AuthShell': () => read('frontend/src/portal/Register.vue').includes('<AuthShell surface="portal" subtitle="手机号注册">'),
       '管理端登录页使用 AuthShell': () => read('frontend/src/admin/AdminLogin.vue').includes('<AuthShell surface="admin" subtitle="管理后台登录">'),
-      '网页标题': () => read('frontend/index.html').includes('<title>Cyber@红枫岭</title>'),
+      '网页标题': () => read('frontend/index.html').includes('<title>赛博@红枫岭</title>'),
       '用户端品牌位': () => (read('frontend/src/portal/PortalLayout.vue').match(/\{\{\s*BRAND_NAME\s*\}\}/g) || []).length === 2,
       '管理端品牌位': () => read('frontend/src/admin/AdminLayout.vue').includes('{{ ADMIN_BRAND_TITLE }}'),
-      '小程序登录页': () => read('miniprogram/pages/login/index.vue').includes('<text class="auth-brand-name">Cyber@红枫岭</text>'),
-      '小程序首页标题': () => JSON.parse(read('miniprogram/pages.json')).pages[0].style.navigationBarTitleText === 'Cyber@红枫岭',
-      '小程序全局标题': () => JSON.parse(read('miniprogram/pages.json')).globalStyle.navigationBarTitleText === 'Cyber@红枫岭'
+      '小程序登录页': () => read('miniprogram/pages/login/index.vue').includes('<text class="auth-brand-name">赛博@红枫岭</text>'),
+      '小程序首页标题': () => JSON.parse(read('miniprogram/pages.json')).pages[0].style.navigationBarTitleText === '赛博@红枫岭',
+      '小程序全局标题': () => JSON.parse(read('miniprogram/pages.json')).globalStyle.navigationBarTitleText === '赛博@红枫岭'
     }
     const failed = Object.entries(sites).filter(([, fn]) => !fn()).map(([name]) => name)
     expect(failed).toEqual([])
@@ -112,11 +112,11 @@ describe('品牌字体（AC-209-03、ADR-123）', () => {
     expect(read('miniprogram/pages/login/index.vue')).not.toMatch(/@font-face|loadFontFace/)
   })
 
-  it('TC-UNIT-849 / ADR-123：brand.css 在 themes.css 之后引入；.brand-font 仅用于品牌名（5 处），其余文字走系统字体', () => {
+  it('TC-UNIT-849 / ADR-123：brand.css 在 themes.css 之后引入；新中文品牌名使用系统字体', () => {
     const main = read('frontend/src/main.js')
     expect(main.indexOf("./theme/generated/themes.css")).toBeGreaterThan(-1)
     expect(main.indexOf("./brand/brand.css")).toBeGreaterThan(main.indexOf("./theme/generated/themes.css"))
-    const users = walk('frontend/src', ['.vue']).filter((f) => /class="[^"]*brand-font/.test(read(f))).sort()
+    const users = walk('frontend/src', ['.vue']).filter((f) => /class="[^"]*brand-wordmark/.test(read(f))).sort()
     expect(users).toEqual([
       path.join('frontend/src/admin/AdminLayout.vue'),
       path.join('frontend/src/brand/AuthShell.vue'),
@@ -126,15 +126,17 @@ describe('品牌字体（AC-209-03、ADR-123）', () => {
 })
 
 describe('BrandMark 品牌标识（IFC-328）', () => {
-  it('TC-UNIT-850 / IFC-328：默认 32px，size 可调；aria-hidden；.vue 内无颜色字面量，只用 currentColor / 语义变量', () => {
+  it('TC-UNIT-850 / IFC-328：透明枫叶标志默认 32px，size 可调，装饰图无替代文字', () => {
     const def = mount(BrandMark)
     expect(def.attributes('width')).toBe('32')
     expect(def.attributes('aria-hidden')).toBe('true')
-    expect(def.element.tagName.toLowerCase()).toBe('svg')
+    expect(def.element.tagName.toLowerCase()).toBe('img')
+    expect(def.attributes('alt')).toBe('')
     expect(mount(BrandMark, { props: { size: 44 } }).attributes('height')).toBe('44')
     const src = read('frontend/src/brand/BrandMark.vue')
     expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/)
-    expect(src).toContain('currentColor')
-    expect(src).toMatch(/var\(--accent\)/)
+    expect(src).toContain("./assets/maple-leaf.png")
+    const image = fs.readFileSync(path.join(ROOT, 'frontend/src/brand/assets/maple-leaf.png'))
+    expect(image.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
   })
 })

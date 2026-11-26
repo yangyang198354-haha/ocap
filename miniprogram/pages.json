@@ -1,6 +1,6 @@
 {
   "pages": [
-    { "path": "pages/index/index", "style": { "navigationBarTitleText": "Cyber@红枫岭" } },
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "赛博@红枫岭" } },
     { "path": "pages/login/index", "style": { "navigationBarTitleText": "登录" } },
     { "path": "pages/profile-setup/index", "style": { "navigationBarTitleText": "完善资料" } },
     { "path": "pages/units/index", "style": { "navigationBarTitleText": "我的房屋" } },
@@ -23,7 +23,7 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Cyber@红枫岭",
+    "navigationBarTitleText": "赛博@红枫岭",
     "navigationBarBackgroundColor": "#F3F4FA",
     "backgroundColor": "#F3F4FA"
   },

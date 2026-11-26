@@ -21,10 +21,10 @@ beforeEach(() => {
 })
 
 describe('pages.json 标题（US-208）', () => {
-  it('TC-UNIT-881 / AC-208-02：首页 navigationBarTitleText 与 globalStyle 均为 Cyber@红枫岭', () => {
+  it('TC-UNIT-881 / AC-208-02：首页 navigationBarTitleText 与 globalStyle 均为 赛博@红枫岭', () => {
     expect(pagesJson.pages[0].path).toBe('pages/index/index')
-    expect(pagesJson.pages[0].style.navigationBarTitleText).toBe('Cyber@红枫岭')
-    expect(pagesJson.globalStyle.navigationBarTitleText).toBe('Cyber@红枫岭')
+    expect(pagesJson.pages[0].style.navigationBarTitleText).toBe('赛博@红枫岭')
+    expect(pagesJson.globalStyle.navigationBarTitleText).toBe('赛博@红枫岭')
   })
 
   it('TC-UNIT-882 / AC-208-02：tabBar 4 项文案与其余页面功能名不变（只改首页与全局标题）', () => {
@@ -37,7 +37,7 @@ describe('pages.json 标题（US-208）', () => {
     expect(titleOf('pages/me/index')).toBe('我的')
     expect(pagesJson.pages).toHaveLength(20)
     // 其余页面标题没有被误改为品牌名
-    const branded = pagesJson.pages.filter((p) => p.style.navigationBarTitleText.includes('Cyber@'))
+    const branded = pagesJson.pages.filter((p) => p.style.navigationBarTitleText.includes('赛博@'))
     expect(branded.map((p) => p.path)).toEqual(['pages/index/index'])
   })
 
@@ -49,11 +49,11 @@ describe('pages.json 标题（US-208）', () => {
 })
 
 describe('登录页品牌头与配图（US-208、US-228）', () => {
-  it('TC-UNIT-884 / AC-208-01、AC-228-01：三种风格下页面标题含"Cyber@红枫岭"，不再出现"业主委员会 · 登录"；子标题"登录"', async () => {
+  it('TC-UNIT-884 / AC-208-01、AC-228-01：三种风格下页面标题含"赛博@红枫岭"，不再出现"业主委员会 · 登录"；子标题"登录"', async () => {
     for (const key of KEYS) {
       uni.setStorageSync('ocap_theme', key)
       const { wrapper } = await mountPage(Login, { token: '' })
-      expect(wrapper.find('.auth-brand-name').text(), key).toBe('Cyber@红枫岭')
+      expect(wrapper.find('.auth-brand-name').text(), key).toBe('赛博@红枫岭')
       expect(wrapper.find('.auth-brand-sub').text(), key).toBe('登录')
       expect(wrapper.text(), key).not.toContain('业主委员会')
       expect(wrapper.find('.brand-mark').exists(), key).toBe(true)

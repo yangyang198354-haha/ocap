@@ -7,7 +7,7 @@
         <div class="auth-head">
           <BrandMark :size="46" />
           <div class="auth-head-text">
-            <h1 class="auth-brand brand-font">{{ BRAND_NAME }}</h1>
+            <h1 class="auth-brand brand-wordmark">{{ BRAND_NAME }}</h1>
             <p class="auth-sub">{{ subtitle }}</p>
           </div>
         </div>

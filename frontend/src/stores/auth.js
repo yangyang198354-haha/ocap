@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import { authApi, meApi } from '@/shared/api'
 import { getToken, setToken } from '@/shared/http'
 
+// 并发去重：布局与页面同时需要 /me 时只发一次请求，缩短首屏身份等待
+let mePending = null
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({ token: getToken(), me: null, loading: false }),
   getters: {
@@ -34,11 +37,15 @@ export const useAuthStore = defineStore('auth', {
     },
     async fetchMe() {
       if (!this.token) return null
+      if (mePending) return mePending
       this.loading = true
+      const request = meApi.me()
+      mePending = request
       try {
-        this.me = await meApi.me()
+        this.me = await request
         return this.me
       } finally {
+        mePending = null
         this.loading = false
       }
     },

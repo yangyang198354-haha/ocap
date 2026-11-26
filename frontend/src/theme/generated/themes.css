@@ -262,7 +262,7 @@ html[data-theme="neon"] .chip { background: rgba(124,92,255,.16); border-color: 
 
 /* 4 栏：Hero 占 2×2；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
-  html[data-theme="neon"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
+  html[data-theme="neon"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, minmax(160px, auto)) minmax(120px, auto); }
   html[data-theme="neon"] .home-hero { grid-column: span 2; grid-row: span 2; }
   html[data-theme="neon"] .home-todo { grid-column: span 2; }
   html[data-theme="neon"] .home-stat { grid-column: span 1; }
@@ -761,7 +761,7 @@ html[data-theme="bento"] .home-hero {
 
 /* 4 栏 Bento：Hero 占 2×2；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
-  html[data-theme="bento"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
+  html[data-theme="bento"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, minmax(160px, auto)) minmax(120px, auto); }
   html[data-theme="bento"] .home-hero { grid-column: span 2; grid-row: span 2; }
   html[data-theme="bento"] .home-todo { grid-column: span 2; }
   html[data-theme="bento"] .home-stat { grid-column: span 1; }
@@ -1335,7 +1335,7 @@ html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; t
 
 /* 4 栏：Hero 占 2×2；数据块 1x1；入口整行；投票 / 最新各 2 */
 @media (min-width: 768px) {
-  html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: 160px 160px minmax(120px, auto); }
+  html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, minmax(160px, auto)) minmax(120px, auto); }
   html[data-theme="terminal"] .home-hero { grid-column: span 2; grid-row: span 2; }
   html[data-theme="terminal"] .home-todo { grid-column: span 2; }
   html[data-theme="terminal"] .home-stat { grid-column: span 1; }

@@ -173,6 +173,7 @@ a { color: var(--accent-text); text-decoration: none; }
 /* 表单卡并入外壳卡片（登录/注册/管理端登录共用，避免双层卡片；选择器需压过主题的 .card 规则） */
 .auth-shell .auth-card .auth-form-card.card { padding: 0; border: 0; background: transparent; box-shadow: none; }
 .auth-shell .auth-card .auth-form-card.card:hover { transform: none; border-color: transparent; box-shadow: none; }
+.auth-art-copy { display: none; }
 
 .admin-login { max-width: 420px; padding-top: 80px; }
 .theme-swatch { width: 34px; height: 14px; flex: none; }

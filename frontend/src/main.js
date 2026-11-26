@@ -8,6 +8,7 @@ import router from './router'
 import './shared/style.css'
 import './theme/generated/themes.css'
 import './brand/brand.css'
+import './brand/auth-layout.css'
 import { detectLowEnd } from './theme/apply'
 
 const app = createApp(App)

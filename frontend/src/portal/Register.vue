@@ -9,7 +9,6 @@
       <el-button type="primary" style="width: 100%; margin-top: 14px" :loading="loading" @click="submit">注册并登录</el-button>
       <div class="row" style="justify-content: space-between; margin-top: 12px">
         <router-link to="/login">返回登录</router-link>
-        <span class="muted">注册后可通过业主清册认证为产权业主</span>
       </div>
     </div>
   </AuthShell>

@@ -5,15 +5,21 @@
         <span class="home-hero-scan" aria-hidden="true" />
         <div class="home-hero-main">
           <div class="label">{{ todayText }}</div>
-          <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
-          <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
-          <p v-if="auth.isGuest" class="muted home-meta"><router-link to="/units/pick" class="link">去认证</router-link></p>
+          <template v-if="layoutReady || meError">
+            <h2 class="title home-greeting">你好，<span class="grad-text home-caret">{{ auth.me?.profile?.nickname || '业主' }}</span></h2>
+            <p class="muted home-meta">当前身份：{{ identityText }}<el-button v-if="meError" link size="small" @click="retryMe">重试</el-button></p>
+            <p v-if="auth.isGuest" class="muted home-meta"><router-link to="/units/pick" class="link">去认证</router-link></p>
+          </template>
+          <template v-else>
+            <div class="sk-line hero-sk-title" aria-hidden="true" />
+            <div class="sk-line hero-sk-meta" aria-hidden="true" />
+          </template>
         </div>
       </section>
 
       <template v-if="layoutReady || meError">
-        <template v-for="(m, index) in bodyModules" :key="m.key">
-        <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': index + 1 }" @click="$router.push('/units')">
+        <template v-for="m in bodyModules" :key="m.key">
+        <section v-if="m.key === 'housing'" class="card home-half home-housing" aria-label="我的房屋" :style="{ '--i': 0 }" @click="$router.push('/units')">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="home" /></span>
@@ -24,7 +30,7 @@
           <p class="muted">共 {{ unitRows.length }} 套（点击查看明细）</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingReview'" class="card home-half home-review" aria-label="待我处理" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'pendingReview'" class="card home-half home-review" aria-label="待我处理" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon is-warning"><UiIcon name="task" /></span>
@@ -35,7 +41,7 @@
           <p class="muted">有 {{ m.count }} 条同住人申请待审批</p>
         </section>
 
-        <section v-else-if="m.key === 'pendingVotes'" class="card home-half home-votes" aria-label="待我表决" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'pendingVotes'" class="card home-half home-votes" aria-label="待我表决" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="vote" /></span>
@@ -55,7 +61,7 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'pendingTasks'" class="card home-half home-todo" aria-label="待办审批" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'pendingTasks'" class="card home-half home-todo" aria-label="待办审批" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon is-warning"><UiIcon name="task" /></span>
@@ -73,7 +79,7 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'finance'" class="card home-half home-accounts" aria-label="财务公开" :style="{ '--i': index + 1 }" @click="$router.push('/reports')">
+        <section v-else-if="m.key === 'finance'" class="card home-half home-accounts" aria-label="财务公开" :style="{ '--i': 0 }" @click="$router.push('/reports')">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="wallet" /></span>
@@ -102,7 +108,7 @@
           </p>
         </section>
 
-        <section v-else-if="m.key === 'management'" class="card home-half home-management" aria-label="管理快捷" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'management'" class="card home-half home-management" aria-label="管理快捷" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="chart" /></span>
@@ -128,7 +134,7 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'polls'" class="card home-full home-poll" aria-label="投票与调查" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'polls'" class="card home-full home-poll" aria-label="投票与调查" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="vote" /></span>
@@ -155,7 +161,7 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'resolutions'" class="card home-full home-latest" aria-label="公开决议" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'resolutions'" class="card home-full home-latest" aria-label="公开决议" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="doc" /></span>
@@ -176,7 +182,7 @@
           </div>
         </section>
 
-        <section v-else-if="m.key === 'info'" class="card home-full home-info" aria-label="信息公开" :style="{ '--i': index + 1 }">
+        <section v-else-if="m.key === 'info'" class="card home-full home-info" aria-label="信息公开" :style="{ '--i': 0 }">
           <div class="card-head">
             <div class="card-head-main">
               <span class="card-icon"><UiIcon name="doc" /></span>
@@ -196,7 +202,7 @@
         </template>
       </template>
       <template v-else>
-        <section v-for="n in 5" :key="`sk-${n}`" class="card home-skeleton" :class="n === 5 ? 'home-full' : 'home-half'" :style="{ '--i': n }" aria-hidden="true">
+        <section v-for="n in 5" :key="`sk-${n}`" class="card home-skeleton" :class="n === 5 ? 'home-full' : 'home-half'" :style="{ '--i': 0 }" aria-hidden="true">
           <div class="sk-line sk-title" />
           <div class="sk-line" />
           <div class="sk-line sk-short" />
@@ -372,8 +378,8 @@ async function retryMe() {
 
 onMounted(async () => {
   loadAccounts()
-  // 兜底：个别接口异常或过慢时最多等 1.5s，避免骨架长期停留
-  const guard = setTimeout(() => { layoutReady.value = true }, 1500)
+  // 兜底：各请求均有独立 catch，正常不会走到这里；仅在极端挂起时 8s 后强制放行
+  const guard = setTimeout(() => { layoutReady.value = true }, 8000)
   try {
     try {
       await auth.fetchMe()
@@ -463,15 +469,17 @@ onMounted(async () => {
 .home-feed-item .is-committee { color: var(--accent-text); background: var(--glass); }
 .home-feed-item .is-representative { color: var(--accent-2); background: var(--glass); }
 .card-icon.is-warning { color: var(--warning); }
-/* 身份加载骨架：与最终 4 栏骨架同构，避免二次渲染的整页跳动 */
+/* 身份/结构加载骨架：Hero 与网格同一时刻用骨架占位，数据齐了再一起显示 */
+.sk-line { height: 12px; border-radius: 8px; background: var(--glass); animation: sk-pulse 1.4s ease-in-out infinite; }
+.hero-sk-title { width: 55%; height: 24px; margin: 6px 0; }
+.hero-sk-meta { width: 40%; }
 .home-skeleton { min-height: 128px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
-.home-skeleton .sk-line { height: 12px; border-radius: 8px; background: var(--glass); animation: sk-pulse 1.4s ease-in-out infinite; }
 .home-skeleton .sk-line.sk-title { width: 42%; height: 16px; }
 .home-skeleton .sk-line.sk-short { width: 64%; }
 @keyframes sk-pulse { 50% { opacity: .45; } }
-html[data-perf="low"] .home-skeleton .sk-line { animation: none; }
+html[data-perf="low"] .sk-line { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-  .home-skeleton .sk-line { animation: none; }
+  .sk-line { animation: none; }
 }
 @media (min-width: 768px) {
   .home-accounts-total { font-size: 38px; }

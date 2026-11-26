@@ -1,13 +1,14 @@
 <!-- MOD-162 / IFC-375：他人 profile 页（REQ-FUNC-261/262、REQ-NFUNC-052；字段白名单由后端返回） -->
 <template>
   <div class="page">
+    <PageHead title="用户主页" />
     <div class="card">
       <el-empty v-if="loading" description="加载中…" />
       <template v-else-if="profile">
         <div class="row profile-head">
           <AuthImage :src="profile.avatar_url" alt="默认头像" :size="72" />
           <div class="profile-meta">
-            <h3 class="title profile-name" style="margin: 0">{{ profile.nickname || '未设置昵称' }}</h3>
+            <h2 class="title profile-name" style="margin: 0">{{ profile.nickname || '未设置昵称' }}</h2>
             <div class="profile-tags">
               <span v-if="profile.real_name" class="real-name">
                 实名：{{ profile.real_name }}
@@ -30,6 +31,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'

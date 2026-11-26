@@ -37,9 +37,9 @@ describe('用户端菜单配置（US-210/211/217/229）', () => {
 
   it('TC-UNIT-804 / AC-236-01、AC-291-01（旧 AC-214-01、AC-215-01、AC-215-02）：二级项数量——我的房屋 3、决议 3、报销 2；其余一级项无 children', () => {
     const byKey = Object.fromEntries(PORTAL_MENU.map((n) => [n.key, n]))
-    // 改写（ocap_navigation_ia ADR-166/167）：4 项 → 3 项；移除“认证产权”，认证申诉改名为“我的认证与申述”
+    // 改写（ocap_navigation_ia ADR-166/167）：4 项 → 3 项；移除“认证产权”，认证申诉改名为“我的认证与申诉”
     expect(byKey.units.children.map((c) => c.label)).toEqual(
-      ['我的身份与房屋', '我的认证与申述', '我的同住人申请']
+      ['我的身份与房屋', '我的认证与申诉', '我的同住人申请']
     )
     expect(byKey.units.children.some((c) => c.label === '选择房屋' || c.label === '待我审批的同住人申请' || c.label === '认证产权')).toBe(false)
     expect(byKey.resolutions.children.map((c) => c.label)).toEqual(['公开决议', '我发起的', '待我表决'])
@@ -140,10 +140,10 @@ describe('isPathMatch / resolveActive / nextOpenKey', () => {
     }
   })
 
-  it('TC-UNIT-814 / AC-217-02、AC-216-04、AC-291-01：/polls/3 仍高亮"投票/调查"；/units/appeal 解析到我的房屋 › 我的认证与申述；旧地址 /units/appeals 不再有独立菜单项；主页只在 "/" 高亮', () => {
+  it('TC-UNIT-814 / AC-217-02、AC-216-04、AC-291-01：/polls/3 仍高亮"投票/调查"；/units/appeal 解析到我的房屋 › 我的认证与申诉；旧地址 /units/appeals 不再有独立菜单项；主页只在 "/" 高亮', () => {
     expect(resolveActive(PORTAL_MENU, '/polls/3').node.label).toBe('投票/调查')
     const u = resolveActive(PORTAL_MENU, '/units/appeal')
-    expect([u.node.label, u.leaf.label]).toEqual(['我的房屋', '我的认证与申述'])
+    expect([u.node.label, u.leaf.label]).toEqual(['我的房屋', '我的认证与申诉'])
     expect(resolveActive(PORTAL_MENU, '/units/appeals').leaf).toBe(null)
     expect(resolveActive(PORTAL_MENU, '/').node.label).toBe('主页')
     expect(resolveActive(PORTAL_MENU, '/units').leaf.label).toBe('我的身份与房屋')

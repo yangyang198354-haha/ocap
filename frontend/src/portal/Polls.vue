@@ -1,15 +1,8 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div class="page-head-main">
-        <div class="page-eyebrow">POLLS</div>
-        <h1>投票 / 调查</h1>
-        <p class="page-desc">截止后统一汇总，结果公开</p>
-      </div>
-      <div class="page-actions">
-        <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起</el-button>
-      </div>
-    </div>
+    <PageHead title="投票/调查" description="截止后统一汇总，结果公开">
+      <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起</el-button>
+    </PageHead>
     <div class="card">
       <p class="muted">截止后统一汇总；截止前任何人（含发起人）不可查看结果。</p>
     </div>
@@ -67,6 +60,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { meApi, pollApi } from '@/shared/api'

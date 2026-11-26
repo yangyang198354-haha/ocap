@@ -200,7 +200,7 @@ describe('管理端表格宽度（ADR-121，R-02，AC-231-02）', () => {
     expect(by['AdminUsers.vue#0']).toMatchObject({ cols: 4, total: 480 })
     // 注册用户表列顺序与含义不变（AdminUsers.vue 注册用户表）
     const tpl = read('frontend/src/admin/AdminUsers.vue').split('<script')[0]
-    const labelsOf = [...tpl.split('注册用户')[1].matchAll(/<el-table-column[^>]*\blabel="([^"]+)"/g)].map((m) => m[1])
+    const labelsOf = [...tpl.split('v-if="isRegistered"')[1].matchAll(/<el-table-column[^>]*\blabel="([^"]+)"/g)].map((m) => m[1])
     expect(labelsOf).toEqual(['ID', '账号', '手机号', '昵称', '状态', '身份', '认证', '实名', '上次登录'])
   })
 })

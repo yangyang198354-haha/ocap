@@ -419,7 +419,7 @@ html[data-theme="bento"] body::before {
 html[data-theme="bento"] .side { background: rgba(255,255,255,.88); border-right: 1px solid #e8e9f1; box-shadow: none; }
 html[data-theme="bento"] .side-brand { padding: 8px 22px; border-bottom-color: #ececf2; font-size: 25px; }
 html[data-theme="bento"] .side-nav { gap: 6px; padding: 9px 11px; }
-html[data-theme="bento"] .side-item { min-height: 49px; padding: 0 17px; font-size: 17px; color: #383b4c; }
+html[data-theme="bento"] .side-item { min-height: 49px; padding: 0 17px; color: #383b4c; }
 html[data-theme="bento"] .side-icon { display: block; width: 20px; height: 20px; flex: none; }
 html[data-theme="bento"] .side-label { flex: 1; }
 html[data-theme="bento"] .side-sub-item { color: #555b6e; }
@@ -477,7 +477,6 @@ html[data-theme="bento"] .el-table th.el-table__cell { color: #5e4bb3; letter-sp
   html[data-theme="bento"] .home-accounts, html[data-theme="bento"] .home-management { min-height: 358px; }
   html[data-theme="bento"] .home-poll, html[data-theme="bento"] .home-latest { min-height: 262px; }
   html[data-theme="bento"] .home-grid .card-head { margin-bottom: 14px; }
-  html[data-theme="bento"] .home-grid .title { font-size: 20px; }
 }
 @media (max-width: 767.98px) {
   html[data-theme="bento"] { --topbar-h: 56px; --content-pad: 14px; }

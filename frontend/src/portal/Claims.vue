@@ -1,13 +1,10 @@
 <template>
   <div class="page">
+    <PageHead title="报销/备用金">
+      <el-button v-if="auth.isCommittee" type="primary" @click="openCreate">新建申请</el-button>
+      <el-button v-if="auth.isCommittee" @click="openSettle">备用金核销</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">报销 / 备用金</h3>
-        <div class="row">
-          <el-button v-if="auth.isCommittee" type="primary" @click="openCreate">新建申请</el-button>
-          <el-button v-if="auth.isCommittee" @click="openSettle">备用金核销</el-button>
-        </div>
-      </div>
       <p class="muted">报销凭发票；备用金为预借现金，办完后核销，实际支出再凭票报销；核销按差额调整支出，多退少补。</p>
       <p class="section-title">{{ scope === 'todo' ? '待我审批' : '我提交的' }}</p>
     </div>
@@ -116,7 +113,7 @@
         </div>
         <aside class="claim-aside">
           <div class="claim-flow">
-            <div class="card-head"><h4 class="title title-flat">审批流程预览</h4><span v-if="selectedFlow" class="mode-tag">{{ flowModeText(selectedFlow.mode) }}</span></div>
+            <div class="card-head"><h2 class="title title-flat">审批流程预览</h2><span v-if="selectedFlow" class="mode-tag">{{ flowModeText(selectedFlow.mode) }}</span></div>
             <ol class="claim-steps">
               <li class="claim-step is-done">
                 <span class="claim-step-node"><UiIcon name="check" /></span>
@@ -172,6 +169,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, claimApi, meApi } from '@/shared/api'

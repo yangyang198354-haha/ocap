@@ -221,7 +221,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
       return out
     }
     const units = await barItems('/units/appeal')
-    expect(units.items).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
+    expect(units.items).toEqual(['我的身份与房屋', '我的认证与申诉', '我的同住人申请'])
     expect(units.tabs).toEqual(['首页', '决议', '投票', '报销', '我的'])
     expect(units.brand).toBe('赛博@红枫岭')
     expect((await barItems('/resolutions/todo')).items).toEqual(['公开决议', '我发起的', '待我表决'])
@@ -242,7 +242,7 @@ describe('PortalLayout 组合（US-210/211/212/214/220/230）', () => {
 // ------------------------------------------------------------------ 我的房屋分区（MOD-123）
 describe('我的房屋分区宿主 Units.vue（US-214）', () => {
   const TITLES = {
-    identity: '我的身份与房屋', pick: '认证产权', appeal: '认证申诉', applications: '我的同住人申请', appeals: '认证申诉'
+    identity: '我的身份与房屋', pick: '认证产权', appeal: '我的认证与申诉', applications: '我的同住人申请', appeals: '我的认证与申诉'
   } // 改写：旧 6 个分区 → 本批 4 个分区；旧 appeals 路由复用申诉中心（默认“我的申诉”Tab）
 
   it('TC-INT-890 / AC-300-01、AC-300-03、AC-291-01：各分区各只显示自己的卡片；身份页以页内 Tab 呈现（游客无“待我审批”Tab）；缺省与未知分区回退身份页', async () => {
@@ -256,7 +256,7 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
         expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, '')), section).toEqual(['我的身份与房屋'])
         expect(wrapper.find('h3.title').exists(), section).toBe(false)
       } else {
-        const shown = wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))
+        const shown = wrapper.findAll('h1').map((h) => h.text().replace(/\s*\d+$/, ''))
         expect(shown, section).toEqual([title])
       }
       wrapper.unmount()
@@ -279,13 +279,13 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
     http.get.mockImplementation(fakeGet({ '/me/housing': { summary: { code: 'GUEST', label: '游客' }, units: [], pending_review_count: 0 } }))
     const { wrapper } = await mountPage(Units, { props: { section: 'applications' } })
     await flush()
-    expect(wrapper.find('h3.title').text()).toBe('我的同住人申请')
+    expect(wrapper.find('h1').text()).toBe('我的同住人申请')
     await wrapper.setProps({ section: 'appeals' })
     await flush()
-    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['我的认证与申诉'])
     await wrapper.setProps({ section: 'appeal' })
     await flush()
-    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['我的认证与申诉'])
   })
 
   it('TC-INT-892 / AC-214-03：审批同住人申请成功后刷新仓库，侧栏角标数据随之变化（2 → 1）', async () => {
@@ -301,7 +301,7 @@ describe('我的房屋分区宿主 Units.vue（US-214）', () => {
     const { wrapper, pinia } = await mountPage(UnitsReview)
     await flush()
     expect(useHousingStore(pinia).pendingReviewCount).toBe(2)
-    expect(wrapper.find('h3.title .el-badge').text()).toBe('2')
+    expect(wrapper.find('h2.title .el-badge').text()).toBe('2')
     await buttonOf(wrapper, '通过').trigger('click')
     await flush()
     expect(http.post).toHaveBeenCalledWith('/resident-applications/8/decision', { decision: 'APPROVE' })
@@ -374,7 +374,7 @@ describe('决议、报销二级分区（US-215）', () => {
     http.get.mockImplementation(fakeGet({ '/me': ME(null) }))
     const guest = await mountPage(Claims, { props: { section: 'mine' } })
     await flush()
-    expect(guest.wrapper.find('h3.title').text()).toBe('报销 / 备用金')
+    expect(guest.wrapper.find('h1').text()).toBe('报销/备用金')
     expect(buttonOf(guest.wrapper, '新建申请')).toBeUndefined()
     expect(buttonOf(guest.wrapper, '备用金核销')).toBeUndefined()
   })
@@ -414,7 +414,7 @@ describe('个人中心各页（US-212/213/220）', () => {
       if (comp === UnitsIdentity) {
         expect(wrapper.findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))).toContain('我的身份与房屋')
       } else {
-        expect(wrapper.findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, '')), title).toEqual([title])
+        expect(wrapper.findAll('h1').map((h) => h.text().replace(/\s*\d+$/, '')), title).toEqual([title])
       }
       seen.push(title)
       wrapper.unmount()
@@ -431,7 +431,7 @@ describe('个人中心各页（US-212/213/220）', () => {
     http.get.mockImplementation(fakeGet({ '/me/profile': { ...profile, phone: '138****0000' }, '/me': ME() }))
     const bound = await mountPage(MePhone)
     await flush()
-    expect(bound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['绑定手机'])
+    expect(bound.wrapper.findAll('h1').map((h) => h.text())).toEqual(['绑定手机'])
     expect(bound.wrapper.find('input[placeholder="原号验证码"]').exists()).toBe(true)
     expect(bound.wrapper.find('input[placeholder="新号验证码"]').exists()).toBe(true)
     bound.wrapper.unmount()
@@ -439,7 +439,7 @@ describe('个人中心各页（US-212/213/220）', () => {
     http.get.mockImplementation(fakeGet({ '/me/profile': { ...profile, phone: null }, '/me': ME() }))
     const unbound = await mountPage(MePhone)
     await flush()
-    expect(unbound.wrapper.findAll('h3').map((h) => h.text())).toEqual(['绑定手机'])
+    expect(unbound.wrapper.findAll('h1').map((h) => h.text())).toEqual(['绑定手机'])
     expect(unbound.wrapper.find('input[placeholder="原号验证码"]').exists()).toBe(false)
   })
 
@@ -560,12 +560,12 @@ describe('管理端 4 页分区（US-225）', () => {
     adminHttp.get.mockImplementation(async (url) => (url === '/admin/admins' ? [{ id: 1, username: 'root', is_active: true }] : { count: 0, results: [] }))
     const { wrapper } = await mountPage(AdminUsers, { props: { section: 'admins' } })
     await flush()
-    expect(wrapper.findAll('h3').map((h) => h.text())).toEqual(['管理员账号'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['管理员账号'])
     expect(getsOf(adminHttp, '/admin/users')).toHaveLength(0)
     adminHttp.get.mockClear()
     await wrapper.setProps({ section: 'registered' })
     await flush()
-    expect(wrapper.findAll('h3').map((h) => h.text())).toEqual(['注册用户'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['注册用户'])
     expect(getsOf(adminHttp, '/admin/users').length).toBeGreaterThan(0)
     expect(getsOf(adminHttp, '/admin/admins')).toHaveLength(0)
   })
@@ -591,13 +591,13 @@ describe('管理端 4 页分区（US-225）', () => {
     expect(wrapper.find('.el-tabs').exists()).toBe(false)
     expect(getsOf(adminHttp, '/admin/content/services')).toHaveLength(1)
     expect(getsOf(adminHttp, '/admin/content/prompt-templates')).toHaveLength(0)
-    expect(wrapper.find('h2').text()).toContain('模型与生成服务')
+    expect(wrapper.find('.page-desc').text()).toContain('模型与生成服务')
     adminHttp.get.mockClear()
     await wrapper.setProps({ section: 'prompts' })
     await flush()
     expect(wrapper.find('.el-tabs').exists()).toBe(false)
     expect(wrapper.find('.el-table').exists()).toBe(true)
-    expect(wrapper.find('h2').text()).toContain('提示词模板')
+    expect(wrapper.find('.page-desc').text()).toContain('提示词模板')
     expect(getsOf(adminHttp, '/admin/content/prompt-templates')).toHaveLength(1)
     expect(getsOf(adminHttp, '/admin/content/services')).toHaveLength(0)
   })

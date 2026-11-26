@@ -1,5 +1,6 @@
 <template>
   <div class="page home">
+    <PageHead title="主页" sr-only />
     <div class="home-grid">
       <section class="card hero home-hero" aria-label="欢迎" style="--i:0">
         <span class="home-hero-scan" aria-hidden="true" />
@@ -213,6 +214,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref } from 'vue'
 import { approvalApi, accountApi, infoApi, meApi, pollApi, resolutionApi } from '@/shared/api'
 import { remaining } from '@/shared/voteShare'

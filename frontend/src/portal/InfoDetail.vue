@@ -1,11 +1,11 @@
 <template>
   <div class="page">
+    <PageHead :title="title || '信息公开'" />
     <div v-if="failed" class="card info-missing">
       <p>内容不存在或已下线</p>
       <router-link to="/info" class="link">返回列表</router-link>
     </div>
     <template v-else>
-      <h2>{{ title }}</h2>
       <div class="muted" style="margin-bottom: 12px">{{ formatDateTime(publishedAt) }}</div>
       <div v-html="pageHtml" />
       <div v-if="pageCount > 1" class="row" style="margin-top: 16px">
@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { infoApi } from '@/shared/api'

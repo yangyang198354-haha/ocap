@@ -1,14 +1,11 @@
 <!-- MOD-210：历史支出批量导入（仅业委会成员；导入后提交审批，通过后写入台账） -->
 <template>
   <div class="page" v-if="auth.isCommittee">
+    <PageHead title="历史支出导入">
+      <el-button @click="downloadTemplate('xlsx')">下载 xlsx 模板</el-button>
+      <el-button @click="downloadTemplate('csv')">下载 csv 模板</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">历史支出导入</h3>
-        <div class="row">
-          <el-button @click="downloadTemplate('xlsx')">下载 xlsx 模板</el-button>
-          <el-button @click="downloadTemplate('csv')">下载 csv 模板</el-button>
-        </div>
-      </div>
       <div class="row" style="margin-top: 10px">
         <AccountSelect v-model="accountId" placeholder="入账账户" style="width: 220px" />
         <el-select v-model="flowId" placeholder="审批流程" style="width: 240px">
@@ -31,7 +28,7 @@
 
     <div v-if="result" class="card">
       <div class="row" style="justify-content: space-between">
-        <h4 style="margin: 0">最近一次导入结果</h4>
+        <h2 class="title title-flat" style="margin: 0">最近一次导入结果</h2>
         <el-button size="small" @click="result = null">关闭</el-button>
       </div>
       <p class="muted" style="margin-top: 8px">
@@ -124,6 +121,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, historicalExpenseApi } from '@/shared/api'

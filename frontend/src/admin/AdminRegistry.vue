@@ -1,14 +1,9 @@
 <template>
   <div class="page">
-    <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">业主清册</h3>
-        <div class="row">
-          <el-button @click="showImport = true">批量导入</el-button>
-          <el-button type="primary" @click="openCreate">新增</el-button>
-        </div>
-      </div>
-    </div>
+    <PageHead title="业主清册">
+      <el-button @click="showImport = true">批量导入</el-button>
+      <el-button type="primary" @click="openCreate">新增</el-button>
+    </PageHead>
 
     <div class="card">
       <!-- REQ-FUNC-281/282：筛选区与表格同一滚动容器、共用列宽网格；面积列无筛选控件保留空位 -->
@@ -132,6 +127,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

@@ -1,8 +1,8 @@
 <!-- MOD-122：账号注销页（自 Me.vue 原 97-106、278-288 行迁移；二次确认 confirmDanger('cancelAccount') 不变） -->
 <template>
   <div class="page">
+    <PageHead title="账号注销" />
     <div class="card">
-      <h3 class="title">账号注销</h3>
       <p class="muted">注销后账号将不可登录，历史记录保留。需输入已绑定的手机号和验证码；未绑定手机号请先绑定。</p>
       <div class="row">
         <el-input v-model="cancel.phone" placeholder="已绑定的手机号" maxlength="11" style="max-width: 160px" />
@@ -15,6 +15,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

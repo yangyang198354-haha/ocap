@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="card" v-if="poll">
-      <h3 class="title">{{ poll.title }}</h3>
+      <PageHead :title="poll ? poll.title : '投票/调查详情'" />
       <p class="muted">{{ poll.description }}</p>
       <p class="muted">
         {{ poll.kind === 'REP_VOTE' ? '业主代表投票' : '调查' }} · 状态：{{ statusLabel('poll', poll.status) }} · 截止：{{ formatDateTime(poll.deadline) }}
@@ -32,7 +32,7 @@
         <el-button v-if="poll.status === 'CLOSED'" @click="loadResult">查看结果</el-button>
       </div>
       <div v-if="result" class="card" style="margin-top: 14px">
-        <h4>结果（参与 {{ result.responses }} / {{ result.participants }}）</h4>
+        <h2 class="section-title">结果（参与 {{ result.responses }} / {{ result.participants }}）</h2>
         <div v-for="row in result.questions || []" :key="row.id" style="margin-bottom: 10px">
           <p style="margin: 4px 0">{{ row.title }}</p>
           <template v-if="row.options">
@@ -52,6 +52,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'

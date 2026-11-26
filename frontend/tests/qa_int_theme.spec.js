@@ -177,10 +177,10 @@ describe('TC-INT-103 个人中心风格页（AC-074-01、AC-076-01/02/03、AC-08
   it('风格区块是独立页面，列出 3 项，默认“极光 Bento”选中；来回切换不限次数', async () => {
     const { wrapper } = await mountPage(MeStyle, { path: '/me/style' }).catch(() => ({}))
     expect(wrapper).toBeTruthy()
-    const titles = wrapper.findAll('h3.title').map((h) => h.text())
+    const titles = wrapper.findAll('h1').map((h) => h.text())
     expect(titles).toEqual(['系统设置']) // MOD-178：界面风格下沉为系统设置页内 Tab，页面标题为“系统设置”
     const profilePage = await mountPage(MeProfile, { path: '/me/profile' })
-    expect(profilePage.wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
+    expect(profilePage.wrapper.findAll('h1').map((h) => h.text())).toEqual(['个人资料'])
     expect(profilePage.wrapper.find('[role=radio]').exists()).toBe(false)
     const opts = wrapper.findAll('[role=radio]')
     expect(opts.map((o) => o.find('.theme-name').text())).toEqual(['霓虹玻璃', '极光 Bento', '赛博终端'])
@@ -204,7 +204,7 @@ describe('TC-INT-103 个人中心风格页（AC-074-01、AC-076-01/02/03、AC-08
     expect(spy.mock.calls[0][0]).toContain('保存失败')
     expect(wrapper.find('[data-theme-key=bento]').attributes('aria-checked')).toBe('true')
     expect(html().getAttribute('data-theme')).toBe('bento')
-    expect((await mountPage(MeProfile, { path: '/me/profile' })).wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
+    expect((await mountPage(MeProfile, { path: '/me/profile' })).wrapper.findAll('h1').map((h) => h.text())).toEqual(['个人资料'])
     spy.mockRestore()
   })
 })

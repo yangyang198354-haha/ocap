@@ -1,6 +1,8 @@
 <!-- MOD-170 / IFC-392a：申诉中心宿主；双 Tab 承载“认证申诉”与“我的申诉”，切换不销毁子组件 -->
 <template>
-  <div class="card">
+  <div>
+    <PageHead title="我的认证与申诉" />
+    <div class="card">
     <el-tabs v-model="tab">
       <el-tab-pane label="认证申诉" name="appeal">
         <UnitsAppeal ref="appealRef" :prefill="prefill" @submitted="onSubmitted" />
@@ -9,10 +11,12 @@
         <UnitsMyAppeals @resubmit="onResubmit" />
       </el-tab-pane>
     </el-tabs>
+    </div>
   </div>
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { reactive, ref } from 'vue'
 import UnitsAppeal from './UnitsAppeal.vue'
 import UnitsMyAppeals from './UnitsMyAppeals.vue'

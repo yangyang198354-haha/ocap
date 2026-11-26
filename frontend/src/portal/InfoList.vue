@@ -1,12 +1,6 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div class="page-head-main">
-        <div class="page-eyebrow">INFORMATION</div>
-        <h1>信息公开</h1>
-        <p class="page-desc">公告、公示与小区动态</p>
-      </div>
-    </div>
+    <PageHead title="信息公开" description="公告、公示与小区动态" />
     <div class="card">
       <el-empty v-if="!items.length" description="暂无公开信息" />
       <div v-for="item in items" :key="item.id" class="list-item">
@@ -21,6 +15,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { infoApi } from '@/shared/api'
 import { formatDateTime } from '@/shared/format'

@@ -1,7 +1,7 @@
 <template>
   <div class="page">
+    <PageHead :title="isLimit ? '金额上限' : '财务'" :description="isLimit ? '' : '报销、备用金与核销申请'" />
     <div v-if="!isLimit" class="card">
-      <h3 class="title">财务（报销 / 备用金）</h3>
       <p class="muted">
         管理员可查看全部报销、备用金与核销申请。收入表录入/审批与财务报表生成属于业委会成员权限，
         请在用户端“收入表”“财务报表”页面使用业委会成员账号操作。
@@ -17,7 +17,6 @@
       </div>
     </div>
     <div v-if="isLimit" class="card amount-limit-card">
-      <h3 class="title">金额上限</h3>
       <p class="muted">报销、备用金与收入表共用的单笔金额上限（元，正数、最多两位小数）；修改后对此后的新提交立即生效，已提交的记录不受影响。</p>
       <div class="row">
         <el-input v-model="amountMax" placeholder="金额上限" style="max-width: 220px" />
@@ -42,6 +41,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

@@ -2,8 +2,8 @@
      界面风格收敛为本页 Tab，不再直接出现在右上角下拉菜单 -->
 <template>
   <div class="page">
+    <PageHead title="系统设置" />
     <div class="card">
-      <h3 class="title">系统设置</h3>
       <el-tabs v-model="activeTab" class="me-settings-tabs">
         <el-tab-pane label="界面风格" name="style">
           <ThemePicker />
@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { ref } from 'vue'
 import ThemePicker from '@/theme/ThemePicker.vue'
 

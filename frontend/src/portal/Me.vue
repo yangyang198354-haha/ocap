@@ -1,15 +1,8 @@
 <!-- MOD-122 / MOD-178：窄屏“我的”总览页；入口收敛为“个人资料/系统设置”两项（IFC-397） -->
 <template>
   <div class="page">
-    <div class="page-head">
-      <div class="page-head-main">
-        <div class="page-eyebrow">ACCOUNT</div>
-        <h1>我的</h1>
-        <p class="page-desc">个人资料、房屋与系统设置</p>
-      </div>
-    </div>
+    <PageHead title="我的" description="个人资料、房屋与系统设置" />
     <div class="card">
-      <h3 class="title">我的</h3>
       <nav class="me-overview" aria-label="个人中心">
         <router-link v-for="item in PORTAL_USER_MENU" :key="item.key" :to="item.to" class="me-overview-item">
           <span>{{ item.label }}</span>
@@ -22,6 +15,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'

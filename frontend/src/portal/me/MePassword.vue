@@ -1,8 +1,8 @@
 <!-- MOD-122：设置密码页（自 Me.vue 原 76-82、245-255 行迁移） -->
 <template>
   <div class="page">
+    <PageHead title="设置密码" />
     <div class="card">
-      <h3 class="title">设置密码</h3>
       <el-input v-model="pwd.current" type="password" placeholder="当前密码（首次设置可留空）" show-password />
       <el-input v-model="pwd.password" type="password" placeholder="新密码（8~64 位，含字母和数字）" show-password style="margin-top: 8px" />
       <el-input v-model="pwd.confirm" type="password" placeholder="再次输入新密码" show-password style="margin-top: 8px" />
@@ -12,6 +12,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { meApi } from '@/shared/api'

@@ -1,10 +1,9 @@
 <template>
   <div class="page">
+    <PageHead title="审批流程">
+      <el-button type="primary" @click="openCreate">新建流程</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">审批流程</h3>
-        <el-button type="primary" @click="openCreate">新建流程</el-button>
-      </div>
       <p class="muted">审批人只能从业委会成员中选择；财务类（报销/备用金/收入）不得自审，决议不回避。</p>
     </div>
     <div class="card">
@@ -119,6 +118,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

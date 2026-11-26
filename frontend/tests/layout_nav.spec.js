@@ -58,7 +58,7 @@ describe('SideNav 展开/收起（US-216）', () => {
     // 改写（ocap_navigation_ia ADR-166）：二级项收敛为 3 项
     expect(wrapper.findAll('.side-sub-item')).toHaveLength(3)
     expect(wrapper.findAll('.side-sub-item').map((a) => a.text().replace(/\d+$/, '').trim())).toEqual(
-      ['我的身份与房屋', '我的认证与申述', '我的同住人申请']
+      ['我的身份与房屋', '我的认证与申诉', '我的同住人申请']
     )
     await toggleOf(wrapper, '决议').trigger('click')
     expect(toggleOf(wrapper, '我的房屋').attributes('aria-expanded')).toBe('false')
@@ -68,14 +68,14 @@ describe('SideNav 展开/收起（US-216）', () => {
     wrapper.unmount()
   })
 
-  it('TC-INT-804 / AC-299-02、AC-216-04：直达 /units/appeal（刷新）——"我的房屋"自动展开并高亮"我的认证与申述"，其余一级仍收起；旧地址 /units/appeals 无独立菜单项', async () => {
+  it('TC-INT-804 / AC-299-02、AC-216-04：直达 /units/appeal（刷新）——"我的房屋"自动展开并高亮"我的认证与申诉"，其余一级仍收起；旧地址 /units/appeals 无独立菜单项', async () => {
     const { wrapper } = await mountNav('/units/appeal')
     expect(toggleOf(wrapper, '我的房屋').attributes('aria-expanded')).toBe('true')
     expect(toggleOf(wrapper, '决议').attributes('aria-expanded')).toBe('false')
     expect(toggleOf(wrapper, '报销/备用金').attributes('aria-expanded')).toBe('false')
     const active = wrapper.findAll('.side-sub-item.is-active')
     expect(active).toHaveLength(1)
-    expect(active[0].text()).toContain('我的认证与申述')
+    expect(active[0].text()).toContain('我的认证与申诉')
     expect(active[0].attributes('aria-current')).toBe('page')
     expect(activeLabels(wrapper)).toEqual(['我的房屋'])
     wrapper.unmount()
@@ -225,16 +225,16 @@ describe('SubNavBar 窄屏二级切换条（US-230）', () => {
   }
   const units = PORTAL_MENU.find((n) => n.key === 'units').children
 
-  it('TC-INT-816 / AC-299-04、AC-304-01：/units/appeal 切换条含 3 项（我的身份与房屋/我的认证与申述/我的同住人申请）且“我的认证与申述”高亮（aria-current=page）', async () => {
+  it('TC-INT-816 / AC-299-04、AC-304-01：/units/appeal 切换条含 3 项（我的身份与房屋/我的认证与申诉/我的同住人申请）且“我的认证与申诉”高亮（aria-current=page）', async () => {
     const { wrapper } = await mountBar('/units/appeal', units, {})
     expect(wrapper.attributes('aria-label')).toBe('分区切换')
     expect(wrapper.findAll('a.sub-nav-item').map((a) => a.text())).toEqual(
-      ['我的身份与房屋', '我的认证与申述', '我的同住人申请']
+      ['我的身份与房屋', '我的认证与申诉', '我的同住人申请']
     )
     expect(wrapper.text()).not.toContain('选择房屋')
     const active = wrapper.findAll('.sub-nav-item.is-active')
     expect(active).toHaveLength(1)
-    expect(active[0].text()).toBe('我的认证与申述')
+    expect(active[0].text()).toBe('我的认证与申诉')
     expect(active[0].attributes('aria-current')).toBe('page')
     wrapper.unmount()
   })

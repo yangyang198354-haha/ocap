@@ -1,7 +1,7 @@
 <template>
   <div class="page">
+    <PageHead :title="isLogs ? '审计日志' : '系统配置'" />
     <div v-if="!isLogs" class="card">
-      <h3 class="title">系统配置</h3>
       <div class="row">
         <span>审计日志保留期限（月，≥6）</span>
         <el-input v-model="retention" style="max-width: 120px" />
@@ -9,7 +9,6 @@
       </div>
     </div>
     <div v-if="isLogs" class="card">
-      <h3 class="title">审计日志</h3>
       <div class="row">
         <el-input v-model="filters.action" placeholder="动作" style="max-width: 180px" @change="load" />
         <el-input v-model="filters.object_type" placeholder="对象类型" style="max-width: 180px" @change="load" />
@@ -38,6 +37,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

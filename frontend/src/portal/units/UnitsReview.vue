@@ -1,7 +1,7 @@
 <!-- MOD-123：待我审批的同住人申请（自 Units.vue 原 26-35、207-215 行迁移） -->
 <template>
   <div id="review" class="card">
-    <h3 class="title">待我审批的同住人申请 <el-badge v-if="toReview.length" :value="toReview.length" /></h3>
+    <h2 class="title">待我审批的同住人申请 <el-badge v-if="toReview.length" :value="toReview.length" /></h2>
     <p v-if="!toReview.length" class="muted">暂无待审批的同住人申请</p>
     <div v-for="item in toReview" :key="item.id" class="row list-item-top">
       <span>

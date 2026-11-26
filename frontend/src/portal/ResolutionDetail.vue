@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="card" v-if="item">
-      <h3 class="title">{{ item.title }}</h3>
+      <PageHead :title="item ? item.title : '决议详情'" />
       <p class="muted">
         状态：<StatusTag :status="item.status" /> · 审批方式：{{ textOf(APPROVAL_MODE_TEXT, item.approval_mode) }}
         <span v-if="item.vote_deadline">· 表决截止：{{ formatDateTime(item.vote_deadline) }}</span>
@@ -76,6 +76,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

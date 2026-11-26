@@ -1,10 +1,9 @@
 <template>
   <div class="page">
+    <PageHead title="账户管理">
+      <el-button type="primary" @click="openCreate">新建账户</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row row-between">
-        <h3 class="title title-flat">账户管理</h3>
-        <el-button type="primary" @click="openCreate">新建账户</el-button>
-      </div>
       <p class="muted">账户可停用不可删除；新建的账户余额从 0.00 开始，入账时默认使用默认账户，可改选其他启用账户。</p>
     </div>
 
@@ -68,6 +67,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { accountApi } from '@/shared/api'

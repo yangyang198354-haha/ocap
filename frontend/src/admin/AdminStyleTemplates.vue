@@ -1,11 +1,10 @@
 <!-- MOD-084 / REQ-FUNC-153：我的版式模板（自定义模板的新建、改名、编辑样式、删除；内置模板只读） -->
 <template>
   <div class="page">
+    <PageHead title="版式模板">
+      <el-button type="primary" @click="openCreate">新建模板</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">我的版式模板</h3>
-        <el-button type="primary" @click="openCreate">新建模板</el-button>
-      </div>
       <p class="muted">自定义模板保存后可在信息公开内容编辑器的模板列表中选用；被内容引用的模板不能删除；内置模板只读。</p>
     </div>
     <div class="card">
@@ -54,6 +53,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

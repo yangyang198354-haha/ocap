@@ -1,7 +1,7 @@
 <!-- MOD-123：认证申诉，自带房屋选择（Q-BL-21=A）；MOD-146：选文件只在页面内暂存，点提交时一次发送 -->
 <template>
   <div id="appeal">
-    <h3 class="title">认证申诉</h3>
+    <h2 class="title">认证申诉</h2>
     <p class="muted">姓名与手机号未能通过清册核对时，可选择房屋、填写产权人名字并选择 1~5 份产权证明（jpg/png/pdf，单个不超过 10MB），点击“提交申诉”后一并提交，由管理员审核。</p>
     <UnitCascader :key="cascaderKey" v-model="appealUnitId" />
     <div class="row" style="margin-top: 10px">

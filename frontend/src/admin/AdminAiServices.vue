@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <h2>AI 服务配置 · {{ isPrompts ? '提示词模板' : '模型与生成服务' }}</h2>
+    <PageHead title="AI 服务配置" :description="isPrompts ? '提示词模板' : '模型与生成服务'" />
     <div>
       <div v-if="!isPrompts">
         <el-card v-for="item in services" :key="item.service_type" style="margin-bottom: 12px">
@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

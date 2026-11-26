@@ -3,10 +3,10 @@
      MOD-178：绑定手机/设置密码/邮箱验证/账号注销收敛为本页 Tab，不再直接出现在右上角下拉菜单 -->
 <template>
   <div class="page">
+    <PageHead title="个人资料" />
     <el-tabs v-model="activeTab" class="me-account-tabs" @tab-change="onTabChange">
       <el-tab-pane label="个人资料" name="profile">
         <div class="card">
-          <h3 class="title">个人资料</h3>
           <div class="row profile-row">
             <el-input v-model="profile.nickname" placeholder="昵称" style="width: 240px" />
             <el-select v-model="profile.gender" placeholder="性别" clearable style="width: 120px">
@@ -26,7 +26,7 @@
         </div>
 
         <div class="card">
-          <h4 class="title">签名档</h4>
+          <h2 class="title">签名档</h2>
           <el-input v-model="profile.signature" type="textarea" :rows="3" maxlength="100" show-word-limit
                     placeholder="写一句自我介绍（不超过 100 字）" />
           <div class="row" style="margin-top: 10px">
@@ -36,7 +36,7 @@
         </div>
 
         <div class="card">
-          <h4 class="title">实名展示</h4>
+          <h2 class="title">实名展示</h2>
           <div class="row">
             <el-switch v-model="profile.real_name_visible" :disabled="!canShowRealName" @change="saveRealNameVisible" />
             <span v-if="canShowRealName" class="muted">
@@ -64,6 +64,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

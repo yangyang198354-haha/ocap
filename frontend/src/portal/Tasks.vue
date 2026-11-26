@@ -1,7 +1,7 @@
 <template>
   <div class="page">
+    <PageHead title="审批待办" />
     <div class="card">
-      <h3 class="title">审批待办</h3>
       <el-select v-model="scope" placeholder="全部类型" clearable style="width: 180px" @change="resetAndLoad">
         <el-option label="决议" value="RESOLUTION" />
         <el-option label="报销/备用金" value="EXPENSE" />
@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi } from '@/shared/api'

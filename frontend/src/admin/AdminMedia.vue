@@ -1,11 +1,10 @@
 <template>
   <div class="page">
-    <div class="row" style="justify-content: space-between">
-      <h2>素材库</h2>
+    <PageHead title="素材库">
       <el-upload :show-file-list="false" :auto-upload="false" :on-change="upload">
         <el-button type="primary">上传素材</el-button>
       </el-upload>
-    </div>
+    </PageHead>
     <div class="row" style="margin: 12px 0">
       <el-select v-model="mediaType" placeholder="全部类型" clearable style="width: 140px" @change="load">
         <el-option label="图片" value="IMAGE" />
@@ -32,6 +31,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

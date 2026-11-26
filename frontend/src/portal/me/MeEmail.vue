@@ -1,8 +1,8 @@
 <!-- MOD-122：邮箱验证页（自 Me.vue 原 84-95、257-276 行迁移） -->
 <template>
   <div class="page">
+    <PageHead title="邮箱验证" />
     <div class="card">
-      <h3 class="title">邮箱验证</h3>
       <p class="muted">当前邮箱：{{ profile.email || '未填写' }}</p>
       <div class="row">
         <el-input v-model="email" placeholder="邮箱" style="max-width: 260px" />
@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { meApi } from '@/shared/api'

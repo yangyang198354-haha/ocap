@@ -1,6 +1,7 @@
 <!-- MOD-136 / MOD-176：我的身份与房屋；页内双 Tab（身份与房屋 / 待我审批），复用 UnitsReview（ADR-167） -->
 <template>
   <div>
+    <PageHead title="我的身份与房屋" />
     <div class="card">
       <el-tabs v-model="tab">
         <el-tab-pane label="我的身份与房屋" name="identity">
@@ -58,6 +59,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'

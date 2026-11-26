@@ -1,8 +1,8 @@
 <!-- MOD-161 / IFC-374：用户房屋关系（身份 + 楼栋/单元/楼层过滤 + 姓名/电话/专有部分搜索） -->
 <template>
   <div class="page">
+    <PageHead title="用户房屋关系" />
     <div class="card">
-      <h3 class="title">用户房屋关系</h3>
       <!-- REQ-FUNC-292：管理后台展示实名与完整手机号；筛选区与表格列共用宽度网格 -->
       <div class="membership-scroll">
         <div class="filter-grid">
@@ -114,6 +114,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <h2>内容中心参数</h2>
+    <PageHead title="内容参数" />
     <el-table :data="items" border>
       <el-table-column prop="key" label="参数" min-width="260" />
       <el-table-column label="值" width="260">
@@ -27,6 +27,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

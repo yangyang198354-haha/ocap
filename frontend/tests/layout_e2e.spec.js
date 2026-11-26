@@ -214,7 +214,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     dropdownItem('个人资料').click()
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/profile'))
     await settle()
-    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['个人资料'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['个人资料'])
     expect(wrapper.findAll('.el-tabs__item').map((t) => t.text()))
       .toEqual(['个人资料', '绑定手机', '设置密码', '邮箱验证', '账号注销'])
     expect(side(wrapper).findAll('.side-item.is-active')).toHaveLength(0) // 个人中心页不高亮任何一级
@@ -229,7 +229,7 @@ describe('TC-E2E-801 用户端宽屏旅程（业委会成员）', () => {
     dropdownItem('系统设置').click()
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me/settings'))
     await settle()
-    expect(wrapper.findAll('h3.title').map((h) => h.text())).toEqual(['系统设置'])
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['系统设置'])
     expect(wrapper.findAll('.el-tabs__item').map((t) => t.text())).toEqual(['界面风格'])
     await wrapper.find('[data-theme-key=terminal]').trigger('click')
     await settle()
@@ -280,17 +280,17 @@ describe('TC-E2E-802 用户端旅程：非业委会成员与窄屏', () => {
     // 2 直达 /claims 行为与改动前一致：页面能渲染，不出现新增按钮（AC-211-03）
     await go('/claims')
     expect(router.currentRoute.value.path).toBe('/claims')
-    expect(wrapper.find('h3.title').text()).toBe('报销 / 备用金')
+    expect(wrapper.find('h1').text()).toBe('报销/备用金')
     expect(wrapper.findAll('button').find((b) => b.text().includes('新建申请'))).toBeUndefined()
-    // 3 窄屏二级切换条：我的房屋 3 项（AC-299-01/04），点"我的认证与申述"只显示该项（US-230、AC-230-01）
+    // 3 窄屏二级切换条：我的房屋 3 项（AC-299-01/04），点"我的认证与申诉"只显示该项（US-230、AC-230-01）
     await go('/units')
     expect(wrapper.findAll('nav.sub-nav-bar .sub-nav-item')).toHaveLength(3)
     expect(wrapper.find('nav.sub-nav-bar').text()).not.toContain('选择房屋')
-    await wrapper.findAll('nav.sub-nav-bar a').find((a) => a.text() === '我的认证与申述').trigger('click')
+    await wrapper.findAll('nav.sub-nav-bar a').find((a) => a.text() === '我的认证与申诉').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/units/appeal'))
     await settle()
-    expect(wrapper.find('main').findAll('h3.title').map((h) => h.text())).toEqual(['认证申诉'])
-    expect(wrapper.find('nav.sub-nav-bar .sub-nav-item.is-active').text()).toBe('我的认证与申述')
+    expect(wrapper.find('main').findAll('h1').map((h) => h.text())).toEqual(['我的认证与申诉'])
+    expect(wrapper.find('nav.sub-nav-bar .sub-nav-item.is-active').text()).toBe('我的认证与申诉')
     // 4 底部"我的" → /me 总览（窄屏不重定向）：个人资料 + 系统设置 + 退出登录（US-220、AC-302-01）
     await wrapper.findAll('nav.tabbar a').find((a) => a.text() === '我的').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/me'))
@@ -387,7 +387,7 @@ describe('TC-E2E-803 管理端旅程', () => {
     await adminSide().findAll('.side-sub-item').find((a) => a.text() === '注册用户').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/admin/users/registered'))
     await settle()
-    expect(wrapper.findAll('h3').map((h) => h.text())).toContain('注册用户')
+    expect(wrapper.findAll('h1').map((h) => h.text())).toContain('注册用户')
     expect(wrapper.text()).not.toContain('新建管理员')
     expect(adminSide().find('.side-sub-item.is-active').text()).toBe('注册用户')
 

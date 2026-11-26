@@ -1,10 +1,9 @@
 <template>
   <div class="page">
+    <PageHead :title="isRegistered ? '注册用户' : '管理员账号'">
+      <el-button v-if="!isRegistered" type="primary" @click="showCreate = true">新建管理员</el-button>
+    </PageHead>
     <div v-if="!isRegistered" class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">管理员账号</h3>
-        <el-button type="primary" @click="showCreate = true">新建管理员</el-button>
-      </div>
       <el-table :data="admins" size="small">
         <el-table-column prop="id" label="ID" width="70" />
         <el-table-column prop="username" label="账号" min-width="160" />
@@ -20,7 +19,6 @@
     </div>
 
     <div v-if="isRegistered" class="card">
-      <h3 class="title">注册用户</h3>
       <el-input v-model="keyword" placeholder="昵称 / 手机号 / 账号 / 实名" style="max-width: 260px" @change="resetAndLoad" />
       <el-table :data="users" size="small" style="margin-top: 10px">
         <el-table-column prop="id" label="ID" width="60" />
@@ -60,6 +58,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

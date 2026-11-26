@@ -41,7 +41,7 @@ const side = (wrapper) => wrapper.find('aside.side')
 const subLabels = (wrapper) => side(wrapper).findAll('.side-sub-item').map((a) => a.text().replace(/\d+$/, '').trim())
 const toggle = (wrapper, label) => side(wrapper).findAll('button.side-group-toggle').find((b) => b.text().includes(label))
 const buttonOf = (wrapper, text) => wrapper.findAll('button').find((b) => b.text().includes(text))
-const mainTitles = (wrapper) => wrapper.find('main').findAll('h3.title').map((h) => h.text().replace(/\s*\d+$/, ''))
+const mainTitles = (wrapper) => wrapper.find('main').findAll('h1, h2.title').map((h) => h.text().replace(/\s*\d+$/, ''))
 const tabLabels = (wrapper) => wrapper.find('main').findAll('.el-tabs__item').map((t) => t.text().replace(/\s*\d+$/, ''))
 
 // ---------------------------------------------------------------- 带状态的假服务端
@@ -126,7 +126,7 @@ describe('TC-E2E-910 手机号注册 → 引导 → 确认 → 我的身份与�
     expect(success).toHaveBeenCalledWith('注册成功')
     expect(success.mock.calls.flat().join('|')).not.toContain('自动认证')
     // 引导页：认证产权、折叠 10 + 展开更多 + 已选 12
-    expect(mainTitles(wrapper)).toEqual(['发现您名下的专有部分', '认证产权'])
+    expect(mainTitles(wrapper)).toEqual(['认证产权', '发现您名下的专有部分'])
     expect(wrapper.find('main').text()).toContain('展开更多（还有 2 套）')
     expect(wrapper.find('main').text()).toContain('已选 12 套')
     expect(S.owned).toHaveLength(0) // 未确认前无任何绑定
@@ -144,7 +144,7 @@ describe('TC-E2E-910 手机号注册 → 引导 → 确认 → 我的身份与�
     expect(wrapper.find('.registry-match').exists()).toBe(false)
     // 左侧二级菜单 3 项（ocap_navigation_ia ADR-166），且无"选择房屋"/"认证产权"（当前在 /units/pick，"我的房屋"已自动展开）
     if (toggle(wrapper, '我的房屋').attributes('aria-expanded') !== 'true') await toggle(wrapper, '我的房屋').trigger('click')
-    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '我的认证与申述', '我的同住人申请'])
+    expect(subLabels(wrapper)).toEqual(['我的身份与房屋', '我的认证与申诉', '我的同住人申请'])
     // 两个地址同页：10 行，含类型与面积，产权业主页内有“待我审批”Tab
     for (const p of ['/me/identity', '/units']) {
       await go(p)
@@ -184,7 +184,7 @@ describe('TC-E2E-911 选择"不是"后不再强制弹出，仍可手动认证入
     await go('/units')
     expect(wrapper.find('main').text()).toContain('您还没有认证任何专有部分，请先认证产权')
     expect(wrapper.find('main').findAll('.list-item-top')).toHaveLength(0)
-    expect(mainTitles(wrapper)).toEqual([]) // 身份页标题由 Tab 承载（ADR-167）
+    expect(mainTitles(wrapper)).toEqual(['我的身份与房屋']) // 页面唯一 h1
     expect(tabLabels(wrapper)).toEqual(['我的身份与房屋']) // 无待审批 Tab
     await go('/units/pick') // 再次进入不再弹出
     expect(wrapper.find('.registry-match').exists()).toBe(false)

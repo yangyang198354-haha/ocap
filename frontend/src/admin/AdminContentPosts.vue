@@ -1,9 +1,8 @@
 <template>
   <div class="page">
-    <div class="row" style="justify-content: space-between">
-      <h2>信息公开</h2>
+    <PageHead title="信息公开">
       <el-button type="primary" @click="create">新建内容</el-button>
-    </div>
+    </PageHead>
     <div class="row" style="margin: 12px 0">
       <el-select v-model="status" placeholder="全部状态" clearable style="width: 140px" @change="load">
         <el-option label="草稿" value="DRAFT" />
@@ -38,6 +37,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'

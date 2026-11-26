@@ -1,7 +1,7 @@
 <!-- MOD-137 / implements IFC-342：手机号匹配清册后的引导确认面板（仅 PENDING 时显示；请求不含手机号与姓名） -->
 <template>
   <div v-if="matches.length" class="card registry-match" id="registry-match">
-    <h3 class="title">发现您名下的专有部分</h3>
+    <h2 class="title">发现您名下的专有部分</h2>
     <p v-if="matches.length === 1">
       我们发现您的手机号登记在 {{ matches[0].specific_part }}（{{ matches[0].unit_type_label }}）名下，您是该专有部分的业主吗？
     </p>

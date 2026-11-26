@@ -1,7 +1,7 @@
 <template>
   <div class="page">
+    <PageHead title="收入表" />
     <div class="card">
-      <h3 class="title">收入表</h3>
       <p class="muted">
         支持逐条录入（一次最多 {{ limits.income_manual_max_records || 500 }} 条），也支持 CSV / xlsx 批量导入（≤5MB、≤{{ limits.income_import_max_rows || 5000 }} 行）。导入时重复行与错误行会被跳过并提示行号，其余行照常导入；
         录入后提交审批，通过后生效。<template v-if="amountMax">单笔金额上限 ¥{{ amountMax }}。</template>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { approvalApi, attachmentApi, incomeApi, meApi } from '@/shared/api'

@@ -1,15 +1,12 @@
 <template>
   <div class="page">
-    <div class="row" style="justify-content: space-between; margin-bottom: 12px">
-      <h2>编辑内容</h2>
-      <div class="row">
-        <el-button @click="$router.push('/admin/content/posts')">返回列表</el-button>
-        <el-button @click="saveDraft" :loading="saving">保存草稿</el-button>
-        <el-button type="success" @click="publish">发布</el-button>
-        <el-button @click="confirmText">确认文案</el-button>
-        <el-button @click="preview">预览</el-button>
-      </div>
-    </div>
+    <PageHead title="编辑内容">
+      <el-button @click="$router.push('/admin/content/posts')">返回列表</el-button>
+      <el-button @click="saveDraft" :loading="saving">保存草稿</el-button>
+      <el-button type="success" @click="publish">发布</el-button>
+      <el-button @click="confirmText">确认文案</el-button>
+      <el-button @click="preview">预览</el-button>
+    </PageHead>
 
     <el-input v-model="title" placeholder="标题" maxlength="200" show-word-limit style="margin-bottom: 12px" />
     <div class="row" style="margin-bottom: 12px">
@@ -29,7 +26,7 @@
                     @pick-media="openPicker" @paste-dropped="onPasteDropped" />
       </div>
       <aside class="side-panel">
-        <h3>AI 生成</h3>
+        <h2 class="title">AI 生成</h2>
         <el-select v-model="promptTemplate" placeholder="提示词模板" clearable style="width: 100%; margin-bottom: 8px"
                    @change="applyTemplate">
           <el-option v-for="item in prompts" :key="item.id" :label="item.name" :value="item.id" />
@@ -129,6 +126,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'

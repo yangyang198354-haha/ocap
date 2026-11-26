@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <h2>平台账户</h2>
+    <PageHead title="平台账户" />
     <el-card v-for="item in platforms" :key="item.platform" style="margin-bottom: 12px">
       <div class="row" style="justify-content: space-between">
         <strong>{{ item.label }}</strong>
@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

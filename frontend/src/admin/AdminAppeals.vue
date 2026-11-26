@@ -1,7 +1,7 @@
 <template>
   <div class="page">
+    <PageHead title="产权申诉审核" />
     <div class="card">
-      <h3 class="title">产权申诉审核</h3>
       <el-select v-model="status" placeholder="全部状态" clearable style="width: 180px" @change="resetAndLoad">
         <el-option label="待审核" value="PENDING" />
         <el-option label="已通过" value="APPROVED" />
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { admin } from '@/shared/api'

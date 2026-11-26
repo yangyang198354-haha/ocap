@@ -85,7 +85,7 @@ describe('报销与核销表单（CR-013）', () => {
     const { wrapper } = await mountPage(Claims)
     expect(http.get).toHaveBeenCalledWith('/claims', { params: { scope: 'mine', page: 1, page_size: 20 } })
     expect(http.get).toHaveBeenCalledWith('/approval/flows', { params: { scope: 'EXPENSE' } })
-    expect(wrapper.text()).toContain('报销 / 备用金')
+    expect(wrapper.text()).toContain('报销/备用金')
     expect(button(wrapper, '备用金核销')).toBeTruthy()
   })
 
@@ -240,7 +240,7 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     http.post.mockResolvedValue({ merged: true, token: 'MERGED-TOKEN', user: { id: 2 } })
     // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
     const { wrapper } = await mountPage(MePhone)
-    const titles = wrapper.findAll('h3').map((h) => h.text())
+    const titles = wrapper.findAll('h1').map((h) => h.text())
     expect(titles).toContain('绑定手机')
     expect(titles).not.toContain('更换手机号')
     Object.assign(wrapper.vm.change, {
@@ -264,7 +264,7 @@ describe('绑定 / 换绑手机号（CR-019）', () => {
     http.post.mockResolvedValue({ merged: false, phone: '139****0000' })
     // 拆分同步：手机号区块迁为独立页 /me/phone（MePhone），原挂载 Me 整页
     const { wrapper } = await mountPage(MePhone)
-    const titles = wrapper.findAll('h3').map((h) => h.text())
+    const titles = wrapper.findAll('h1').map((h) => h.text())
     expect(titles).toContain('绑定手机')
     expect(titles).not.toContain('更换手机号')
     Object.assign(wrapper.vm.bind, { phone: '13900000000', code: '123456' })

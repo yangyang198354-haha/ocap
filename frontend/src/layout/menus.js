@@ -8,7 +8,7 @@ export const PORTAL_MENU = [
     children: [
       // ADR-166/ADR-167：二级项收敛为 3 项；待审批改为身份页页内 Tab，角标仍挂在此项
       { key: 'units.identity', label: '我的身份与房屋', to: '/units', activeOn: ['/me/identity'], badge: 'pendingReview' },
-      { key: 'units.appeal', label: '我的认证与申述', to: '/units/appeal' },
+      { key: 'units.appeal', label: '我的认证与申诉', to: '/units/appeal' },
       { key: 'units.applications', label: '我的同住人申请', to: '/units/applications' }
     ]
   },

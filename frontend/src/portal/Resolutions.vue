@@ -1,15 +1,8 @@
 <template>
   <div class="page">
-    <div class="page-head">
-      <div class="page-head-main">
-        <div class="page-eyebrow">RESOLUTIONS</div>
-        <h1>业委会决议</h1>
-        <p class="page-desc">公开决议与表决结果</p>
-      </div>
-      <div class="page-actions">
-        <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起决议</el-button>
-      </div>
-    </div>
+    <PageHead title="业委会决议" description="公开决议与表决结果">
+      <el-button v-if="auth.isChairOrVice" type="primary" @click="showCreate = true">发起决议</el-button>
+    </PageHead>
     <div class="card">
       <p class="section-title">{{ sectionTitle }}</p>
     </div>
@@ -19,7 +12,7 @@
     </div>
     <template v-else>
       <section v-for="group in displayGroups" :key="group.key" class="res-section">
-        <h4 v-if="group.title" class="res-section-title">{{ group.title }}（{{ group.items.length }}）</h4>
+        <h2 v-if="group.title" class="res-section-title">{{ group.title }}（{{ group.items.length }}）</h2>
         <div class="res-grid">
       <article v-for="item in group.items" :key="item.id" class="card res-card">
         <div class="res-top">
@@ -98,6 +91,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -230,6 +224,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.res-section-title { margin: 4px 2px 10px; font-size: 14px; font-weight: 650; color: var(--muted); }
+.res-section-title { margin: 4px 2px 10px; font-size: var(--text-section-title); line-height: var(--leading-section-title); font-weight: var(--weight-card-title); color: var(--muted); }
 .res-section + .res-section { margin-top: 8px; }
 </style>

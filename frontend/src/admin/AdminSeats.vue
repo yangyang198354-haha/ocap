@@ -2,11 +2,10 @@
      口径（GR-B-001-F02）：status=ACTIVE 但未到任期开始的席位保留在主表并显示"待生效"标签 -->
 <template>
   <div class="page">
+    <PageHead title="业委会席位/业主代表">
+      <el-button type="primary" @click="showCreate = true">赋予席位</el-button>
+    </PageHead>
     <div class="card">
-      <div class="row" style="justify-content: space-between">
-        <h3 class="title" style="margin: 0">业委会席位 / 业主代表</h3>
-        <el-button type="primary" @click="showCreate = true">赋予席位</el-button>
-      </div>
       <p class="muted">
         人数：主任 {{ config.cap_chair ?? '-' }}、副主任 {{ config.cap_vice ?? '-' }}、委员 {{ config.cap_member ?? '-' }}、业主代表 {{ config.cap_rep ?? '-' }}；
         任期（月）：主任 {{ config.term_months_chair ?? '-' }}、副主任 {{ config.term_months_vice ?? '-' }}、委员 {{ config.term_months_member ?? '-' }}、业主代表 {{ config.term_months_rep ?? '-' }}。
@@ -207,6 +206,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { admin } from '@/shared/api'

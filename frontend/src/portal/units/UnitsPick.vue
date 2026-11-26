@@ -1,9 +1,9 @@
 <!-- MOD-137：认证产权（只做产权认证；同住人申请已迁至 UnitsApplications，ADR-134） -->
 <template>
   <div>
+    <PageHead title="认证产权" />
     <RegistryMatchPanel />
     <div class="card">
-      <h3 class="title">认证产权</h3>
       <p class="muted">逐级选择你的专有部分，输入您本人的姓名后点击"认证产权"。</p>
       <UnitCascader v-model="pickedUnitId" />
       <div class="row" style="margin-top: 10px">
@@ -20,6 +20,7 @@
 </template>
 
 <script setup>
+import PageHead from '@/shared/PageHead.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

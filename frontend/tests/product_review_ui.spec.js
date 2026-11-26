@@ -20,6 +20,7 @@ vi.mock('element-plus', async (importOriginal) => {
 
 import { mountPage, routeTable } from './helpers.js'
 import { useAuthStore } from '@/stores/auth'
+import { clearIdentityCache } from '@/shared/identityCache'
 import Units from '@/portal/Units.vue'
 import UnitsPick from '@/portal/units/UnitsPick.vue'
 import UnitsReview from '@/portal/units/UnitsReview.vue'
@@ -302,6 +303,9 @@ describe('登录页、导航与内容详情', () => {
   it('TC-UNIT-577 / AC-154-04、AC-166-01：左侧导航（原：顶部导航）——非成员无"报销/备用金""收入表""待办"；委员三者可见；"个人中心"移入右上角菜单，不在导航内', async () => {
     const nav = async (position) => {
       document.body.innerHTML = ''
+      // 同一 it 内两次挂载 PortalLayout：清掉上一次写入的身份缓存，否则新 pinia 从 localStorage
+      // 读到带 identities 的旧身份，onMounted 会跳过 fetchMe，导致委员导航按旧身份渲染（测试隔离）
+      clearIdentityCache()
       http.get.mockImplementation(routeTable({ '/me': ME(position) }))
       const { wrapper } = await mountPage(PortalLayout)
       await flush()

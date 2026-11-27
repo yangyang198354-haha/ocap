@@ -118,6 +118,8 @@ export const incomeApi = {
   resubmit: (id, flowId) => post(`/admin/income/sheets/${id}/resubmit`, { approval_flow_id: flowId }),
   withdraw: (id) => post(`/admin/income/sheets/${id}/withdraw`, {}),
   voidSheet: (id) => post(`/admin/income/sheets/${id}/void`, {}),
+  // 软删除：仅草稿/已撤回可删，仅提交人（区别于已生效的作废）
+  deleteSheet: (id) => post(`/admin/income/sheets/${id}/delete`, {}),
   template: (fileType = 'xlsx') =>
     http.get('/admin/income/template', { params: { file_type: fileType }, responseType: 'blob' }),
   list: (params) => get('/income/sheets', params)

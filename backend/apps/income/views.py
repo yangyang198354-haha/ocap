@@ -27,7 +27,7 @@ from apps.core.serializers import page_response
 from apps.ledger.services import AccountService
 
 from .models import IncomeRecord, IncomeSheet
-from .services import is_original_approver_of, recalculate, void_sheet
+from .services import is_original_approver_of, recalculate, soft_delete_sheet, void_sheet
 
 COLUMNS = ["日期", "金额", "收入类别", "来源说明", "备注"]
 
@@ -265,7 +265,7 @@ class AdminSheetListView(APIView):
     permission_classes = [IsIncomeMember]
 
     def get(self, request):
-        qs = IncomeSheet.objects.select_related("account").order_by("-created_at")
+        qs = IncomeSheet.objects.select_related("account").filter(deleted_at__isnull=True).order_by("-created_at")
         for param in ("status",):
             value = request.query_params.get(param)
             if value:
@@ -364,14 +364,14 @@ class SheetSubmitView(APIView):
     permission_classes = [IsIncomeMember]
 
     def post(self, request, sheet_id: int):
-        sheet = _get_sheet(sheet_id)
-        if sheet.status != "DRAFT":
-            raise ApiError("NOT_SUBMITTABLE", "仅草稿可提交", 409)
-        flow = _flow(request.data or {})
-        if not sheet.records.exists():
-            raise ApiError("INCOME_SHEET_EMPTY", "收入表没有记录", 409)
-        recalculate(sheet)
         with transaction.atomic():
+            sheet = _get_sheet(sheet_id, for_update=True)
+            if sheet.status != "DRAFT":
+                raise ApiError("NOT_SUBMITTABLE", "仅草稿可提交", 409)
+            flow = _flow(request.data or {})
+            if not sheet.records.exists():
+                raise ApiError("INCOME_SHEET_EMPTY", "收入表没有记录", 409)
+            recalculate(sheet)
             instance = ApprovalEngine.submit(scope="INCOME", subject_type="income_sheet",
                                              subject_id=sheet.id, flow_id=flow.id,
                                              submitter=request.user)
@@ -389,14 +389,14 @@ class SheetResubmitView(APIView):
     permission_classes = [IsIncomeMember]
 
     def post(self, request, sheet_id: int):
-        sheet = _get_sheet(sheet_id)
-        if sheet.status != "WITHDRAWN":
-            raise ApiError("NOT_RESUBMITTABLE", "该收入表已结束，如需再次提交请新建", 409)
-        flow = _flow(request.data or {})
-        if not sheet.records.exists():
-            raise ApiError("INCOME_SHEET_EMPTY", "收入表没有记录", 409)
-        recalculate(sheet)
         with transaction.atomic():
+            sheet = _get_sheet(sheet_id, for_update=True)
+            if sheet.status != "WITHDRAWN":
+                raise ApiError("NOT_RESUBMITTABLE", "该收入表已结束，如需再次提交请新建", 409)
+            flow = _flow(request.data or {})
+            if not sheet.records.exists():
+                raise ApiError("INCOME_SHEET_EMPTY", "收入表没有记录", 409)
+            recalculate(sheet)
             sheet.status = "PENDING"
             sheet.revision += 1
             sheet.decided_at = None
@@ -434,12 +434,21 @@ class SheetVoidView(APIView):
         return Response(sheet_view(sheet))
 
 
+class SheetDeleteView(APIView):
+    """软删除草稿/已撤回的收入表（REQ-FUNC-048 补充：录入后不想提交可删除）。"""
+    permission_classes = [IsIncomeMember]
+
+    def post(self, request, sheet_id: int):
+        soft_delete_sheet(sheet_id, request.user)
+        return Response({"id": sheet_id, "deleted": True})
+
+
 class IncomeSheetListView(APIView):
     # DEF-002：已生效收入表对所有登录用户可见，录入/审批入口仍在 admin 视图。
     permission_classes = [IsMember]
 
     def get(self, request):
-        qs = (IncomeSheet.objects.select_related("account").filter(status="EFFECTIVE")
+        qs = (IncomeSheet.objects.select_related("account").filter(status="EFFECTIVE", deleted_at__isnull=True)
               .order_by("-period_start", "-id"))
         period_start = request.query_params.get("period_start")
         period_end = request.query_params.get("period_end")
@@ -498,8 +507,10 @@ def sheet_detail_view(sheet: IncomeSheet) -> dict:
     } for r in sheet.records.all()]}
 
 
-def _get_sheet(sheet_id: int) -> IncomeSheet:
-    sheet = IncomeSheet.objects.select_related("account").filter(id=sheet_id).first()
+def _get_sheet(sheet_id: int, *, for_update: bool = False) -> IncomeSheet:
+    sheets = IncomeSheet.objects.filter(id=sheet_id, deleted_at__isnull=True)
+    sheets = sheets.select_for_update() if for_update else sheets.select_related("account")
+    sheet = sheets.first()
     if sheet is None:
         raise ApiError("NOT_FOUND", "收入表不存在", 404)
     return sheet

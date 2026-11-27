@@ -11,6 +11,7 @@ export const CONFIRM_TEXTS = {
   withdrawResolution: { title: '撤回决议', consequences: ['决议将退出审批，需修改后重新提交'] },
   withdrawClaim: { title: '撤回申请', consequences: ['申请将退出审批，需修改后重新提交'] },
   withdrawIncome: { title: '撤回收入表', consequences: ['收入表将退出审批，需修改后重新提交'] },
+  deleteIncome: { title: '删除收入表', consequences: ['仅草稿或已撤回的收入表可删除', '删除后不再出现在列表中，如需恢复请联系管理员'] },
   withdrawHistoricalExpense: { title: '撤回历史支出导入', consequences: ['该批次将退出审批，不会写入台账', '可修改后重新导入'] },
   removeResident: { title: '移除同住人', consequences: ['该用户在本房屋将不再是同住人', '其在其他房屋的身份不变'] },
   leaveUnit: { title: '退出同住人身份', consequences: ['你在本房屋将不再是同住人', '若无其他身份将回到游客'] },

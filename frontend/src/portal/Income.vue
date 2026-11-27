@@ -44,6 +44,7 @@
             <el-button v-if="item.status === 'WITHDRAWN'" size="small" type="primary" @click="submit(item)">重新提交</el-button>
             <el-button v-if="item.status === 'REJECTED'" size="small" type="primary" @click="openReissue(item)">重新发起</el-button>
             <el-button type="danger" v-if="item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
+            <el-button v-if="['DRAFT', 'WITHDRAWN'].includes(item.status)" size="small" type="danger" plain @click="deleteSheet(item.id)">删除</el-button>
             <el-button v-if="item.status === 'EFFECTIVE' && item.can_void" size="small" type="danger" @click="voidSheet(item.id)">作废</el-button>
           </div>
         </div>
@@ -281,6 +282,17 @@ async function voidSheet(id) {
   try {
     await incomeApi.voidSheet(id)
     ElMessage.success('已作废')
+    load()
+  } catch (e) {
+    ElMessage.error(errorText(e))
+  }
+}
+
+async function deleteSheet(id) {
+  if (!(await confirmDanger('deleteIncome'))) return
+  try {
+    await incomeApi.deleteSheet(id)
+    ElMessage.success('已删除')
     load()
   } catch (e) {
     ElMessage.error(errorText(e))

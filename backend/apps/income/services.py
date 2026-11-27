@@ -1,6 +1,7 @@
 """收入服务（IFC-102/104）：审批回调入账、作废留痕、金额重算。"""
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Max, Min, Sum
 from django.utils import timezone
 
@@ -83,6 +84,33 @@ def void_sheet(sheet_id: int, by_user) -> IncomeSheet:
     return sheet
 
 
+@transaction.atomic
+def soft_delete_sheet(sheet_id: int, by_user) -> IncomeSheet:
+    """软删除：仅未生效（DRAFT/WITHDRAWN）的收入表可删，仅提交人可删。
+
+    与作废的语义分界：草稿/撤回从未入账，删除只是清掉暂存；已生效的须走 void_sheet 留痕。
+    软删除用 deleted_at 标记，列表与详情隐藏，但记录保留以供审计追溯。
+    """
+    from apps.core.errors import ApiError
+
+    actor = AuditActor("MEMBER", by_user.id, by_user.identity_label)
+    with transaction.atomic():
+        sheet = IncomeSheet.objects.select_for_update().filter(id=sheet_id, deleted_at__isnull=True).first()
+        if sheet is None:
+            raise ApiError("NOT_FOUND", "收入表不存在", 404)
+        if sheet.status not in {"DRAFT", "WITHDRAWN"}:
+            raise ApiError("IMMUTABLE", "仅草稿或已撤回的收入表可删除；已生效请用作废", 409)
+        if sheet.submitted_by_id == by_user.id:
+            sheet.deleted_at = timezone.now()
+            sheet.save(update_fields=["deleted_at", "updated_at"])
+            AuditService.record(actor=actor, action="INCOME_DELETED", object_type="income_sheet",
+                                object_id=str(sheet.id), result="SUCCESS", detail={"status": sheet.status})
+            return sheet
+    AuditService.record(actor=actor, action="INCOME_DELETED", object_type="income_sheet",
+                        object_id=str(sheet.id), result="DENIED")
+    raise ApiError("FORBIDDEN", "仅提交人可删除", 403)
+
+
 def recalculate(sheet: IncomeSheet) -> Decimal:
     total = sheet.records.aggregate(total=Sum("amount"))["total"]
     sheet.total_amount = total or Decimal("0.00")
@@ -95,7 +123,7 @@ def recalculate(sheet: IncomeSheet) -> Decimal:
 
 class IncomeAttachmentPolicy:
     def can_open(self, linked_id: str, principal) -> bool:
-        sheet = IncomeSheet.objects.filter(id=linked_id).first()
+        sheet = IncomeSheet.objects.filter(id=linked_id, deleted_at__isnull=True).first()
         if sheet is None or principal is None:
             return False
         if getattr(principal, "is_admin_principal", False):

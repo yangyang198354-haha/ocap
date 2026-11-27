@@ -25,6 +25,8 @@ class IncomeSheet(models.Model):
     void_reason = models.CharField(max_length=200, blank=True, default="")
     voided_by_id = models.IntegerField(null=True, blank=True)
     voided_at = models.DateTimeField(null=True, blank=True)
+    # 软删除：仅 DRAFT/WITHDRAWN 且未生效的收入表可删，列表隐藏但保留审计痕迹（区别于已生效的作废）
+    deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -31,15 +31,24 @@
       </div>
     </section>
 
-    <section class="card reports-accounts business-panel business-summary business-enter" aria-label="账户余额">
+    <section class="card reports-accounts business-panel business-summary" aria-label="账户余额" :aria-busy="accountsLoading">
       <header class="reports-accounts-head">
         <div>
           <div class="label">账户余额合计（启用账户）</div>
-          <div class="reports-total mono">¥{{ totalBalance }}</div>
+          <div v-if="accountsLoading" class="sk-line reports-total-skeleton" aria-hidden="true" />
+          <div v-else class="reports-total mono account-content">¥{{ totalBalance }}</div>
         </div>
-        <router-link to="/reports" class="link reports-refresh" @click.prevent="loadAccounts">刷新</router-link>
+        <el-button link type="primary" class="reports-refresh" :disabled="accountsLoading" @click="loadAccounts">刷新</el-button>
       </header>
-      <p v-if="accountError" class="muted account-error">
+      <div v-if="accountsLoading" class="reports-account-grid" role="status" aria-label="正在加载账户">
+        <article v-for="n in skeletonCount" :key="n" class="card account-skeleton" aria-hidden="true">
+          <div class="sk-line sk-title" />
+          <div class="sk-line sk-short" />
+          <div class="sk-line sk-balance" />
+          <div v-for="row in 10" :key="row" class="sk-entry"><div class="sk-line" /></div>
+        </article>
+      </div>
+      <p v-else-if="accountError" class="muted account-error">
         加载失败
         <el-button link type="primary" size="small" @click="loadAccounts">重试</el-button>
       </p>
@@ -95,6 +104,7 @@ import ReportDetailDialog from './ReportDetailDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { errorText } from '@/shared/format'
 import { usePaging } from '@/shared/usePaging'
+import { readAccountCount, writeAccountCount } from '@/shared/accountCountCache'
 
 const PERIOD_OPTIONS = [
   { value: 'ALL', label: '全部' },
@@ -105,6 +115,8 @@ const PERIOD_OPTIONS = [
 const auth = useAuthStore()
 const periodFilter = ref('ALL')
 const accounts = ref([])
+const accountsLoading = ref(true)
+const skeletonCount = ref(readAccountCount() ?? 2)
 const totalBalance = ref('0.00')
 const accountError = ref(false)
 const selectedAccountId = ref(null)
@@ -152,9 +164,13 @@ async function choosePeriod(value) {
 }
 
 async function loadAccounts() {
+  accountsLoading.value = true
+  accountError.value = false
   try {
     const data = await accountApi.summary({ status: 'ENABLED', recent: 10 })
     accounts.value = data?.accounts || []
+    skeletonCount.value = accounts.value.length
+    writeAccountCount(accounts.value.length)
     totalBalance.value = data?.total_balance ?? '0.00'
     accountError.value = false
     if (!accounts.value.some((a) => a.id === selectedAccountId.value)) {
@@ -165,6 +181,8 @@ async function loadAccounts() {
     accounts.value = []
     totalBalance.value = '0.00'
     accountError.value = true
+  } finally {
+    accountsLoading.value = false
   }
 }
 
@@ -219,7 +237,24 @@ onMounted(async () => {
   display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px;
   scrollbar-width: thin; scrollbar-color: var(--line) transparent;
 }
-.reports-account-grid > * { flex: 1 1 0; min-width: 280px; }
+.reports-account-grid > * { flex: 1 1 0; min-width: min(100%, 420px); }
+.account-skeleton { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+.sk-line { height: 12px; border-radius: 8px; background: var(--glass); animation: sk-pulse 1.4s ease-in-out infinite; }
+.sk-title { width: 55%; height: 18px; }
+.sk-short { width: 30%; }
+.sk-balance { width: 45%; height: 38px; }
+.reports-total-skeleton { width: 180px; height: 36px; }
+.sk-entry { padding: 9px 0; border-top: 1px solid var(--line); }
+@keyframes sk-pulse { 50% { opacity: .45; } }
+@keyframes content-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .account-content, .reports-account-grid :deep(.account-card > *) { animation: content-rise 260ms var(--motion-ease, cubic-bezier(.2, .7, .2, 1)) both; }
+  .reports-account-grid :deep(.account-card > :nth-child(2)) { animation-delay: 45ms; }
+  .reports-account-grid :deep(.account-card > :nth-child(3)) { animation-delay: 90ms; }
+}
+@media (prefers-reduced-motion: reduce) { .sk-line { animation: none; } }
+html[data-perf="low"] .sk-line, html[data-perf="low"] .account-content,
+html[data-perf="low"] .reports-account-grid :deep(.account-card > *) { animation: none !important; }
 .account-error { margin: 0; }
 .reports-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding-inline: 10px; border-radius: var(--radius-sm); }
 @media (max-width: 767.98px) { .reports-item { grid-template-columns: minmax(0, 1fr); } }

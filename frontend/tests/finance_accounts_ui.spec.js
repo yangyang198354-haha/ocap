@@ -13,6 +13,7 @@ import { mountPage, routeTable } from './helpers.js'
 import Reports from '@/portal/Reports.vue'
 import Home from '@/portal/Home.vue'
 import AdminAccounts from '@/admin/AdminAccounts.vue'
+import { writeAccountCount } from '@/shared/accountCountCache'
 
 const { http, adminHttp } = mocked
 
@@ -66,6 +67,45 @@ function reportsRoutes(extra = {}) {
 }
 
 describe('财务报表页', () => {
+  it('按缓存数量显示骨架，接口返回后填入账户，刷新期间重新显示骨架', async () => {
+    writeAccountCount(3)
+    let resolveSummary
+    http.get.mockImplementation(reportsRoutes({
+      '/ledger/accounts/summary': () => new Promise(resolve => { resolveSummary = resolve })
+    }))
+    const { wrapper } = await mountPage(Reports, { path: '/reports' })
+    expect(wrapper.findAll('.account-skeleton')).toHaveLength(3)
+    expect(wrapper.find('.reports-accounts').attributes('aria-busy')).toBe('true')
+    expect(wrapper.text()).not.toContain('暂无账户')
+    expect(wrapper.find('.reports-total').exists()).toBe(false)
+    resolveSummary(SUMMARY)
+    await flushPromises()
+    expect(wrapper.findAll('.account-skeleton')).toHaveLength(0)
+    expect(wrapper.findAll('.account-card')).toHaveLength(1)
+    await wrapper.find('.reports-refresh').trigger('click')
+    expect(wrapper.findAll('.account-skeleton')).toHaveLength(1)
+    resolveSummary({ accounts: [], total_balance: '0.00' })
+    await flushPromises()
+    expect(wrapper.find('.reports-accounts').attributes('aria-busy')).toBe('false')
+    expect(wrapper.find('.reports-accounts').text()).toContain('暂无账户')
+    wrapper.unmount()
+  })
+
+  it('账户接口失败后结束骨架并允许重试', async () => {
+    http.get.mockImplementation(reportsRoutes({
+      '/ledger/accounts/summary': () => Promise.reject(new Error('offline'))
+    }))
+    const { wrapper } = await mountPage(Reports, { path: '/reports' })
+    expect(wrapper.find('.account-skeleton').exists()).toBe(false)
+    expect(wrapper.find('.account-error').text()).toContain('重试')
+    http.get.mockImplementation(reportsRoutes())
+    await wrapper.find('.account-error button').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.account-error').exists()).toBe(false)
+    expect(wrapper.findAll('.account-card')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('TC-WEB-1401 / AC-409-01、AC-409-03：展示账户余额合计、账户卡片与最近流水', async () => {
     http.get.mockImplementation(reportsRoutes())
     const { wrapper } = await mountPage(Reports, { path: '/reports' })

@@ -1,16 +1,19 @@
 <template>
   <div class="shell">
     <aside class="side">
-      <router-link to="/" class="side-brand">
+      <router-link to="/" class="side-brand portal-side-brand">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-wordmark">{{ BRAND_NAME }}</span>
+        <BrandWordmark class="side-brand-name brand-wordmark" />
       </router-link>
       <SideNav :menu="menu" :badges="{ pendingReview: housing.pendingReviewCount }" />
     </aside>
     <div class="shell-main">
       <header class="topbar">
         <div class="topbar-inner row">
-          <router-link to="/" class="brand brand-wordmark brand-lockup"><BrandMark :size="28" />{{ BRAND_NAME }}</router-link>
+          <router-link to="/" class="brand brand-wordmark brand-lockup">
+            <BrandMark :size="28" />
+            <BrandWordmark />
+          </router-link>
           <div class="topbar-user"><PortalUserMenu /></div>
         </div>
       </header>
@@ -28,8 +31,8 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useHousingStore } from '@/stores/housing'
-import { BRAND_NAME } from '@/brand/brand'
 import BrandMark from '@/brand/BrandMark.vue'
+import BrandWordmark from '@/brand/BrandWordmark.vue'
 import SideNav from '@/layout/SideNav.vue'
 import SubNavBar from '@/layout/SubNavBar.vue'
 import { PORTAL_MENU, resolveActive, visibleMenu } from '@/layout/menus'

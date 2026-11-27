@@ -78,7 +78,9 @@ describe('三套风格各一版（AC-209-01、AC-209-02、AC-227-01）', () => {
         expect(w.findAll('.auth-art svg'), `${key}/${name}`).toHaveLength(1)
         expect(w.find('.auth-art').attributes('aria-hidden')).toBe('true')
         expect(w.find('.auth-brand').classes()).toContain('brand-wordmark')
-        expect(w.find('.auth-sub').text()).toBe(name === 'login' ? '登录' : '手机号注册')
+        expect(w.find('h1 .brand-at').text()).toBe('@')
+        if (name === 'login') expect(w.find('.auth-sub').exists()).toBe(false)
+        else expect(w.find('.auth-sub').text()).toBe('手机号注册')
         ;(seen[key] ||= new Set()).add(artClass(w))
         seen[key].html = w.find('.auth-art').html()
         w.unmount()
@@ -157,7 +159,7 @@ describe('三套风格各一版（AC-209-01、AC-209-02、AC-227-01）', () => {
     }
   })
 
-  it('TC-INT-868 / AC-209-05(2)(3)：同一品牌——三版 AuthShell 均含 BrandMark、品牌名 h1 与副标题；配图栏在表单栏之前（品牌名与配图同屏）；三套品牌名位置一致', async () => {
+  it('TC-INT-868：三套登录页只放一枚枫叶，霓虹在品牌区，极光和终端在表单区', async () => {
     const orders = []
     for (const key of ['neon', 'bento', 'terminal']) {
       document.body.innerHTML = ''
@@ -167,7 +169,10 @@ describe('三套风格各一版（AC-209-01、AC-209-02、AC-227-01）', () => {
       await flush()
       const shell = m.wrapper.find('.auth-shell')
       orders.push([...shell.element.children].map((c) => c.className.split(' ')[0]))
-      expect(m.wrapper.find('.auth-panel img.brand-mark').exists(), key).toBe(true)
+      expect(shell.findAll('img.brand-mark'), key).toHaveLength(1)
+      const brandArea = key === 'neon' ? '.auth-art' : '.auth-panel'
+      expect(shell.find(`${brandArea} img.brand-mark`).exists(), key).toBe(true)
+      expect(shell.find(`${brandArea} .brand-at`).text(), key).toBe('@')
       expect(m.wrapper.find('.auth-panel h1').text(), key).toBe('赛博@红枫岭')
       m.wrapper.unmount()
     }
@@ -176,12 +181,13 @@ describe('三套风格各一版（AC-209-01、AC-209-02、AC-227-01）', () => {
 })
 
 describe('表单字段与流程不变（AC-207-01、AC-207-02、AC-209-06、AC-227-03）', () => {
-  it('TC-INT-869 / AC-207-01：/login 含"验证码/密码/邮箱"3 个登录方式、"手机号注册"链接，且不再出现"业主委员会 · 登录"', async () => {
+  it('TC-INT-869：/login 含三种登录方式和「用户注册」入口，无重复登录标题', async () => {
     const { wrapper } = await mountPage(Login)
     await flush()
     const tabs = wrapper.findAll('.el-tabs__item').map((t) => t.text())
     expect(tabs).toEqual(['验证码', '密码', '邮箱'])
-    expect(wrapper.findAll('a').find((a) => a.text() === '手机号注册').attributes('href')).toBe('/register')
+    expect(wrapper.findAll('a').find((a) => a.text() === '用户注册').attributes('href')).toBe('/register')
+    expect(wrapper.find('.auth-sub').exists()).toBe(false)
     expect(wrapper.text()).toContain('赛博@红枫岭')
     expect(wrapper.text()).not.toContain('业主委员会')
   })

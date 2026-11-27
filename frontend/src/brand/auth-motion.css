@@ -142,9 +142,6 @@ html[data-theme="bento"] .auth-shell .auth-art::after {
   animation: auth-aurora-ribbon 13s ease-in-out infinite alternate;
 }
 html[data-theme="bento"] .auth-art-copy { z-index: 1; }
-html[data-theme="bento"] .auth-art-copy .brand-mark {
-  animation: auth-aurora-leaf 6s ease-in-out infinite;
-}
 html[data-theme="bento"] .auth-panel {
   background: #fffffff0;
   backdrop-filter: blur(16px);
@@ -169,7 +166,6 @@ html[data-theme="bento"] .auth-card .el-button--primary:not(.is-link, .is-text, 
 @keyframes auth-aurora-gradient { from { background-position: 0 35%; } to { background-position: 100% 65%; } }
 @keyframes auth-aurora-card-light { from { transform: translate(-9%, 5%) rotate(-10deg); } to { transform: translate(10%, -7%) rotate(9deg); } }
 @keyframes auth-aurora-ribbon { from { transform: translateX(-45%) rotate(-6deg); opacity: .55; } to { transform: translateX(40%) rotate(5deg); opacity: .9; } }
-@keyframes auth-aurora-leaf { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
 @keyframes auth-aurora-card-shadow { from { box-shadow: 0 20px 48px #0b103650, 0 0 0 #6fcfff00; } to { box-shadow: 0 20px 52px #0b103650, 0 0 42px #79baff4d; } }
 @keyframes auth-aurora-button { from { background-position: 0 50%; } to { background-position: 100% 50%; } }
 

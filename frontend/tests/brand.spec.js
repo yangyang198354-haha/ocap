@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ADMIN_BRAND_TITLE, BRAND_NAME } from '@/brand/brand'
 import BrandMark from '@/brand/BrandMark.vue'
+import BrandWordmark from '@/brand/BrandWordmark.vue'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -34,12 +35,12 @@ describe('产品名常量与网页标题', () => {
 describe('REQ-NFUNC-041：9 处用户可见产品名位置残留旧名为 0', () => {
   it('TC-UNIT-843 / AC-223-02：逐处核对 9 处——Web 登录页、注册页、网页标题、用户端品牌位、管理端品牌位、管理端登录页（经 AuthShell 取 BRAND_NAME）、小程序登录页、小程序首页标题、小程序全局标题', () => {
     const sites = {
-      '登录页/注册页/管理端登录页（AuthShell h1）': () => /<h1[^>]*>\{\{\s*BRAND_NAME\s*\}\}<\/h1>/.test(read('frontend/src/brand/AuthShell.vue')),
-      '登录页使用 AuthShell': () => read('frontend/src/portal/Login.vue').includes('<AuthShell surface="portal" subtitle="登录">'),
+      '登录页/注册页/管理端登录页（AuthShell h1）': () => /<h1[^>]*><BrandWordmark\s*\/><\/h1>/.test(read('frontend/src/brand/AuthShell.vue')),
+      '登录页使用 AuthShell': () => read('frontend/src/portal/Login.vue').includes('<AuthShell surface="portal">'),
       '注册页使用 AuthShell': () => read('frontend/src/portal/Register.vue').includes('<AuthShell surface="portal" subtitle="手机号注册">'),
       '管理端登录页使用 AuthShell': () => read('frontend/src/admin/AdminLogin.vue').includes('<AuthShell surface="admin" subtitle="管理后台登录">'),
       '网页标题': () => read('frontend/index.html').includes('<title>赛博@红枫岭</title>'),
-      '用户端品牌位': () => (read('frontend/src/portal/PortalLayout.vue').match(/\{\{\s*BRAND_NAME\s*\}\}/g) || []).length === 2,
+      '用户端品牌位': () => (read('frontend/src/portal/PortalLayout.vue').match(/<BrandWordmark\b/g) || []).length === 2,
       '管理端品牌位': () => read('frontend/src/admin/AdminLayout.vue').includes('{{ ADMIN_BRAND_TITLE }}'),
       '小程序登录页': () => read('miniprogram/pages/login/index.vue').includes('<text class="auth-brand-name">赛博@红枫岭</text>'),
       '小程序首页标题': () => JSON.parse(read('miniprogram/pages.json')).pages[0].style.navigationBarTitleText === '赛博@红枫岭',
@@ -48,6 +49,12 @@ describe('REQ-NFUNC-041：9 处用户可见产品名位置残留旧名为 0', ()
     const failed = Object.entries(sites).filter(([, fn]) => !fn()).map(([name]) => name)
     expect(failed).toEqual([])
     expect(Object.keys(sites).length).toBeGreaterThanOrEqual(9)
+  })
+
+  it('保持品牌全文可读，只把 @ 放入强调样式', () => {
+    const wordmark = mount(BrandWordmark)
+    expect(wordmark.text()).toBe(BRAND_NAME)
+    expect(wordmark.find('.brand-at').text()).toBe('@')
   })
 
   it('TC-UNIT-844 / AC-223-02、AC-207-01：全仓用户可见源码中旧产品名（"业主委员会 · 登录/管理后台"、<title>业主委员会</title>、小程序标题"业主委员会"）残留数 = 0', () => {

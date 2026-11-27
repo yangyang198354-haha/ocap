@@ -13,6 +13,21 @@
 .brand-mark { flex: none; display: block; object-fit: contain; }
 .brand-wordmark { font-family: var(--font); font-weight: 800; letter-spacing: .01em; }
 .brand-lockup { display: inline-flex; align-items: center; gap: 8px; }
+.portal-side-brand { container-type: inline-size; }
+.portal-side-brand .side-brand-name { font-size: clamp(17px, 11.7cqi, 1em); }
+html[data-theme="bento"] { --brand-at-color: #6542cc; --brand-at-gradient: linear-gradient(140deg, #9b38bb, #5841da 52%, #136f9e); }
+html[data-theme="terminal"] { --brand-at-color: #c6ff3d; --brand-at-gradient: linear-gradient(140deg, #f2ffb3, #c6ff3d 48%, #67e8a5); }
+html[data-theme="neon"] { --brand-at-color: #9bcfff; --brand-at-gradient: linear-gradient(140deg, #f3b5fd, #ab9bff 42%, #5fe5f1); }
+.brand-at { color: var(--brand-at-color, currentColor); }
+@supports (background-clip: text) {
+  @media (forced-colors: none) {
+    .brand-at {
+      background: var(--brand-at-gradient, linear-gradient(currentColor, currentColor));
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+}
 html[data-theme="bento"] .brand-mark { filter: drop-shadow(0 1px 2px rgba(65, 24, 56, .22)); }
 html[data-theme="neon"] .brand-mark { filter: drop-shadow(0 0 6px rgba(67, 233, 236, .28)); }
 html[data-theme="terminal"] .brand-mark { filter: drop-shadow(0 0 3px rgba(255, 70, 62, .32)); }

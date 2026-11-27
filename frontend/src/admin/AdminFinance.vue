@@ -29,7 +29,7 @@
         <el-table-column label="类型" width="130">
           <template #default="{ row }">{{ textOf(CLAIM_TYPE_TEXT, row.type) }}</template>
         </el-table-column>
-        <el-table-column prop="amount" label="金额" width="120" />
+        <el-table-column prop="amount" label="金额" min-width="120" align="right" class-name="business-money" />
         <el-table-column prop="reason" label="事由" min-width="180" />
         <el-table-column label="状态" width="110">
           <template #default="{ row }">{{ textOf(CLAIM_STATUS_TEXT, row.status) }}</template>

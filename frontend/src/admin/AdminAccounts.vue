@@ -13,7 +13,7 @@
         <el-table-column label="账户号" min-width="140">
           <template #default="{ row }">{{ row.account_no || '—' }}</template>
         </el-table-column>
-        <el-table-column label="余额" width="120">
+        <el-table-column label="余额" min-width="120" align="right" class-name="business-money">
           <template #default="{ row }"><span class="mono">¥{{ row.balance }}</span></template>
         </el-table-column>
         <el-table-column label="状态" width="90">

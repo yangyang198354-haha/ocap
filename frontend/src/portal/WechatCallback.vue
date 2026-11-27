@@ -1,8 +1,10 @@
 <template>
-  <div class="page" style="max-width: 420px; padding-top: 80px">
-    <div class="card">
-      <p>正在完成微信登录…</p>
-      <p v-if="error" class="error-text">{{ error }}</p>
+  <div class="page business-page wechat-callback">
+    <div class="card business-panel business-summary business-enter">
+      <h1 class="page-title">微信登录</h1>
+      <p v-if="error" class="error-text" role="alert">{{ error }}</p>
+      <p v-else role="status">正在完成微信登录…</p>
+      <router-link v-if="error" to="/login">返回登录</router-link>
     </div>
   </div>
 </template>
@@ -37,3 +39,7 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.wechat-callback { max-width: 420px; padding-top: clamp(32px, 10vh, 80px); }
+</style>

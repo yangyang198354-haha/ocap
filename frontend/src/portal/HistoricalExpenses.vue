@@ -62,7 +62,7 @@
         <el-table-column prop="imported_rows" label="成功" width="70" />
         <el-table-column prop="skipped_rows" label="重复" width="70" />
         <el-table-column prop="failed_rows" label="失败" width="70" />
-        <el-table-column label="金额合计" width="120">
+        <el-table-column label="金额合计" min-width="120" align="right" class-name="business-money">
           <template #default="{ row }">¥{{ row.total_amount }}</template>
         </el-table-column>
         <el-table-column label="状态" width="100">
@@ -92,7 +92,7 @@
         <el-table :data="detail.rows || []" size="small" max-height="460">
           <el-table-column prop="line_no" label="#" width="60" />
           <el-table-column prop="occurred_on" label="日期" width="110" />
-          <el-table-column prop="amount" label="金额" width="100" />
+          <el-table-column prop="amount" label="金额" min-width="115" align="right" class-name="business-money" />
           <el-table-column prop="category" label="支出类别" width="110" />
           <el-table-column prop="purpose" label="用途/事由" min-width="160" />
           <el-table-column prop="remark" label="备注" min-width="120" />

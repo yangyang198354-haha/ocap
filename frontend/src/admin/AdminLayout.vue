@@ -18,7 +18,7 @@
           <AdminUserMenu />
         </div>
       </header>
-      <main class="layout-main">
+      <main class="layout-main business-page">
         <router-view />
       </main>
     </div>

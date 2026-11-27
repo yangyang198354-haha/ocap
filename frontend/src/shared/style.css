@@ -60,6 +60,36 @@ html[data-perf="low"] .home-grid > .card { animation: none !important; }
 }
 /* 业务页首屏与首页共用入场节奏。 */
 .business-page { font-size: 15px; line-height: 1.55; }
+.layout-main.business-page .page-head:not(.sr-only) {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface));
+}
+html[data-theme="terminal"] .layout-main.business-page .page-head:not(.sr-only) {
+  border-inline-start: 3px solid var(--accent);
+}
+html[data-theme="neon"] .layout-main.business-page .page-head:not(.sr-only) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  box-shadow: var(--inset-highlight, none);
+}
+.admin-shell .business-page .card:hover { transform: none; }
+.business-page .el-form-item__label { font-size: 14px; font-weight: 600; }
+.business-page .el-form-item__content { min-width: 0; }
+.business-page .el-table,
+body:has(.layout-main.business-page) .el-dialog .el-table {
+  font-size: 14px;
+  line-height: 1.5;
+  --el-table-header-bg-color: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+.business-page .el-table th.el-table__cell,
+body:has(.layout-main.business-page) .el-dialog .el-table th.el-table__cell {
+  font-size: 13px;
+  font-weight: 650;
+}
+.el-table td.business-money { font-size: 15px; font-variant-numeric: tabular-nums; }
+.business-page .list-item:not(.business-record):hover,
+.business-page .list-item:not(.business-record):focus-within { background-color: var(--glass); }
 .business-page .business-panel { min-width: 0; }
 .business-page .business-panel:hover { transform: none; }
 .business-page .business-summary {
@@ -207,6 +237,7 @@ html[data-theme="terminal"] .business-page .business-record:focus-within { box-s
   .card:hover { transform: none; box-shadow: var(--inset-highlight, none), var(--shadow-rest, var(--shadow)); border-color: var(--line); }
   .page-head { align-items: flex-start; flex-direction: column; gap: 12px; }
   .page-head h1, .page-title { font-size: var(--text-page-title-sm); line-height: var(--leading-page-title-sm); }
+  .layout-main.business-page .page-head:not(.sr-only) { padding: 12px 14px; }
   .shell { display: block; }
   .side { display: none; }
   .topbar-user { display: none; }
@@ -346,10 +377,11 @@ html[data-theme="terminal"] .business-page .business-record:focus-within { box-s
 
 /* 卡片与导航动效（MOD-149/150，REQ-NFUNC-047）：全部包在 no-preference 内，"减少动效"下无任何新增动画；时长 ≤ 360ms */
 @media (prefers-reduced-motion: no-preference) {
-  html:not([data-perf="low"]) .business-page .business-enter {
+  html:not([data-perf="low"]) .business-page .business-enter,
+  html:not([data-perf="low"]) .layout-main.business-page .page-head:not(.sr-only) {
     animation: card-rise 320ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) both;
   }
-  .business-page .business-record {
+  .business-page .business-record, .business-page .list-item {
     transition: background-color var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
   }
   .res-card, .poll-item { transition: transform .18s ease, box-shadow .18s ease; }

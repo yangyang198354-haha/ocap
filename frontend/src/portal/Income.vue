@@ -85,7 +85,7 @@
       <el-table :data="detail?.records || []" size="small">
         <el-table-column prop="line_no" label="#" width="50" />
         <el-table-column prop="occurred_on" label="日期" width="110" />
-        <el-table-column prop="amount" label="金额" width="100" />
+        <el-table-column prop="amount" label="金额" min-width="115" align="right" class-name="business-money" />
         <el-table-column prop="category" label="类别" width="100" />
         <el-table-column prop="source_note" label="来源说明" min-width="120" />
       </el-table>

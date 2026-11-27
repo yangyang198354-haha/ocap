@@ -14,7 +14,7 @@
           <div class="topbar-user"><PortalUserMenu /></div>
         </div>
       </header>
-      <main class="portal-main layout-main">
+      <main class="portal-main layout-main" :class="{ 'business-page': route.path !== '/' }">
         <SubNavBar v-if="active.node && active.node.children" :items="active.node.children" :badges="{ pendingReview: housing.pendingReviewCount }" />
         <router-view />
       </main>

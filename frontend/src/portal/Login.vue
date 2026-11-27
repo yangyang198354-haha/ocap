@@ -1,5 +1,5 @@
 <template>
-  <AuthShell surface="portal" subtitle="登录">
+  <AuthShell surface="portal">
     <div class="card auth-form-card">
       <el-tabs v-model="tab">
         <el-tab-pane label="验证码" name="code">
@@ -27,7 +27,7 @@
         </el-tab-pane>
       </el-tabs>
       <div class="row" style="justify-content: space-between; margin-top: 14px">
-        <router-link to="/register">手机号注册</router-link>
+        <router-link to="/register">用户注册</router-link>
         <a v-if="wechatUrl" :href="wechatUrl">微信扫码登录</a>
       </div>
     </div>

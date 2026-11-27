@@ -6,32 +6,27 @@
       <TerminalMatrix v-if="themeKey === 'terminal'" />
       <div class="auth-art-copy">
         <template v-if="themeKey === 'terminal'">
-          <div class="auth-terminal-window">
-            <p>&gt; boot cyber@hongfengling</p>
-            <p>&gt; auth --mode secure</p>
-            <p>&gt; link established <span class="auth-terminal-cursor">...</span> ok</p>
-          </div>
+          <TerminalCommands />
         </template>
         <template v-else-if="themeKey === 'neon'">
           <BrandMark :size="160" />
-          <h2>{{ BRAND_NAME }}</h2>
+          <h2><BrandWordmark /></h2>
           <p class="auth-art-english">Cyber@HFL</p>
           <p class="auth-art-tagline">AI 驱动的智能社区平台</p>
         </template>
         <template v-else>
-          <h2>欢迎来到<br />{{ BRAND_NAME }}</h2>
-          <p class="auth-art-tagline">登录以进入您的智能社区空间</p>
-          <BrandMark :size="112" />
+          <h2>欢迎回来</h2>
+          <p class="auth-art-tagline">进入您的智能社区空间</p>
         </template>
       </div>
     </div>
     <div class="auth-panel">
       <div class="auth-card">
-        <div class="auth-head">
-          <BrandMark :size="46" />
+        <div class="auth-head" :class="{ 'auth-head--title-only': themeKey === 'neon' && !subtitle }">
+          <BrandMark v-if="themeKey !== 'neon'" :size="46" />
           <div class="auth-head-text">
-            <h1 class="auth-brand brand-wordmark">{{ BRAND_NAME }}</h1>
-            <p class="auth-sub">{{ subtitle }}</p>
+            <h1 class="auth-brand brand-wordmark"><BrandWordmark /></h1>
+            <p v-if="subtitle" class="auth-sub">{{ subtitle }}</p>
           </div>
         </div>
         <slot />
@@ -44,8 +39,9 @@
 import { computed } from 'vue'
 import { useThemeStore } from '@/theme/store'
 import { useAdminThemeStore } from '@/theme/adminStore'
-import { BRAND_NAME } from './brand'
 import BrandMark from './BrandMark.vue'
+import BrandWordmark from './BrandWordmark.vue'
+import TerminalCommands from './TerminalCommands.vue'
 import TerminalMatrix from './TerminalMatrix.vue'
 import { artFor } from './art'
 

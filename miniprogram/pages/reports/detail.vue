@@ -1,4 +1,4 @@
-<!-- MOD-085 / IFC-271 / REQ-FUNC-159：报表明细（与 Web 报表详情同口径，不显示支出事由 summary） -->
+<!-- MOD-085 / IFC-271 / REQ-FUNC-159：报表明细（与 Web 报表详情同口径） -->
 <template>
   <ThemeRoot>
   <view>
@@ -20,6 +20,10 @@
           <text style="margin-left: 12rpx">{{ entryTypeText(row.entry_type) }}</text>
           <text class="muted" style="margin-left: 12rpx">{{ row.direction === 'INCOME' ? '收入' : '支出' }}</text>
           <text style="margin-left: 12rpx">¥{{ row.amount }}</text>
+          <view class="entry-summary">
+            <text class="muted">{{ row.direction === 'INCOME' ? '来源说明' : '用途／事由' }}：</text>
+            <text>{{ row.summary || '—' }}</text>
+          </view>
         </view>
       </view>
     </template>
@@ -36,7 +40,7 @@ import { api } from '@/utils/api'
 const report = ref(null)
 const failed = ref(false)
 
-// 明细类型：报销 / 备用金 / 核销为系统类型，收入行的类型即收入类别（明细不含事由）
+// 明细类型：报销 / 备用金 / 核销为系统类型，收入行的类型即收入类别。
 const ENTRY_TYPES = { REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销', INCOME: '收入' }
 const entryTypeText = (t) => ENTRY_TYPES[t] || t || ''
 const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year} 年第 ${r.quarter} 季度`)
@@ -49,3 +53,7 @@ onLoad(async (options) => {
   }
 })
 </script>
+
+<style scoped>
+.entry-summary { margin-top: 6rpx; overflow-wrap: anywhere; white-space: pre-line; }
+</style>

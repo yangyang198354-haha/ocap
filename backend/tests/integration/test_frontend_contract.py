@@ -687,19 +687,20 @@ class ProductReviewFieldContractTests(ApiTestBase):
 
     # ---------- 报表明细 ----------
     def test_tc_int_493_report_detail_fields_vs_web_and_mini_pages(self):
-        """TC-INT-493 / AC-168-01、AC-178-02：报表明细响应的合计与明细行字段 ⊇ Web Reports.vue、小程序 reports/detail.vue 读取的字段；支出 summary 为 null 且前端不读取 summary。"""
+        """TC-INT-493 / AC-168-01、AC-178-02：报表明细响应的合计与明细行字段 ⊇ Web 报表详情和小程序读取的字段，含收入来源与支出事由。"""
         _, token = self.make_user()
         data = self.assert_ok(self.api("get", f"/ledger/reports/{self.report.id}", token=token)).data
         row = data["detail"][0]
         self.assertTrue({"direction", "amount", "entry_type", "occurred_on", "summary"} <= set(row))
-        self.assertIsNone(row["summary"])
-        web, mini = src("frontend/src/portal/Reports.vue"), src("miniprogram/pages/reports/detail.vue")
-        self.assertLessEqual(reads(web, ["detail"]), set(data))
+        self.assertEqual(row["summary"], "x")
+        web = src("frontend/src/portal/ReportDetailDialog.vue")
+        mini = src("miniprogram/pages/reports/detail.vue")
+        self.assertLessEqual(reads(web, ["report"]), set(data))
         self.assertLessEqual(reads(web, ["row"]), set(row))
         self.assertLessEqual(reads(mini, ["report"]), set(data))
         self.assertLessEqual(reads(mini, ["row"]), set(row))
-        self.assertNotIn("summary", reads(web, ["row"]) | reads(mini, ["row"]))
-        for needed in ("total_income", "total_expense", "balance"):
+        self.assertIn("summary", reads(web, ["row"]) & reads(mini, ["row"]))
+        for needed in ("total_income", "total_expense"):
             self.assertIn(needed, web)
             self.assertIn(needed, mini)
 

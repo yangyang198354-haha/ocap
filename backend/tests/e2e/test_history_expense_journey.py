@@ -66,7 +66,10 @@ class HistoryExpenseJourneyTests(ApiTestBase):
         self.assertEqual(len([r for r in report["detail"] if r["source_type"] == "historical_expense"]), 3)
 
         # 4) 业主可查看报表
-        self.assert_ok(self.api("get", f"/ledger/reports/{report['id']}", token=owner_token))
+        owner_report = self.assert_ok(
+            self.api("get", f"/ledger/reports/{report['id']}", token=owner_token)).data
+        self.assertEqual([row["summary"] for row in owner_report["detail"]],
+                         ["更换电梯钢丝绳", "季度保洁", "修剪树木"])
 
         # 5) 整批作废 → 报表过期 → 重算为 0
         self.assert_ok(self.api("post", f"{BASE}/batches/{batch_id}/void", {"reason": "科目错误"}, token=token))

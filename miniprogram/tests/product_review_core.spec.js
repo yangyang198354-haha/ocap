@@ -119,11 +119,12 @@ describe('页面', () => {
     expect(requests().some((r) => r.path === '/resident-applications' && r.method === 'POST')).toBe(false)
   })
 
-  it('TC-UNIT-574 / AC-168-01：报表明细：合计与明细行，不显示支出事由', async () => {
+  it('TC-UNIT-574 / AC-168-01：报表明细：合计与明细行，显示收入来源与支出事由', async () => {
     respondWith({
       'GET /ledger/reports/5': {
         id: 5, period_type: 'QUARTER', year: 2026, quarter: 3, total_income: '100.00', total_expense: '30.00', balance: '70.00',
-        detail: [{ direction: 'EXPENSE', occurred_on: '2026-08-01', entry_type: 'REIMBURSEMENT', amount: '30.00', summary: null }]
+        detail: [{ direction: 'EXPENSE', occurred_on: '2026-08-01', entry_type: 'REIMBURSEMENT', amount: '30.00', summary: '电梯维修' },
+          { direction: 'INCOME', occurred_on: '2026-08-02', entry_type: '停车费', amount: '100.00', summary: '小区公共收益' }]
       }
     })
     const { wrapper } = await mountPage(ReportDetail, { query: { id: '5' } })
@@ -131,6 +132,8 @@ describe('页面', () => {
     expect(wrapper.text()).toContain('收入合计：¥100.00')
     expect(wrapper.text()).toContain('报销')
     expect(wrapper.text()).toContain('¥30.00')
+    expect(wrapper.text()).toContain('电梯维修')
+    expect(wrapper.text()).toContain('小区公共收益')
   })
 
   it('TC-UNIT-575 / AC-154-04、AC-168-01：我的：报表可点击进入明细；非成员无“报销 / 备用金”按钮；成员有', async () => {

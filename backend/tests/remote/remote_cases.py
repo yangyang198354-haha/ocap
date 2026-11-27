@@ -157,8 +157,8 @@ class ReadOnlyChecks(RemoteBase):
         else:
             self.assertEqual(len(first["results"]), 20)
 
-    def test_328_ac_168_01_02_report_detail_masks_expense_summary(self):
-        """TC-E2E-328 / AC-168-01、AC-168-02：已有报表时明细合计与列表一致、支出事由为空；未登录 401；无报表则 SKIP。"""
+    def test_328_ac_168_01_02_report_detail_exposes_summary_field(self):
+        """TC-E2E-328 / AC-168-01、AC-168-02：已有报表时明细合计与列表一致并返回摘要字段；未登录 401；无报表则 SKIP。"""
         reports = self.j(R.get("/ledger/reports", "e2e_guest"))["results"]
         self.err(R.get("/ledger/reports/1"), 401)
         if not reports:
@@ -168,8 +168,8 @@ class ReadOnlyChecks(RemoteBase):
         for k in ("total_income", "total_expense", "balance"):
             self.assertEqual(detail[k], item[k])
         for row in detail["detail"]:
-            if row["direction"] == "EXPENSE":
-                self.assertIsNone(row["summary"])
+            self.assertIn("summary", row)
+            self.assertTrue(row["summary"] is None or isinstance(row["summary"], str))
 
     def test_329_ac_175_01_template_preflight_is_read_only(self):
         """TC-E2E-329 / AC-175-01：下载 xlsx 模板并预检（dry_run=1）：总行数 6、失败 0；清册专有部分总数前后不变。"""

@@ -325,22 +325,25 @@ class StyleAndReportTests(ApiTestBase):
         self.assertEqual(self.api("delete", "/admin/content/style-templates/builtin:classic",
                                   token=self.token).status_code, 404)
 
-    def test_report_detail_masks_expense_summary_unless_configured(self):
-        """TC-INT-531 / AC-168-01（GROUP_C 自验证，GROUP_D 接管）：报表明细支出事由默认置空，配置开启后显示，不写回库。"""
+    def test_report_detail_shows_expense_summary_unless_disabled(self):
+        """TC-INT-531 / AC-168-01（GROUP_C 自验证，GROUP_D 接管）：报表明细默认展示支出事由，显式关闭后隐藏且不写回库。"""
         _, mtoken, _ = self.make_owner()
         detail = [{"direction": "EXPENSE", "amount": "1.00", "summary": "个人事由", "seq": 0},
                   {"direction": "INCOME", "amount": "2.00", "summary": "物业费", "seq": 0}]
         report = LedgerReport.objects.create(period_type="YEAR", year=2026, detail=detail)
         data = self.assert_ok(self.api("get", f"/ledger/reports/{report.id}", token=mtoken)).data
-        self.assertIsNone(data["detail"][0]["summary"])
+        self.assertEqual(data["detail"][0]["summary"], "个人事由")
         self.assertEqual(data["detail"][1]["summary"], "物业费")
         report.refresh_from_db()
         self.assertEqual(report.detail[0]["summary"], "个人事由")
         from apps.core.config import SystemConfig
 
-        SystemConfig.set("report.show_expense_reason", True, None)
+        SystemConfig.set("report.show_expense_reason", False, None)
         data = self.api("get", f"/ledger/reports/{report.id}", token=mtoken).data
-        self.assertEqual(data["detail"][0]["summary"], "个人事由")
+        self.assertIsNone(data["detail"][0]["summary"])
+        self.assertEqual(data["detail"][1]["summary"], "物业费")
+        report.refresh_from_db()
+        self.assertEqual(report.detail[0]["summary"], "个人事由")
 
 
 class IdentityLabelsTests(ApiTestBase):

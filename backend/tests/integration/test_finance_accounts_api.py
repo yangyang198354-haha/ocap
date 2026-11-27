@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from apps.approval.models import ApprovalInstance
 from apps.claims.models import Claim
+from apps.core.config import SystemConfig
 from apps.core.models import AuditLog
 from apps.ledger.models import LedgerAccount, LedgerEntry, LedgerReport
 from apps.ledger.services import AccountService, LedgerService
@@ -40,6 +41,11 @@ class AccountApiTests(ApiTestBase):
         self.assertEqual(row["account_no"], "")
         self.assertEqual(len(row["recent_entries"]), 2)
         self.assertEqual(row["recent_entries"][0]["amount"], "20.00")
+        self.assertEqual([entry["summary"] for entry in row["recent_entries"]], ["集成测试", "集成测试"])
+
+        SystemConfig.set("report.show_expense_reason", False, None)
+        hidden = self.assert_ok(self.api("get", "/ledger/accounts/summary", token=self.member_token)).data
+        self.assertEqual([entry["summary"] for entry in hidden["accounts"][0]["recent_entries"]], [None, "集成测试"])
 
         self.assert_error(self.api("get", "/ledger/accounts/summary"), 401)
         self.assert_error(self.api("get", "/ledger/accounts/summary", token=self.admin_token),
@@ -141,6 +147,12 @@ class ReportChainApiTests(ApiTestBase):
         self.assertEqual(view.data["total_income"], "0.00")
         self.assertEqual(view.data["total_expense"], "80.00")
         self.assertEqual(view.data["closing_balance"], "-80.00")
+        self.assertEqual([row["summary"] for row in view.data["detail"]], ["集成测试"])
+
+        SystemConfig.set("report.show_expense_reason", False, None)
+        masked = self.assert_ok(self.api("get", f"/ledger/reports/{report.id}?account_id={other.id}",
+                                         token=self.member_token)).data
+        self.assertIsNone(masked["detail"][0]["summary"])
 
         missing = self.api("get", f"/ledger/reports/{report.id}?account_id=999999",
                            token=self.member_token)

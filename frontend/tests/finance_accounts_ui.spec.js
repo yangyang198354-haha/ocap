@@ -27,7 +27,8 @@ const ME = {
 const ACCOUNT = {
   id: 1, name: '第四届业主委员会基本账户', account_no: '', status: 'ENABLED', is_default: true,
   balance: '100.00',
-  recent_entries: [{ id: 9, occurred_on: '2025-02-01', direction: 'INCOME', amount: '100.00', entry_type: 'INCOME' }]
+  recent_entries: [{ id: 9, occurred_on: '2025-02-01', direction: 'INCOME', amount: '100.00', entry_type: 'INCOME', summary: '小区公共收益' },
+    { id: 10, occurred_on: '2025-02-02', direction: 'EXPENSE', amount: '20.00', entry_type: '维修', summary: '电梯维修' }]
 }
 const SUMMARY = { total_balance: '100.00', accounts: [ACCOUNT] }
 const REPORTS = {
@@ -40,7 +41,8 @@ const REPORTS = {
 const DETAIL = {
   id: 1, period_type: 'QUARTER', year: 2025, quarter: 1, total_income: '100.00', total_expense: '0.00',
   balance: '100.00', opening_balance: '0.00', closing_balance: '100.00', legacy: false, stale: false,
-  detail: [{ occurred_on: '2025-02-01', direction: 'INCOME', entry_type: '停车费', amount: '100.00' }]
+  detail: [{ occurred_on: '2025-02-01', direction: 'INCOME', entry_type: '停车费', amount: '100.00', summary: '小区公共收益' },
+    { occurred_on: '2025-02-02', direction: 'EXPENSE', entry_type: '维修', amount: '20.00', summary: '电梯维修' }]
 }
 
 const buttonByText = (root, text) => [...root.querySelectorAll('button')].find((b) => b.textContent.includes(text))
@@ -73,6 +75,9 @@ describe('财务报表页', () => {
     expect(text).toContain('第四届业主委员会基本账户')
     expect(text).toContain('¥100.00')
     expect(wrapper.text()).toContain('2025 年第 1 季度')
+    expect(wrapper.findAll('.account-entry-summary').map(row => row.text())).toEqual([
+      expect.stringContaining('小区公共收益'), expect.stringContaining('电梯维修')
+    ])
   })
 
   it('TC-WEB-1402 / AC-401-01、AC-401-04：切换“仅年报”后按 period_type 重新请求', async () => {
@@ -97,6 +102,9 @@ describe('财务报表页', () => {
     expect(document.body.textContent).toContain('期初结余')
     expect(document.body.textContent).toContain('期末结余')
     expect(document.body.textContent).toContain('2025 年第 1 季度报表')
+    expect(document.body.querySelector('.report-detail-table').textContent).toContain('小区公共收益')
+    expect(document.body.querySelector('.report-detail-table').textContent).toContain('电梯维修')
+    expect(document.body.querySelector('.report-detail-mobile').textContent).toContain('电梯维修')
     const closeBtn = buttonByText(document.body, '关闭')
     closeBtn.click()
     await flushPromises()

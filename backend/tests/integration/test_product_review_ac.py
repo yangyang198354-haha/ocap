@@ -665,7 +665,7 @@ class ShouldHaveAccountTests(PRBase):
         self.assert_ok(self.api("get", "/approval/tasks", token=mtoken))
 
     def test_tc_int_463_ac_168_01_to_03_report_detail_totals_and_auth(self):
-        """TC-INT-463 / AC-168-01~03：报表明细合计与列表一致、支出事由为 null；未登录 401；无报表时列表为空。"""
+        """TC-INT-463 / AC-168-01~03：报表明细合计与列表一致、保留收入来源与支出事由；未登录 401；无报表时列表为空。"""
         _, token = self.make_user()
         self.assertEqual(self.api("get", "/ledger/reports", token=token).data["results"], [])
         detail = [{"direction": "INCOME", "amount": "300.00", "entry_type": "INCOME_RECORD", "seq": 0,
@@ -683,8 +683,7 @@ class ShouldHaveAccountTests(PRBase):
                          Decimal(got["total_income"]))
         self.assertEqual(sum(Decimal(r["amount"]) for r in got["detail"] if r["direction"] == "EXPENSE"),
                          Decimal(got["total_expense"]))
-        self.assertIsNone([r for r in got["detail"] if r["direction"] == "EXPENSE"][0]["summary"])
-        self.assertNotIn("私人事由", str(got))
+        self.assertEqual([r["summary"] for r in got["detail"]], ["物业费", "私人事由"])
         self.assert_error(self.api("get", f"/ledger/reports/{report.id}"), 401)
 
     def test_tc_int_464_ac_169_01_169_02_offline_and_missing_post_404(self):

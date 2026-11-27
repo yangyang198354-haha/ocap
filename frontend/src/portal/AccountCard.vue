@@ -27,6 +27,10 @@
         </span>
         <span class="account-entry-type">{{ entryTypeText(entry.entry_type) }}</span>
         <span class="account-entry-amount mono">¥{{ moneyText(entry.amount) }}</span>
+        <span class="account-entry-summary">
+          <span class="account-entry-summary-label">{{ entry.direction === 'INCOME' ? '来源说明' : '用途／事由' }}</span>
+          {{ entry.summary || '—' }}
+        </span>
       </li>
     </ul>
   </article>
@@ -67,6 +71,8 @@ const entryTypeText = (t) => ENTRY_TYPES[t] || t || '收支'
 .account-entry-dir.is-expense { color: var(--danger); }
 .account-entry-type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-entry-amount { text-align: right; }
+.account-entry-summary { grid-column: 1 / -1; min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+.account-entry-summary-label { color: var(--muted); margin-inline-end: 6px; }
 @media (min-width: 768px) {
   .account-balance { font-size: 32px; }
 }

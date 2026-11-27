@@ -42,7 +42,7 @@ DEFAULTS: dict[str, Any] = {
     "poll.max_questions": 50,
     "vote.min_window_minutes": 60,
     "vote.denominator_mode": "ACTIVE",
-    "report.show_expense_reason": False,
+    "report.show_expense_reason": True,
     "wechat.phone_quick_verify_enabled": False,
 }
 

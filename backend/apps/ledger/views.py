@@ -20,10 +20,10 @@ from .services import (AccountService, LedgerService, _aggregate, _opening_balan
                        _totals_by_period)
 
 
-def _recent_entry_view(entry) -> dict:
+def _recent_entry_view(entry, *, show_expense_reason: bool) -> dict:
     return {"id": entry.id, "occurred_on": str(entry.occurred_on), "direction": entry.direction,
             "amount": money(entry.amount), "entry_type": entry.entry_type,
-            "summary": entry.summary}
+            "summary": entry.summary if entry.direction != "EXPENSE" or show_expense_reason else None}
 
 
 def account_view(account: LedgerAccount) -> dict:
@@ -53,10 +53,12 @@ class AccountSummaryView(APIView):
             recent = 10
         recent = min(max(recent, 0), 20)
         summary = AccountService.summary(status=status, recent=recent)
+        show_expense_reason = recent > 0 and bool(SystemConfig.get("report.show_expense_reason"))
         accounts = [{"id": row["id"], "name": row["name"], "account_no": row["account_no"],
                      "status": row["status"], "is_default": row["is_default"],
                      "balance": money(row["balance"]),
-                     "recent_entries": [_recent_entry_view(e) for e in row["recent_entries"]]}
+                     "recent_entries": [_recent_entry_view(e, show_expense_reason=show_expense_reason)
+                                        for e in row["recent_entries"]]}
                     for row in summary["accounts"]]
         return Response({"total_balance": money(summary["total_balance"]), "accounts": accounts})
 
@@ -393,7 +395,7 @@ def report_summary(report: LedgerReport, *, total_income=None, total_expense=Non
 
 
 def _mask_expense_reason(detail):
-    # ADR-091 / ocap REQ-FUNC-050 OQ-08：报表明细默认不显示支出事由（不写回数据库）
+    # 默认显示事由，保留显式关闭时的隐藏行为，不改写报表快照。
     if SystemConfig.get("report.show_expense_reason") or not isinstance(detail, list):
         return detail
     return [({**row, "summary": None} if isinstance(row, dict) and row.get("direction") == "EXPENSE"

@@ -132,9 +132,9 @@ class CancelJourneyTests(ApiTestBase):
 
 
 class FinanceJourneyTests(ApiTestBase):
-    def test_tc_e2e_312_us_154_168_170_member_claim_approved_report_masked_limit_changed(self):
+    def test_tc_e2e_312_us_154_168_170_member_claim_approved_report_summary_limit_changed(self):
         """TC-E2E-312 / US-154、168、170（AC-154-01/02、168-01、170-01/03）：非成员被拒 → 委员发起报销 → 审批通过 →
-        生成季度报表 → 普通用户看到明细合计、支出事由为空；管理员把上限改为 500000 后新提交按新上限，旧记录不变。"""
+        生成年报 → 普通用户看到明细合计与支出事由；管理员把上限改为 500000 后新提交按新上限，旧记录不变。"""
         member, mtoken, _ = self.make_owner()
         self.make_seat(member, "MEMBER")
         approver, atoken, _ = self.make_owner()
@@ -160,8 +160,7 @@ class FinanceJourneyTests(ApiTestBase):
         detail = self.assert_ok(self.api("get", f"/ledger/reports/{report['id']}", token=ptoken)).data
         expense = [r for r in detail["detail"] if r["direction"] == "EXPENSE"]
         self.assertEqual((detail["total_expense"], len(expense)), ("800000.00", 1))
-        self.assertIsNone(expense[0]["summary"])
-        self.assertNotIn("XYZ", str(detail))
+        self.assertEqual(expense[0]["summary"], "e2e_私人事由XYZ")
         self.assert_ok(self.api("put", "/admin/system-config/claim.amount_max", {"value": "500000"},
                                 token=admin_token))
         self.assert_error(self.api("post", "/claims/reimbursements", body(member, "500000.01"), token=mtoken),

@@ -201,6 +201,8 @@ class FinanceCommitteeJourneyTests(ApiTestBase):
         self.assertEqual(report.data["total_income"], "300.50")
         self.assertEqual(report.data["total_expense"], "100.00")
         self.assertEqual(report.data["balance"], "200.50")
+        self.assertEqual({row["direction"]: row["summary"] for row in report.data["detail"]},
+                         {"INCOME": "6月物业费", "EXPENSE": "绿化养护"})
 
 
 class FinanceTransparencyJourneyTests(ApiTestBase):

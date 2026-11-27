@@ -53,12 +53,33 @@
           <el-table-column label="类型" min-width="100">
             <template #default="{ row }">{{ entryTypeText(row.entry_type) }}</template>
           </el-table-column>
+          <el-table-column label="来源／用途事由" min-width="180">
+            <template #default="{ row }">
+              <span class="report-entry-summary">{{ row.summary || '—' }}</span>
+            </template>
+          </el-table-column>
           <el-table-column label="金额" min-width="125" align="right" class-name="report-money">
             <template #default="{ row }">
               <span :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">¥{{ moneyText(row.amount) }}</span>
             </template>
           </el-table-column>
         </el-table>
+        <ul v-if="(report.detail || []).length" class="report-detail-mobile" aria-label="收支明细">
+          <li v-for="(row, index) in report.detail" :key="index" class="report-entry">
+            <div class="report-entry-meta">
+              <span class="muted">{{ row.occurred_on }}</span>
+              <span>{{ row.direction === 'INCOME' ? '收入' : '支出' }}</span>
+              <span>{{ entryTypeText(row.entry_type) }}</span>
+              <b class="mono report-entry-amount" :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">
+                ¥{{ moneyText(row.amount) }}
+              </b>
+            </div>
+            <div class="report-entry-summary">
+              <span class="muted">{{ row.direction === 'INCOME' ? '来源说明' : '用途／事由' }}</span>
+              {{ row.summary || '—' }}
+            </div>
+          </li>
+        </ul>
         <el-empty v-else :image-size="48" description="本期暂无收支明细" />
       </div>
     </template>
@@ -150,6 +171,15 @@ watch(
 .report-metric b.is-income, .is-income { color: var(--success); }
 .report-metric b.is-expense, .is-expense { color: var(--danger); }
 .report-detail-scroll { margin-top: 12px; max-height: 46vh; overflow-y: auto; }
+.report-entry-summary { white-space: pre-line; overflow-wrap: anywhere; }
+.report-detail-mobile { display: none; }
+@media (max-width: 767.98px) {
+  .report-detail-table { display: none; }
+  .report-detail-mobile { display: block; list-style: none; padding: 0; margin: 0; }
+  .report-entry { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .report-entry-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 4px; }
+  .report-entry-amount { margin-inline-start: auto; }
+}
 .report-error { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 .report-loading { padding: 24px 0; text-align: center; }
 @media (min-width: 768px) {

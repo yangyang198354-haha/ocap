@@ -25,7 +25,7 @@
     </div>
     <div v-if="!isLimit" class="card">
       <el-table :data="claims" size="small">
-        <el-table-column prop="id" label="ID" width="70" />
+        <el-table-column class-name="data-number" prop="id" label="ID" width="70" />
         <el-table-column label="类型" width="130">
           <template #default="{ row }">{{ textOf(CLAIM_TYPE_TEXT, row.type) }}</template>
         </el-table-column>

@@ -14,7 +14,7 @@
         <el-input v-model="filters.object_type" placeholder="对象类型" style="max-width: 180px" @change="load" />
       </div>
       <el-table :data="logs" size="small" style="margin-top: 10px">
-        <el-table-column label="时间" width="180">
+        <el-table-column class-name="data-number" label="时间" width="180">
           <template #default="{ row }">{{ datetime(row.occurred_at) }}</template>
         </el-table-column>
         <el-table-column label="主体" width="90">
@@ -22,7 +22,7 @@
         </el-table-column>
         <el-table-column prop="action" label="动作" min-width="170" />
         <el-table-column prop="object_type" label="对象" min-width="120" />
-        <el-table-column prop="object_id" label="对象 ID" width="110" />
+        <el-table-column class-name="data-number" prop="object_id" label="对象 ID" width="110" />
         <el-table-column label="结果" width="90">
           <template #default="{ row }">{{ textOf(AUDIT_RESULT_TEXT, row.result) }}</template>
         </el-table-column>

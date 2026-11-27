@@ -90,8 +90,8 @@
           <template v-if="detail.status === 'VOIDED'"> · 已作废：{{ detail.void_reason }}</template>
         </p>
         <el-table :data="detail.rows || []" size="small" max-height="460">
-          <el-table-column prop="line_no" label="#" width="60" />
-          <el-table-column prop="occurred_on" label="日期" width="110" />
+          <el-table-column class-name="data-number" prop="line_no" label="#" width="60" />
+          <el-table-column class-name="data-number" prop="occurred_on" label="日期" width="110" />
           <el-table-column prop="amount" label="金额" min-width="115" align="right" class-name="business-money" />
           <el-table-column prop="category" label="支出类别" width="110" />
           <el-table-column prop="purpose" label="用途/事由" min-width="160" />

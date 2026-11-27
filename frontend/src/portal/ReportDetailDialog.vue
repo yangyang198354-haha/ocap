@@ -42,7 +42,7 @@
       </div>
       <div class="report-detail-scroll">
         <el-table class="report-detail-table" v-if="(report.detail || []).length" :data="report.detail" size="small">
-          <el-table-column prop="occurred_on" label="日期" width="110" />
+          <el-table-column class-name="data-number" prop="occurred_on" label="日期" width="110" />
           <el-table-column label="方向" width="70">
             <template #default="{ row }">
               <span :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">

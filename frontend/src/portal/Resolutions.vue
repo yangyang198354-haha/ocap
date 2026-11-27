@@ -14,7 +14,7 @@
       <section v-for="group in displayGroups" :key="group.key" class="res-section">
         <h2 v-if="group.title" class="res-section-title">{{ group.title }}（{{ group.items.length }}）</h2>
         <div class="res-grid">
-      <article v-for="item in group.items" :key="item.id" class="card res-card">
+      <article v-for="item in group.items" :key="item.id" class="card res-card" :data-status="item.status">
         <div class="res-top">
           <div>
             <div class="res-idx mono">{{ resNo(item.id) }}</div>

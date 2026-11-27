@@ -89,8 +89,8 @@
       <p v-if="detail?.origin_id" class="muted">重新发起自 #{{ detail.origin_id }}</p>
       <p v-if="detail?.reopened_by_id" class="muted">已由 #{{ detail.reopened_by_id }} 重新发起</p>
       <el-table :data="detail?.records || []" size="small">
-        <el-table-column prop="line_no" label="#" width="50" />
-        <el-table-column prop="occurred_on" label="日期" width="110" />
+        <el-table-column class-name="data-number" prop="line_no" label="#" width="50" />
+        <el-table-column class-name="data-number" prop="occurred_on" label="日期" width="110" />
         <el-table-column prop="amount" label="金额" min-width="115" align="right" class-name="business-money" />
         <el-table-column prop="category" label="类别" width="100" />
         <el-table-column prop="source_note" label="来源说明" min-width="120" />

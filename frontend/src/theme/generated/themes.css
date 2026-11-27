@@ -449,13 +449,13 @@ html[data-theme="neon"] .topbar-inner { min-height: 80px; box-sizing: border-box
 html[data-theme="neon"] .user-menu-trigger { background: rgba(20,19,41,.85); border-color: #35304e; }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero) {
   background: linear-gradient(145deg, rgba(39,37,64,.82), rgba(25,24,46,.84));
-  border: 1px solid rgba(143,112,234,.43); border-radius: 27px;
+  border: 1px solid rgba(143,112,234,.43); border-radius: var(--neon-showcase-radius);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 15px 36px -28px #000, 2px 0 20px -12px rgba(136,77,235,.48);
 }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero)::before { display: none; }
 html[data-theme="neon"] .home-grid > .card:not(.home-hero):hover { border-color: #b28bff; box-shadow: 0 0 28px -13px rgba(142,89,247,.65); }
 html[data-theme="neon"] .home-hero {
-  border: 1px solid rgba(147,125,233,.5); border-radius: 27px;
+  border: 1px solid rgba(147,125,233,.5); border-radius: var(--neon-showcase-radius);
   background: radial-gradient(65% 90% at 90% 16%, rgba(116,64,195,.35), transparent 70%),
     linear-gradient(125deg, #24204f, #151b35 74%, #11172b);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 36px -26px #000;
@@ -516,6 +516,48 @@ html[data-theme="neon"] .home-grid > .card:nth-child(2n) { animation-delay: -5s;
 html[data-theme="neon"][data-perf="low"] body::before,
 html[data-theme="neon"][data-perf="low"] .home-hero-scan,
 html[data-theme="neon"][data-perf="low"] .home-grid > .card:not(.home-hero) { animation: none; }
+
+/* Roomier showcase cards, compact and solid surfaces for business content. */
+html[data-theme="neon"] { --neon-showcase-radius: 27px; }
+html[data-theme="neon"] .layout-main.business-page .card:not(.business-summary) {
+  background: var(--overlay);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-radius: var(--radius-lg);
+}
+html[data-theme="neon"] .layout-main.business-page .business-summary {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 24%, var(--surface)), var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+html[data-theme="neon"] .layout-main.business-page .el-table,
+html[data-theme="neon"] .el-dialog .el-table {
+  --el-table-bg-color: var(--overlay);
+  --el-table-tr-bg-color: var(--overlay);
+  --el-table-header-bg-color: color-mix(in srgb, var(--accent) 19%, var(--overlay));
+}
+html[data-theme="neon"] .el-dialog {
+  --el-dialog-bg-color: var(--overlay);
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+}
+html[data-theme="neon"] .side-sub-item.is-active,
+html[data-theme="neon"] .sub-nav-item.is-active,
+html[data-theme="neon"] .tabbar a.is-active {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 18%, var(--overlay));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, var(--line));
+}
+html[data-theme="neon"] .side-item:focus-visible,
+html[data-theme="neon"] .side-sub-item:focus-visible,
+html[data-theme="neon"] .sub-nav-item:focus-visible,
+html[data-theme="neon"] .tabbar a:focus-visible {
+  outline-color: var(--accent-2);
+}
+html[data-theme="neon"] .housing-identity .summary-tag,
+html[data-theme="neon"] .housing-identity .housing-role {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 15%, var(--overlay));
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--line));
+}
 
 html[data-theme="bento"] {
   color-scheme: light;
@@ -1442,9 +1484,10 @@ html[data-theme="terminal"] .page-head::after {
   opacity: .85;
 }
 html[data-theme="terminal"] .page-head h1 { font-family: var(--mono); letter-spacing: .02em; color: var(--text); }
-html[data-theme="terminal"] .res-card { border-top: 0; border-left: 3px solid rgba(198,255,61,.35); }
-html[data-theme="terminal"] .res-card:nth-child(3n+2) { border-left-color: rgba(255,61,187,.45); }
-html[data-theme="terminal"] .res-card:nth-child(3n+3) { border-left-color: rgba(255,197,61,.45); }
+html[data-theme="terminal"] .res-card { border-top: 0; border-left: 3px solid var(--border-strong); }
+html[data-theme="terminal"] .res-card[data-status="PENDING"] { border-left-color: var(--warning); }
+html[data-theme="terminal"] .res-card[data-status="APPROVED"] { border-left-color: var(--success); }
+html[data-theme="terminal"] .res-card[data-status="REJECTED"] { border-left-color: var(--danger); }
 html[data-theme="terminal"] .list-item { transition: background .18s steps(2), box-shadow .18s steps(2); }
 html[data-theme="terminal"] .list-item:hover { background: rgba(198,255,61,.06); box-shadow: inset 3px 0 0 var(--accent); }
 html[data-theme="terminal"] .el-table {
@@ -1452,7 +1495,7 @@ html[data-theme="terminal"] .el-table {
   --el-table-header-bg-color: rgba(198,255,61,.08);
   --el-table-row-hover-bg-color: rgba(198,255,61,.06);
   --el-table-bg-color: transparent;
-  font-family: var(--mono);
+  font-family: var(--font);
 }
 html[data-theme="terminal"] .el-table th.el-table__cell { color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
 html[data-theme="terminal"] .el-table td.el-table__cell { font-variant-numeric: tabular-nums; }
@@ -1582,6 +1625,42 @@ html[data-theme="terminal"][data-perf="low"] body::before,
 html[data-theme="terminal"][data-perf="low"] .home-grid > .home-hero::after,
 html[data-theme="terminal"][data-perf="low"] .home-grid > .card::before,
 html[data-theme="terminal"][data-perf="low"] .home-hero-scan { animation: none; }
+
+/* Role navigation and readable data surfaces. */
+html[data-theme="terminal"] .side-sub-item.is-active,
+html[data-theme="terminal"] .sub-nav-item.is-active,
+html[data-theme="terminal"] .tabbar a.is-active {
+  color: var(--accent-text);
+  background: var(--glass);
+  box-shadow: inset 2px 0 var(--accent);
+}
+html[data-theme="terminal"] .side-sub-item.is-active::before { display: none; }
+html[data-theme="terminal"] .side-item:focus-visible,
+html[data-theme="terminal"] .side-sub-item:focus-visible,
+html[data-theme="terminal"] .sub-nav-item:focus-visible,
+html[data-theme="terminal"] .tabbar a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+html[data-theme="terminal"] .side-sub-item.is-active::after,
+html[data-theme="terminal"] .sub-nav-item.is-active::after { opacity: 0; }
+html[data-theme="terminal"] .layout-main.business-page .card:not(.business-summary)::before { opacity: 0; }
+html[data-theme="terminal"] .housing-identity .summary-tag,
+html[data-theme="terminal"] .housing-identity .housing-role {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--accent-text);
+}
+html[data-theme="terminal"] .housing-identity .review-tab-label .el-badge__content {
+  background: var(--warning);
+  color: var(--bg);
+  border-color: transparent;
+}
+html[data-theme="terminal"] .el-table td.business-money,
+html[data-theme="terminal"] .el-table td.report-money,
+html[data-theme="terminal"] .el-table td.data-number,
+html[data-theme="terminal"] .income-amount { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 /* 低端设备降级（ADR-032）：玻璃模糊换为不透明纯色 */
 

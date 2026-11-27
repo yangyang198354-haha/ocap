@@ -56,10 +56,10 @@
         <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" class="registry-table"
                   style="width: 100%" @sort-change="onSort">
           <el-table-column prop="specific_part" label="专有部分" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="building" label="楼栋" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="unit_no" label="单元" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="floor" label="楼层" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column prop="room" label="房号" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="building" label="楼栋" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="unit_no" label="单元" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="floor" label="楼层" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="room" label="房号" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
           <el-table-column label="类型" min-width="120">
             <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
           </el-table-column>

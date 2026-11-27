@@ -10,7 +10,7 @@
     <div class="card">
       <el-table :data="accounts" size="small">
         <el-table-column prop="name" label="账户名称" min-width="180" />
-        <el-table-column label="账户号" min-width="140">
+        <el-table-column class-name="data-number" label="账户号" min-width="140">
           <template #default="{ row }">{{ row.account_no || '—' }}</template>
         </el-table-column>
         <el-table-column label="余额" min-width="120" align="right" class-name="business-money">

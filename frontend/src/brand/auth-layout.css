@@ -20,7 +20,7 @@
 .auth-shell .auth-form-card .el-button--primary { min-height: 56px; font-size: 18px; font-weight: 700; }
 .auth-shell .auth-form-card .el-checkbox { min-height: 32px; }
 
-/* Cyber terminal: matrix backdrop, command panel, violet login card. */
+/* Cyber terminal: matrix backdrop, command panel and solid form surface. */
 html[data-theme="terminal"] .auth-shell {
   position: relative; display: grid; align-items: center;
   grid-template-columns: minmax(0, 1.73fr) minmax(390px, .97fr);
@@ -44,8 +44,8 @@ html[data-theme="terminal"] .auth-terminal-cursor { filter: drop-shadow(0 0 8px 
 @keyframes auth-cursor-blink { 50% { opacity: .18; } }
 html[data-theme="terminal"] .auth-panel { padding: 0; background: transparent; }
 html[data-theme="terminal"] .auth-card {
-  max-width: none; padding: 32px clamp(28px, 3vw, 66px); border: 1px solid #795c8b; border-radius: 9px;
-  background: #29202ed9; box-shadow: 0 0 30px #854c9d18, inset 0 1px #ffffff0c;
+  max-width: none; padding: 32px clamp(28px, 3vw, 66px); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+  background: var(--surface); box-shadow: 0 0 30px -14px color-mix(in srgb, var(--accent) 34%, transparent);
 }
 html[data-theme="terminal"] .auth-card::before { display: none; }
 html[data-theme="terminal"] .auth-head { flex-direction: column; gap: 6px; margin-bottom: 20px; text-align: center; }
@@ -55,13 +55,13 @@ html[data-theme="terminal"] .auth-card .auth-sub { margin-top: 5px; color: #b4ad
 html[data-theme="terminal"] .auth-card .el-tabs__item { color: #aaa2b5; }
 html[data-theme="terminal"] .auth-card .el-tabs__item.is-active { color: #c6ff73; }
 html[data-theme="terminal"] .auth-card .el-tabs__active-bar { background: #c6ff73; }
-html[data-theme="terminal"] .auth-card .el-tabs__nav-wrap::after { background: #6b557b; }
-html[data-theme="terminal"] .auth-card .el-input__wrapper { border-radius: 8px; background: #211e28; box-shadow: 0 0 0 1px #735884 inset; }
+html[data-theme="terminal"] .auth-card .el-tabs__nav-wrap::after { background: var(--border-strong); }
+html[data-theme="terminal"] .auth-card .el-input__wrapper { border-radius: var(--radius-sm); background: var(--bg); box-shadow: 0 0 0 1px var(--border-strong) inset; }
 html[data-theme="terminal"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px #c6ff73 inset; }
 html[data-theme="terminal"] .auth-card .el-input__inner { color: #fff; }
 html[data-theme="terminal"] .auth-card .el-input__inner::placeholder { color: #aaa4ae; }
-html[data-theme="terminal"] .auth-card .el-button:not(.el-button--primary) { color: #d8d2de; background: #292333; border-color: #735884; border-radius: 8px; }
-html[data-theme="terminal"] .auth-card .el-button--primary { color: #111918; border: 0; border-radius: 8px; background: linear-gradient(105deg, #b7ffd2, #a8ff3f); box-shadow: 0 0 25px #aaff6b55; }
+html[data-theme="terminal"] .auth-card .el-button:not(.el-button--primary) { color: #d8d2de; background: var(--surface-tint); border-color: var(--border-strong); border-radius: var(--radius-btn); }
+html[data-theme="terminal"] .auth-card .el-button--primary { color: #111918; border: 0; border-radius: var(--radius-btn); background: linear-gradient(105deg, #b7ffd2, #a8ff3f); box-shadow: 0 0 25px #aaff6b55; }
 html[data-theme="terminal"] .auth-card .el-checkbox__label { color: #b8b1bc; }
 html[data-theme="terminal"] .auth-card a { color: #c6ff73; }
 
@@ -74,7 +74,7 @@ html[data-theme="neon"] .auth-art-copy h2 { color: #fff; font-size: clamp(44px, 
 html[data-theme="neon"] .auth-art-english { margin-top: 12px !important; color: #96919d; font-size: clamp(30px, 3vw, 64px); }
 html[data-theme="neon"] .auth-art-tagline { margin-top: 34px !important; color: #aaa5b2; font-size: clamp(20px, 2vw, 42px); }
 html[data-theme="neon"] .auth-panel { display: flex; align-items: center; padding: 40px clamp(50px, 6vw, 190px); background: transparent; }
-html[data-theme="neon"] .auth-card { max-width: 640px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+html[data-theme="neon"] .auth-card { max-width: 640px; height: auto; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 html[data-theme="neon"] .auth-card::after { display: none; }
 html[data-theme="neon"] .auth-head { margin-bottom: 34px; }
 html[data-theme="neon"] .auth-head .brand-mark { display: none; }
@@ -89,7 +89,7 @@ html[data-theme="neon"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0
 html[data-theme="neon"] .auth-card .el-input__inner { color: #fff; }
 html[data-theme="neon"] .auth-card .el-input__inner::placeholder { color: #9d98a1; }
 html[data-theme="neon"] .auth-card .el-button:not(.el-button--primary) { color: #ded9e6; background: #27222e; border-color: #544162; border-radius: 12px; }
-html[data-theme="neon"] .auth-card .el-button--primary { color: #fff; border: 0; border-radius: 13px; background: linear-gradient(103deg, #1fcce8, #5863f2 50%, #8712ee); box-shadow: 0 12px 32px #29105e44; }
+html[data-theme="neon"] .auth-card .el-button--primary { color: #fff; border: 0; border-radius: 13px; background: linear-gradient(103deg, #0e7490, #3f4dcc 50%, #7712cf); box-shadow: 0 12px 32px #29105e44; }
 html[data-theme="neon"] .auth-card .el-checkbox__label { color: #bcb7c3; }
 html[data-theme="neon"] .auth-card a { color: #76cafa; }
 
@@ -158,7 +158,7 @@ html[data-theme="bento"] .auth-card a { color: #5f3de7; }
   html[data-theme="neon"] .auth-art-english { margin-top: 2px !important; font-size: 17px; }
   html[data-theme="neon"] .auth-art-tagline { margin-top: 8px !important; font-size: 13px; }
   html[data-theme="neon"] .auth-panel { padding: 20px 24px 40px; }
-  html[data-theme="neon"] .auth-card { min-height: 500px; height: 500px; }
+  html[data-theme="terminal"] .auth-card, html[data-theme="neon"] .auth-card { min-height: 0; height: auto; }
   html[data-theme="bento"] .auth-art { height: 210px; }
   html[data-theme="bento"] .auth-art-copy { padding: 28px; }
   html[data-theme="bento"] .auth-art-copy h2 { font-size: 36px; }

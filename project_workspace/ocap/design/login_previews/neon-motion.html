@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>霓虹玻璃 · 登录页动效演示</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    :root { color-scheme: dark; }
+    body { color: #fff; background: #1d1427; }
+    .preview-page { display: grid; place-items: center; background: #1d1427; }
+    .neon-layout { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 2100px); min-height: min(80vh, 1200px); }
+    .brand-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(55px, 7vw, 170px) clamp(55px, 8vw, 195px) clamp(55px, 7vw, 170px) clamp(55px, 3vw, 80px); border-right: 1px solid #5b4b67; }
+    .brand-panel .preview-logo { width: clamp(130px, 12vw, 220px); height: clamp(130px, 12vw, 220px); margin-bottom: 50px; }
+    .brand-panel h1 { margin: 0; font-size: clamp(48px, 5.1vw, 106px); font-weight: 800; line-height: 1.18; letter-spacing: -.055em; white-space: nowrap; }
+    .brand-panel .english { margin: 15px 0 0; color: #96919d; font-size: clamp(33px, 3.1vw, 64px); line-height: 1.2; }
+    .brand-panel .tagline { margin: 39px 0 0; color: #aaa5b2; font-size: clamp(22px, 2vw, 42px); }
+    .form-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(55px, 6vw, 150px) clamp(55px, 3vw, 80px) clamp(55px, 6vw, 150px) clamp(70px, 8vw, 195px); }
+    .form-panel h2 { margin: 0 0 58px; font-size: clamp(42px, 3.3vw, 70px); font-weight: 750; line-height: 1.2; }
+    .form-panel label { display: block; margin-bottom: 14px; color: #bcb7c3; font-size: clamp(20px, 1.6vw, 32px); }
+    .form-panel input { height: clamp(68px, 5.2vw, 110px); margin-bottom: 35px; padding: 0 34px; border: 2px solid #544162; border-radius: 17px; color: #fff; background: #27222e; font-size: clamp(21px, 1.8vw, 38px); }
+    .form-panel input::placeholder { color: #9d98a1; }
+    .form-panel .password-toggle { top: calc(50% - 18px); right: 34px; color: #aba6af; }
+    .form-panel button[type="submit"] { width: 100%; height: clamp(72px, 5.5vw, 113px); margin-top: 32px; border: 0; border-radius: 16px; color: #fff; background: linear-gradient(103deg, #1fcce8 0%, #5863f2 50%, #8712ee 100%); font-size: clamp(23px, 2vw, 41px); font-weight: 750; box-shadow: 0 12px 32px #29105e44; }
+    .form-panel button[type="submit"]:hover { filter: brightness(1.12); }
+    @media (max-width: 1100px) { .neon-layout { min-height: 100vh; } .brand-panel { padding: 55px 35px; } .form-panel { padding: 55px 35px; } .brand-panel h1 { font-size: clamp(34px, 4.7vw, 60px); } }
+    @media (max-width: 700px) { .neon-layout { grid-template-columns: 1fr; min-height: 100vh; } .brand-panel { align-items: center; padding: 50px 24px 30px; border-right: 0; border-bottom: 1px solid #5b4b67; text-align: center; } .brand-panel .preview-logo { width: 110px; height: 110px; margin-bottom: 16px; } .brand-panel h1 { font-size: clamp(33px, 9vw, 52px); } .brand-panel .english { font-size: 24px; } .brand-panel .tagline { margin-top: 16px; font-size: 17px; } .form-panel { padding: 35px 24px 60px; } .form-panel h2 { margin-bottom: 28px; font-size: 34px; } .form-panel label { font-size: 17px; } .form-panel input { height: 62px; margin-bottom: 22px; font-size: 19px; } .form-panel button[type="submit"] { margin-top: 12px; } }
+  </style>
+  <link rel="stylesheet" href="./motion.css" />
+</head>
+<body>
+  <main class="preview-page neon-motion">
+    <div class="neon-layout">
+      <section class="brand-panel" aria-label="品牌介绍">
+        <img class="preview-logo" src="../../../../frontend/src/brand/assets/maple-leaf.png" alt="" />
+        <h1>赛博@红枫岭</h1>
+        <p class="english">Cyber@HFL</p>
+        <p class="tagline">AI 驱动的智能社区平台</p>
+      </section>
+      <section class="form-panel" aria-label="账号登录">
+        <h2>账号登录</h2>
+        <form class="preview-form">
+          <label for="neon-account">账号</label><input id="neon-account" autocomplete="username" placeholder="请输入账号" required />
+          <label for="neon-password">密码</label><div class="password-wrap"><input id="neon-password" type="password" autocomplete="current-password" placeholder="请输入密码" required /><button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+          <button type="submit">登录</button>
+        </form>
+      </section>
+    </div>
+    <p class="preview-notice" role="status" hidden>此页仅演示动效，请在正式登录页使用账号功能。</p>
+  </main>
+  <script src="./preview.js"></script>
+</body>
+</html>

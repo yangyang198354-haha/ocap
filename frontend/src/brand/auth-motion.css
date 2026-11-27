@@ -1,0 +1,189 @@
+/* Motion from the approved neon and aurora login studies. All layers stay
+   behind the auth content and are scoped to the selected theme. */
+html[data-theme="neon"] .auth-shell,
+html[data-theme="bento"] .auth-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+html[data-theme="neon"] .auth-shell .auth-form-card.card,
+html[data-theme="bento"] .auth-shell .auth-form-card.card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-theme="neon"] .auth-shell::before,
+html[data-theme="neon"] .auth-shell::after,
+html[data-theme="bento"] .auth-shell::before,
+html[data-theme="bento"] .auth-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Neon glass: drifting color, illuminated divider and a reflection on glass. */
+html[data-theme="neon"] .auth-shell::before {
+  inset: -18%;
+  background:
+    radial-gradient(ellipse 27% 43% at 13% 28%, #bd3dff4a, transparent 75%),
+    radial-gradient(ellipse 28% 40% at 82% 67%, #18d8f450, transparent 75%),
+    radial-gradient(ellipse 24% 32% at 52% 90%, #7726ed48, transparent 75%);
+  filter: blur(38px);
+  animation: auth-neon-ambient 13s ease-in-out infinite alternate;
+}
+html[data-theme="neon"] .auth-shell::after {
+  inset: 0;
+  background: linear-gradient(118deg, transparent 34%, #8d43ed0b 50%, transparent 66%);
+  background-size: 220% 100%;
+  animation: auth-neon-haze 16s linear infinite;
+}
+html[data-theme="neon"] .auth-art {
+  z-index: 1;
+  border-right-color: #a654e973;
+  background: linear-gradient(90deg, #1d1427d9, #2d1a3985);
+}
+html[data-theme="neon"] .auth-art::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent 8%, #a24cf3aa 30%, #48e2f7e6 52%, #b64cf4a8 72%, transparent 95%);
+  background-size: 100% 220%;
+  box-shadow: 0 0 14px #b84cf3aa, 0 0 35px #39d8f56b;
+  animation: auth-neon-divider 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+html[data-theme="neon"] .auth-art-copy .brand-mark {
+  filter: drop-shadow(0 0 10px #e832ef70) drop-shadow(0 0 24px #31e1f78a);
+  animation: auth-neon-logo 5.5s ease-in-out infinite;
+}
+html[data-theme="neon"] .auth-panel {
+  overflow: hidden;
+  background: #30213c8a;
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  box-shadow: inset 0 0 0 1px #d7a8ff1c, inset 0 0 80px #aa53fb11;
+}
+html[data-theme="neon"] .auth-panel::before,
+html[data-theme="neon"] .auth-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+html[data-theme="neon"] .auth-panel::before {
+  background: linear-gradient(112deg, transparent 42%, #ffffff16 49%, #80eaff17 52%, transparent 60%);
+  transform: translateX(-120%);
+  animation: auth-neon-reflection 10s ease-in-out infinite;
+}
+html[data-theme="neon"] .auth-panel::after {
+  border: 1px solid #b06bfa55;
+  box-shadow: inset 0 0 28px #ab5eff20, 0 0 34px #7b45e536;
+  animation: auth-neon-frame 6s ease-in-out infinite alternate;
+}
+html[data-theme="neon"] .auth-panel > .auth-card { position: relative; z-index: 1; }
+html[data-theme="neon"] .auth-card .el-input__wrapper:not(.is-focus) {
+  animation: auth-neon-input 5s ease-in-out infinite alternate;
+}
+html[data-theme="neon"] .auth-card .el-button--primary {
+  background-size: 210% 100%;
+  animation: auth-neon-button 7s ease-in-out infinite alternate;
+}
+
+/* Aurora Bento: slow moving sky light and color within the welcome card. */
+html[data-theme="bento"] .auth-shell::before {
+  inset: -25%;
+  background:
+    radial-gradient(ellipse 29% 25% at 22% 44%, #7a46ff77, transparent 77%),
+    radial-gradient(ellipse 28% 22% at 72% 62%, #2ae4dc5e, transparent 78%),
+    radial-gradient(ellipse 28% 25% at 83% 24%, #fb68b65b, transparent 80%);
+  filter: blur(48px);
+  animation: auth-aurora-drift 16s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-shell::after {
+  inset: -18%;
+  background: radial-gradient(ellipse 25% 18% at 48% 72%, #93c7ff59, transparent 80%);
+  filter: blur(42px);
+  animation: auth-aurora-drift-two 13s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-art {
+  background: linear-gradient(118deg, #6038f3 0%, #8a4bf4 28%, #c866d4 57%, #fa7f97 82%, #a560e8 100%);
+  background-size: 220% 220%;
+  animation: auth-aurora-gradient 14s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-shell .auth-art::before,
+html[data-theme="bento"] .auth-shell .auth-art::after {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: -35%;
+  pointer-events: none;
+}
+html[data-theme="bento"] .auth-shell .auth-art::before {
+  background:
+    radial-gradient(ellipse 30% 45% at 20% 60%, #4bffef77, transparent 75%),
+    radial-gradient(ellipse 30% 42% at 71% 32%, #ffc4f075, transparent 77%);
+  filter: blur(25px);
+  animation: auth-aurora-card-light 11s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-shell .auth-art::after {
+  background: linear-gradient(125deg, transparent 30%, #aafaff18 44%, #ffffff2c 50%, #abfff01a 56%, transparent 69%);
+  transform: translateX(-45%) rotate(-6deg);
+  animation: auth-aurora-ribbon 13s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-art-copy { z-index: 1; }
+html[data-theme="bento"] .auth-art-copy .brand-mark {
+  animation: auth-aurora-leaf 6s ease-in-out infinite;
+}
+html[data-theme="bento"] .auth-panel {
+  background: #fffffff0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: auth-aurora-card-shadow 9s ease-in-out infinite alternate;
+}
+html[data-theme="bento"] .auth-card .el-button--primary {
+  background-size: 190% 100%;
+  animation: auth-aurora-button 8s ease-in-out infinite alternate;
+}
+
+@keyframes auth-neon-ambient { from { transform: translate(-3%, -2%) scale(1); } to { transform: translate(4%, 3%) scale(1.1); } }
+@keyframes auth-neon-haze { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes auth-neon-divider { from { background-position: 0 0; opacity: .65; } to { background-position: 0 100%; opacity: 1; } }
+@keyframes auth-neon-logo { 0%, 100% { transform: translateY(0); opacity: .95; } 50% { transform: translateY(-7px); opacity: 1; } }
+@keyframes auth-neon-reflection { 0%, 16% { transform: translateX(-120%); } 62%, 100% { transform: translateX(120%); } }
+@keyframes auth-neon-frame { from { opacity: .43; } to { opacity: 1; } }
+@keyframes auth-neon-input { from { box-shadow: 0 0 0 1px #544162 inset; } to { box-shadow: 0 0 0 1px #8c5ec0 inset, 0 0 16px #a85de72b; } }
+@keyframes auth-neon-button { from { background-position: 0 50%; box-shadow: 0 12px 32px #29105e44; } to { background-position: 100% 50%; box-shadow: 0 12px 38px #8544de70; } }
+@keyframes auth-aurora-drift { from { transform: translate(-4%, 3%) rotate(-7deg) scale(1); } to { transform: translate(5%, -4%) rotate(8deg) scale(1.12); } }
+@keyframes auth-aurora-drift-two { from { transform: translate(5%, -4%) scale(.95); } to { transform: translate(-6%, 4%) scale(1.13); } }
+@keyframes auth-aurora-gradient { from { background-position: 0 35%; } to { background-position: 100% 65%; } }
+@keyframes auth-aurora-card-light { from { transform: translate(-9%, 5%) rotate(-10deg); } to { transform: translate(10%, -7%) rotate(9deg); } }
+@keyframes auth-aurora-ribbon { from { transform: translateX(-45%) rotate(-6deg); opacity: .55; } to { transform: translateX(40%) rotate(5deg); opacity: .9; } }
+@keyframes auth-aurora-leaf { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
+@keyframes auth-aurora-card-shadow { from { box-shadow: 0 20px 48px #0b103650, 0 0 0 #6fcfff00; } to { box-shadow: 0 20px 52px #0b103650, 0 0 42px #79baff4d; } }
+@keyframes auth-aurora-button { from { background-position: 0 50%; } to { background-position: 100% 50%; } }
+
+@media (max-width: 767.98px) {
+  html[data-theme="neon"] .auth-art::after { display: none; }
+  html[data-theme="neon"] .auth-art { border-bottom-color: #a654e973; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="neon"] .auth-shell *,
+  html[data-theme="neon"] .auth-shell *::before,
+  html[data-theme="neon"] .auth-shell *::after,
+  html[data-theme="neon"] .auth-shell::before,
+  html[data-theme="neon"] .auth-shell::after,
+  html[data-theme="bento"] .auth-shell *,
+  html[data-theme="bento"] .auth-shell *::before,
+  html[data-theme="bento"] .auth-shell *::after,
+  html[data-theme="bento"] .auth-shell::before,
+  html[data-theme="bento"] .auth-shell::after {
+    animation: none !important;
+  }
+}

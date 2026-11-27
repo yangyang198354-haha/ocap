@@ -1,0 +1,184 @@
+/* Standalone motion studies. The original neon.html and bento.html stay static. */
+.neon-motion,
+.bento-motion {
+  position: relative;
+  isolation: isolate;
+}
+
+.neon-motion::before,
+.neon-motion::after,
+.bento-motion::before,
+.bento-motion::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Neon glass: colored light moves behind the glass, while a soft reflection
+   crosses the form. Content remains above every effect layer. */
+.neon-motion::before {
+  inset: -18%;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 27% 43% at 13% 28%, #bd3dff4a, transparent 75%),
+    radial-gradient(ellipse 28% 40% at 82% 67%, #18d8f450, transparent 75%),
+    radial-gradient(ellipse 24% 32% at 52% 90%, #7726ed48, transparent 75%);
+  filter: blur(38px);
+  animation: neon-ambient 13s ease-in-out infinite alternate;
+}
+.neon-motion::after {
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(118deg, transparent 34%, #8d43ed0b 50%, transparent 66%);
+  background-size: 220% 100%;
+  animation: neon-haze 16s linear infinite;
+}
+.neon-motion .neon-layout { position: relative; z-index: 1; }
+.neon-motion .brand-panel {
+  position: relative;
+  border-right-color: #a654e973;
+  background: linear-gradient(90deg, #1d1427d9, #2d1a3985);
+}
+.neon-motion .brand-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent 8%, #a24cf3aa 30%, #48e2f7e6 52%, #b64cf4a8 72%, transparent 95%);
+  background-size: 100% 220%;
+  box-shadow: 0 0 14px #b84cf3aa, 0 0 35px #39d8f56b;
+  animation: neon-divider 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.neon-motion .brand-panel .preview-logo {
+  filter: drop-shadow(0 0 10px #e832ef70) drop-shadow(0 0 24px #31e1f78a);
+  animation: neon-logo 5.5s ease-in-out infinite;
+}
+.neon-motion .form-panel {
+  position: relative;
+  overflow: hidden;
+  background: #30213c8a;
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  box-shadow: inset 0 0 0 1px #d7a8ff1c, inset 0 0 80px #aa53fb11;
+}
+.neon-motion .form-panel::before,
+.neon-motion .form-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.neon-motion .form-panel::before {
+  z-index: 0;
+  background: linear-gradient(112deg, transparent 42%, #ffffff16 49%, #80eaff17 52%, transparent 60%);
+  transform: translateX(-120%);
+  animation: neon-reflection 10s ease-in-out infinite;
+}
+.neon-motion .form-panel::after {
+  z-index: 0;
+  border: 1px solid #b06bfa55;
+  box-shadow: inset 0 0 28px #ab5eff20, 0 0 34px #7b45e536;
+  animation: neon-frame 6s ease-in-out infinite alternate;
+}
+.neon-motion .form-panel > * { position: relative; z-index: 1; }
+.neon-motion .form-panel input {
+  transition: border-color .3s ease, box-shadow .3s ease;
+  animation: neon-input 5s ease-in-out infinite alternate;
+}
+.neon-motion .form-panel input:focus-visible {
+  border-color: #5cecf5;
+  box-shadow: 0 0 0 3px #54dbf530, 0 0 20px #57e2ef4d;
+  animation: none;
+}
+.neon-motion .form-panel button[type="submit"] {
+  background-size: 210% 100%;
+  animation: neon-button 7s ease-in-out infinite alternate;
+}
+
+/* Aurora Bento: colored clouds drift behind the cards and a broad light band
+   moves inside the welcome card. No effect sits over the form text. */
+.bento-motion::before {
+  inset: -25%;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 29% 25% at 22% 44%, #7a46ff77, transparent 77%),
+    radial-gradient(ellipse 28% 22% at 72% 62%, #2ae4dc5e, transparent 78%),
+    radial-gradient(ellipse 28% 25% at 83% 24%, #fb68b65b, transparent 80%);
+  filter: blur(48px);
+  animation: aurora-drift 16s ease-in-out infinite alternate;
+}
+.bento-motion::after {
+  inset: -18%;
+  z-index: 0;
+  background: radial-gradient(ellipse 25% 18% at 48% 72%, #93c7ff59, transparent 80%);
+  filter: blur(42px);
+  animation: aurora-drift-two 13s ease-in-out infinite alternate;
+}
+.bento-motion .bento-layout { position: relative; z-index: 1; }
+.bento-motion .welcome-card {
+  background: linear-gradient(118deg, #6038f3 0%, #8a4bf4 28%, #c866d4 57%, #fa7f97 82%, #a560e8 100%);
+  background-size: 220% 220%;
+  animation: aurora-gradient 14s ease-in-out infinite alternate;
+}
+.bento-motion .welcome-card::before {
+  inset: -35%;
+  background:
+    radial-gradient(ellipse 30% 45% at 20% 60%, #4bffef77, transparent 75%),
+    radial-gradient(ellipse 30% 42% at 71% 32%, #ffc4f075, transparent 77%);
+  filter: blur(25px);
+  animation: aurora-card-light 11s ease-in-out infinite alternate;
+}
+.bento-motion .welcome-card::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(125deg, transparent 30%, #aafaff18 44%, #ffffff2c 50%, #abfff01a 56%, transparent 69%);
+  transform: translateX(-40%) rotate(-6deg);
+  animation: aurora-ribbon 13s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.bento-motion .welcome-card h1,
+.bento-motion .welcome-card p,
+.bento-motion .welcome-card .preview-logo { z-index: 1; }
+.bento-motion .welcome-card .preview-logo { animation: aurora-leaf 6s ease-in-out infinite; }
+.bento-motion .form-card {
+  background: #fffffff0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: aurora-card-shadow 9s ease-in-out infinite alternate;
+}
+.bento-motion .form-card button[type="submit"] {
+  background-size: 190% 100%;
+  animation: aurora-button 8s ease-in-out infinite alternate;
+}
+
+@keyframes neon-ambient { from { transform: translate(-3%, -2%) scale(1); } to { transform: translate(4%, 3%) scale(1.1); } }
+@keyframes neon-haze { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes neon-divider { from { background-position: 0 0; opacity: .65; } to { background-position: 0 100%; opacity: 1; } }
+@keyframes neon-logo { 0%, 100% { transform: translateY(0); opacity: .95; } 50% { transform: translateY(-7px); opacity: 1; } }
+@keyframes neon-reflection { 0%, 16% { transform: translateX(-120%); } 62%, 100% { transform: translateX(120%); } }
+@keyframes neon-frame { from { opacity: .43; } to { opacity: 1; } }
+@keyframes neon-input { from { box-shadow: 0 0 0 1px #544162 inset; } to { box-shadow: 0 0 0 1px #8c5ec0 inset, 0 0 16px #a85de72b; } }
+@keyframes neon-button { from { background-position: 0 50%; box-shadow: 0 12px 32px #29105e44; } to { background-position: 100% 50%; box-shadow: 0 12px 38px #8544de70; } }
+@keyframes aurora-drift { from { transform: translate(-4%, 3%) rotate(-7deg) scale(1); } to { transform: translate(5%, -4%) rotate(8deg) scale(1.12); } }
+@keyframes aurora-drift-two { from { transform: translate(5%, -4%) scale(.95); } to { transform: translate(-6%, 4%) scale(1.13); } }
+@keyframes aurora-gradient { from { background-position: 0 35%; } to { background-position: 100% 65%; } }
+@keyframes aurora-card-light { from { transform: translate(-9%, 5%) rotate(-10deg); } to { transform: translate(10%, -7%) rotate(9deg); } }
+@keyframes aurora-ribbon { from { transform: translateX(-45%) rotate(-6deg); opacity: .55; } to { transform: translateX(40%) rotate(5deg); opacity: .9; } }
+@keyframes aurora-leaf { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
+@keyframes aurora-card-shadow { from { box-shadow: 0 20px 48px #0b103650, 0 0 0 #6fcfff00; } to { box-shadow: 0 20px 52px #0b103650, 0 0 42px #79baff4d; } }
+@keyframes aurora-button { from { background-position: 0 50%; } to { background-position: 100% 50%; } }
+
+@media (max-width: 700px) {
+  .neon-motion .brand-panel::after { display: none; }
+  .neon-motion .brand-panel { border-bottom-color: #a654e973; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .neon-motion *, .neon-motion::before, .neon-motion::after,
+  .bento-motion *, .bento-motion::before, .bento-motion::after {
+    animation: none !important;
+  }
+}

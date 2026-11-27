@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>极光 Bento · 登录页动效演示</title>
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    :root { color-scheme: light; }
+    body { color: #303747; background: #1c2340; }
+    .preview-page { display: grid; place-items: center; padding: clamp(24px, 5vw, 80px); background: #1c2340; }
+    .bento-layout { display: grid; grid-template-columns: minmax(0, 1.43fr) minmax(400px, .93fr); gap: clamp(28px, 3.2vw, 66px); width: min(100%, 74vw, 1880px); min-height: clamp(500px, 31vw, 800px); }
+    .welcome-card, .form-card { border-radius: clamp(26px, 2vw, 48px); box-shadow: 0 20px 48px #0b103650; }
+    .welcome-card { position: relative; display: flex; flex-direction: column; padding: clamp(58px, 4vw, 96px); overflow: hidden; color: #fff; background: linear-gradient(114deg, #6938f6 0%, #ad63d4 47%, #fa788b 100%); }
+    .welcome-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 18% 82%, #5135fb55, transparent 45%); pointer-events: none; }
+    .welcome-card h1 { position: relative; margin: 0; font-size: clamp(48px, 4vw, 110px); line-height: 1.25; letter-spacing: -.045em; font-weight: 800; }
+    .welcome-card p { position: relative; margin: 22px 0 0; font-size: clamp(22px, 1.7vw, 43px); line-height: 1.4; }
+    .welcome-card .preview-logo { position: relative; width: clamp(94px, 7.5vw, 145px); height: clamp(94px, 7.5vw, 145px); margin-top: auto; filter: drop-shadow(0 2px 2px #fff); }
+    .form-card { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: clamp(40px, 3vw, 86px); background: #fff; }
+    .form-card .preview-logo { width: clamp(80px, 6vw, 150px); height: clamp(80px, 6vw, 150px); margin-bottom: 15px; }
+    .form-card h2 { margin: 0 0 42px; color: #313747; font-size: clamp(29px, 2.3vw, 55px); font-weight: 800; white-space: nowrap; }
+    .form-card .field { position: relative; margin-bottom: 25px; }
+    .form-card .field > svg { position: absolute; left: 24px; top: 50%; width: 28px; height: 28px; transform: translateY(-50%); fill: none; stroke: #848994; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .form-card input { height: clamp(58px, 4vw, 93px); padding: 0 62px 0 64px; border: 0; border-radius: 16px; color: #2f3442; background: #eeeff2; box-shadow: inset 0 2px 7px #1b23300a; font-size: clamp(19px, 1.5vw, 34px); }
+    .form-card input::placeholder { color: #9599a2; }
+    .form-card .password-toggle { right: 21px; color: #848994; }
+    .form-card button[type="submit"] { width: 100%; height: clamp(63px, 4vw, 95px); margin-top: 22px; border: 0; border-radius: 16px; color: #fff; background: linear-gradient(100deg, #a625f7, #5059f6 54%, #058af5); box-shadow: 0 17px 30px #563ee24b; font-size: clamp(22px, 1.7vw, 39px); font-weight: 700; }
+    .form-card button[type="submit"]:hover { filter: brightness(1.08); }
+    @media (max-width: 1050px) { .bento-layout { grid-template-columns: 1fr; width: min(100%, 680px); } .welcome-card { min-height: 310px; } .welcome-card h1 { font-size: 54px; } .welcome-card p { font-size: 24px; } .welcome-card .preview-logo { position: absolute; right: 36px; bottom: 30px; width: 90px; height: 90px; } .form-card { min-height: 500px; } }
+    @media (max-width: 560px) { .preview-page { padding: 16px; } .bento-layout { gap: 16px; } .welcome-card { min-height: 260px; padding: 32px; } .welcome-card h1 { font-size: 42px; } .welcome-card p { max-width: 230px; font-size: 17px; } .welcome-card .preview-logo { width: 70px; height: 70px; } .form-card { min-height: 430px; padding: 36px 26px; } .form-card .preview-logo { width: 86px; height: 86px; margin-bottom: 12px; } .form-card h2 { margin-bottom: 30px; font-size: 27px; } .form-card .field { margin-bottom: 16px; } .form-card input { height: 61px; font-size: 18px; } .form-card button[type="submit"] { margin-top: 17px; } }
+  </style>
+  <link rel="stylesheet" href="./motion.css" />
+</head>
+<body>
+  <main class="preview-page bento-motion">
+    <div class="bento-layout">
+      <section class="welcome-card" aria-label="欢迎信息">
+        <h1>欢迎来到<br />赛博@红枫岭</h1>
+        <p>登录以进入您的智能社区空间</p>
+        <img class="preview-logo" src="../../../../frontend/src/brand/assets/maple-leaf.png" alt="" />
+      </section>
+      <section class="form-card" aria-label="账号登录">
+        <img class="preview-logo" src="../../../../frontend/src/brand/assets/maple-leaf.png" alt="" />
+        <h2>赛博@红枫岭</h2>
+        <form class="preview-form">
+          <div class="field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2Z"/></svg><input aria-label="账号" autocomplete="username" placeholder="账号" required /></div>
+          <div class="field password-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input aria-label="密码" type="password" autocomplete="current-password" placeholder="密码" required /><button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+          <button type="submit">登录</button>
+        </form>
+      </section>
+    </div>
+    <p class="preview-notice" role="status" hidden>此页仅演示动效，请在正式登录页使用账号功能。</p>
+  </main>
+  <script src="./preview.js"></script>
+</body>
+</html>

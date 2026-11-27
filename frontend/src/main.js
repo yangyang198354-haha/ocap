@@ -9,6 +9,7 @@ import './shared/style.css'
 import './theme/generated/themes.css'
 import './brand/brand.css'
 import './brand/auth-layout.css'
+import './brand/auth-motion.css'
 import { detectLowEnd } from './theme/apply'
 
 const app = createApp(App)

@@ -3,8 +3,9 @@ from django.urls import path
 from .views import (
     AdminAppealDecisionView, AdminAppealListView, AppealListCreateView, AppealWithdrawView,
     CertificationView, MyHousingView, RegistryMatchesConfirmView, RegistryMatchesDismissView,
-    RegistryMatchesView, ResidentApplicationCreateView, ResidentApplicationDecisionView,
-    ResidentApplicationMineView, ResidentApplicationToReviewView, ResidentApplicationWithdrawView,
+    RegistryMatchesView, ResidentApplicationApprovedView, ResidentApplicationCreateView,
+    ResidentApplicationDecisionView, ResidentApplicationMineView, ResidentApplicationToReviewView,
+    ResidentApplicationWithdrawView,
     ResidentRemoveView, UnitLeaveView,
 )
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path("admin/appeals/<int:appeal_id>/decision", AdminAppealDecisionView.as_view()),
     path("resident-applications", ResidentApplicationCreateView.as_view()),
     path("resident-applications/mine", ResidentApplicationMineView.as_view()),
+    path("resident-applications/approved", ResidentApplicationApprovedView.as_view()),
     path("resident-applications/<int:application_id>/withdraw", ResidentApplicationWithdrawView.as_view()),
     path("resident-applications/to-review", ResidentApplicationToReviewView.as_view()),
     path("resident-applications/<int:application_id>/decision", ResidentApplicationDecisionView.as_view()),

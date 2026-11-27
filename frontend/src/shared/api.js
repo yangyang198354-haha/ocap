@@ -58,6 +58,8 @@ export const unitApi = {
   createResidentApplication: (data) => post('/resident-applications', data),
   myResidentApplications: () => get('/resident-applications/mine'),
   residentApplicationsToReview: () => get('/resident-applications/to-review'),
+  // IFC-455/457：当前产权业主可见的已通过同住人申请
+  approvedResidentApplications: () => get('/resident-applications/approved'),
   // IFC-386：撤回待审同住申请
   withdrawResidentApplication: (id) => post(`/resident-applications/${id}/withdraw`, {}),
   // options: { reject_reason?, note? }（IFC-388）

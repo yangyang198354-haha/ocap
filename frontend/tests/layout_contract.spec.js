@@ -100,7 +100,7 @@ describe('新增页面只经 api.js 既有函数发请求', () => {
     // 改写：meApi 基线加入 confirmRegistryMatches / dismissRegistryMatches / registryMatches（IFC-343）
     expect(names.meApi).toEqual(['bindPhone', 'cancelAccount', 'changePhone', 'confirmRegistryMatches', 'dismissRegistryMatches', 'housing', 'limits', 'me', 'profile', 'registryMatches', 'sendCode', 'setPassword', 'setTheme', 'theme', 'updateProfile', 'userProfile', 'verifyEmail'])
     // F2（ocap_batch_1118，IFC-363）：基线集合加 unitApi.submitAppeal、resolutionApi.participants、admin.unitOptions、admin.ownerCandidates
-    expect(names.unitApi).toEqual(['certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal', 'withdrawAppeal', 'withdrawResidentApplication'])
+    expect(names.unitApi).toEqual(['approvedResidentApplications', 'certify', 'createAppeal', 'createResidentApplication', 'decideResidentApplication', 'leaveUnit', 'myAppeals', 'myResidentApplications', 'options', 'removeResident', 'residentApplicationsToReview', 'submitAppeal', 'withdrawAppeal', 'withdrawResidentApplication'])
     expect(names.resolutionApi).toEqual(['create', 'detail', 'list', 'participants', 'resubmit', 'vote', 'withdraw'])
     expect(names.admin).toContain('unitOptions')
     expect(names.admin).toContain('ownerCandidates')
@@ -133,6 +133,8 @@ describe('请求 方法+路径 与后端路由对应', () => {
     ['member', () => api.unitApi.createResidentApplication({ unit_id: 7 }), 'POST', '/resident-applications'],
     ['member', () => api.unitApi.myResidentApplications(), 'GET', '/resident-applications/mine'],
     ['member', () => api.unitApi.residentApplicationsToReview(), 'GET', '/resident-applications/to-review'],
+    // ocap_approval_history / IFC-455、457：已通过同住人历史
+    ['member', () => api.unitApi.approvedResidentApplications(), 'GET', '/resident-applications/approved'],
     ['member', () => api.unitApi.decideResidentApplication(8, 'APPROVE'), 'POST', '/resident-applications/8/decision'],
     ['member', () => api.unitApi.removeResident(1, 9), 'DELETE', '/units/1/residents/9'],
     ['member', () => api.unitApi.leaveUnit(1), 'POST', '/units/1/leave'],
@@ -140,6 +142,8 @@ describe('请求 方法+路径 与后端路由对应', () => {
     ['member', () => api.claimApi.list({ scope: 'todo' }), 'GET', '/claims'],
     // ocap_role_home 首页只复用既有 api.js 函数（GR-D-001 契约）：以下为首页实际调用的方法与路径
     ['member', () => api.approvalApi.tasks(), 'GET', '/approval/tasks'],
+    // ocap_approval_history / IFC-454：已处理视图仍复用待办路由
+    ['member', () => api.approvalApi.tasks(undefined, { view: 'handled', page: 2 }), 'GET', '/approval/tasks'],
     ['member', () => api.pollApi.list(), 'GET', '/polls'],
     ['member', () => api.pollApi.detail(5), 'GET', '/polls/5'],
     ['member', () => api.accountApi.summary({ status: 'ENABLED', recent: 0 }), 'GET', '/ledger/accounts/summary'],

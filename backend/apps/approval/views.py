@@ -1,5 +1,5 @@
 """审批视图（IFC-080~082、IFC-402~407）。"""
-from django.db.models import ProtectedError
+from django.db.models import Prefetch, ProtectedError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,7 +9,7 @@ from apps.core.errors import ApiError
 from apps.core.permissions import IsAdmin, IsCommitteeMember, IsMemberOrAdmin
 from apps.core.serializers import page_response
 
-from .models import ApprovalFlow, ApprovalInstance, ApprovalStep, StepApprover
+from .models import ApprovalAction, ApprovalFlow, ApprovalInstance, ApprovalStep, StepApprover
 from .services import ApprovalEngine, subject_title
 
 MAX_STEPS = 50
@@ -223,8 +223,21 @@ class TaskListView(APIView):
     def get(self, request):
         from .models import ApprovalStepState
 
-        qs = ApprovalInstance.objects.filter(status="PENDING").select_related("submitter").order_by("submitted_at")
+        view = request.query_params.get("view", "todo")
         scope = request.query_params.get("scope")
+        if view not in {"todo", "handled"}:
+            raise ApiError("INVALID_QUERY", "view 仅支持 todo 或 handled")
+        if scope and scope not in {"RESOLUTION", "EXPENSE", "INCOME"}:
+            raise ApiError("INVALID_QUERY", "scope 不合法")
+        try:
+            page = max(int(request.query_params.get("page", 1)), 1)
+            page_size = min(max(int(request.query_params.get("page_size", 20)), 1), 100)
+        except (TypeError, ValueError):
+            raise ApiError("INVALID_QUERY", "分页参数须为整数") from None
+        if view == "handled":
+            return self._handled(request, scope, page, page_size)
+
+        qs = ApprovalInstance.objects.filter(status="PENDING").select_related("submitter").order_by("submitted_at")
         if scope:
             qs = qs.filter(scope=scope)
         rows = []
@@ -247,8 +260,53 @@ class TaskListView(APIView):
             "step_order": step.step_order, "step_name": step.name, "step_strategy": step.strategy,
             "step_reached_at": step.reached_at,
         } for i, step in rows]
-        page = max(int(request.query_params.get("page", 1)), 1)
-        page_size = min(max(int(request.query_params.get("page_size", 20)), 1), 100)
+        return Response({"count": len(data), "page": page, "page_size": page_size,
+                         "results": data[(page - 1) * page_size: page * page_size]})
+
+    def _handled(self, request, scope, page, page_size):
+        own_actions = (ApprovalAction.objects.filter(actor=request.user, action__in=["APPROVE", "REJECT"])
+                       .select_related("step_state").order_by("-acted_at", "-id"))
+        qs = (ApprovalInstance.objects.filter(actions__actor=request.user,
+                                              actions__action__in=["APPROVE", "REJECT"])
+              .select_related("submitter")
+              .prefetch_related(Prefetch("actions", queryset=own_actions, to_attr="handled_actions"),
+                                "step_states")
+              .distinct())
+        if scope:
+            qs = qs.filter(scope=scope)
+        rows = []
+        for instance in qs:
+            action = instance.handled_actions[0]
+            steps = instance.step_states.all()
+            current_step = next((s for s in steps if s.step_order == instance.current_step_order), None)
+            own_step = action.step_state
+            if own_step is None and action.step_order is not None:
+                own_step = next((s for s in steps if s.step_order == action.step_order), None)
+            rows.append((instance, action, current_step, own_step))
+        rows.sort(key=lambda row: (row[1].acted_at, row[0].id), reverse=True)
+
+        from apps.accounts.directory import person_refs
+
+        submitter_refs = person_refs([i.submitter_id for i, _, _, _ in rows])
+        data = []
+        for instance, action, current_step, own_step in rows:
+            submitter = submitter_refs.get(instance.submitter_id)
+            data.append({
+                "instance_id": instance.id, "scope": instance.scope,
+                "subject_type": instance.subject_type, "subject_id": instance.subject_id,
+                "subject_title": subject_title(instance.subject_type, instance.subject_id),
+                "submitter": submitter,
+                "submitter_label": (submitter or {}).get("display_name",
+                                                        instance.submitter.identity_label),
+                "submitted_at": instance.submitted_at, "status": instance.status,
+                "step_order": current_step.step_order if current_step else None,
+                "step_name": current_step.name if current_step else None,
+                "step_strategy": current_step.strategy if current_step else None,
+                "my_action": action.action, "my_acted_at": action.acted_at,
+                "my_comment": action.comment,
+                "my_step_order": own_step.step_order if own_step else action.step_order,
+                "my_step_name": own_step.name if own_step else None,
+            })
         return Response({"count": len(data), "page": page, "page_size": page_size,
                          "results": data[(page - 1) * page_size: page * page_size]})
 

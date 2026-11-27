@@ -469,6 +469,15 @@ def application_view(application: ResidentApplication) -> dict:
             "previous_application_id": application.previous_application_id}
 
 
+def _review_application_view(application: ResidentApplication) -> dict:
+    return {
+        **application_view(application),
+        "applicant": {"id": application.applicant_id, "account_no": application.applicant.account_no,
+                      "nickname": application.applicant.nickname,
+                      "phone": mask_phone(application.applicant.phone) if application.applicant.phone else None},
+    }
+
+
 class ResidentApplicationWithdrawView(APIView):
     """POST /resident-applications/{id}/withdraw（IFC-386）：仅本人且待审可撤回。"""
     permission_classes = [IsMember]
@@ -510,12 +519,18 @@ class ResidentApplicationToReviewView(APIView):
                                              role__in=["HEAD", "OWNER"]).values_list("unit_id", flat=True)
         rows = (ResidentApplication.objects.filter(unit_id__in=list(unit_ids), status="PENDING")
                 .select_related("unit", "applicant").order_by("created_at"))
-        return Response([{
-            **application_view(a),
-            "applicant": {"id": a.applicant_id, "account_no": a.applicant.account_no,
-                          "nickname": a.applicant.nickname,
-                          "phone": mask_phone(a.applicant.phone) if a.applicant.phone else None},
-        } for a in rows])
+        return Response([_review_application_view(a) for a in rows])
+
+
+class ResidentApplicationApprovedView(APIView):
+    permission_classes = [IsMember]
+
+    def get(self, request):
+        unit_ids = Membership.objects.filter(user=request.user, ended_at__isnull=True,
+                                             role__in=["HEAD", "OWNER"]).values_list("unit_id", flat=True)
+        rows = (ResidentApplication.objects.filter(unit_id__in=list(unit_ids), status="APPROVED")
+                .select_related("unit", "applicant").order_by("-decided_at", "-id"))
+        return Response([_review_application_view(a) for a in rows])
 
 
 class ResidentApplicationDecisionView(APIView):

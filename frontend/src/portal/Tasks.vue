@@ -1,6 +1,10 @@
 <template>
   <div class="page">
     <PageHead title="审批待办" />
+    <el-tabs v-model="view" @tab-change="resetAndLoad">
+      <el-tab-pane label="待办" name="todo" />
+      <el-tab-pane label="已处理" name="handled" />
+    </el-tabs>
     <div class="card">
       <el-select v-model="scope" placeholder="全部类型" clearable style="width: 180px" @change="resetAndLoad">
         <el-option label="决议" value="RESOLUTION" />
@@ -9,7 +13,7 @@
       </el-select>
     </div>
     <div class="card">
-      <el-empty v-if="!tasks.length" description="暂无待办" />
+      <el-empty v-if="!tasks.length" :description="view === 'handled' ? '暂无已处理记录' : '暂无待办'" />
       <div v-for="task in tasks" :key="task.instance_id" class="list-item">
         <div class="row" style="justify-content: space-between">
           <div>
@@ -19,12 +23,19 @@
               <AuthImage :src="task.submitter?.avatar_url" :alt="task.submitter_label" :size="24" />
               <span class="muted">提交人：{{ task.submitter?.display_name || task.submitter_label }}</span>
             </div>
-            <div class="muted">当前第 {{ task.step_order }} 步 · {{ task.step_name }}（{{ textOf(STEP_STRATEGY_LABELS, task.step_strategy) }}）</div>
+            <div v-if="task.step_order && (view === 'todo' || task.status === 'PENDING')" class="muted">当前第 {{ task.step_order }} 步 · {{ task.step_name }}（{{ textOf(STEP_STRATEGY_LABELS, task.step_strategy) }}）</div>
+            <template v-if="view === 'handled'">
+              <div class="muted">我的处理：{{ textOf(APPROVAL_ACTION_LABELS, task.my_action) }} · {{ formatDateTime(task.my_acted_at) }}</div>
+              <div class="muted">审批意见：{{ task.my_comment || '—' }}</div>
+              <div class="muted">整单状态：<el-tag size="small">{{ task.status === 'PENDING' ? '审批中' : textOf(APPROVAL_STATUS_LABELS, task.status) }}</el-tag></div>
+            </template>
           </div>
           <div class="row">
-            <el-button size="small" @click="openTimeline(task)">查看进度</el-button>
-            <el-button size="small" type="success" @click="openDecide(task, 'APPROVE')">同意</el-button>
-            <el-button size="small" type="danger" @click="openDecide(task, 'REJECT')">拒绝</el-button>
+            <el-button size="small" @click="openTimeline(task)">{{ view === 'handled' ? '审批过程' : '查看进度' }}</el-button>
+            <template v-if="view === 'todo'">
+              <el-button size="small" type="success" @click="openDecide(task, 'APPROVE')">同意</el-button>
+              <el-button size="small" type="danger" @click="openDecide(task, 'REJECT')">拒绝</el-button>
+            </template>
           </div>
         </div>
       </div>
@@ -56,13 +67,14 @@ import ApprovalTimeline from './ApprovalTimeline.vue'
 import AuthImage from './parts/AuthImage.vue'
 import PagerBar from '@/shared/PagerBar.vue'
 import { errorText, formatDateTime } from '@/shared/format'
-import { FLOW_SCOPE_TEXT, STEP_STRATEGY_LABELS, textOf } from '@/shared/labels'
+import { APPROVAL_ACTION_LABELS, APPROVAL_STATUS_LABELS, FLOW_SCOPE_TEXT, STEP_STRATEGY_LABELS, textOf } from '@/shared/labels'
 import { usePaging } from '@/shared/usePaging'
 
 const scope = ref('')
-const filters = computed(() => ({ scope: scope.value || undefined }))
+const view = ref('todo')
+const filters = computed(() => ({ scope: scope.value || undefined, view: view.value }))
 const { items: tasks, total, page, pageSize, reload, goto, resetAndLoad: pagingReset } = usePaging({
-  fetch: ({ scope: s, ...params }) => approvalApi.tasks(s, params), filters
+  fetch: ({ scope: s, view: v, ...params }) => approvalApi.tasks(s, { ...params, view: v }), filters
 })
 
 const showDecide = ref(false)

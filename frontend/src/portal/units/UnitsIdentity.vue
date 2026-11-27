@@ -1,8 +1,8 @@
 <!-- MOD-136 / MOD-176：我的身份与房屋；页内双 Tab（身份与房屋 / 待我审批），复用 UnitsReview（ADR-167） -->
 <template>
-  <div>
-    <PageHead title="我的身份与房屋" />
-    <div class="card">
+  <div class="business-page">
+    <PageHead title="我的身份与房屋" description="查看认证身份、关联房屋与同住人申请" />
+    <div class="card business-panel business-enter">
       <el-tabs v-model="tab">
         <el-tab-pane label="我的身份与房屋" name="identity">
           <div v-if="housingError" class="row">
@@ -10,15 +10,17 @@
             <el-button size="small" @click="loadHousing">重试</el-button>
           </div>
           <template v-else>
-            <div class="row summary-row">
+            <div class="card business-panel business-summary row row-between summary-row">
               <span class="summary-identity">汇总身份：<el-tag size="large" class="summary-tag">{{ housing.summary.label }}</el-tag></span>
               <span class="real-names">真实姓名：{{ (housing.real_names || []).join('、') || '—' }}</span>
+              <el-button type="primary" @click="goPick">认证产权</el-button>
             </div>
             <p v-if="!housing.units.length" class="muted">暂无已认证房屋</p>
             <p v-if="!housing.units.length" class="muted">
               您还没有认证任何专有部分，请先认证产权
               <el-button type="primary" link @click="goPick">认证产权</el-button>
             </p>
+            <h2 v-if="housing.units.length" class="title title-flat">已关联房屋（{{ housing.units.length }}）</h2>
             <div v-for="unit in housing.units" :key="unit.unit_id" class="list-item-top">
               <div class="row">
                 <strong>{{ unit.specific_part }}</strong>
@@ -40,9 +42,7 @@
               </div>
             </div>
           </template>
-          <div class="row" style="margin-top: 10px">
-            <el-button type="primary" @click="goPick">认证产权</el-button>
-          </div>
+
         </el-tab-pane>
         <el-tab-pane v-if="ownsAnyUnit" name="review">
           <template #label>
@@ -135,7 +135,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.summary-row { align-items: baseline; }
+.summary-row { align-items: center; }
 .summary-identity { font-size: 16px; }
 .summary-tag { font-size: 15px; padding: 0 12px; }
 .review-tab-label { display: inline-flex; align-items: center; gap: 8px; }

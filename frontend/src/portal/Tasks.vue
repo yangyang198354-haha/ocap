@@ -1,20 +1,21 @@
 <template>
-  <div class="page">
-    <PageHead title="审批待办" />
-    <el-tabs v-model="view" @tab-change="resetAndLoad">
-      <el-tab-pane label="待办" name="todo" />
-      <el-tab-pane label="已处理" name="handled" />
-    </el-tabs>
-    <div class="card">
+  <div class="page business-page">
+    <PageHead title="审批待办" description="查看待处理事项、审批进度与已处理记录" />
+    <section class="card business-panel business-summary business-enter task-toolbar">
+      <el-tabs v-model="view" @tab-change="resetAndLoad">
+        <el-tab-pane label="待办" name="todo" />
+        <el-tab-pane label="已处理" name="handled" />
+      </el-tabs>
       <el-select v-model="scope" placeholder="全部类型" clearable style="width: 180px" @change="resetAndLoad">
         <el-option label="决议" value="RESOLUTION" />
         <el-option label="报销/备用金" value="EXPENSE" />
         <el-option label="收入表" value="INCOME" />
       </el-select>
-    </div>
-    <div class="card">
+    </section>
+    <section class="card business-panel" aria-label="事项列表">
+      <h2 class="title title-flat">事项列表</h2>
       <el-empty v-if="!tasks.length" :description="view === 'handled' ? '暂无已处理记录' : '暂无待办'" />
-      <div v-for="task in tasks" :key="task.instance_id" class="list-item">
+      <div v-for="task in tasks" :key="task.instance_id" class="list-item business-record task-record">
         <div class="row" style="justify-content: space-between">
           <div>
             <strong>{{ task.title || task.subject_title || textOf(FLOW_SCOPE_TEXT, task.scope) }}</strong>
@@ -40,7 +41,7 @@
         </div>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
-    </div>
+    </section>
 
     <el-dialog v-model="showDecide" :title="pendingAction === 'APPROVE' ? '通过审批' : '拒绝审批'" width="480px">
       <p v-if="currentTask" class="muted">{{ currentTask.subject_title }} · 第 {{ currentTask.step_order }} 步 {{ currentTask.step_name }}</p>
@@ -135,5 +136,7 @@ onMounted(load)
 </script>
 
 <style scoped>
+.task-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.task-record { padding-inline: 10px; border-radius: var(--radius-sm); }
 .person-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
 </style>

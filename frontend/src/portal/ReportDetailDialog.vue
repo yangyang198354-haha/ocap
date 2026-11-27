@@ -41,7 +41,7 @@
         </div>
       </div>
       <div class="report-detail-scroll">
-        <el-table v-if="(report.detail || []).length" :data="report.detail" size="small">
+        <el-table class="report-detail-table" v-if="(report.detail || []).length" :data="report.detail" size="small">
           <el-table-column prop="occurred_on" label="日期" width="110" />
           <el-table-column label="方向" width="70">
             <template #default="{ row }">
@@ -53,7 +53,7 @@
           <el-table-column label="类型" min-width="100">
             <template #default="{ row }">{{ entryTypeText(row.entry_type) }}</template>
           </el-table-column>
-          <el-table-column label="金额" width="110">
+          <el-table-column label="金额" min-width="125" align="right" class-name="report-money">
             <template #default="{ row }">
               <span :class="row.direction === 'INCOME' ? 'is-income' : 'is-expense'">¥{{ moneyText(row.amount) }}</span>
             </template>
@@ -136,6 +136,9 @@ watch(
 </style>
 
 <style scoped>
+.report-detail-table { font-size: 14px; }
+.report-detail-table :deep(th.el-table__cell) { font-size: 13px; }
+.report-detail-table :deep(td.report-money) { font-size: 15px; font-variant-numeric: tabular-nums; }
 .report-toolbar { margin-bottom: 12px; min-height: 0; }
 .report-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .report-metric {

@@ -58,6 +58,22 @@ html[data-perf="low"] .home-grid > .card { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .home-grid > .card { animation: none !important; }
 }
+/* 业务页首屏与首页共用入场节奏。 */
+.business-page { font-size: 15px; line-height: 1.55; }
+.business-page .business-panel { min-width: 0; }
+.business-page .business-panel:hover { transform: none; }
+.business-page .business-summary {
+  background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface));
+}
+html[data-theme="terminal"] .business-page .business-summary {
+  border-inline-start: 3px solid var(--accent);
+}
+html[data-theme="neon"] .business-page .business-summary {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.business-page .business-record:hover, .business-page .business-record:focus-within { background-color: var(--glass); }
+html[data-theme="terminal"] .business-page .business-record:hover,
+html[data-theme="terminal"] .business-page .business-record:focus-within { box-shadow: inset 3px 0 var(--accent); }
 .card .el-empty { padding: 8px 0; }
 .card .el-empty__description { margin-top: 4px; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -330,6 +346,12 @@ html[data-perf="low"] .home-grid > .card { animation: none !important; }
 
 /* 卡片与导航动效（MOD-149/150，REQ-NFUNC-047）：全部包在 no-preference 内，"减少动效"下无任何新增动画；时长 ≤ 360ms */
 @media (prefers-reduced-motion: no-preference) {
+  html:not([data-perf="low"]) .business-page .business-enter {
+    animation: card-rise 320ms var(--motion-ease, cubic-bezier(.2,.7,.2,1)) both;
+  }
+  .business-page .business-record {
+    transition: background-color var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
+  }
   .res-card, .poll-item { transition: transform .18s ease, box-shadow .18s ease; }
   .res-card:hover, .poll-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
   .res-card:active, .poll-item:active { transform: scale(.985); }

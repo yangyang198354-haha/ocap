@@ -1,7 +1,7 @@
 <template>
-  <div class="page reports-page">
+  <div class="page reports-page business-page">
     <PageHead title="财务报表" description="季度 / 年度报表与收支明细" />
-    <section class="card reports-hero">
+    <section class="card reports-hero business-panel">
       <div class="row row-between">
         <h2 class="title title-flat">周期与筛选</h2>
         <div v-if="auth.isCommittee" class="row">
@@ -31,7 +31,7 @@
       </div>
     </section>
 
-    <section class="reports-accounts" aria-label="账户余额">
+    <section class="card reports-accounts business-panel business-summary business-enter" aria-label="账户余额">
       <header class="reports-accounts-head">
         <div>
           <div class="label">账户余额合计（启用账户）</div>
@@ -55,9 +55,10 @@
       <el-empty v-else :image-size="48" description="暂无账户" />
     </section>
 
-    <section class="card">
+    <section class="card business-panel">
+      <h2 class="title title-flat">已生成报表</h2>
       <el-empty v-if="!reports.length" description="暂无已生成报表" />
-      <div v-for="item in reports" :key="item.id" class="list-item reports-item">
+      <div v-for="item in reports" :key="item.id" class="list-item reports-item business-record">
         <div class="reports-item-main">
           <button type="button" class="reports-item-link" @click="open(item, $event)">
             {{ label(item) }}
@@ -220,14 +221,15 @@ onMounted(async () => {
 }
 .reports-account-grid > * { flex: 1 1 0; min-width: 280px; }
 .account-error { margin: 0; }
-.reports-item { display: flex; flex-direction: column; gap: 6px; }
+.reports-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding-inline: 10px; border-radius: var(--radius-sm); }
+@media (max-width: 767.98px) { .reports-item { grid-template-columns: minmax(0, 1fr); } }
 .reports-item-main { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .reports-item-link {
   padding: 0; border: 0; background: transparent; color: var(--accent-text);
   font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; text-align: left;
 }
 .reports-item-link:hover { text-decoration: underline; }
-.reports-item-totals { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.reports-item-totals { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 14px; font-variant-numeric: tabular-nums; }
 .reports-item-totals .is-income { color: var(--success); }
 .reports-item-totals .is-expense { color: var(--danger); }
 </style>

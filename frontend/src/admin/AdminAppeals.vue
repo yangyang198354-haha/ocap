@@ -162,7 +162,7 @@ async function decide(id, decision) {
     }
     let rejectReason
     if (decision === 'REJECT') {
-      const { value } = await ElMessageBox.prompt('请输入拒绝原因（必填，≤500 字）', '拒绝申诉', { inputPattern: /\S+/, inputErrorMessage: '必填' })
+      const { value } = await ElMessageBox.prompt('请输入拒绝原因（必填，≤500 字）', '拒绝申诉', { inputPattern: /\S+/, inputErrorMessage: '必填', confirmButtonText: '确认拒绝', confirmButtonClass: 'button-confirm-danger' })
       rejectReason = value
     }
     const result = await admin.decideAppeal(id, decision, rejectReason, note)

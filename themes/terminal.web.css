@@ -29,7 +29,7 @@ html[data-theme="terminal"] .card::before {
 }
 html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
 html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
-html[data-theme="terminal"] .tabbar a, html[data-theme="terminal"] .el-button, html[data-theme="terminal"] .label,
+html[data-theme="terminal"] .tabbar a, html[data-theme="terminal"] .label,
 html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .field-label {
   font-family: var(--mono);
 }
@@ -195,7 +195,6 @@ html[data-theme="terminal"] .auth-card .auth-form-card.card::before { display: n
 html[data-theme="terminal"] .auth-card .el-tabs__item { font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
 html[data-theme="terminal"] .auth-card .el-input__wrapper { border-radius: 2px; background: #0A0A0B; box-shadow: 0 0 0 1px #26262A inset; }
 html[data-theme="terminal"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px var(--accent) inset, 0 0 16px -6px var(--accent); }
-html[data-theme="terminal"] .auth-card .el-button:not(.el-button--primary) { border-radius: 2px; }
 html[data-theme="terminal"] .auth-card a { color: var(--accent); }
 html[data-theme="terminal"] .auth-card .muted { font-family: var(--mono); }
 @media (max-width: 767.98px) {

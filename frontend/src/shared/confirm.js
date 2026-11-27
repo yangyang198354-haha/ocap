@@ -27,7 +27,8 @@ export async function confirmDanger(key, vars = {}) {
   try {
     await ElMessageBox.confirm(h('div', lines.map((line) => h('p', line))), spec.title, {
       type: 'warning',
-      confirmButtonText: '确认',
+      confirmButtonText: `确认${spec.title}`,
+      confirmButtonClass: 'button-confirm-danger',
       cancelButtonText: '取消'
     })
     return true

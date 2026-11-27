@@ -187,7 +187,7 @@ describe('Tasks（US-313 / AC-322-01、AC-332-02）', () => {
     const textarea = document.querySelector('.el-dialog textarea')
     textarea.value = '票据齐全'
     textarea.dispatchEvent(new Event('input', { bubbles: true }))
-    const confirm = [...document.querySelectorAll('.el-dialog button')].find((b) => b.textContent.trim() === '确认')
+    const confirm = [...document.querySelectorAll('.el-dialog button')].find((b) => b.textContent.trim() === '确认通过')
     confirm.click()
     await flush()
     expect(approvalApi.decide).toHaveBeenCalledWith(7, 'APPROVE', '票据齐全')

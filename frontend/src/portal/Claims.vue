@@ -25,7 +25,7 @@
           </div>
           <div class="row">
             <StatusTag :status="item.status" />
-            <el-button v-if="scope === 'mine' && item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
+            <el-button type="danger" v-if="scope === 'mine' && item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
             <el-button v-if="scope === 'mine' && item.status === 'REJECTED' && item.type !== 'SETTLEMENT'" size="small" @click="openReissue(item)">重新发起</el-button>
           </div>
         </div>

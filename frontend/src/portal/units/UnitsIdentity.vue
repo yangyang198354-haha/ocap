@@ -7,7 +7,7 @@
       <el-tab-pane label="我的身份与房屋" name="identity">
         <div v-if="housingError" class="card business-panel row">
           <span class="muted">加载失败，请重试</span>
-          <el-button size="small" @click="loadHousing">重试</el-button>
+          <el-button link size="small" @click="loadHousing">重试</el-button>
         </div>
         <template v-else>
           <section class="card business-panel business-summary business-enter housing-summary" aria-label="身份信息">
@@ -42,10 +42,10 @@
                       <router-link v-if="r.user_id" :to="'/users/' + r.user_id + '/profile'">{{ r.nickname || r.account_no }}（{{ r.account_no }}）</router-link>
                       <span v-else>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</span>
                       <span class="muted">加入于 {{ formatDateTime(r.joined_at) }}</span>
-                      <el-button size="small" @click="removeResident(unit, r)">移除</el-button>
+                      <el-button type="danger" size="small" @click="removeResident(unit, r)">移除</el-button>
                     </div>
                   </div>
-                  <el-button v-if="unit.role === 'RESIDENT'" size="small" @click="leave(unit)">退出</el-button>
+                  <el-button type="danger" v-if="unit.role === 'RESIDENT'" size="small" @click="leave(unit)">退出</el-button>
                 </div>
               </article>
             </div>

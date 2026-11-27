@@ -32,7 +32,7 @@
             </template>
           </div>
           <div class="row">
-            <el-button size="small" @click="openTimeline(task)">{{ view === 'handled' ? '审批过程' : '查看进度' }}</el-button>
+            <el-button size="small" link @click="openTimeline(task)">{{ view === 'handled' ? '审批过程' : '查看进度' }}</el-button>
             <template v-if="view === 'todo'">
               <el-button size="small" type="success" @click="openDecide(task, 'APPROVE')">同意</el-button>
               <el-button size="small" type="danger" @click="openDecide(task, 'REJECT')">拒绝</el-button>
@@ -49,7 +49,9 @@
                 placeholder="审批意见（可选，最多 500 字）" />
       <template #footer>
         <el-button @click="showDecide = false">取消</el-button>
-        <el-button type="primary" @click="submitDecision">确认</el-button>
+        <el-button :type="pendingAction === 'APPROVE' ? 'success' : 'danger'" @click="submitDecision">
+          {{ pendingAction === 'APPROVE' ? '确认通过' : '确认拒绝' }}
+        </el-button>
       </template>
     </el-dialog>
 

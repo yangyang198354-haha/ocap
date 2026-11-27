@@ -11,7 +11,6 @@ html[data-theme="neon"] body::before {
 }
 @keyframes ocap-float { 50% { transform: translate(40px, 30px) scale(1.06); } }
 @keyframes ocap-flow { to { filter: hue-rotate(360deg); } }
-html[data-theme="neon"] .el-button--primary { background: var(--accent-bg); border-color: transparent; box-shadow: 0 10px 30px rgba(124,92,255,.4); }
 html[data-theme="neon"] .tag { border-color: var(--glass); }
 html[data-theme="neon"] .grad-text { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 html[data-theme="neon"] .chip { background: rgba(124,92,255,.16); border-color: rgba(169,150,255,.35); color: var(--text); }
@@ -175,7 +174,6 @@ html[data-theme="neon"] .auth-card::after {
 html[data-theme="neon"] .auth-card .auth-sub { color: #B7BDD8; }
 html[data-theme="neon"] .auth-card .el-input__wrapper { background: rgba(8,8,22,.62); box-shadow: 0 0 0 1px rgba(169,150,255,.30) inset; }
 html[data-theme="neon"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px rgba(34,211,238,.85) inset, 0 0 22px -8px rgba(34,211,238,.8); }
-html[data-theme="neon"] .auth-card .el-button:not(.el-button--primary) { background: rgba(124,92,255,.14); border-color: rgba(169,150,255,.32); color: #E4E1FA; }
 html[data-theme="neon"] .auth-card a { color: #A9D8FF; }
 html[data-theme="neon"] .auth-card .muted { color: #9BA2BE; }
 html[data-theme="neon"] .auth-panel .brand-mark { filter: drop-shadow(0 0 14px rgba(124,92,255,.55)); }

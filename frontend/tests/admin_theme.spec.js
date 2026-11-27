@@ -77,9 +77,11 @@ describe('口径 1~4：作用域、渐变顶栏与零回归（AC-142-01~04）', 
     expect(bentoWeb).not.toContain('.topnav')
   })
 
-  it('管理端主按钮在生成物中取强调色', () => {
-    const block = adminBlock(`${PREFIX} .el-button--primary`)
-    expect(block).toMatch(/--el-button-bg-color:\s*var\(--accent\)/)
+  it('管理端主按钮与用户端共用 Bento 强调色', () => {
+    const buttons = read('frontend/src/shared/buttons.css')
+    expect(adminBlock(`${PREFIX} .el-button--primary`)).toBeNull()
+    expect(buttons).toMatch(/html\[data-theme="bento"\]\s*\{[^}]*--button-primary-fill:\s*var\(--accent\)/)
+    expect(buttons).toMatch(/\.el-button--primary[^{}]*\{[^}]*--button-fill:\s*var\(--button-primary-fill\)/)
   })
 
   it('管理端 .vue 无颜色字面量，静态内联 style 无颜色类属性，<style> 仅用变量', () => {

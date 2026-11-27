@@ -9,7 +9,7 @@
         <span class="muted">提交 {{ formatDateTime(item.submitted_at) }}</span>
         <span v-if="item.decided_at" class="muted">处理 {{ formatDateTime(item.decided_at) }}</span>
         <span v-if="item.withdrawn_at" class="muted">撤回 {{ formatDateTime(item.withdrawn_at) }}</span>
-        <el-button v-if="item.status === 'PENDING'" size="small" @click="withdraw(item)">撤回</el-button>
+        <el-button type="danger" v-if="item.status === 'PENDING'" size="small" @click="withdraw(item)">撤回</el-button>
         <el-button v-if="item.status === 'WITHDRAWN'" size="small" type="primary" @click="$emit('resubmit', item)">
           重新提交
         </el-button>
@@ -41,7 +41,7 @@ const { myAppeals } = storeToRefs(store)
 async function withdraw(item) {
   try {
     await ElMessageBox.confirm('撤回后该申诉不可恢复，可修改信息后重新提交。确认撤回？', '撤回申诉',
-      { confirmButtonText: '撤回', cancelButtonText: '取消', type: 'warning' })
+      { confirmButtonText: '确认撤回', confirmButtonClass: 'button-confirm-danger', cancelButtonText: '取消', type: 'warning' })
   } catch (e) {
     return
   }

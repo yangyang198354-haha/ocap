@@ -23,7 +23,7 @@
         </el-table-column>
         <el-table-column label="操作" width="260">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">查看详情</el-button>
+            <el-button link size="small" @click="openDetail(row)">查看详情</el-button>
             <el-button size="small" @click="toggle(row)">{{ row.is_active ? '停用' : '启用' }}</el-button>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </template>

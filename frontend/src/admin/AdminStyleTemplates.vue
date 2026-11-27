@@ -104,7 +104,7 @@ async function save() {
 async function remove(row) {
   try {
     await ElMessageBox.confirm(`删除模板“${row.name}”后不可恢复，确认删除？`, '删除版式模板', {
-      type: 'warning', confirmButtonText: '确认', cancelButtonText: '取消'
+      type: 'warning', confirmButtonText: '确认删除', confirmButtonClass: 'button-confirm-danger', cancelButtonText: '取消'
     })
   } catch (e) {
     return

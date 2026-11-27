@@ -95,7 +95,7 @@ html[data-theme="neon"] .auth-panel > .auth-card { position: relative; z-index: 
 html[data-theme="neon"] .auth-card .el-input__wrapper:not(.is-focus) {
   animation: auth-neon-input 5s ease-in-out infinite alternate;
 }
-html[data-theme="neon"] .auth-card .el-button--primary {
+html[data-theme="neon"] .auth-card .el-button--primary:not(.is-link, .is-text, .is-disabled, .is-loading) {
   background-size: 210% 100%;
   animation: auth-neon-button 7s ease-in-out infinite alternate;
 }
@@ -151,7 +151,7 @@ html[data-theme="bento"] .auth-panel {
   -webkit-backdrop-filter: blur(16px);
   animation: auth-aurora-card-shadow 9s ease-in-out infinite alternate;
 }
-html[data-theme="bento"] .auth-card .el-button--primary {
+html[data-theme="bento"] .auth-card .el-button--primary:not(.is-link, .is-text, .is-disabled, .is-loading) {
   background-size: 190% 100%;
   animation: auth-aurora-button 8s ease-in-out infinite alternate;
 }

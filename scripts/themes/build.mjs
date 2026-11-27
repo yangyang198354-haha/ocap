@@ -88,22 +88,6 @@ export function elementVars(def) {
 
 const decl = (vars, indent = '  ') => Object.entries(vars).map(([k, v]) => `${indent}${k}: ${v};`).join('\n')
 
-function primaryButtonRule(def, selector) {
-  const t = def.tokens
-  const grad = t.accentBg.startsWith('linear-gradient')
-  const bg = grad ? 'transparent' : t.accentBg
-  const lines = [
-    `--el-button-text-color: ${t.onAccent}`, `--el-button-hover-text-color: ${t.onAccent}`,
-    `--el-button-active-text-color: ${t.onAccent}`,
-    `--el-button-bg-color: ${bg}`, `--el-button-hover-bg-color: ${bg}`, `--el-button-active-bg-color: ${bg}`,
-    `--el-button-border-color: ${bg}`, `--el-button-hover-border-color: ${bg}`, `--el-button-active-border-color: ${bg}`,
-    `border-radius: var(--radius-btn)`
-  ]
-  if (grad) lines.push(`background-image: ${t.accentBg}`)
-  return `${selector} .el-button--primary {\n${lines.map((l) => `  ${l};`).join('\n')}\n}\n` +
-    `${selector} .el-button--primary:hover { filter: brightness(1.08); }`
-}
-
 export function loadThemeFiles(dir) {
   const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.theme.json')).sort() : []
   return files.map((file) => {
@@ -173,7 +157,6 @@ export function generate(entries) {
   for (const { def, webCss } of valid) {
     const sel = `html[data-theme="${def.key}"]`
     css.push(`${sel} {\n  color-scheme: ${def.scheme};\n${decl({ ...businessVars(def), ...elementVars(def) })}\n}`)
-    css.push(primaryButtonRule(def, sel))
     if (webCss.trim()) css.push(`/* themes/${def.key}.web.css */\n${webCss.trim()}`)
   }
   css.push('/* 低端设备降级（ADR-032）：玻璃模糊换为不透明纯色 */')

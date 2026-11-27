@@ -39,11 +39,11 @@
             </div>
           </div>
           <div class="row income-record-actions">
-            <el-button size="small" @click="showDetail(item.id)">明细</el-button>
-            <el-button v-if="item.status === 'DRAFT'" size="small" @click="submit(item)">提交</el-button>
-            <el-button v-if="item.status === 'WITHDRAWN'" size="small" @click="submit(item)">重新提交</el-button>
-            <el-button v-if="item.status === 'REJECTED'" size="small" @click="openReissue(item)">重新发起</el-button>
-            <el-button v-if="item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
+            <el-button link size="small" @click="showDetail(item.id)">明细</el-button>
+            <el-button v-if="item.status === 'DRAFT'" size="small" type="primary" @click="submit(item)">提交</el-button>
+            <el-button v-if="item.status === 'WITHDRAWN'" size="small" type="primary" @click="submit(item)">重新提交</el-button>
+            <el-button v-if="item.status === 'REJECTED'" size="small" type="primary" @click="openReissue(item)">重新发起</el-button>
+            <el-button type="danger" v-if="item.status === 'PENDING'" size="small" @click="withdraw(item.id)">撤回</el-button>
             <el-button v-if="item.status === 'EFFECTIVE' && item.can_void" size="small" type="danger" @click="voidSheet(item.id)">作废</el-button>
           </div>
         </div>

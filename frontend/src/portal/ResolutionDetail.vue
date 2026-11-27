@@ -32,7 +32,7 @@
         <el-button size="small" @click="showTimeline = true">审批过程</el-button>
       </div>
       <div class="row" v-if="isInitiator" style="margin-top: 12px">
-        <el-button v-if="item.status === 'PENDING'" @click="withdraw">撤回</el-button>
+        <el-button type="danger" v-if="item.status === 'PENDING'" @click="withdraw">撤回</el-button>
         <el-button v-if="item.status === 'WITHDRAWN'" type="primary" @click="openResubmit">修改后重新提交</el-button>
         <el-button v-if="item.status === 'REJECTED'" type="primary" @click="newResolution">新建决议</el-button>
       </div>

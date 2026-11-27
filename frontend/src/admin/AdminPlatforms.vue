@@ -22,7 +22,7 @@
                   :placeholder="item.account.secret_saved?.[field.key]
                     ? `${field.label}（已保存，输入新值可覆盖）` : `新的 ${field.label}`"
                   style="width: 260px" show-password />
-        <el-button size="small" @click="update(item)">保存</el-button>
+        <el-button size="small" type="primary" @click="update(item)">保存</el-button>
         <el-button size="small" type="danger" @click="remove(item)">删除</el-button>
       </div>
       <div v-else class="row" style="margin-top: 8px">
@@ -91,7 +91,7 @@ async function update(item) {
 }
 async function remove(item) {
   try {
-    await ElMessageBox.confirm(`确认删除「${item.label}」账户？`, '删除确认', { type: 'warning' })
+    await ElMessageBox.confirm(`确认删除「${item.label}」账户？`, '删除确认', { type: 'warning', confirmButtonText: '确认删除', confirmButtonClass: 'button-confirm-danger' })
   } catch { return }
   await admin.deletePlatformAccount(item.account.id)
   await load()

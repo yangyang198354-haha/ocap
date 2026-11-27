@@ -1,0 +1,166 @@
+/* Buttons use the same semantic variants in the portal, admin, auth and teleported dialogs. */
+html[data-theme] {
+  --button-focus: var(--accent-text);
+  --button-primary-fill: var(--accent-bg);
+  --button-danger-fill: var(--danger);
+  --button-danger-ink: var(--on-accent);
+  --button-feedback: none;
+}
+html[data-theme="bento"] {
+  --button-primary-fill: var(--accent);
+  --button-feedback: 0 4px 12px color-mix(in srgb, var(--accent) 19%, transparent);
+}
+html[data-theme="neon"] {
+  --button-focus: var(--accent-2);
+  --button-danger-fill: #a62247;
+  --button-feedback: 0 0 14px color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+html[data-theme] .el-button {
+  --button-height: var(--hit-min);
+  --button-font-size: 14px;
+  --button-weight: 500;
+  --button-fill: var(--surface);
+  --button-ink: var(--text);
+  --button-border: var(--border-strong);
+  --button-hover-fill: var(--glass);
+  --button-hover-border: var(--accent-text);
+  height: auto;
+  min-height: var(--button-height);
+  max-width: 100%;
+  padding: 0 14px;
+  border: 1px solid var(--button-border);
+  border-radius: var(--radius-btn);
+  background: var(--button-fill);
+  color: var(--button-ink);
+  font-family: var(--font);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-weight);
+  line-height: 1.35;
+  white-space: normal;
+  transition: background-color var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease), filter var(--motion-base) var(--motion-ease);
+}
+
+/* el-button with no type is secondary. Solid primary and status variants are opt-in. */
+html[data-theme] .el-button--primary:not(.is-link, .is-text, .is-plain) {
+  --button-fill: var(--button-primary-fill);
+  --button-ink: var(--on-accent);
+  --button-weight: 600;
+  --button-border: transparent;
+  --button-hover-fill: var(--button-primary-fill);
+  --button-hover-border: transparent;
+}
+
+html[data-theme] .el-button--success {
+  --button-fill: var(--success-bg);
+  --button-ink: var(--success);
+  --button-border: color-mix(in srgb, var(--success) 44%, var(--line));
+  --button-hover-fill: var(--success-bg);
+  --button-hover-border: var(--success);
+  --button-weight: 600;
+}
+
+html[data-theme] .el-button--danger {
+  --button-fill: transparent;
+  --button-ink: var(--danger);
+  --button-border: var(--danger);
+  --button-hover-fill: var(--danger-bg);
+  --button-hover-border: var(--danger);
+}
+
+html[data-theme] .el-dialog__footer .el-button--danger:not(.is-plain, .is-link, .is-text),
+html[data-theme] .el-button.button-confirm-danger {
+  --button-fill: var(--button-danger-fill);
+  --button-ink: var(--button-danger-ink);
+  --button-border: transparent;
+  --button-hover-fill: var(--button-danger-fill);
+  --button-hover-border: transparent;
+  --button-weight: 600;
+}
+
+html[data-theme] .el-button:is(.is-link, .is-text) {
+  --button-fill: transparent;
+  --button-ink: var(--accent-text);
+  --button-border: transparent;
+  --button-hover-fill: var(--glass);
+  --button-hover-border: transparent;
+  --button-weight: 500;
+  padding-inline: 8px;
+}
+
+html[data-theme] .el-button--danger:is(.is-link, .is-text) { --button-ink: var(--danger); }
+html[data-theme] .el-button--success:is(.is-link, .is-text) { --button-ink: var(--success); }
+
+html[data-theme] .el-button:not(.is-disabled, .is-loading):hover,
+html[data-theme] .el-button:not(.is-disabled, .is-loading):active {
+  background: var(--button-hover-fill);
+  border-color: var(--button-hover-border);
+  color: var(--button-ink);
+  box-shadow: var(--button-feedback);
+}
+html[data-theme] .el-button--primary:not(.is-link, .is-text, .is-plain, .is-disabled, .is-loading):hover { filter: brightness(1.05); }
+html[data-theme] .el-button:not(.is-disabled, .is-loading):active { filter: brightness(.94); }
+html[data-theme] .el-button:focus-visible,
+html[data-theme] .card-link:focus-visible,
+html[data-theme] .file-remove:focus-visible {
+  outline: 2px solid var(--button-focus);
+  outline-offset: 2px;
+}
+html[data-theme] .el-button.is-disabled,
+html[data-theme] .el-button.is-disabled:hover {
+  background: var(--glass);
+  border-color: var(--line);
+  color: var(--muted);
+  opacity: .72;
+  box-shadow: none;
+}
+html[data-theme] .el-button:is(.is-link, .is-text).is-disabled {
+  background: transparent;
+  border-color: transparent;
+}
+html[data-theme] .el-button.is-loading > .el-icon.is-loading {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+html[data-theme] .el-button.is-loading > .el-icon.is-loading + span { margin-left: 0; }
+html[data-theme] .el-button.is-loading > span { opacity: 0; }
+
+html[data-theme] .el-button.is-circle {
+  min-width: var(--button-height);
+  padding-inline: 0;
+  border-radius: 50%;
+}
+html[data-theme] .card-link { font-size: 14px; font-weight: 500; }
+html[data-theme] .file-remove {
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-btn);
+  color: var(--danger);
+}
+html[data-theme] .file-remove:hover { background: var(--danger-bg); }
+html[data-theme] .row > .el-button + .el-button { margin-inline-start: 0; }
+html[data-theme] .auth-shell .el-button--primary:not(.is-link, .is-text, .is-plain) {
+  --button-height: 52px;
+  --button-font-size: 16px;
+}
+html[data-theme="bento"] .auth-shell .el-button--primary:not(.is-link, .is-text, .is-plain, .is-disabled, .is-loading) {
+  background-image: linear-gradient(100deg, transparent 20%, #ffffff12 50%, transparent 80%);
+}
+
+@media (min-width: 768px) {
+  html[data-theme] .admin-shell .el-table .el-button {
+    --button-height: 36px;
+    --button-font-size: 13px;
+    padding-inline: 10px;
+  }
+}
+@media (max-width: 767.98px) {
+  html[data-theme] .el-button { min-width: var(--hit-min); }
+  html[data-theme] .card-link { min-height: var(--hit-min); }
+  html[data-theme] .el-dialog__footer,
+  html[data-theme] .el-message-box__btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  html[data-theme] .el-dialog__footer > .el-button,
+  html[data-theme] .el-message-box__btns > .el-button { margin-inline-start: 0; }
+}

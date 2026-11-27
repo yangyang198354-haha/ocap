@@ -10,6 +10,7 @@ import './theme/generated/themes.css'
 import './brand/brand.css'
 import './brand/auth-layout.css'
 import './brand/auth-motion.css'
+import './shared/buttons.css'
 import { detectLowEnd } from './theme/apply'
 
 const app = createApp(App)

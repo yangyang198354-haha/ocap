@@ -72,8 +72,8 @@
         </el-table-column>
         <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">明细</el-button>
-            <el-button v-if="row.status === 'PENDING'" size="small" @click="withdraw(row)">撤回</el-button>
+            <el-button link size="small" @click="openDetail(row)">明细</el-button>
+            <el-button type="danger" v-if="row.status === 'PENDING'" size="small" @click="withdraw(row)">撤回</el-button>
             <el-button v-if="row.status === 'IMPORTED'" size="small" type="danger" @click="openVoid(row)">整批作废</el-button>
           </template>
         </el-table-column>

@@ -11,8 +11,8 @@
           → {{ item.unit?.specific_part }}
         </span>
         <span class="muted">{{ formatDateTime(item.created_at) }}</span>
-        <el-button size="small" type="primary" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
-        <el-button size="small" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>
+        <el-button size="small" type="success" @click="decideResident(item.id, 'APPROVE')">通过</el-button>
+        <el-button size="small" type="danger" @click="decideResident(item.id, 'REJECT')">拒绝</el-button>
       </div>
     </div>
 

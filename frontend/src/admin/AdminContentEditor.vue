@@ -3,7 +3,7 @@
     <PageHead title="编辑内容">
       <el-button @click="$router.push('/admin/content/posts')">返回列表</el-button>
       <el-button @click="saveDraft" :loading="saving">保存草稿</el-button>
-      <el-button type="success" @click="publish">发布</el-button>
+      <el-button type="primary" @click="publish">发布</el-button>
       <el-button @click="confirmText">确认文案</el-button>
       <el-button @click="preview">预览</el-button>
     </PageHead>
@@ -95,7 +95,7 @@
         </el-table-column>
         <el-table-column label="操作" width="180">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'FAILED' || row.status === 'UNKNOWN'" size="small" @click="retry(row)">重试</el-button>
+            <el-button link v-if="row.status === 'FAILED' || row.status === 'UNKNOWN'" size="small" @click="retry(row)">重试</el-button>
             <el-button v-if="row.mode === 'MANUAL'" size="small" @click="exportPack(row.platform)">内容包</el-button>
             <el-button v-if="row.mode === 'MANUAL'" size="small" @click="copyPack(row.platform)">复制</el-button>
           </template>
@@ -290,7 +290,7 @@ function textToDoc(text) {
 async function insertText() {
   if (JSON.stringify(doc.value?.content || []) !== '[]') {
     try {
-      await ElMessageBox.confirm('将覆盖当前正文，是否继续？', '提示', { type: 'warning' })
+      await ElMessageBox.confirm('将覆盖当前正文，是否继续？', '提示', { type: 'warning', confirmButtonText: '确认覆盖', confirmButtonClass: 'button-confirm-danger' })
     } catch { return }
   }
   doc.value = textToDoc(generatedText.value)

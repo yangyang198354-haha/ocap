@@ -25,7 +25,7 @@
       <el-table-column label="操作" width="260">
         <template #default="{ row }">
           <el-button size="small" @click="$router.push(`/admin/content/posts/${row.id}`)">编辑</el-button>
-          <el-button v-if="row.status !== 'PUBLISHED'" size="small" type="success" @click="publish(row)">发布</el-button>
+          <el-button v-if="row.status !== 'PUBLISHED'" size="small" type="primary" @click="publish(row)">发布</el-button>
           <el-button v-else size="small" @click="offline(row)">下线</el-button>
           <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
         </template>
@@ -79,7 +79,7 @@ async function offline(row) {
 }
 async function remove(row) {
   try {
-    await ElMessageBox.confirm(`确认删除「${row.title}」？`, '删除确认', { type: 'warning' })
+    await ElMessageBox.confirm(`确认删除「${row.title}」？`, '删除确认', { type: 'warning', confirmButtonText: '确认删除', confirmButtonClass: 'button-confirm-danger' })
   } catch { return }
   await admin.deleteContentPost(row.id)
   ElMessage.success('已删除')

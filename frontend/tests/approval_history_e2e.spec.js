@@ -84,7 +84,7 @@ describe('审批历史 critical path', () => {
     textarea.value = '同意，预算清晰'
     textarea.dispatchEvent(new Event('input', { bubbles: true }))
     await flush()
-    await dialogButton('确认').click()
+    await dialogButton('确认通过').click()
     await flush()
 
     expect(http.post).toHaveBeenCalledTimes(1)

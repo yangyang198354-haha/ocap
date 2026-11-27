@@ -16,8 +16,7 @@
 .auth-shell .auth-form-card .el-tab-pane > .row,
 .auth-shell .auth-form-card > .row { flex-wrap: nowrap; }
 .auth-shell .auth-form-card .row .el-input { flex: 1; min-width: 0; }
-.auth-shell .auth-form-card .row .el-button { min-height: 54px; flex: none; }
-.auth-shell .auth-form-card .el-button--primary { min-height: 56px; font-size: 18px; font-weight: 700; }
+.auth-shell .auth-form-card .row .el-button { flex: none; }
 .auth-shell .auth-form-card .el-checkbox { min-height: 32px; }
 
 /* Cyber terminal: matrix backdrop, command panel and solid form surface. */
@@ -60,8 +59,6 @@ html[data-theme="terminal"] .auth-card .el-input__wrapper { border-radius: var(-
 html[data-theme="terminal"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px #c6ff73 inset; }
 html[data-theme="terminal"] .auth-card .el-input__inner { color: #fff; }
 html[data-theme="terminal"] .auth-card .el-input__inner::placeholder { color: #aaa4ae; }
-html[data-theme="terminal"] .auth-card .el-button:not(.el-button--primary) { color: #d8d2de; background: var(--surface-tint); border-color: var(--border-strong); border-radius: var(--radius-btn); }
-html[data-theme="terminal"] .auth-card .el-button--primary { color: #111918; border: 0; border-radius: var(--radius-btn); background: linear-gradient(105deg, #b7ffd2, #a8ff3f); box-shadow: 0 0 25px #aaff6b55; }
 html[data-theme="terminal"] .auth-card .el-checkbox__label { color: #b8b1bc; }
 html[data-theme="terminal"] .auth-card a { color: #c6ff73; }
 
@@ -88,8 +85,6 @@ html[data-theme="neon"] .auth-card .el-input__wrapper { border-radius: 13px; bac
 html[data-theme="neon"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px #44cde9 inset; }
 html[data-theme="neon"] .auth-card .el-input__inner { color: #fff; }
 html[data-theme="neon"] .auth-card .el-input__inner::placeholder { color: #9d98a1; }
-html[data-theme="neon"] .auth-card .el-button:not(.el-button--primary) { color: #ded9e6; background: #27222e; border-color: #544162; border-radius: 12px; }
-html[data-theme="neon"] .auth-card .el-button--primary { color: #fff; border: 0; border-radius: 13px; background: linear-gradient(103deg, #0e7490, #3f4dcc 50%, #7712cf); box-shadow: 0 12px 32px #29105e44; }
 html[data-theme="neon"] .auth-card .el-checkbox__label { color: #bcb7c3; }
 html[data-theme="neon"] .auth-card a { color: #76cafa; }
 
@@ -129,8 +124,6 @@ html[data-theme="bento"] .auth-card .el-input__inner::placeholder { color: var(-
 html[data-theme="bento"] .auth-card .el-input__icon { color: #848994; }
 html[data-theme="bento"] .auth-card .el-checkbox__label { color: #606879; }
 html[data-theme="bento"] .auth-card .el-checkbox__inner { background: #fff; border-color: #a6aabc; }
-html[data-theme="bento"] .auth-card .el-button:not(.el-button--primary) { color: #5d5e72; background: #eeeff2; border-color: #dddde7; border-radius: 12px; }
-html[data-theme="bento"] .auth-card .el-button--primary { color: #fff; border: 0; border-radius: 14px; background: linear-gradient(100deg, #8b24d6, var(--accent) 54%, #1462c5); box-shadow: 0 17px 30px #563ee24b; }
 html[data-theme="bento"] .auth-card a { color: #5f3de7; }
 
 @media (max-width: 1050px) {
@@ -167,7 +160,7 @@ html[data-theme="bento"] .auth-card a { color: #5f3de7; }
   html[data-theme="bento"] .auth-card { padding: 26px 24px; }
 }
 @media (max-width: 400px) {
-  .auth-shell .auth-form-card .row .el-button { padding-inline: 9px; font-size: 13px; }
+  .auth-shell .auth-form-card .row .el-button { padding-inline: 9px; }
   html[data-theme="bento"] .auth-art-copy .brand-mark { width: 60px; height: 60px; }
 }
 @media (prefers-reduced-motion: reduce) { html[data-theme="terminal"] .auth-terminal-cursor { animation: none; } }

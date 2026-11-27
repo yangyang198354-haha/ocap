@@ -73,7 +73,7 @@
             <template #default="{ row }">
               <span class="row-actions">
                 <el-button size="small" @click="openEdit(row)">编辑</el-button>
-                <el-button size="small" @click="remove(row)">删除</el-button>
+                <el-button type="danger" size="small" @click="remove(row)">删除</el-button>
               </span>
             </template>
           </el-table-column>
@@ -112,7 +112,7 @@
       <div v-for="(owner, index) in ownerDrafts" :key="index" class="row" style="margin-top: 8px">
         <el-input v-model="owner.name" :placeholder="owner.id ? '业主姓名' : '业主姓名（必填）'" style="width: 160px" />
         <el-input v-model="owner.phonesText" placeholder="手机号，英文分号分隔" style="flex: 1" />
-        <el-button size="small" @click="ownerDrafts.splice(index, 1)">删除</el-button>
+        <el-button type="danger" size="small" @click="ownerDrafts.splice(index, 1)">删除</el-button>
       </div>
       <el-button size="small" style="margin-top: 8px" @click="addOwner">添加业主</el-button>
 

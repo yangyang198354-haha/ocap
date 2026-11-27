@@ -318,7 +318,9 @@ describe('放入编辑器的覆盖确认（AC-115-03）', () => {
     const confirm = vi.spyOn(ElMessageBox, 'confirm').mockRejectedValueOnce('cancel')
     const original = JSON.stringify(wrapper.vm.doc)
     await buttonByText(wrapper, '放入编辑器').trigger('click'); await flushPromises()
-    expect(confirm).toHaveBeenCalledWith('将覆盖当前正文，是否继续？', '提示', { type: 'warning' })
+    expect(confirm).toHaveBeenCalledWith('将覆盖当前正文，是否继续？', '提示', {
+      type: 'warning', confirmButtonText: '确认覆盖', confirmButtonClass: 'button-confirm-danger'
+    })
     expect(JSON.stringify(wrapper.vm.doc)).toBe(original)
 
     confirm.mockResolvedValueOnce('confirm')
@@ -443,7 +445,9 @@ describe('删除确认与素材选择器（AC-106-03、AC-121-01/03、AC-111-01�
     const wrapper = mount(AdminContentPosts, { global: { plugins: [ElementPlus], mocks: { $router: { push: vi.fn() } } }, attachTo: document.body })
     await flushPromises()
     await buttonByText(wrapper, '删除').trigger('click'); await flushPromises()
-    expect(confirm).toHaveBeenCalledWith('确认删除「待删公告」？', '删除确认', { type: 'warning' })
+    expect(confirm).toHaveBeenCalledWith('确认删除「待删公告」？', '删除确认', {
+      type: 'warning', confirmButtonText: '确认删除', confirmButtonClass: 'button-confirm-danger'
+    })
     expect(adminHttp.delete).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('待删公告')
     confirm.mockResolvedValueOnce('confirm')

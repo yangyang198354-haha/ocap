@@ -62,7 +62,7 @@ async function rename(item) {
 }
 async function remove(item) {
   try {
-    await ElMessageBox.confirm(`确认删除「${item.title}」？`, '删除确认', { type: 'warning' })
+    await ElMessageBox.confirm(`确认删除「${item.title}」？`, '删除确认', { type: 'warning', confirmButtonText: '确认删除', confirmButtonClass: 'button-confirm-danger' })
   } catch { return }
   try {
     await admin.deleteMedia(item.id)

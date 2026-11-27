@@ -222,15 +222,17 @@ describe('个人中心 me/* 各页（原 Me.vue）', () => {
   it('TC-UNIT-530 / AC-232-01、AC-157-01、AC-157-05：身份卡（现为"我的身份与房屋"页）列出汇总身份与每套房屋（名称、类型、面积、关系），全部中文且没有编辑身份的输入控件', async () => {
     // 改写：旧 MeIdentity 身份卡"零按钮" → 新 UnitsIdentity：仍无 input/select 等编辑身份控件；按钮仅"认证产权"（AC-237-01），不含身份编辑
     const { wrapper } = await mountMe()
-    const card = wrapper.findAll('.card').find((c) => c.text().includes('身份'))
-    expect(card.text()).toContain('汇总身份：户主')
-    expect(card.text()).toContain('1栋1单元3层301号')
-    expect(card.text()).toContain('住宅')
-    expect(card.text()).toContain('89.50 ㎡')
-    expect(card.text()).toContain('户主')
-    expect(card.text()).not.toMatch(/HEAD|OWNER|RESIDENT/)
-    expect(card.findAll('input,select')).toHaveLength(0)
-    expect(card.findAll('button').map((b) => b.text())).toEqual(['认证产权'])
+    const summary = wrapper.get('.housing-summary')
+    const property = wrapper.get('.housing-property')
+    expect(summary.get('.summary-identity dt').text()).toBe('汇总身份：')
+    expect(summary.get('.summary-tag').text()).toBe('户主')
+    expect(property.text()).toContain('1栋1单元3层301号')
+    expect(property.text()).toContain('住宅')
+    expect(property.text()).toContain('89.50 ㎡')
+    expect(property.get('.housing-role').text()).toBe('户主')
+    expect(wrapper.text()).not.toMatch(/HEAD|OWNER|RESIDENT/)
+    expect(wrapper.findAll('input,select')).toHaveLength(0)
+    expect(summary.findAll('button').map((b) => b.text())).toEqual(['认证产权'])
   })
 
   it('TC-UNIT-531 / AC-165-03：更换头像处提示"jpg/png，不超过 5 MB"，选择器仅允许 jpg/png；超大或错误格式在上传前被拒', async () => {

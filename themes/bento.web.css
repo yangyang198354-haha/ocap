@@ -438,6 +438,15 @@ html[data-theme="bento"] .home-grid > .card:not(.home-hero) {
   box-shadow: inset 0 1px 0 #fff, var(--lg-lift);
   -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
 }
+/* Form and data surfaces use a solid fill for readable, dense content. */
+html[data-theme="bento"] .layout-main.business-page .card {
+  border-radius: var(--radius-lg);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: var(--inset-highlight), var(--shadow-rest);
+}
+html[data-theme="bento"] .layout-main.business-page .card:not(.business-summary) {
+  background: var(--surface);
+}
 html[data-theme="bento"] .home-grid > .card:not(.home-hero)::before { display: none; }
 html[data-theme="bento"] .card:not(.home-hero):hover,
 html[data-theme="bento"] .home-grid > .card:not(.home-hero):hover {
@@ -485,6 +494,17 @@ html[data-theme="bento"] .el-table th.el-table__cell { color: #5e4bb3; letter-sp
   html[data-theme="bento"] .home-hero { min-height: 210px; }
   html[data-theme="bento"] .home-greeting { font-size: 28px; }
 }
+
+html[data-theme="bento"] .housing-identity .housing-summary {
+  background: linear-gradient(112deg, var(--surface), color-mix(in srgb, var(--surface) 92%, var(--accent2)));
+}
+html[data-theme="bento"] .housing-identity .summary-tag,
+html[data-theme="bento"] .housing-identity .housing-role {
+  border-color: transparent;
+  background: linear-gradient(110deg, var(--accent), color-mix(in srgb, var(--accent) 78%, var(--accent2)));
+  color: var(--on-accent);
+}
+html[data-theme="bento"] .housing-identity .housing-role { border-radius: var(--radius-btn); }
 
 /* Slowly moving aurora is shared by every Bento page through the theme root. */
 html[data-theme="bento"] body::before {

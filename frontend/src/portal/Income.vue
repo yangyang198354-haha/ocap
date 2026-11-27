@@ -1,12 +1,9 @@
 <template>
   <div class="page">
     <PageHead title="收入表" />
-    <div class="card">
-      <p class="muted">
-        支持逐条录入（一次最多 {{ limits.income_manual_max_records || 500 }} 条），也支持 CSV / xlsx 批量导入（≤5MB、≤{{ limits.income_import_max_rows || 5000 }} 行）。导入时重复行与错误行会被跳过并提示行号，其余行照常导入；
-        录入后提交审批，通过后生效。<template v-if="amountMax">单笔金额上限 ¥{{ amountMax }}。</template>
-      </p>
-      <div class="row">
+    <div class="card business-panel income-entry">
+      <h2 class="title title-flat">录入收入</h2>
+      <div class="row income-toolbar">
         <AccountSelect v-model="importAccountId" placeholder="入账账户（批量导入）" style="width: 220px" />
         <el-button type="primary" @click="openCreate">逐条录入</el-button>
         <el-upload :show-file-list="false" :http-request="importFile" accept=".csv,.xlsx">
@@ -17,22 +14,31 @@
           <el-option v-for="f in flows" :key="f.id" :label="`${f.name}（${f.mode === 'HALF_MAJORITY' ? '半数以上参与者同意' : '指定负责人'}）`" :value="f.id" />
         </el-select>
       </div>
+      <div class="income-guide muted">
+        <p>逐条录入最多 {{ limits.income_manual_max_records || 500 }} 条。批量导入支持 CSV / XLSX（≤5MB、≤{{ limits.income_import_max_rows || 5000 }} 行），重复行和错误行会被跳过并提示行号。</p>
+        <p>录入后提交审批，通过后生效。<template v-if="amountMax">单笔金额上限 ¥{{ amountMax }}。</template></p>
+      </div>
       <div v-if="skipped.length" style="margin-top: 10px">
         <p class="muted" style="margin: 0">已跳过 {{ skipped.length }} 行：</p>
         <div v-for="(s, i) in skipped" :key="i" class="muted">第 {{ s.row }} 行：{{ s.reason === 'DUPLICATE' ? '重复' : '错误' }}（{{ s.detail }}）</div>
       </div>
     </div>
-    <div class="card">
+    <div class="card business-panel">
+      <h2 class="title title-flat">收入记录</h2>
       <el-empty v-if="!items.length" description="暂无收入表" />
-      <div v-for="item in items" :key="item.id" class="list-item">
-        <div class="row" style="justify-content: space-between">
-          <div>
-            <strong>¥{{ item.total_amount }}</strong>
-            <span class="muted" style="margin-left: 8px">{{ item.period_start }} ~ {{ item.period_end }}</span>
-            <span class="muted" style="margin-left: 8px">{{ item.account_name || '默认账户' }}</span>
-            <el-tag size="small" style="margin-left: 8px">{{ textOf(INCOME_STATUS_TEXT, item.status) }}</el-tag>
+      <div v-for="item in items" :key="item.id" class="list-item business-record income-record">
+        <div class="income-record-layout">
+          <div class="income-record-summary">
+            <div class="row income-record-main">
+              <strong class="income-amount">¥{{ item.total_amount }}</strong>
+              <el-tag size="small">{{ textOf(INCOME_STATUS_TEXT, item.status) }}</el-tag>
+            </div>
+            <div class="row muted income-record-meta">
+              <span>{{ item.period_start }} ~ {{ item.period_end }}</span>
+              <span>{{ item.account_name || '默认账户' }}</span>
+            </div>
           </div>
-          <div class="row">
+          <div class="row income-record-actions">
             <el-button size="small" @click="showDetail(item.id)">明细</el-button>
             <el-button v-if="item.status === 'DRAFT'" size="small" @click="submit(item)">提交</el-button>
             <el-button v-if="item.status === 'WITHDRAWN'" size="small" @click="submit(item)">重新提交</el-button>
@@ -292,3 +298,19 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.income-entry { display: grid; gap: 12px; }
+.income-guide { display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+.income-guide p { margin: 0; }
+.income-record-layout { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; }
+.income-record-summary { display: grid; gap: 4px; min-width: 0; }
+.income-record-main, .income-record-meta, .income-record-actions { gap: 4px 8px; }
+.income-record-meta { overflow-wrap: anywhere; }
+.income-amount { font-size: 16px; font-variant-numeric: tabular-nums; }
+.income-entry :deep(.el-button + .el-button), .income-record-actions :deep(.el-button + .el-button) { margin-left: 0; }
+@media (max-width: 767.98px) {
+  .income-record-layout { grid-template-columns: minmax(0, 1fr); }
+  .income-toolbar > :deep(.el-select), .income-toolbar > :deep(.account-select) { max-width: 100%; }
+}
+</style>

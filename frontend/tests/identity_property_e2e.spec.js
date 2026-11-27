@@ -150,7 +150,7 @@ describe('TC-E2E-910 手机号注册 → 引导 → 确认 → 我的身份与�
       await go(p)
       expect(router.currentRoute.value.path).toBe(p)
       expect(tabLabels(wrapper)).toEqual(['我的身份与房屋', '待我审批的同住人申请'])
-      const rows = wrapper.find('main').findAll('.list-item-top')
+      const rows = wrapper.find('main').findAll('.housing-property')
       expect(rows, p).toHaveLength(10)
       expect(rows[0].text()).toContain('车库B-1')
       expect(rows[0].text()).toContain('车位')
@@ -183,8 +183,8 @@ describe('TC-E2E-911 选择"不是"后不再强制弹出，仍可手动认证入
     expect(wrapper.find('.registry-match').exists()).toBe(false)
     await go('/units')
     expect(wrapper.find('main').text()).toContain('您还没有认证任何专有部分，请先认证产权')
-    expect(wrapper.find('main').findAll('.list-item-top')).toHaveLength(0)
-    expect(mainTitles(wrapper)).toEqual(['我的身份与房屋']) // 页面唯一 h1
+    expect(wrapper.find('main').findAll('.housing-property')).toHaveLength(0)
+    expect(mainTitles(wrapper)).toEqual(['我的身份与房屋', '暂无已认证房屋'])
     expect(tabLabels(wrapper)).toEqual(['我的身份与房屋']) // 无待审批 Tab
     await go('/units/pick') // 再次进入不再弹出
     expect(wrapper.find('.registry-match').exists()).toBe(false)

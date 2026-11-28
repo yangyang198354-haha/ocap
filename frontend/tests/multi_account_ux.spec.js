@@ -42,8 +42,8 @@ const SUMMARY_EMPTY = { total_balance: '0.00', accounts: [] }
 const REPORTS = {
   count: 2,
   results: [
-    { id: 1, period_type: 'QUARTER', year: 2025, quarter: 1, total_income: '100.00', total_expense: '20.00', balance: '80.00', legacy: false, stale: false },
-    { id: 2, period_type: 'YEAR', year: 2025, quarter: null, total_income: '100.00', total_expense: '20.00', balance: '80.00', legacy: false, stale: false }
+    { id: 1, period_type: 'QUARTER', year: 2025, quarter: 1, total_income: '100.00', total_expense: '20.00', balance: '80.00', opening_balance: '0.00', closing_balance: '80.00', legacy: false, stale: false },
+    { id: 2, period_type: 'YEAR', year: 2025, quarter: null, total_income: '100.00', total_expense: '20.00', balance: '80.00', opening_balance: '0.00', closing_balance: '80.00', legacy: false, stale: false }
   ]
 }
 const DETAIL = {

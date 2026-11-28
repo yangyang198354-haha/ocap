@@ -8,9 +8,10 @@
     <template v-else-if="report">
       <view class="card">
         <view class="title">{{ label(report) }} 报表</view>
+        <view>期初结余：{{ money(report.opening_balance) }}</view>
         <view>收入合计：¥{{ report.total_income }}</view>
         <view>支出合计：¥{{ report.total_expense }}</view>
-        <view>结余：¥{{ report.balance }}</view>
+        <view>期末结余：{{ money(report.closing_balance) }}</view>
       </view>
       <view class="card">
         <view class="title">收支明细</view>
@@ -44,6 +45,7 @@ const failed = ref(false)
 const ENTRY_TYPES = { REIMBURSEMENT: '报销', ADVANCE: '备用金', SETTLEMENT: '核销', INCOME: '收入' }
 const entryTypeText = (t) => ENTRY_TYPES[t] || t || ''
 const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year} 年第 ${r.quarter} 季度`)
+const money = (value) => (value === null || value === undefined ? '—' : `¥${value}`)
 
 onLoad(async (options) => {
   try {

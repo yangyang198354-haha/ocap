@@ -123,6 +123,7 @@ describe('页面', () => {
     respondWith({
       'GET /ledger/reports/5': {
         id: 5, period_type: 'QUARTER', year: 2026, quarter: 3, total_income: '100.00', total_expense: '30.00', balance: '70.00',
+        opening_balance: '0.00', closing_balance: '70.00',
         detail: [{ direction: 'EXPENSE', occurred_on: '2026-08-01', entry_type: 'REIMBURSEMENT', amount: '30.00', summary: '电梯维修' },
           { direction: 'INCOME', occurred_on: '2026-08-02', entry_type: '停车费', amount: '100.00', summary: '小区公共收益' }]
       }
@@ -130,6 +131,7 @@ describe('页面', () => {
     const { wrapper } = await mountPage(ReportDetail, { query: { id: '5' } })
     expect(wrapper.text()).toContain('2026 年第 3 季度')
     expect(wrapper.text()).toContain('收入合计：¥100.00')
+    expect(wrapper.text()).toContain('期末结余：¥70.00')
     expect(wrapper.text()).toContain('报销')
     expect(wrapper.text()).toContain('¥30.00')
     expect(wrapper.text()).toContain('电梯维修')

@@ -44,10 +44,14 @@ class TotalsByPeriodUnitTests(ApiTestBase):
         a_totals = _totals_by_period([q1, q2], self.account_a)
         b_totals = _totals_by_period([q1, q2], self.account_b)
 
-        self.assertEqual(a_totals[q1.id], (Decimal("100.00"), Decimal("30.00")))
-        self.assertEqual(a_totals[q2.id], (Decimal("10.00"), Decimal("0.00")))
-        self.assertEqual(b_totals[q1.id], (Decimal("200.00"), Decimal("50.00")))
-        self.assertEqual(b_totals[q2.id], (Decimal("0.00"), Decimal("0.00")))
+        self.assertEqual(a_totals[q1.id], (Decimal("100.00"), Decimal("30.00"),
+                                           Decimal("0.00"), Decimal("70.00")))
+        self.assertEqual(a_totals[q2.id], (Decimal("10.00"), Decimal("0.00"),
+                                           Decimal("70.00"), Decimal("80.00")))
+        self.assertEqual(b_totals[q1.id], (Decimal("200.00"), Decimal("50.00"),
+                                           Decimal("0.00"), Decimal("150.00")))
+        self.assertEqual(b_totals[q2.id], (Decimal("0.00"), Decimal("0.00"),
+                                           Decimal("150.00"), Decimal("150.00")))
         self.assertEqual(_totals_by_period([], self.account_a), {})
 
 

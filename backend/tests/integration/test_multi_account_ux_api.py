@@ -250,6 +250,8 @@ class ReportAccountScopeTests(MultiAccountBase):
         self.assertEqual(row["total_income"], "100.00")
         self.assertEqual(row["total_expense"], "20.00")
         self.assertEqual(row["balance"], "80.00")
+        self.assertEqual(row["opening_balance"], "0.00")
+        self.assertEqual(row["closing_balance"], "80.00")
         self.assertFalse(row["legacy"])
 
         org = self.assert_ok(self.api("get", "/ledger/reports?period_type=QUARTER&year=2025",
@@ -257,6 +259,7 @@ class ReportAccountScopeTests(MultiAccountBase):
         org_row = next(item for item in org["results"] if item["id"] == self.report.id)
         self.assertEqual(org_row["total_income"], "300.00")
         self.assertEqual(org_row["total_expense"], "20.00")
+        self.assertEqual(org_row["closing_balance"], "280.00")
 
         detail = self.assert_ok(self.api(
             "get", f"/ledger/reports/{self.report.id}?account_id={self.account_b.id}",

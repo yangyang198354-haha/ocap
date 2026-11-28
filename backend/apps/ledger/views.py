@@ -258,7 +258,9 @@ class ReportSerializer:
             self.data = [report_summary(r) for r in rows]
         else:
             self.data = [report_summary(r, total_income=totals[r.id][0],
-                                        total_expense=totals[r.id][1], legacy=False)
+                                        total_expense=totals[r.id][1],
+                                        opening_balance=totals[r.id][2],
+                                        closing_balance=totals[r.id][3], legacy=False)
                          for r in rows]
 
 
@@ -382,14 +384,16 @@ def _nullable_money(value):
 
 
 def report_summary(report: LedgerReport, *, total_income=None, total_expense=None,
-                   legacy=None) -> dict:
+                   opening_balance=None, closing_balance=None, legacy=None) -> dict:
     income = report.total_income if total_income is None else total_income
     expense = report.total_expense if total_expense is None else total_expense
+    opening = report.opening_balance if opening_balance is None else opening_balance
+    closing = report.closing_balance if closing_balance is None else closing_balance
     return {"id": report.id, "period_type": report.period_type, "year": report.year,
             "quarter": report.quarter, "total_income": money(income),
             "total_expense": money(expense), "balance": money(income - expense),
-            "opening_balance": _nullable_money(report.opening_balance),
-            "closing_balance": _nullable_money(report.closing_balance),
+            "opening_balance": _nullable_money(opening),
+            "closing_balance": _nullable_money(closing),
             "legacy": report.legacy if legacy is None else legacy,
             "stale": report.stale, "generated_at": report.generated_at}
 

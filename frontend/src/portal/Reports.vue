@@ -78,7 +78,7 @@
         <div class="muted reports-item-totals">
           <span class="is-income">收入 ¥{{ item.total_income }}</span>
           <span class="is-expense">支出 ¥{{ item.total_expense }}</span>
-          <span>结余 ¥{{ item.balance }}</span>
+          <span>期末结余 {{ closingText(item) }}</span>
         </div>
       </div>
       <PagerBar :total="total" :page="page" :page-size="pageSize" @change="gotoPage" />
@@ -135,6 +135,7 @@ const { items: reports, total, page, pageSize, reload, goto, resetAndLoad } = us
 const gen = reactive({ period_type: 'QUARTER', year: new Date().getFullYear(), quarter: 1 })
 
 const label = (r) => (r.period_type === 'YEAR' ? `${r.year} 年度` : `${r.year} 年第 ${r.quarter} 季度`)
+const closingText = (r) => (r.closing_balance == null ? '—' : `¥${r.closing_balance}`)
 
 async function loadReports() {
   if (!selectedAccountId.value) return // AC-418-02：无可用账户时不请求列表

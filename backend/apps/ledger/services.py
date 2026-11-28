@@ -1,4 +1,5 @@
 """台账服务（IFC-111~114、IFC-409/413/417）：追加式入账、作废留痕、账户余额、链式报表生成。"""
+from bisect import bisect_left, bisect_right
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -60,8 +61,11 @@ def _opening_balance(start: date, account: LedgerAccount | None = None) -> Decim
     return (agg["income"] or Decimal("0.00")) - (agg["expense"] or Decimal("0.00"))
 
 
-def _totals_by_period(reports, account: LedgerAccount) -> dict[int, tuple[Decimal, Decimal]]:
-    """IFC-418：一次台账扫描按报表周期分桶，返回 {report.id: (收入, 支出)}（ADR-187）。"""
+def _totals_by_period(reports, account: LedgerAccount) -> dict[int, tuple[Decimal, Decimal, Decimal, Decimal]]:
+    """IFC-418：一次台账扫描按报表周期分桶，返回 {report.id: (收入, 支出, 期初结余, 期末结余)}（ADR-187）。
+
+    期初/期末按账户累计口径计算，供报表列表展示“结余=期末余额”。
+    """
     reports = list(reports)
     if not reports:
         return {}
@@ -69,16 +73,27 @@ def _totals_by_period(reports, account: LedgerAccount) -> dict[int, tuple[Decima
               for report in reports}
     start = min(item[0] for item in ranges.values())
     end = max(item[1] for item in ranges.values())
-    totals = {report.id: [Decimal("0.00"), Decimal("0.00")] for report in reports}
+    base = _opening_balance(start, account)
+    dates = []
+    income_prefix = [Decimal("0.00")]
+    expense_prefix = [Decimal("0.00")]
     entries = (LedgerEntry.objects.filter(status="ACTIVE", account=account, occurred_on__gte=start,
                                           occurred_on__lte=end)
+               .order_by("occurred_on", "id")
                .values_list("occurred_on", "direction", "amount"))
     for occurred_on, direction, amount in entries.iterator():
-        index = 0 if direction == "INCOME" else 1
-        for report_id, (period_start, period_end) in ranges.items():
-            if period_start <= occurred_on <= period_end:
-                totals[report_id][index] += amount
-    return {report_id: (values[0], values[1]) for report_id, values in totals.items()}
+        dates.append(occurred_on)
+        income_prefix.append(income_prefix[-1] + (amount if direction == "INCOME" else Decimal("0.00")))
+        expense_prefix.append(expense_prefix[-1] + (amount if direction == "EXPENSE" else Decimal("0.00")))
+    totals = {}
+    for report_id, (period_start, period_end) in ranges.items():
+        lo = bisect_left(dates, period_start)
+        hi = bisect_right(dates, period_end)
+        income = income_prefix[hi] - income_prefix[lo]
+        expense = expense_prefix[hi] - expense_prefix[lo]
+        opening = base + (income_prefix[lo] - income_prefix[0]) - (expense_prefix[lo] - expense_prefix[0])
+        totals[report_id] = (income, expense, opening, opening + income - expense)
+    return totals
 
 
 class AccountService:

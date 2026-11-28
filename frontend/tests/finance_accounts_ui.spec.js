@@ -35,8 +35,8 @@ const SUMMARY = { total_balance: '100.00', accounts: [ACCOUNT] }
 const REPORTS = {
   count: 2,
   results: [
-    { id: 1, period_type: 'QUARTER', year: 2025, quarter: 1, total_income: '100.00', total_expense: '0.00', balance: '100.00', legacy: false, stale: false },
-    { id: 2, period_type: 'YEAR', year: 2025, quarter: null, total_income: '100.00', total_expense: '0.00', balance: '100.00', legacy: false, stale: false }
+    { id: 1, period_type: 'QUARTER', year: 2025, quarter: 1, total_income: '100.00', total_expense: '0.00', balance: '100.00', opening_balance: '0.00', closing_balance: '100.00', legacy: false, stale: false },
+    { id: 2, period_type: 'YEAR', year: 2025, quarter: null, total_income: '100.00', total_expense: '0.00', balance: '100.00', opening_balance: '0.00', closing_balance: '100.00', legacy: false, stale: false }
   ]
 }
 const DETAIL = {
@@ -114,7 +114,8 @@ describe('财务报表页', () => {
     expect(text).toContain('财务报表')
     expect(text).toContain('第四届业主委员会基本账户')
     expect(text).toContain('¥100.00')
-    expect(wrapper.text()).toContain('2025 年第 1 季度')
+    expect(text).toContain('2025 年第 1 季度')
+    expect(text).toContain('期末结余 ¥100.00')
     expect(wrapper.findAll('.account-entry-summary').map(row => row.text())).toEqual([
       expect.stringContaining('小区公共收益'), expect.stringContaining('电梯维修')
     ])

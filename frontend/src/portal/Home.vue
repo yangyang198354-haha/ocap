@@ -1,7 +1,7 @@
 <template>
   <div class="page home">
     <PageHead title="主页" sr-only />
-    <div class="home-grid">
+    <div class="home-grid" :class="{ 'home-grid-with-housing': bodyModules[0]?.key === 'housing', 'home-grid-overview': hasDashboardOverview }">
       <section class="card hero home-hero" aria-label="欢迎" style="--i:0">
         <span class="home-hero-scan" aria-hidden="true" />
         <div class="home-hero-main">
@@ -157,6 +157,8 @@
             <el-button type="primary" class="home-poll-btn" @click="$router.push(`/polls/${poll.id}`)">立即参与</el-button>
           </template>
           <div v-else class="home-empty">
+            <UiIcon name="clipboard" class="home-empty-icon is-neon" />
+            <UiIcon name="ballot" class="home-empty-icon is-terminal" />
             <el-empty :image-size="48" description="暂无进行中的投票" />
             <router-link to="/polls" class="link card-link">去投票<span class="card-link-arrow">→</span></router-link>
           </div>
@@ -287,6 +289,12 @@ const bodyModules = computed(() => {
   const hasHousing = order.includes('housing') && unitRows.value.length > 0
   if (!hasHousing) out.unshift(...taskModules.value)
   return out
+})
+
+const hasDashboardOverview = computed(() => {
+  const leading = bodyModules.value.slice(0, 4).map(({ key }) => key)
+  return leading[0] === 'housing' && leading[1] === 'pendingReview'
+    && leading[2] === 'finance' && leading[3] === 'management'
 })
 
 const publicFeed = computed(() => {
@@ -487,6 +495,7 @@ onMounted(async () => {
 }
 .home-manage-item:hover .home-manage-arrow { transform: translateX(2px); color: var(--accent-text); }
 .home-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0 8px; }
+.home-empty .home-empty-icon { display: none; }
 .home-feed-item { display: flex; align-items: center; gap: 10px; }
 .home-feed-item a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-feed-item .tag { flex: none; }

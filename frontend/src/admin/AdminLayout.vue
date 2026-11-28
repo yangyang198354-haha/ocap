@@ -33,7 +33,7 @@
           <span class="admin-brand-label">管理后台</span>
         </span>
       </router-link>
-      <SideNav :menu="ADMIN_MENU" aria-label="管理端导航（抽屉）" />
+      <SideNav :menu="ADMIN_MENU" id-prefix="admin-drawer-sub" aria-label="管理端导航（抽屉）" />
     </el-drawer>
   </div>
 </template>

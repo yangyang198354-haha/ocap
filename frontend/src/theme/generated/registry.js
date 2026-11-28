@@ -6,9 +6,9 @@ export const THEMES = [
     "order": 1,
     "scheme": "dark",
     "swatch": [
-      "#7C5CFF",
-      "#22D3EE",
-      "#07080F"
+      "#48EEFF",
+      "#AD76FF",
+      "#0B101C"
     ]
   },
   {
@@ -28,9 +28,9 @@ export const THEMES = [
     "order": 3,
     "scheme": "dark",
     "swatch": [
-      "#C6FF3D",
-      "#FF3DBB",
-      "#0A0A0B"
+      "#D5FF63",
+      "#FFC45E",
+      "#0C0F0D"
     ]
   }
 ]

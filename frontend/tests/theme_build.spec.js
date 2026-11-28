@@ -4,12 +4,23 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { checkScopedCss, loadThemeFiles, run } from '../../scripts/themes/build.mjs'
+import { THEMES as WEB_THEMES } from '../src/theme/generated/registry.js'
+import { THEMES as MINI_THEMES } from '../../miniprogram/theme/generated/registry.js'
 import { contrastRatio } from '../../scripts/themes/schema.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const entries = loadThemeFiles(path.join(ROOT, 'themes'))
 
 describe('风格生成物与源一致', () => {
+  it('Web 专用色板同步到样式选择器，小程序继续从基础令牌生成', () => {
+    for (const { def } of entries.filter(({ def }) => def.webTokens)) {
+      expect(WEB_THEMES.find(({ key }) => key === def.key).swatch).toEqual(def.webSwatch)
+      expect(MINI_THEMES.find(({ key }) => key === def.key).tokens['--accent']).toBe(def.tokens.accent)
+      for (const { fg, bg, min } of def.webContrast) {
+        expect(contrastRatio(def.webTokens[fg] ?? def.tokens[fg] ?? fg, bg)).toBeGreaterThanOrEqual(min)
+      }
+    }
+  })
   it('也检查容器查询中的主题作用域', () => {
     const prefixes = ['html[data-theme="bento"]']
     expect(checkScopedCss('@container home (max-width: 680px) { .card { padding: 16px } }', prefixes, 'test')).toHaveLength(1)

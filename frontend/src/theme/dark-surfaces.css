@@ -1,0 +1,307 @@
+/* Shared geometry for the two dark Web themes; material and color come from their theme files. */
+html:is([data-theme="neon"], [data-theme="terminal"]) {
+  --side-w: clamp(184px, 14.3vw, 370px);
+  --topbar-h: clamp(64px, 4.25vw, 110px);
+  --content-pad: clamp(16px, 1.8vw, 46px);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) body {
+  background: var(--dark-backdrop), var(--bg);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.side, .portal-nav-drawer, .admin-drawer) {
+  background: var(--dark-sidebar);
+  border-color: var(--line);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.topbar, .admin-bar, .sub-nav-bar, .tabbar) {
+  background: var(--dark-chrome);
+  border-color: var(--line);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .topbar-inner {
+  min-height: var(--topbar-h);
+  padding: 8px var(--content-pad);
+  box-sizing: border-box;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .side-nav { gap: 4px; padding: 8px 10px 16px 0; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .side-item {
+  min-height: clamp(44px, 3vw, 75px);
+  padding-inline: 16px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .side-icon {
+  display: block; flex: none; width: 18px; height: 18px; color: var(--accent-text);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .side-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.side-item, .side-sub-item, .sub-nav-item, .tabbar a).is-active {
+  color: var(--accent-text);
+  background: var(--dark-selected);
+  box-shadow: inset 2px 0 var(--accent);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.user-menu-trigger, .portal-menu-btn) {
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.side-item, .side-sub-item, .sub-nav-item, .tabbar a, .user-menu-trigger, .portal-menu-btn):focus-visible {
+  outline-color: var(--dark-focus);
+  outline-offset: -2px;
+}
+
+/* Reading surfaces for portal records, administration tools and teleported controls. */
+html:is([data-theme="neon"], [data-theme="terminal"]) .layout-main.business-page .page-head:not(.sr-only) {
+  background: var(--dark-panel);
+  border: 1px solid var(--dark-border);
+  box-shadow: var(--shadow-rest);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.layout-main.business-page, .wechat-callback) :is(.card, .business-panel) {
+  background: var(--dark-data-panel);
+  border-color: var(--dark-border);
+  backdrop-filter: none;
+  box-shadow: var(--shadow-rest);
+  transform: none;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.layout-main.business-page, .wechat-callback) .business-summary { background: var(--dark-panel); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .layout-main.business-page .res-card {
+  border-inline-start-width: 3px;
+}
+html[data-theme="terminal"] .layout-main.business-page .res-card[data-status="PENDING"] { border-inline-start-color: var(--warning); }
+html[data-theme="terminal"] .layout-main.business-page .res-card[data-status="APPROVED"] { border-inline-start-color: var(--success); }
+html[data-theme="terminal"] .layout-main.business-page .res-card[data-status="REJECTED"] { border-inline-start-color: var(--danger); }
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.layout-main.business-page .list-item, .reports-item):hover {
+  background-color: var(--dark-table-hover);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.home-grid > .card, .layout-main.business-page .page-head:not(.sr-only), .layout-main.business-page .page > .card, .wechat-callback > .card, .el-dialog, .el-message-box) {
+  position: relative;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.home-grid > .card, .layout-main.business-page .page-head:not(.sr-only), .layout-main.business-page .page > .card, .wechat-callback > .card, .el-dialog, .el-message-box)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--dark-frame);
+  opacity: .78;
+  pointer-events: none;
+  z-index: 1;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-dialog, .el-message-box) {
+  background: var(--overlay);
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-table, .business-page .el-table, .el-dialog .el-table) {
+  --el-table-bg-color: var(--overlay);
+  --el-table-tr-bg-color: var(--overlay);
+  --el-table-header-bg-color: var(--dark-table-head);
+  --el-table-row-hover-bg-color: var(--dark-table-hover);
+  --el-table-border-color: var(--line);
+  --el-table-text-color: var(--text);
+  --el-table-header-text-color: var(--accent-text);
+  color: var(--text);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .el-table th.el-table__cell {
+  background: var(--dark-table-head);
+  color: var(--accent-text);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-table__cell.business-money, .el-table__cell.report-money, .el-table__cell.data-number, .home-account-row b, .income-amount) {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-input__wrapper, .el-select__wrapper, .el-textarea__inner, .el-upload-dragger) {
+  background: var(--dark-field);
+  box-shadow: 0 0 0 1px var(--border-strong) inset;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-input__wrapper.is-focus, .el-select__wrapper.is-focused, .el-textarea__inner:focus) {
+  box-shadow: 0 0 0 2px var(--dark-focus) inset;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.el-checkbox, .el-radio) {
+  --el-checkbox-checked-icon-color: var(--on-accent);
+  --el-radio-checked-icon-color: var(--on-accent);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .el-radio__input.is-checked .el-radio__inner::after { background: var(--on-accent); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .el-pagination {
+  --el-pagination-button-bg-color: var(--surface);
+  --el-pagination-button-disabled-bg-color: var(--surface);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .el-pagination.is-background .el-pager li.is-active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .admin-shell .editor-layout :is(.rich-editor, .side-panel) {
+  min-width: 0;
+  background: var(--dark-data-panel);
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .admin-shell .editor-layout .re-body {
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.housing-identity .summary-tag, .housing-identity .housing-role) {
+  background: var(--dark-selected);
+  border-color: var(--border-strong);
+  color: var(--accent-text);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .housing-identity .review-tab-label .el-badge__content {
+  background: var(--warning); border-color: transparent; color: var(--bg);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) :is(.type-card.is-selected, .reports-filter-btn.is-active) {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--dark-selected);
+}
+
+/* Homepage uses the live module list. The seven-card composition is used when those cards are present. */
+html:is([data-theme="neon"], [data-theme="terminal"]) .page.home {
+  container: dark-home / inline-size;
+  padding-block-start: clamp(19px, 1.45vw, 38px);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .page.home > .page-head {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid {
+  --dashboard-gap: clamp(14px, 1.2vw, 32px);
+  gap: var(--dashboard-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid > .card {
+  grid-column: auto;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: clamp(17px, 1.45vw, 38px);
+  background: var(--dark-panel);
+  border-color: var(--dark-border);
+  backdrop-filter: none;
+  box-shadow: var(--shadow-rest);
+  transform: none;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid > .card:hover {
+  border-color: var(--border-strong);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid > .home-hero {
+  grid-column: 1 / -1;
+  min-height: clamp(180px, 23cqi, 290px);
+  overflow: hidden;
+  padding: clamp(20px, 2vw, 54px);
+  background: var(--hero);
+}
+html[data-theme="terminal"] .home-grid > .home-hero {
+  background: repeating-linear-gradient(0deg, #a8d35c0b 0 1px, transparent 1px 4px), var(--hero);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-hero-scan {
+  display: block; position: absolute; inset: 0; pointer-events: none;
+}
+html[data-theme="terminal"] .home-hero-scan { inset: auto 24px 21px auto; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-greeting {
+  font-size: clamp(27px, 2.2vw, 56px);
+  line-height: 1.16;
+}
+html[data-theme="terminal"] .home-grid .title { font-family: var(--font); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-hero :is(.home-meta, .label) {
+  color: var(--muted);
+  font-size: clamp(14px, .92vw, 22px);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid .card-icon {
+  background: var(--dark-selected);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  color: var(--accent-text);
+}
+html[data-theme="terminal"] .home-grid .card-icon.is-warning { color: var(--warning); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-manage-icon {
+  background: var(--dark-selected);
+  border: 1px solid currentColor;
+  box-sizing: border-box;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-manage-item {
+  box-sizing: border-box;
+  min-height: clamp(54px, 4.15vw, 104px);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-manage-item:hover .home-manage-icon { transform: none; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-accounts-total {
+  font-size: clamp(29px, 2.25vw, 58px);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-account-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-account-row b { color: var(--accent-text); white-space: nowrap; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-account-row { font-size: clamp(14px, .86vw, 18px); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-feed-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-feed-item a {
+  color: var(--text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-feed-item:hover a { color: var(--accent-text); }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-feed-item .tag {
+  border-color: color-mix(in srgb, var(--dark-decision-color) 45%, var(--line));
+  border-radius: var(--radius-sm);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-feed-item .is-committee {
+  color: var(--dark-decision-color);
+  background: var(--dark-decision-bg);
+}
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid > .home-info { grid-column: 1 / -1; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-poll .el-empty__image { display: none; }
+html:is([data-theme="neon"], [data-theme="terminal"]) .home-poll .home-empty-icon {
+  width: 40px; height: 40px; margin-top: 12px; color: var(--accent-text);
+}
+@container dark-home (min-width: 851px) {
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid { grid-template-columns: var(--dashboard-columns); }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-with-housing > .home-hero { grid-column: 1; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview {
+    grid-template-rows: repeat(2, minmax(calc((var(--dashboard-hero-h) - var(--dashboard-gap)) / 2), auto))
+      minmax(var(--dashboard-main-h), auto) minmax(var(--dashboard-feed-h), auto);
+  }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-hero {
+    grid-area: 1 / 1 / 3 / 2;
+    min-height: 0;
+  }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-housing { grid-area: 1 / 2; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-review { grid-area: 2 / 2; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-accounts { grid-area: 3 / 1; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-management { grid-area: 3 / 2; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-poll { grid-area: 4 / 1; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-latest { grid-area: 4 / 2; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > .home-info { grid-area: 5 / 1 / auto / -1; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > :is(.home-housing, .home-review) {
+    padding-block-end: 10px;
+  }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > :is(.home-housing, .home-review) .card-head { margin-bottom: 8px; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid-overview > :is(.home-housing, .home-review) > .muted { margin: 0; }
+  html[data-theme="neon"] .home-grid-overview {
+    /* A narrower voting card, with the other right-column cards sharing one axis. */
+    grid-template-columns: minmax(0, 39fr) minmax(0, 11fr) minmax(0, 47fr);
+  }
+  html[data-theme="neon"] .home-grid-overview > :is(.home-hero, .home-accounts) { grid-column: 1 / 3; }
+  html[data-theme="neon"] .home-grid-overview > :is(.home-housing, .home-review, .home-management) { grid-column: 3; }
+  html[data-theme="neon"] .home-grid-overview > .home-latest { grid-column: 2 / -1; }
+}
+@container dark-home (max-width: 585px) {
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid { grid-template-columns: minmax(0, 1fr); }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .home-grid > .home-hero { min-height: 164px; }
+}
+
+@media (max-width: 880px) {
+  html:is([data-theme="neon"], [data-theme="terminal"]) { --topbar-h: 58px; --content-pad: 14px; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell { display: block; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell > .side { display: none; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell .topbar-inner { justify-content: flex-start; gap: 8px; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell .topbar .brand {
+    display: flex; flex: 1; min-width: 0;
+  }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell .topbar-user { display: flex; min-width: 0; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell .user-menu-trigger { max-width: clamp(80px, 27vw, 175px); }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-shell .sub-nav-bar { display: flex; }
+  html:is([data-theme="neon"], [data-theme="terminal"]) .portal-menu-btn { display: inline-grid; }
+}
+@media (forced-colors: active) {
+  html:is([data-theme="neon"], [data-theme="terminal"]) :is(.home-accounts-total, .reports-total) {
+    background: none;
+    color: CanvasText;
+    text-shadow: none;
+  }
+}

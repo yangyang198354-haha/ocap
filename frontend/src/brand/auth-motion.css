@@ -28,10 +28,10 @@ html[data-theme="bento"] .auth-shell::after {
 html[data-theme="neon"] .auth-shell::before {
   inset: -18%;
   background:
-    radial-gradient(ellipse 27% 43% at 13% 28%, #bd3dff4a, transparent 75%),
-    radial-gradient(ellipse 28% 40% at 82% 67%, #18d8f450, transparent 75%),
-    radial-gradient(ellipse 24% 32% at 52% 90%, #7726ed48, transparent 75%);
-  filter: blur(38px);
+    radial-gradient(ellipse 27% 43% at 13% 28%, #207ea94a, transparent 75%),
+    radial-gradient(ellipse 28% 40% at 82% 67%, #18d8f427, transparent 75%),
+    radial-gradient(ellipse 24% 32% at 52% 90%, #9154dd29, transparent 75%);
+  filter: blur(20px);
   animation: auth-neon-ambient 13s ease-in-out infinite alternate;
 }
 html[data-theme="neon"] .auth-shell::after {
@@ -42,8 +42,8 @@ html[data-theme="neon"] .auth-shell::after {
 }
 html[data-theme="neon"] .auth-art {
   z-index: 1;
-  border-right-color: #a654e973;
-  background: linear-gradient(90deg, #1d1427d9, #2d1a3985);
+  border-right-color: var(--dark-border);
+  background: var(--dark-panel);
 }
 html[data-theme="neon"] .auth-art::after {
   content: "";
@@ -64,13 +64,12 @@ html[data-theme="neon"] .auth-art-copy .brand-mark {
 }
 html[data-theme="neon"] .auth-panel {
   overflow: hidden;
-  background: #30213c8a;
-  backdrop-filter: var(--neon-auth-filter, blur(18px) saturate(125%));
-  -webkit-backdrop-filter: var(--neon-auth-filter, blur(18px) saturate(125%));
-  box-shadow: inset 0 0 0 1px #d7a8ff1c, inset 0 0 80px #aa53fb11;
+  background: var(--dark-data-panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 html[data-theme="neon"][data-perf="low"] .auth-panel {
-  --neon-auth-filter: none;
   background: var(--overlay);
 }
 html[data-theme="neon"] .auth-panel::before,
@@ -87,17 +86,17 @@ html[data-theme="neon"] .auth-panel::before {
   animation: auth-neon-reflection 10s ease-in-out infinite;
 }
 html[data-theme="neon"] .auth-panel::after {
-  border: 1px solid #b06bfa55;
-  box-shadow: inset 0 0 28px #ab5eff20, 0 0 34px #7b45e536;
-  animation: auth-neon-frame 6s ease-in-out infinite alternate;
+  background: var(--dark-frame);
+  opacity: .55;
 }
 html[data-theme="neon"] .auth-panel > .auth-card { position: relative; z-index: 1; }
-html[data-theme="neon"] .auth-card .el-input__wrapper:not(.is-focus) {
-  animation: auth-neon-input 5s ease-in-out infinite alternate;
-}
-html[data-theme="neon"] .auth-card .el-button--primary:not(.is-link, .is-text, .is-disabled, .is-loading) {
-  background-size: 210% 100%;
-  animation: auth-neon-button 7s ease-in-out infinite alternate;
+html[data-theme="neon"][data-perf="low"] .auth-shell::before,
+html[data-theme="neon"][data-perf="low"] .auth-shell::after,
+html[data-theme="neon"][data-perf="low"] .auth-art::after,
+html[data-theme="neon"][data-perf="low"] .auth-art-copy .brand-mark,
+html[data-theme="neon"][data-perf="low"] .auth-panel::before {
+  animation: none;
+  filter: none;
 }
 
 /* Aurora Bento: slow moving sky light and color within the welcome card. */
@@ -177,9 +176,6 @@ html[data-theme="bento"][data-perf="low"] .auth-card .el-button--primary {
 @keyframes auth-neon-divider { from { background-position: 0 0; opacity: .65; } to { background-position: 0 100%; opacity: 1; } }
 @keyframes auth-neon-logo { 0%, 100% { transform: translateY(0); opacity: .95; } 50% { transform: translateY(-7px); opacity: 1; } }
 @keyframes auth-neon-reflection { 0%, 16% { transform: translateX(-120%); } 62%, 100% { transform: translateX(120%); } }
-@keyframes auth-neon-frame { from { opacity: .43; } to { opacity: 1; } }
-@keyframes auth-neon-input { from { box-shadow: 0 0 0 1px #544162 inset; } to { box-shadow: 0 0 0 1px #8c5ec0 inset, 0 0 16px #a85de72b; } }
-@keyframes auth-neon-button { from { background-position: 0 50%; box-shadow: 0 12px 32px #29105e44; } to { background-position: 100% 50%; box-shadow: 0 12px 38px #8544de70; } }
 @keyframes auth-aurora-drift { from { transform: translate(-4%, 3%) rotate(-7deg) scale(1); } to { transform: translate(5%, -4%) rotate(8deg) scale(1.12); } }
 @keyframes auth-aurora-drift-two { from { transform: translate(5%, -4%) scale(.95); } to { transform: translate(-6%, 4%) scale(1.13); } }
 @keyframes auth-aurora-gradient { from { background-position: 0 35%; } to { background-position: 100% 65%; } }
@@ -190,7 +186,7 @@ html[data-theme="bento"][data-perf="low"] .auth-card .el-button--primary {
 
 @media (max-width: 767.98px) {
   html[data-theme="neon"] .auth-art::after { display: none; }
-  html[data-theme="neon"] .auth-art { border-bottom-color: #a654e973; }
+  html[data-theme="neon"] .auth-art { border-bottom-color: var(--dark-border); }
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="neon"] .auth-shell *,

@@ -11,9 +11,10 @@ html[data-theme="bento"] {
   --button-feedback: 0 4px 12px color-mix(in srgb, var(--accent) 19%, transparent);
 }
 html[data-theme="neon"] {
-  --button-focus: var(--accent-2);
+  --button-focus: var(--dark-focus);
   --button-danger-fill: #a62247;
-  --button-feedback: 0 0 14px color-mix(in srgb, var(--accent) 42%, transparent);
+  --button-danger-ink: #fff;
+  --button-feedback: 0 0 14px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 html[data-theme] .el-button {

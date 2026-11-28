@@ -1,316 +1,79 @@
-/* 风格 C 结构性差异：网格背景、等宽大写标签、四角框线、直角、12 栏紧凑首页、编号入口、光标、扫描线、步骤脉冲 */
-html[data-theme="terminal"] body {
-  background:
-    radial-gradient(120% 80% at 50% -12%, rgba(198,255,61,.07), transparent 62%),
-    linear-gradient(rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(90deg, rgba(198,255,61,.05) 1px, transparent 1px) 0 0 / 32px 32px,
-    var(--bg);
-  background-attachment: fixed;
+/* CRT 终端：哑光面、荧光角框、静态扫描纹理。 */
+html[data-theme="terminal"] {
+  --dark-backdrop:
+    repeating-linear-gradient(0deg, #9adb8d05 0 1px, transparent 1px 4px),
+    linear-gradient(#b6e64209 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, #b6e64209 1px, transparent 1px) 0 0 / 48px 48px,
+    radial-gradient(ellipse at 26% 0%, #172013 0%, transparent 52%);
+  --dark-sidebar: #121513;
+  --dark-chrome: #101310;
+  --dark-panel: linear-gradient(154deg, #20231a 0%, #161815 57%, #171a13);
+  --dark-data-panel: #161815;
+  --dark-border: #485132;
+  --dark-field: #0f130e;
+  --dark-table-head: #24291a;
+  --dark-table-hover: #242b1b;
+  --dark-selected: #232b18;
+  --dark-frame-color: color-mix(in srgb, var(--accent) 79%, var(--dark-border));
+  --dark-frame:
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) left top / 17px 2px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) left top / 2px 17px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) right top / 17px 2px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) right top / 2px 17px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) left bottom / 17px 2px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) left bottom / 2px 17px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) right bottom / 17px 2px no-repeat,
+    linear-gradient(var(--dark-frame-color), var(--dark-frame-color)) right bottom / 2px 17px no-repeat;
+  --dark-decision-color: var(--warning);
+  --dark-decision-bg: var(--warning-bg);
+  --dark-focus: var(--accent);
+  --border-strong: #505A39;
+  --surface-tint: #24291a;
+  --shadow-rest: none;
+  --shadow-hover: 0 0 16px -12px #D5FF63;
 }
-/* HUD 卡片：橄榄绿细描边 + 四角框线（右下角另用 ::after 画装饰短线） */
-html[data-theme="terminal"] .card {
-  position: relative;
-  background: linear-gradient(160deg, rgba(198,255,61,.05), rgba(198,255,61,.012) 42%), var(--surface);
-  border-color: rgba(198,255,61,.16);
-  box-shadow: none;
-}
-html[data-theme="terminal"] .card::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .85;
-  --frame: var(--frame-accent, var(--accent));
-  background:
-    linear-gradient(var(--frame), var(--frame)) left top / 14px 2px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) left top / 2px 14px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) right top / 14px 2px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) right top / 2px 14px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) left bottom / 14px 2px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) left bottom / 2px 14px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) right bottom / 14px 2px no-repeat,
-    linear-gradient(var(--frame), var(--frame)) right bottom / 2px 14px no-repeat;
-}
-html[data-theme="terminal"] .title, html[data-theme="terminal"] .tag, html[data-theme="terminal"] .side-item,
-html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item, html[data-theme="terminal"] .user-menu-trigger,
-html[data-theme="terminal"] .tabbar a, html[data-theme="terminal"] .label,
-html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .field-label {
-  font-family: var(--mono);
-}
-html[data-theme="terminal"] .tag { border: 1px solid currentColor; border-radius: 2px; }
+html[data-theme="terminal"] .title,
+html[data-theme="terminal"] .side-item,
+html[data-theme="terminal"] .side-sub-item,
+html[data-theme="terminal"] .sub-nav-item { font-family: var(--mono), var(--font); }
 html[data-theme="terminal"] .tag-dot { border-radius: 0; }
-/* 左侧导航：等宽大写，当前项荧光描边 + "> " 前缀（除颜色外的可辨认方式） */
-html[data-theme="terminal"] .side-item, html[data-theme="terminal"] .side-sub-item, html[data-theme="terminal"] .sub-nav-item { border-radius: 0; }
-html[data-theme="terminal"] .side-item.is-active, html[data-theme="terminal"] .side-sub-item.is-active, html[data-theme="terminal"] .sub-nav-item.is-active {
-  background: rgba(198,255,61,.07); outline: 1px solid rgba(198,255,61,.45); outline-offset: -1px; border-left-color: var(--accent);
+html[data-theme="terminal"] .home-grid {
+  --dashboard-columns: minmax(0, 1.21fr) minmax(0, 1fr);
+  --dashboard-hero-h: clamp(218px, 15.85vw, 408px);
+  --dashboard-main-h: clamp(267px, 17.3vw, 446px);
+  --dashboard-feed-h: clamp(196px, 14.2vw, 370px);
 }
-html[data-theme="terminal"] .side-item.is-active::before, html[data-theme="terminal"] .side-sub-item.is-active::before { content: "> "; white-space: pre; }
-html[data-theme="terminal"] .user-menu-trigger { border-radius: 2px; }
-html[data-theme="terminal"] .auth-brand { font-family: var(--mono); letter-spacing: .04em; }
-html[data-theme="terminal"] .auth-brand::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
-html[data-theme="terminal"][data-perf="low"] .auth-brand::after { animation: none; }
-html[data-theme="terminal"] .chip, html[data-theme="terminal"] .mode-tag, html[data-theme="terminal"] .home-q { border-radius: 2px; }
-html[data-theme="terminal"] .chip { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: transparent; }
-
-/* 4 栏：Hero 占 2×2；数据块 1x1；入口整行；投票 / 最新各 2 */
-@media (min-width: 768px) {
-  html[data-theme="terminal"] .home-grid { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, minmax(160px, auto)) minmax(120px, auto); }
-  html[data-theme="terminal"] .home-hero { grid-column: span 2; grid-row: span 2; }
-  html[data-theme="terminal"] .home-todo { grid-column: span 2; }
-  html[data-theme="terminal"] .home-stat { grid-column: span 1; }
-  html[data-theme="terminal"] .home-quick { grid-column: span 4; }
-  html[data-theme="terminal"] .home-poll { grid-column: span 2; }
-  html[data-theme="terminal"] .home-latest { grid-column: span 2; }
-}
-html[data-theme="terminal"] .home-stat .stat-value { font-family: var(--mono); }
-/* 标题光标闪烁、Hero 扫描线 */
 html[data-theme="terminal"] .home-hero {
-  border: 1px solid rgba(198,255,61,.22);
-  background:
-    radial-gradient(90% 130% at 12% 118%, rgba(198,255,61,.20), transparent 60%),
-    linear-gradient(180deg, rgba(198,255,61,.05), transparent 46%),
-    var(--hero);
+  background: repeating-linear-gradient(0deg, #a8d35c0b 0 1px, transparent 1px 4px), var(--hero);
 }
-html[data-theme="terminal"] .grad-text { color: var(--accent); }
-html[data-theme="terminal"] .home-caret::after { content: "_"; color: var(--accent); animation: ocap-blink 1s steps(1) infinite; }
-@keyframes ocap-blink { 50% { opacity: 0; } }
+html[data-theme="terminal"] .home-hero .label,
+html[data-theme="terminal"] .home-grid .count-pill { font-variant-numeric: tabular-nums; }
+html[data-theme="terminal"] .home-hero .label { font-family: var(--mono); }
+html[data-theme="terminal"] .home-greeting,
+html[data-theme="terminal"] .home-accounts-total,
+html[data-theme="terminal"] .reports-total { color: var(--accent); text-shadow: 0 0 16px #d5ff6345; }
 html[data-theme="terminal"] .home-hero-scan {
-  display: block; position: absolute; inset: 0; pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(198,255,61,.05) 0 1px, transparent 1px 4px);
+  inset: auto 24px 21px auto; width: min(34%, 220px); height: 2px;
+  background: repeating-linear-gradient(90deg, #d5ff638c 0 10px, transparent 10px 22px);
+  opacity: .57;
+  animation: terminal-dashboard-readout 11s ease-in-out infinite alternate;
 }
-/* 编号式入口 */
-html[data-theme="terminal"] .home-q-key { display: block; }
-html[data-theme="terminal"] .home-q-key::before { content: attr(data-k); font-size: 10px; color: var(--muted); }
-html[data-theme="terminal"] .home-q-icon { border: 1px solid var(--line); border-radius: 2px; background: transparent; color: var(--accent); }
-html[data-theme="terminal"] .home-q:hover { border-color: var(--accent); }
-html[data-theme="terminal"] .home-countdown > div { border-radius: 2px; border: 1px solid var(--line); background: transparent; }
-html[data-theme="terminal"] .vote-bar { border-radius: 0; height: 6px; }
-html[data-theme="terminal"] .vote-disagree { background: var(--accent-2); }
-html[data-theme="terminal"] .vote-abstain { background: var(--muted); opacity: .6; }
-html[data-theme="terminal"] .type-card { border-radius: 2px; }
-html[data-theme="terminal"] .type-card.is-selected { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
-html[data-theme="terminal"] .money-input { border-radius: 4px; }
-html[data-theme="terminal"] .money-input input { font-family: var(--mono); }
-html[data-theme="terminal"] .drop-zone .el-upload-dragger { border-style: dashed; border-radius: 4px; }
-html[data-theme="terminal"] .claim-step-node { border-radius: 2px; font-family: var(--mono); }
-html[data-theme="terminal"] .claim-step.is-done .claim-step-node { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-html[data-theme="terminal"] .claim-step.is-current .claim-step-node { border-color: var(--accent); color: var(--accent); animation: ocap-pulse 1.6s ease-in-out infinite; }
-@keyframes ocap-pulse { 50% { box-shadow: 0 0 0 4px rgba(198,255,61,.18); } }
-html[data-theme="terminal"][data-perf="low"] .home-caret::after, html[data-theme="terminal"][data-perf="low"] .claim-step.is-current .claim-step-node { animation: none; }
-
-/* === 角色化首页 2.0：荧光三色分区 + 终端卡片 === */
-html[data-theme="terminal"] .home-grid > .card { position: relative; overflow: hidden; }
-html[data-theme="terminal"] .home-housing { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.05); }
-html[data-theme="terminal"] .home-review { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.05); }
-html[data-theme="terminal"] .home-votes { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.05); }
-html[data-theme="terminal"] .home-accounts { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
-html[data-theme="terminal"] .home-management { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
-html[data-theme="terminal"] .home-poll { --card-accent: #C6FF3D; --card-tint: rgba(198,255,61,.04); }
-html[data-theme="terminal"] .home-latest { --card-accent: #FF3DBB; --card-tint: rgba(255,61,187,.04); }
-html[data-theme="terminal"] .home-info { --card-accent: #FFC53D; --card-tint: rgba(255,197,61,.04); }
-html[data-theme="terminal"] .home-grid > .card:not(.home-hero) {
-  --frame-accent: var(--accent);
-  background: linear-gradient(180deg, var(--card-tint, transparent), transparent 44%), var(--surface);
-  border: 1px solid rgba(198,255,61,.26);
-}
-html[data-theme="terminal"] .home-grid > .card:not(.home-hero)::after {
-  content: ""; position: absolute; top: 8px; right: 18px; width: 34px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)));
-  opacity: .55; pointer-events: none;
-}
-html[data-theme="terminal"] .home-grid > .card:not(.home-hero):hover {
-  border-color: var(--card-accent, var(--accent));
-  box-shadow: 0 0 34px -14px var(--card-accent, var(--accent)), inset 0 0 24px -18px var(--card-accent, var(--accent));
-}
-html[data-theme="terminal"] .home-grid > .card .card-icon {
-  border-radius: 2px; background: transparent; color: var(--card-accent, var(--accent));
-  border: 1px solid var(--card-accent, var(--accent));
-}
-html[data-theme="terminal"] .home-accounts-total {
-  color: var(--accent); text-shadow: 0 0 18px rgba(198,255,61,.45); font-family: var(--mono);
-}
-html[data-theme="terminal"] .home-feed-item { transition: background .18s steps(2), box-shadow .18s steps(2); }
-html[data-theme="terminal"] .home-feed-item:hover { background: rgba(198,255,61,.06); box-shadow: inset 3px 0 0 var(--accent); }
-html[data-theme="terminal"] .home-feed-item .tag { border: 1px solid currentColor; border-radius: 2px; }
-html[data-theme="terminal"] .home-feed-item .is-representative { color: #FF3DBB; background: rgba(255,61,187,.08); }
-html[data-theme="terminal"] .home-hero-scan { animation: term-scan 7s linear infinite; }
-@keyframes term-scan { from { background-position: 0 0; } to { background-position: 0 40px; } }
-html[data-theme="terminal"] .page-head { border-bottom: 0; position: relative; }
-html[data-theme="terminal"] .page-head::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-  background: repeating-linear-gradient(90deg, var(--accent) 0 12px, transparent 12px 18px, #FF3DBB 18px 30px, transparent 30px 36px);
-  opacity: .85;
-}
-html[data-theme="terminal"] .page-head h1 { font-family: var(--mono); letter-spacing: .02em; color: var(--text); }
-html[data-theme="terminal"] .res-card { border-top: 0; border-left: 3px solid var(--border-strong); }
-html[data-theme="terminal"] .res-card[data-status="PENDING"] { border-left-color: var(--warning); }
-html[data-theme="terminal"] .res-card[data-status="APPROVED"] { border-left-color: var(--success); }
-html[data-theme="terminal"] .res-card[data-status="REJECTED"] { border-left-color: var(--danger); }
-html[data-theme="terminal"] .list-item { transition: background .18s steps(2), box-shadow .18s steps(2); }
-html[data-theme="terminal"] .list-item:hover { background: rgba(198,255,61,.06); box-shadow: inset 3px 0 0 var(--accent); }
-html[data-theme="terminal"] .el-table {
-  --el-table-border-color: #26262A;
-  --el-table-header-bg-color: rgba(198,255,61,.08);
-  --el-table-row-hover-bg-color: rgba(198,255,61,.06);
-  --el-table-bg-color: transparent;
-  font-family: var(--font);
-}
-html[data-theme="terminal"] .el-table th.el-table__cell { color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
-html[data-theme="terminal"] .el-table td.el-table__cell { font-variant-numeric: tabular-nums; }
-html[data-theme="terminal"] .el-table tr:hover > td.el-table__cell { box-shadow: inset 0 -1px 0 rgba(198,255,61,.35); }
-html[data-theme="terminal"] .reports-filter-btn.is-active { background: var(--accent); color: var(--bg); border-radius: 2px; box-shadow: 0 0 18px rgba(198,255,61,.35); font-family: var(--mono); }
-html[data-theme="terminal"] .reports-item { padding: 12px 10px; margin: 0 -10px; transition: background .18s steps(2), box-shadow .18s steps(2); }
-html[data-theme="terminal"] .reports-item:hover { background: rgba(198,255,61,.06); box-shadow: inset 3px 0 0 var(--accent); }
-html[data-theme="terminal"] .reports-total { color: var(--accent); text-shadow: 0 0 16px rgba(198,255,61,.4); font-family: var(--mono); }
-html[data-theme="terminal"] .reports-accounts-head { color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
-
-/* === 登录页（参考图 3：二进制雨背景 + 左侧终端窗口 + 右侧 HUD 登录卡） === */
-html[data-theme="terminal"] .auth-shell {
-  grid-template-columns: minmax(0, 1.05fr) minmax(400px, .95fr);
-  background:
-    radial-gradient(80% 60% at 18% 20%, rgba(198,255,61,.06), transparent 70%),
-    radial-gradient(70% 60% at 86% 80%, rgba(255,61,187,.06), transparent 70%),
-    #08080A;
-}
-html[data-theme="terminal"] .auth-panel { position: relative; padding: 40px clamp(20px, 4vw, 56px); }
-html[data-theme="terminal"] .auth-card {
-  width: 100%; max-width: 430px; padding: 30px 28px 44px;
-  background: linear-gradient(180deg, rgba(198,255,61,.07), rgba(198,255,61,.012) 42%), #0E0E10;
-  border: 1px solid rgba(198,255,61,.34);
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px rgba(198,255,61,.06), 0 30px 70px -48px #000;
-}
-html[data-theme="terminal"] .auth-card::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .9;
-  background:
-    linear-gradient(var(--accent), var(--accent)) left top / 16px 2px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) left top / 2px 16px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) right top / 16px 2px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) right top / 2px 16px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 16px 2px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) left bottom / 2px 16px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 16px 2px no-repeat,
-    linear-gradient(var(--accent), var(--accent)) right bottom / 2px 16px no-repeat;
-}
-html[data-theme="terminal"] .auth-card .auth-brand { font-family: var(--mono); letter-spacing: .02em; }
-html[data-theme="terminal"] .auth-card .auth-sub { font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; }
-/* 表单卡已并入外壳卡片：去掉内层 .card 的四角框线（否则会在文案左侧画出角标） */
-html[data-theme="terminal"] .auth-card .auth-form-card.card::before { display: none; }
-html[data-theme="terminal"] .auth-card .el-tabs__item { font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; }
-html[data-theme="terminal"] .auth-card .el-input__wrapper { border-radius: 2px; background: #0A0A0B; box-shadow: 0 0 0 1px #26262A inset; }
-html[data-theme="terminal"] .auth-card .el-input__wrapper.is-focus { box-shadow: 0 0 0 1px var(--accent) inset, 0 0 16px -6px var(--accent); }
-html[data-theme="terminal"] .auth-card a { color: var(--accent); }
-html[data-theme="terminal"] .auth-card .muted { font-family: var(--mono); }
-@media (max-width: 767.98px) {
-  html[data-theme="terminal"] .auth-panel { padding: 22px 16px; }
-  html[data-theme="terminal"] .auth-card { padding: 24px 18px; }
-}
-
-/* Dashboard artwork: black HUD, lime corner brackets and a two-column console. */
-html[data-theme="terminal"] { --side-w: 262px; --topbar-h: 80px; --content-pad: 28px; }
-html[data-theme="terminal"] body {
-  background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.012) 3px 4px),
-    linear-gradient(90deg, rgba(198,255,61,.025) 1px, transparent 1px) 0 0 / 94px 94px, #090a09;
-}
-html[data-theme="terminal"] .side { background: rgba(16,17,16,.96); border-right: 1px solid #262824; }
-html[data-theme="terminal"] .side-brand { min-height: 80px; padding: 8px 22px; font-size: 23px; border-bottom-color: #262824; }
-html[data-theme="terminal"] .side-nav { gap: 4px; padding: 5px 10px 16px 0; }
-html[data-theme="terminal"] .side-item { min-height: 50px; padding: 0 20px 0 25px; color: #aaa9aa; letter-spacing: 0; text-transform: none; }
-html[data-theme="terminal"] .side-icon { display: block; flex: none; width: 19px; height: 19px; color: #c6ff3d; }
-html[data-theme="terminal"] .side-label { flex: 1; }
-html[data-theme="terminal"] .side-item.is-active { background: rgba(198,255,61,.065); outline: 0; box-shadow: inset 5px 0 0 #c6ff3d; color: #e2fa69; }
-html[data-theme="terminal"] .side-item.is-active::before { display: none; }
-html[data-theme="terminal"] .topbar { background: rgba(9,10,9,.93); border-bottom: 1px solid #22251e; }
-html[data-theme="terminal"] .topbar-inner { min-height: 80px; box-sizing: border-box; padding: 12px 22px; }
-html[data-theme="terminal"] .user-menu-trigger { background: #111211; border-color: #2c2d29; }
-html[data-theme="terminal"] .card { background: #111210; border-color: #292d20; }
-html[data-theme="terminal"] .home-grid > .card:not(.home-hero) { background: linear-gradient(155deg, #141512, #10110f); border: 1px solid #303521; }
-html[data-theme="terminal"] .home-grid > .card:not(.home-hero)::after { display: none; }
-html[data-theme="terminal"] .card::before { opacity: 1; --frame: #d7fa4b; background-size: 18px 3px, 3px 18px, 18px 3px, 3px 18px, 18px 3px, 3px 18px, 18px 3px, 3px 18px; }
-html[data-theme="terminal"] .home-hero {
-  background: linear-gradient(155deg, rgba(198,255,61,.025), transparent 65%), #10110f;
-  border: 1px solid #303521; box-shadow: none;
-}
-html[data-theme="terminal"] .home-hero-scan { background: repeating-linear-gradient(0deg, rgba(198,255,61,.018) 0 1px, transparent 1px 4px); }
-html[data-theme="terminal"] .home-greeting { color: #dcfa50; font-size: 35px; text-shadow: 0 0 16px rgba(198,255,61,.22); }
-html[data-theme="terminal"] .home-greeting .grad-text { color: #dcfa50; -webkit-text-fill-color: #dcfa50; background: none; }
-html[data-theme="terminal"] .home-caret::after { display: none; }
-html[data-theme="terminal"] .home-meta { color: #b7b7b3; font-size: 15px; }
-html[data-theme="terminal"] .home-grid .card-icon { border: 0; border-radius: 4px; background: rgba(198,255,61,.09); color: #d7fa4b; }
-html[data-theme="terminal"] .home-review .card-icon { color: #f3ae37; background: rgba(243,174,55,.1); }
-html[data-theme="terminal"] .home-accounts-total { font-size: clamp(30px, 2.25vw, 43px); color: #dcfa50; text-shadow: 0 0 17px rgba(198,255,61,.55); }
-html[data-theme="terminal"] .home-account-row b { color: #d7fa4b; }
-html[data-theme="terminal"] .home-manage-icon { border-radius: 50%; color: #d7fa4b; background: rgba(198,255,61,.08); }
-html[data-theme="terminal"] .home-manage-item { min-height: 78px; }
-html[data-theme="terminal"] .home-feed-item .tag { color: #e4aa3a; border-color: #a66d1d; background: transparent; }
-html[data-theme="terminal"] .home-feed-item { padding: 12px 0; }
-@media (min-width: 768px) {
-  html[data-theme="terminal"] .home-grid { gap: 20px; }
-  html[data-theme="terminal"] .home-grid > .card { padding: 25px; }
-  html[data-theme="terminal"] .home-housing, html[data-theme="terminal"] .home-review,
-  html[data-theme="terminal"] .home-votes, html[data-theme="terminal"] .home-todo { min-height: 132px; }
-  html[data-theme="terminal"] .home-accounts, html[data-theme="terminal"] .home-management { min-height: 350px; }
-  html[data-theme="terminal"] .home-poll, html[data-theme="terminal"] .home-latest { min-height: 268px; }
-}
-@media (max-width: 767.98px) {
-  html[data-theme="terminal"] { --topbar-h: 56px; --content-pad: 14px; }
-  html[data-theme="terminal"] .home-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  html[data-theme="terminal"] .home-grid > .card { grid-column: 1; }
-}
-
-/* Ambient terminal output stays decorative; content and controls remain untouched. */
-html[data-theme="terminal"] body::before {
-  content: "01001011 00110101 11001010 01100010 10110010\A 10010110 01101001 00110110 11010011 01001001\A 00110101 10100110 01011010 00110101 11001010\A 11001010 00110101 10110010 01101001 00110101\A 01011010 11001001 00110101 10100110 01011010\A 10100110 01011010 11001001 00110101 10100110\A 00110101 10100110 01011010 00110101 11001010";
-  position: fixed; inset: 16% 0 auto auto; z-index: -1; width: min(56vw, 850px);
-  overflow: hidden; pointer-events: none; white-space: pre; color: #c6ff3d;
-  font: 11px/3 var(--mono); letter-spacing: .4em; opacity: .055;
-  text-shadow: 0 0 12px rgba(198,255,61,.7);
-  animation: terminal-matrix-drift 17s linear infinite;
-}
-html[data-theme="terminal"] .home-grid > .home-hero::after {
-  content: "0101  1010  0011\A 1100  0110  1001\A 0010  1110  0101\A 1001  0011  1100";
-  position: absolute; right: 24px; bottom: 30px; pointer-events: none; white-space: pre;
-  color: #c6ff3d; font: 12px/2 var(--mono); letter-spacing: .23em;
-  opacity: .22; text-align: right; text-shadow: 0 0 12px rgba(198,255,61,.7);
-  animation: terminal-matrix-pulse 5.2s steps(4, end) infinite;
-}
-html[data-theme="terminal"] .home-grid > .card::before { animation: terminal-frame-pulse 6.4s ease-in-out infinite; }
-@keyframes terminal-matrix-drift { 50% { transform: translateY(24px); opacity: .11; } }
-@keyframes terminal-matrix-pulse { 50% { opacity: .46; transform: translateY(-5px); } }
-@keyframes terminal-frame-pulse { 50% { opacity: .52; filter: drop-shadow(0 0 5px rgba(198,255,61,.45)); } }
-html[data-theme="terminal"][data-perf="low"] body::before,
-html[data-theme="terminal"][data-perf="low"] .home-grid > .home-hero::after,
-html[data-theme="terminal"][data-perf="low"] .home-grid > .card::before,
+@keyframes terminal-dashboard-readout { from { clip-path: inset(0 22% 0 0); } to { clip-path: inset(0 0 0 16%); } }
 html[data-theme="terminal"][data-perf="low"] .home-hero-scan { animation: none; }
-
-/* Role navigation and readable data surfaces. */
-html[data-theme="terminal"] .side-sub-item.is-active,
-html[data-theme="terminal"] .sub-nav-item.is-active,
-html[data-theme="terminal"] .tabbar a.is-active {
-  color: var(--accent-text);
-  background: var(--glass);
-  box-shadow: inset 2px 0 var(--accent);
+html[data-theme="terminal"] .home-management .home-manage-item + .home-manage-item {
+  border-top: 1px solid var(--line);
 }
-html[data-theme="terminal"] .side-sub-item.is-active::before { display: none; }
-html[data-theme="terminal"] .side-item:focus-visible,
-html[data-theme="terminal"] .side-sub-item:focus-visible,
-html[data-theme="terminal"] .sub-nav-item:focus-visible,
-html[data-theme="terminal"] .tabbar a:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+html[data-theme="terminal"] .home-manage-text small { display: none; }
+html[data-theme="terminal"] .home-poll .home-empty-icon.is-terminal { display: block; }
+html[data-theme="terminal"] .home-review .card-icon,
+html[data-theme="terminal"] .home-todo .card-icon { color: var(--warning); }
+html[data-theme="terminal"] .vote-disagree { background: var(--danger); }
+html[data-theme="terminal"] .type-card.is-selected { box-shadow: inset 3px 0 var(--accent); }
+html[data-theme="terminal"] .claim-step-node { border-radius: var(--radius-sm); font-family: var(--mono); }
+html[data-theme="terminal"] .claim-step.is-done .claim-step-node {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
 }
-html[data-theme="terminal"] .side-sub-item.is-active::after,
-html[data-theme="terminal"] .sub-nav-item.is-active::after { opacity: 0; }
-html[data-theme="terminal"] .layout-main.business-page .card:not(.business-summary)::before { opacity: 0; }
-html[data-theme="terminal"] .housing-identity .summary-tag,
-html[data-theme="terminal"] .housing-identity .housing-role {
-  background: var(--surface);
-  border-color: var(--border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--accent-text);
-}
-html[data-theme="terminal"] .housing-identity .review-tab-label .el-badge__content {
-  background: var(--warning);
-  color: var(--bg);
-  border-color: transparent;
-}
-html[data-theme="terminal"] .el-table td.business-money,
-html[data-theme="terminal"] .el-table td.report-money,
-html[data-theme="terminal"] .el-table td.data-number,
-html[data-theme="terminal"] .income-amount { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+html[data-theme="terminal"] .claim-step.is-current .claim-step-node { border-color: var(--accent); color: var(--accent); }
+html[data-theme="terminal"] .res-card[data-status="PENDING"] { border-inline-start-color: var(--warning); }
+html[data-theme="terminal"] .res-card[data-status="APPROVED"] { border-inline-start-color: var(--success); }
+html[data-theme="terminal"] .res-card[data-status="REJECTED"] { border-inline-start-color: var(--danger); }

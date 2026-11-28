@@ -32,6 +32,10 @@ export function validateTheme(def, file) {
   if (!Array.isArray(def.swatch) || def.swatch.length !== 3 || !def.swatch.every((c) => HEX_RE.test(c ?? ''))) {
     err('swatch', '必须是 3 个 #RRGGBB 颜色')
   }
+  if (def.webSwatch !== undefined && (!Array.isArray(def.webSwatch) || def.webSwatch.length !== 3 ||
+      !def.webSwatch.every((c) => HEX_RE.test(c ?? '')))) {
+    err('webSwatch', '必须是 3 个 #RRGGBB 颜色')
+  }
   const tokens = def.tokens
   if (!tokens || typeof tokens !== 'object') {
     err('tokens', '缺少 tokens')
@@ -58,12 +62,14 @@ export function validateTheme(def, file) {
     }
     hexIn(nat, 'windowBackground', 'native')
   }
-  if (!Array.isArray(def.contrast) || def.contrast.length === 0) {
-    err('contrast', '至少声明 1 个对比度组合')
-  } else if (tokens && typeof tokens === 'object') {
-    def.contrast.forEach((c, i) => {
-      const path = `contrast[${i}]`
-      const fg = tokens[c?.fg] ?? c?.fg
+  function validateContrast(pairs, palette, field) {
+    if (!Array.isArray(pairs) || pairs.length === 0) {
+      err(field, '至少声明 1 个对比度组合')
+      return
+    }
+    pairs.forEach((c, i) => {
+      const path = `${field}[${i}]`
+      const fg = palette?.[c?.fg] ?? c?.fg
       if (!HEX_RE.test(fg ?? '')) return err(`${path}.fg`, '必须是 token 名（取值为 #RRGGBB）或 #RRGGBB')
       if (!HEX_RE.test(c?.bg ?? '')) return err(`${path}.bg`, '必须是等效不透明背景 #RRGGBB')
       if (typeof c.min !== 'number' || c.min < 4.5) return err(`${path}.min`, '必须是数字且不低于 4.5')
@@ -71,6 +77,19 @@ export function validateTheme(def, file) {
       const ratio = contrastRatio(fg, c.bg)
       if (ratio + 1e-9 < c.min) err(path, `${c.label}：对比度 ${ratio.toFixed(2)} 低于 ${c.min}`)
     })
+  }
+  validateContrast(def.contrast, tokens, 'contrast')
+  if (def.webTokens !== undefined) {
+    if (!def.webTokens || typeof def.webTokens !== 'object' || Array.isArray(def.webTokens)) {
+      err('webTokens', '必须是对象')
+    } else {
+      for (const [name, value] of Object.entries(def.webTokens)) {
+        const kind = Object.hasOwn(TOKEN_SPEC, name) ? TOKEN_SPEC[name] : undefined
+        if (!kind) err(`webTokens.${name}`, '不是可覆盖的主题令牌')
+        else if (kind === 'hex' ? !HEX_RE.test(value ?? '') : !isStr(value)) err(`webTokens.${name}`, '格式与基础令牌不符')
+      }
+    }
+    validateContrast(def.webContrast, { ...tokens, ...def.webTokens }, 'webContrast')
   }
   return errors
 }

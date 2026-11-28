@@ -128,7 +128,7 @@ export function checkScopedCss(css, prefixes, label) {
         j++
       }
       const body = text.slice(open + 1, j - 1)
-      if (/^@(media|container)\b/.test(prelude)) walk(body)
+      if (/^@(media|container|supports)\b/.test(prelude)) walk(body)
       else if (!prelude.startsWith('@')) {
         for (const sel of prelude.split(',').map((s) => s.trim()).filter(Boolean)) {
           if (!prefixes.some((p) => sel.startsWith(p))) errors.push(`${label}: 选择器 "${sel}" 未以 ${prefixes.join(' 或 ')} 开头`)
@@ -156,15 +156,16 @@ export function generate(entries) {
   css.push(`:root {\n  color-scheme: light;\n${decl({ ...businessVars(bento.def), ...elementVars(bento.def) })}\n}`)
   for (const { def, webCss } of valid) {
     const sel = `html[data-theme="${def.key}"]`
-    css.push(`${sel} {\n  color-scheme: ${def.scheme};\n${decl({ ...businessVars(def), ...elementVars(def) })}\n}`)
+    const web = { ...def, tokens: { ...def.tokens, ...def.webTokens } }
+    css.push(`${sel} {\n  color-scheme: ${def.scheme};\n${decl({ ...businessVars(web), ...elementVars(web) })}\n}`)
     if (webCss.trim()) css.push(`/* themes/${def.key}.web.css */\n${webCss.trim()}`)
   }
   css.push('/* 低端设备降级（ADR-032）：玻璃模糊换为不透明纯色 */')
   css.push('html[data-perf="low"] {\n  --blur: none;\n  --surface: var(--glass-low-end);\n  --glass: var(--glass-low-end);\n}')
   css.push(REDUCED_MOTION)
 
-  const meta = (def) => ({ key: def.key, name: def.name, order: def.order, scheme: def.scheme, swatch: def.swatch })
-  const webRegistry = `// ${GENERATED_NOTE}\nexport const THEMES = ${JSON.stringify(valid.map((e) => meta(e.def)), null, 2)}\nexport const DEFAULT_THEME = '${DEFAULT_THEME}'\n`
+  const meta = (def, swatch = def.swatch) => ({ key: def.key, name: def.name, order: def.order, scheme: def.scheme, swatch })
+  const webRegistry = `// ${GENERATED_NOTE}\nexport const THEMES = ${JSON.stringify(valid.map(({ def }) => meta(def, def.webSwatch)), null, 2)}\nexport const DEFAULT_THEME = '${DEFAULT_THEME}'\n`
   const mpThemes = valid.map((e) => ({ ...meta(e.def), tokens: businessVars(e.def), native: e.def.native }))
   const mpRegistry = `// ${GENERATED_NOTE}\nexport const THEMES = ${JSON.stringify(mpThemes, null, 2)}\nexport const DEFAULT_THEME = '${DEFAULT_THEME}'\n`
   const scss = [`/* ${GENERATED_NOTE} */`, `page {\n${decl(businessVars(bento.def))}\n}`]

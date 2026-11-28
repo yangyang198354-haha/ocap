@@ -135,9 +135,9 @@ describe('三套风格各一版（AC-209-01、AC-209-02、AC-227-01）', () => {
     m.wrapper.unmount()
   })
 
-  it('TC-INT-866 / AC-209-01：三套风格的页面背景取各自色板——生成物中 data-theme 块的 --bg 分别为 #07080F、#F3F4FA、#0A0A0B，且与注册表色板第 3 色一致', () => {
+  it('TC-INT-866 / AC-209-01：三套风格的页面背景与 Web 注册表色板第 3 色一致', () => {
     const swatchBg = Object.fromEntries(THEMES.map((t) => [t.key, t.swatch[2]]))
-    expect(swatchBg).toEqual({ neon: '#07080F', bento: '#F3F4FA', terminal: '#0A0A0B' })
+    expect(swatchBg).toEqual({ neon: '#0B101C', bento: '#F3F4FA', terminal: '#0C0F0D' })
     const css = read('frontend/src/theme/generated/themes.css')
     for (const [key, bg] of Object.entries(swatchBg)) {
       const block = css.match(new RegExp(`html\\[data-theme="${key}"\\]\\s*\\{([^}]*)\\}`))

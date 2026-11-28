@@ -8,7 +8,7 @@
         class="side-item side-group-toggle"
         :class="{ 'is-active': active.node && active.node.key === node.key }"
         :aria-expanded="openKey === node.key ? 'true' : 'false'"
-        :aria-controls="`side-sub-${node.key}`"
+        :aria-controls="submenuId(node.key)"
         :aria-current="active.node && active.node.key === node.key ? 'true' : undefined"
         @click="toggle(node.key)"
       >
@@ -27,7 +27,7 @@
         <span class="side-label">{{ node.label }}</span>
       </router-link>
       <Transition name="side-sub" :css="false" @enter="onEnter" @leave="onLeave">
-        <ul v-if="node.children && openKey === node.key" :id="`side-sub-${node.key}`" class="side-sub" @keydown.esc="collapse(node.key, $event)">
+        <ul v-if="node.children && openKey === node.key" :id="submenuId(node.key)" class="side-sub" @keydown.esc="collapse(node.key, $event)">
           <li v-for="(leaf, index) in node.children" :key="leaf.key" :style="{ '--i': index }">
             <router-link
               :to="leaf.to"
@@ -57,12 +57,14 @@ const iconFor = (key) => ICONS[key] || 'doc'
 const props = defineProps({
   menu: { type: Array, required: true },
   badges: { type: Object, default: () => ({}) },
-  ariaLabel: { type: String, default: '主导航' }
+  ariaLabel: { type: String, default: '主导航' },
+  idPrefix: { type: String, default: 'side-sub' }
 })
 
 const route = useRoute()
 const active = computed(() => resolveActive(props.menu, route.path))
 const openKey = ref(nextOpenKey(props.menu, route.path))
+const submenuId = (key) => `${props.idPrefix}-${key}`
 
 // 路由变化：当前页属于某个有二级项的一级则展开它，否则全部收起（ADR-118 规则②）
 watch(() => route.path, (path) => {
@@ -109,6 +111,6 @@ function onLeave(el, done) {
 function collapse(key, event) {
   const nav = event.currentTarget.closest('.side-nav')
   openKey.value = null
-  nextTick(() => nav?.querySelector(`.side-group-toggle[aria-controls="side-sub-${key}"]`)?.focus())
+  nextTick(() => nav?.querySelector(`.side-group-toggle[aria-controls="${submenuId(key)}"]`)?.focus())
 }
 </script>

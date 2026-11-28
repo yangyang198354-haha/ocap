@@ -9,15 +9,16 @@ export function isWideNow() {
   return Boolean(window.matchMedia(WIDE_QUERY).matches)
 }
 
-export function useIsWide() {
-  const wide = ref(isWideNow())
+export function useIsWide(media = WIDE_QUERY) {
+  const wide = ref(typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+    window.matchMedia(media).matches)
   let query = null
   const onChange = (event) => {
     wide.value = Boolean(event.matches)
   }
   onMounted(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-    query = window.matchMedia(WIDE_QUERY)
+    query = window.matchMedia(media)
     wide.value = Boolean(query.matches)
     if (typeof query.addEventListener === 'function') query.addEventListener('change', onChange)
     else if (typeof query.addListener === 'function') query.addListener(onChange)

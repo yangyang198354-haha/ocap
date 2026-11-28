@@ -1,9 +1,12 @@
 <template>
   <div class="admin-shell shell">
     <aside class="side admin-side">
-      <router-link to="/admin" class="side-brand">
+      <router-link to="/admin" class="side-brand admin-brand" :aria-label="ADMIN_BRAND_TITLE">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-wordmark">{{ ADMIN_BRAND_TITLE }}</span>
+        <span class="admin-brand-copy">
+          <BrandWordmark class="side-brand-name brand-wordmark" />
+          <span class="admin-brand-label">管理后台</span>
+        </span>
       </router-link>
       <SideNav :menu="ADMIN_MENU" aria-label="管理端导航" />
     </aside>
@@ -23,9 +26,12 @@
       </main>
     </div>
     <el-drawer v-model="drawerOpen" direction="ltr" :with-header="false" size="min(280px, 85vw)" class="admin-drawer">
-      <router-link to="/admin" class="side-brand">
+      <router-link to="/admin" class="side-brand admin-brand" :aria-label="ADMIN_BRAND_TITLE">
         <BrandMark :size="28" />
-        <span class="side-brand-name brand-wordmark">{{ ADMIN_BRAND_TITLE }}</span>
+        <span class="admin-brand-copy">
+          <BrandWordmark class="side-brand-name brand-wordmark" />
+          <span class="admin-brand-label">管理后台</span>
+        </span>
       </router-link>
       <SideNav :menu="ADMIN_MENU" aria-label="管理端导航（抽屉）" />
     </el-drawer>
@@ -37,6 +43,7 @@ import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ADMIN_BRAND_TITLE } from '@/brand/brand'
 import BrandMark from '@/brand/BrandMark.vue'
+import BrandWordmark from '@/brand/BrandWordmark.vue'
 import SideNav from '@/layout/SideNav.vue'
 import { ADMIN_MENU } from '@/layout/menus'
 import { useIsWide } from '@/layout/useBreakpoint'
@@ -50,3 +57,10 @@ const isWide = useIsWide()
 watch(() => route.fullPath, () => { drawerOpen.value = false })
 watch(isWide, (wide) => { if (wide) drawerOpen.value = false })
 </script>
+
+<style scoped>
+.admin-brand { container-type: inline-size; }
+.admin-brand-copy { display: grid; gap: 3px; min-width: 0; line-height: 1.15; }
+.admin-brand-copy .side-brand-name { font-size: clamp(16px, 11.7cqi, 22px); }
+.admin-brand-label { color: var(--muted); font-size: 12px; font-weight: 500; }
+</style>

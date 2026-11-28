@@ -456,6 +456,44 @@ describe('删除确认与素材选择器（AC-106-03、AC-121-01/03、AC-111-01�
     wrapper.unmount()
   })
 
+  it('信息公开在筛选或删除最后一页唯一一条后显示有效页', async () => {
+    const first = { id: 1, title: '首页公告', status: 'DRAFT' }
+    const last = { id: 21, title: '末页公告', status: 'DRAFT' }
+    let total = 21
+    adminHttp.get.mockReset().mockImplementation(async (_, { params }) => {
+      const count = params.q ? 1 : total
+      const results = params.page === 1 ? [first] : count > 20 ? [last] : []
+      return { count, results }
+    })
+    adminHttp.delete.mockReset().mockImplementation(async () => { total-- })
+    vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
+    vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue('confirm')
+    const wrapper = mount(AdminContentPosts, { global: { plugins: [ElementPlus] }, attachTo: document.body })
+    await flushPromises()
+    await wrapper.get('.btn-next').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('末页公告')
+
+    const search = wrapper.get('input[placeholder="搜索标题"]')
+    await search.setValue('首页')
+    await search.trigger('change')
+    await flushPromises()
+    expect(adminHttp.get).toHaveBeenLastCalledWith('/admin/content/posts', { params: { q: '首页', page: 1 } })
+    expect(wrapper.text()).toContain('首页公告')
+
+    await search.setValue('')
+    await search.trigger('change')
+    await flushPromises()
+    await wrapper.get('.btn-next').trigger('click')
+    await flushPromises()
+    await buttonByText(wrapper, '删除').trigger('click')
+    await flushPromises()
+    expect(adminHttp.delete).toHaveBeenCalledWith('/admin/content/posts/21')
+    expect(wrapper.text()).toContain('首页公告')
+    expect(wrapper.get('.pager-total').text()).toBe('共 20 条')
+    wrapper.unmount()
+  })
+
   async function openPicker(items) {
     adminHttp.get.mockReset()
     adminHttp.get.mockResolvedValue({ results: items })

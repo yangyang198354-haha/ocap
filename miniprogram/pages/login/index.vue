@@ -10,18 +10,17 @@
   <view class="auth-brand">
     <view class="brand-mark"></view>
     <text class="auth-brand-name">赛博@红枫岭</text>
-    <text class="auth-brand-sub">登录</text>
   </view>
   <view class="card">
     <view class="row" style="margin-bottom: 16rpx">
-      <button size="mini" :type="mode === 'code' ? 'primary' : 'default'" @click="mode = 'code'">验证码登录</button>
-      <button size="mini" :type="mode === 'password' ? 'primary' : 'default'" @click="mode = 'password'">密码登录</button>
+      <button class="btn btn--compact" :class="{ 'btn--secondary': mode !== 'code' }" :aria-pressed="mode === 'code'" @click="mode = 'code'">验证码登录</button>
+      <button class="btn btn--compact" :class="{ 'btn--secondary': mode !== 'password' }" :aria-pressed="mode === 'password'" @click="mode = 'password'">密码登录</button>
     </view>
     <template v-if="mode === 'code'">
       <input v-model="phone" placeholder="手机号" maxlength="11" class="field" style="margin-bottom: 16rpx" />
       <view class="row">
         <input v-model="code" placeholder="验证码" maxlength="6" class="field" style="flex: 1" />
-        <button size="mini" :disabled="left > 0" @click="send">{{ left ? `${left}s` : '获取验证码' }}</button>
+        <button class="btn btn--compact btn--secondary" :disabled="left > 0" @click="send">{{ left ? `${left}s` : '获取验证码' }}</button>
       </view>
       <button class="btn" style="margin-top: 24rpx" @click="loginCode">登录</button>
     </template>
@@ -30,7 +29,7 @@
       <input v-model="password" password placeholder="密码" class="field" />
       <button class="btn" style="margin-top: 24rpx" @click="loginPassword">登录</button>
     </template>
-    <button style="margin-top: 16rpx" @click="loginWechat">微信一键登录</button>
+    <button class="btn btn--secondary" style="margin-top: 16rpx" @click="loginWechat">微信一键登录</button>
     <view class="muted" style="margin-top: 16rpx">未注册的手机号不会自动创建账号，请先在 Web 端注册，或使用微信一键登录。</view>
   </view>
   </view>
@@ -116,5 +115,4 @@ function loginWechat() {
 .auth-brand { display: flex; flex-direction: column; gap: 8rpx; padding: 24rpx 24rpx 0; }
 .brand-mark { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: var(--accent); box-shadow: inset 0 0 0 12rpx var(--surface); }
 .auth-brand-name { font-size: 48rpx; font-weight: 700; color: var(--text); }
-.auth-brand-sub { font-size: 28rpx; color: var(--muted); }
 </style>

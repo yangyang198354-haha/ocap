@@ -49,12 +49,12 @@ describe('pages.json 标题（US-208）', () => {
 })
 
 describe('登录页品牌头与配图（US-208、US-228）', () => {
-  it('TC-UNIT-884 / AC-208-01、AC-228-01：三种风格下页面标题含"赛博@红枫岭"，不再出现"业主委员会 · 登录"；子标题"登录"', async () => {
+  it('TC-UNIT-884：三种风格保留品牌头和登录主按钮，去掉重复副标题', async () => {
     for (const key of KEYS) {
       uni.setStorageSync('ocap_theme', key)
       const { wrapper } = await mountPage(Login, { token: '' })
       expect(wrapper.find('.auth-brand-name').text(), key).toBe('赛博@红枫岭')
-      expect(wrapper.find('.auth-brand-sub').text(), key).toBe('登录')
+      expect(wrapper.find('.auth-brand-sub').exists(), key).toBe(false)
       expect(wrapper.text(), key).not.toContain('业主委员会')
       expect(wrapper.find('.brand-mark').exists(), key).toBe(true)
       wrapper.unmount()
@@ -97,12 +97,16 @@ describe('登录页品牌头与配图（US-208、US-228）', () => {
 
   it('TC-UNIT-888 / AC-208-01、AC-228-03：验证码登录、密码登录、微信一键登录三个入口仍在', async () => {
     const { wrapper } = await mountPage(Login, { token: '' })
-    const buttons = wrapper.findAll('button').map((b) => b.text())
-    expect(buttons).toContain('验证码登录')
-    expect(buttons).toContain('密码登录')
-    expect(buttons).toContain('微信一键登录')
-    expect(wrapper.findAll('button').filter((b) => b.text() === '登录')).toHaveLength(1) // 当前模式的提交按钮
-    await wrapper.findAll('button').find((b) => b.text() === '密码登录').trigger('click')
+    const buttons = wrapper.findAll('button')
+    const code = buttons.find((button) => button.text() === '验证码登录')
+    const password = buttons.find((button) => button.text() === '密码登录')
+    expect(code.attributes('aria-pressed')).toBe('true')
+    expect(password.classes()).toContain('btn--secondary')
+    expect(buttons.find((button) => button.text() === '微信一键登录').classes()).toContain('btn--secondary')
+    expect(buttons.filter((button) => button.text() === '登录')).toHaveLength(1)
+    await password.trigger('click')
+    expect(password.attributes('aria-pressed')).toBe('true')
+    expect(code.classes()).toContain('btn--secondary')
     expect(wrapper.find('input[placeholder="账号 / 手机号"]').exists()).toBe(true)
     expect(wrapper.find('input[placeholder="密码"]').exists()).toBe(true)
   })
@@ -195,5 +199,13 @@ describe('三版 CSS 配图（themes/*.mp.css 与生成的 themes.scss）', () =
   it('TC-UNIT-895 / AC-228-01：三版配图互不相同（构图不同）', () => {
     const art = (key) => read(`themes/${key}.mp.css`).split('\n').filter((l) => l.includes('.auth-art')).map((l) => l.replace(`.theme-${key}`, '')).join('\n')
     expect(new Set(KEYS.map(art)).size).toBe(3)
+  })
+
+  it('霓虹主题只为主按钮提供发光，次要、危险及禁用状态使用各自配色', () => {
+    const neon = read('themes/neon.mp.css')
+    const app = read('miniprogram/App.vue')
+    expect(neon).toMatch(/\.theme-neon\s*\{\s*--mp-button-primary-shadow:/)
+    expect(neon).not.toMatch(/\.theme-neon\s+\.btn\s*\{/)
+    expect(app).toMatch(/\.btn--secondary, \.btn--danger, \.btn\[disabled\]\s*\{\s*box-shadow: none;/)
   })
 })

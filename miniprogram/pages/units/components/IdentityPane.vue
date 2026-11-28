@@ -24,13 +24,13 @@
             <text>{{ unit.specific_part }}</text>
             <text class="muted" style="margin-left: 12rpx">{{ unit.unit_type_label }} · {{ unit.area_display }}</text>
             <text class="muted" style="margin-left: 12rpx">{{ unit.role_label }}</text>
-            <button v-if="unit.role === 'RESIDENT'" size="mini" style="margin-left: 12rpx" @click="leave(unit)">退出</button>
+            <button v-if="unit.role === 'RESIDENT'" class="btn btn--compact btn--danger" style="margin-left: 12rpx" @click="leave(unit)">退出</button>
           </view>
           <view v-if="isOwner(unit)">
             <view class="muted">同住人：{{ unit.residents.length ? '' : '暂无' }}</view>
             <view v-for="r in unit.residents" :key="r.user_id" class="row" style="margin-top: 8rpx">
               <text>{{ r.nickname || r.account_no }}（{{ r.account_no }}）</text>
-              <button size="mini" style="margin-left: 12rpx" @click="removeResident(unit, r)">移除</button>
+              <button class="btn btn--compact btn--danger" style="margin-left: 12rpx" @click="removeResident(unit, r)">移除</button>
             </view>
           </view>
         </view>
@@ -53,8 +53,8 @@
         <text>{{ item.applicant?.nickname || item.applicant?.account_no }} → {{ item.unit?.specific_part }}</text>
         <text class="muted" style="margin-left: 12rpx">{{ formatDateTime(item.created_at) }}</text>
         <view class="row" style="margin-top: 8rpx">
-          <button size="mini" @click="decideResident(item.id, 'APPROVE')">通过</button>
-          <button size="mini" @click="decideResident(item.id, 'REJECT')">拒绝</button>
+          <button class="btn btn--compact" @click="decideResident(item.id, 'APPROVE')">通过</button>
+          <button class="btn btn--compact btn--danger" @click="decideResident(item.id, 'REJECT')">拒绝</button>
         </view>
       </view>
     </view>

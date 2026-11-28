@@ -31,7 +31,7 @@
           <div class="income-record-summary">
             <div class="row income-record-main">
               <strong class="income-amount">¥{{ item.total_amount }}</strong>
-              <el-tag size="small">{{ textOf(INCOME_STATUS_TEXT, item.status) }}</el-tag>
+              <StatusTag :status="item.status" />
             </div>
             <div class="row muted income-record-meta">
               <span>{{ item.period_start }} ~ {{ item.period_end }}</span>
@@ -112,7 +112,7 @@ import { apiUrl } from '@/shared/http'
 import PagerBar from '@/shared/PagerBar.vue'
 import AccountSelect from '@/shared/AccountSelect.vue'
 import { errorText, moneyText } from '@/shared/format'
-import { INCOME_STATUS_TEXT, textOf } from '@/shared/labels'
+import StatusTag from './StatusTag.vue'
 import { confirmDanger } from '@/shared/confirm'
 import { usePaging } from '@/shared/usePaging'
 

@@ -16,6 +16,7 @@ const MAP = {
   EFFECTIVE: ['已生效', 'success'],
   REJECTED: ['未通过', 'danger'],
   WITHDRAWN: ['已撤回', 'danger'],
+  VOID: ['已作废', 'neutral'],
   CLOSED: ['已截止', 'neutral']
 }
 const text = computed(() => MAP[props.status]?.[0] || props.status)

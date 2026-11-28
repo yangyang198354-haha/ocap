@@ -114,7 +114,7 @@ export function loadThemeFiles(dir) {
 export function checkScopedCss(css, prefixes, label) {
   const errors = []
   const src = css.replace(/\/\*[\s\S]*?\*\//g, '')
-  const walk = (text, inMedia) => {
+  const walk = (text) => {
     let i = 0
     while (i < text.length) {
       const open = text.indexOf('{', i)
@@ -128,7 +128,7 @@ export function checkScopedCss(css, prefixes, label) {
         j++
       }
       const body = text.slice(open + 1, j - 1)
-      if (prelude.startsWith('@media')) walk(body, true)
+      if (/^@(media|container)\b/.test(prelude)) walk(body)
       else if (!prelude.startsWith('@')) {
         for (const sel of prelude.split(',').map((s) => s.trim()).filter(Boolean)) {
           if (!prefixes.some((p) => sel.startsWith(p))) errors.push(`${label}: 选择器 "${sel}" 未以 ${prefixes.join(' 或 ')} 开头`)
@@ -137,7 +137,7 @@ export function checkScopedCss(css, prefixes, label) {
       i = j
     }
   }
-  walk(src, false)
+  walk(src)
   return errors
 }
 

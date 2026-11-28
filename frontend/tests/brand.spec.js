@@ -41,7 +41,7 @@ describe('REQ-NFUNC-041：9 处用户可见产品名位置残留旧名为 0', ()
       '管理端登录页使用 AuthShell': () => read('frontend/src/admin/AdminLogin.vue').includes('<AuthShell surface="admin" subtitle="管理后台登录">'),
       '网页标题': () => read('frontend/index.html').includes('<title>赛博@红枫岭</title>'),
       '用户端品牌位': () => (read('frontend/src/portal/PortalLayout.vue').match(/<BrandWordmark\b/g) || []).length === 2,
-      '管理端品牌位': () => read('frontend/src/admin/AdminLayout.vue').includes('{{ ADMIN_BRAND_TITLE }}'),
+      '管理端品牌位': () => read('frontend/src/admin/AdminLayout.vue').includes(':aria-label="ADMIN_BRAND_TITLE"'),
       '小程序登录页': () => read('miniprogram/pages/login/index.vue').includes('<text class="auth-brand-name">赛博@红枫岭</text>'),
       '小程序首页标题': () => JSON.parse(read('miniprogram/pages.json')).pages[0].style.navigationBarTitleText === '赛博@红枫岭',
       '小程序全局标题': () => JSON.parse(read('miniprogram/pages.json')).globalStyle.navigationBarTitleText === '赛博@红枫岭'

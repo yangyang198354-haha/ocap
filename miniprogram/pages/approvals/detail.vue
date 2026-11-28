@@ -33,7 +33,7 @@
       <view class="muted">{{ comment.length }} / 500</view>
       <view class="row" style="margin-top: 16rpx">
         <button class="btn" @click="decide('APPROVE')">通过</button>
-        <button class="btn" style="margin-left: 16rpx" @click="decide('REJECT')">拒绝</button>
+        <button class="btn btn--danger" style="margin-left: 16rpx" @click="decide('REJECT')">拒绝</button>
       </view>
     </view>
   </view>

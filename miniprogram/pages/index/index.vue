@@ -35,8 +35,8 @@
         <view v-for="task in tasks || []" :key="task.instance_id" class="list-item">
           <text>{{ task.subject_title || task.scope }}</text>
           <view class="row" style="margin-top: 8rpx">
-            <button size="mini" @click="decide(task, 'APPROVE')">同意</button>
-            <button size="mini" @click="decide(task, 'REJECT')">拒绝</button>
+            <button class="btn btn--compact" @click="decide(task, 'APPROVE')">同意</button>
+            <button class="btn btn--compact btn--danger" @click="decide(task, 'REJECT')">拒绝</button>
           </view>
         </view>
         <button v-if="taskPaging.hasMore.value" style="margin-top: 12rpx" @click="loadMoreTasks">加载更多</button>

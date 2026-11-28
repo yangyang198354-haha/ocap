@@ -68,7 +68,7 @@
       <view v-for="item in items" :key="item.id" class="list-item">
         <text>{{ label(item.type) }} ¥{{ item.amount }}</text>
         <StatusTag class="muted-gap" :status="item.status" />
-        <button v-if="item.status === 'PENDING'" size="mini" style="margin-left: 12rpx" @click="withdraw(item.id)">撤回</button>
+        <button v-if="item.status === 'PENDING'" class="btn btn--compact btn--danger" style="margin-left: 12rpx" @click="withdraw(item.id)">撤回</button>
       </view>
       <button v-if="hasMore" style="margin-top: 16rpx" @click="more">加载更多</button>
       <view v-else-if="items.length" class="muted">没有更多了，共 {{ total }} 条</view>

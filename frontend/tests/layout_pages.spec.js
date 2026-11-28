@@ -618,7 +618,9 @@ describe('AdminLayout（US-224、231）', () => {
 
   it('TC-INT-910 / AC-224-01、AC-223-01：左侧 9 个一级项；品牌位"赛博@红枫岭 · 管理后台"链到 /admin；顶栏无横排导航与"退出"按钮；右上角菜单键仅供窄屏（按钮存在，显隐靠 CSS）', async () => {
     const { wrapper } = await mountAdminLayout()
-    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('赛博@红枫岭 · 管理后台')
+    expect(wrapper.find('aside.admin-side .side-brand').attributes('aria-label')).toBe('赛博@红枫岭 · 管理后台')
+    expect(wrapper.find('aside.admin-side .side-brand-name').text()).toBe('赛博@红枫岭')
+    expect(wrapper.find('aside.admin-side .admin-brand-label').text()).toBe('管理后台')
     expect(wrapper.find('aside.admin-side .side-brand').attributes('href')).toBe('/admin')
     expect(wrapper.findAll('aside.admin-side .side-nav > .side-item .side-label').map((e) => e.text())).toEqual(
       ['业主清册', '申诉', '房屋关系', '业委会席位', '审批流程', '财务', '账号', '内容管理', '审计/配置']

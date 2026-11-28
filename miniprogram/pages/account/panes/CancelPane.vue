@@ -6,10 +6,10 @@
       <view class="muted">注销后账号将不可登录，历史记录保留。需输入已绑定的手机号和验证码；未绑定手机号请先绑定。</view>
       <input v-model="phone" class="field mt-16" maxlength="11" placeholder="已绑定的手机号" />
       <view class="row" style="margin-top: 16rpx">
-        <button size="mini" @click="sendCode">发送注销验证码</button>
+        <button class="btn btn--compact btn--secondary" @click="sendCode">发送注销验证码</button>
         <input v-model="code" class="field" maxlength="6" placeholder="验证码" style="flex: 1" />
       </view>
-      <button class="btn" style="margin-top: 24rpx" @click="cancelAccount">确认注销</button>
+      <button class="btn btn--danger" style="margin-top: 24rpx" @click="cancelAccount">确认注销</button>
     </view>
   </view>
 </template>

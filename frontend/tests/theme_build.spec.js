@@ -3,13 +3,18 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { loadThemeFiles, run } from '../../scripts/themes/build.mjs'
+import { checkScopedCss, loadThemeFiles, run } from '../../scripts/themes/build.mjs'
 import { contrastRatio } from '../../scripts/themes/schema.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const entries = loadThemeFiles(path.join(ROOT, 'themes'))
 
 describe('风格生成物与源一致', () => {
+  it('也检查容器查询中的主题作用域', () => {
+    const prefixes = ['html[data-theme="bento"]']
+    expect(checkScopedCss('@container home (max-width: 680px) { .card { padding: 16px } }', prefixes, 'test')).toHaveLength(1)
+    expect(checkScopedCss('@container home (max-width: 680px) { html[data-theme="bento"] .card { padding: 16px } }', prefixes, 'test')).toEqual([])
+  })
   it('themes/ 三份定义全部合规，且已提交的生成物与重新生成的内容一致', () => {
     const { outputs, errors, fatal } = run(path.join(ROOT, 'themes'))
     expect(fatal).toBeNull()

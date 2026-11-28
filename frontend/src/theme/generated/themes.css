@@ -1002,10 +1002,6 @@ html[data-theme="bento"] .auth-card .el-checkbox__label { color: #B7BFDA; }
 html[data-theme="bento"] .auth-card .el-checkbox__inner { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.28); }
 html[data-theme="bento"] .auth-card a { color: #B9C8FF; }
 html[data-theme="bento"] .auth-card .muted { color: #98A1C2; }
-html[data-theme="bento"][data-perf="low"] .auth-card {
-  background: rgba(12,15,38,.94);
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-}
 @media (max-width: 767.98px) {
   html[data-theme="bento"] .auth-panel { padding: 28px 16px; justify-content: center; }
   html[data-theme="bento"] .auth-card { padding: 26px 20px; border-radius: 24px; }
@@ -1159,13 +1155,29 @@ html[data-theme="bento"] .el-table th.el-table__cell { color: #5e4bb3; letter-sp
   html[data-theme="bento"] .home-accounts .home-account-row { font-size: 14px; }
 }
 
+html[data-theme="bento"] .page.home { container: bento-home / inline-size; }
+@container bento-home (max-width: 680px) {
+  html[data-theme="bento"] .home-grid {
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: none; gap: 14px;
+  }
+  html[data-theme="bento"] .home-grid > .card {
+    grid-column: 1; grid-row: auto; min-height: 0; padding: 16px;
+  }
+  html[data-theme="bento"] .home-grid > .home-hero {
+    box-sizing: border-box; min-height: clamp(166px, 33cqi, 204px); padding: 20px;
+  }
+  html[data-theme="bento"] .home-greeting { font-size: clamp(26px, 5cqi, 32px); }
+}
+
 html[data-theme="bento"] .housing-identity .housing-summary {
-  background: linear-gradient(112deg, var(--surface), color-mix(in srgb, var(--surface) 92%, var(--accent2)));
+  background-color: var(--surface);
+  background-image: linear-gradient(112deg, var(--surface), color-mix(in srgb, var(--surface) 92%, var(--accent-2)));
 }
 html[data-theme="bento"] .housing-identity .summary-tag,
 html[data-theme="bento"] .housing-identity .housing-role {
   border-color: transparent;
-  background: linear-gradient(110deg, var(--accent), color-mix(in srgb, var(--accent) 78%, var(--accent2)));
+  background-color: var(--accent, #4F46E5);
+  background-image: linear-gradient(110deg, var(--accent), color-mix(in srgb, var(--accent) 78%, var(--accent-2)));
   color: var(--on-accent);
 }
 html[data-theme="bento"] .housing-identity .housing-role { border-radius: var(--radius-btn); }

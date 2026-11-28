@@ -121,6 +121,8 @@ describe('DEF-020 / REQ-FUNC-158：管理端与用户端不展示内部值', () 
     await flush()
     const text = wrapper.text()
     for (const label of ['草稿', '审批中', '已生效', '未通过', '已撤回', '已作废']) expect(text, label).toContain(label)
+    expect(wrapper.findAll('.income-record .tag').map((tag) => tag.classes().find((name) => name.startsWith('is-'))))
+      .toEqual(['is-neutral', 'is-warning', 'is-success', 'is-danger', 'is-danger', 'is-neutral'])
     expect(text).not.toMatch(/\bDRAFT\b|\bPENDING\b|\bEFFECTIVE\b|\bREJECTED\b|\bWITHDRAWN\b|\bVOID\b/)
   })
 

@@ -55,21 +55,21 @@
         <!-- MOD-151：楼栋/单元/楼层/房号四列服务端排序（升序与降序两态），其余列不可排序 -->
         <el-table ref="tableRef" :data="items" size="small" empty-text="暂无数据" class="registry-table"
                   style="width: 100%" @sort-change="onSort">
-          <el-table-column prop="specific_part" label="专有部分" min-width="180" show-overflow-tooltip />
-          <el-table-column class-name="data-number" prop="building" label="楼栋" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column class-name="data-number" prop="unit_no" label="单元" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column class-name="data-number" prop="floor" label="楼层" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column class-name="data-number" prop="room" label="房号" min-width="100" sortable="custom" :sort-orders="SORT_ORDERS" />
-          <el-table-column label="类型" min-width="120">
+          <el-table-column prop="specific_part" label="专有部分" min-width="154" show-overflow-tooltip />
+          <el-table-column class-name="data-number" prop="building" label="楼栋" min-width="78" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="unit_no" label="单元" min-width="72" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="floor" label="楼层" min-width="72" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column class-name="data-number" prop="room" label="房号" min-width="72" sortable="custom" :sort-orders="SORT_ORDERS" />
+          <el-table-column label="类型" min-width="102">
             <template #default="{ row }">{{ row.unit_type_label || '未登记' }}</template>
           </el-table-column>
-          <el-table-column label="面积" min-width="100">
+          <el-table-column label="面积" min-width="80">
             <template #default="{ row }">{{ row.area ? `${row.area} ㎡` : '未登记' }}</template>
           </el-table-column>
-          <el-table-column label="业主" min-width="240" show-overflow-tooltip>
+          <el-table-column label="业主" min-width="210" show-overflow-tooltip>
             <template #default="{ row }">{{ ownersText(row.owners) }}</template>
           </el-table-column>
-          <el-table-column label="操作" min-width="150">
+          <el-table-column label="操作" min-width="140">
             <template #default="{ row }">
               <span class="row-actions">
                 <el-button size="small" @click="openEdit(row)">编辑</el-button>
@@ -383,12 +383,12 @@ onMounted(() => {
 
 <style scoped>
 /* REQ-FUNC-281：筛选区与表格同宽，按 min-width 比例伸展；窄屏仅本容器横向滚动 */
-.registry-scroll { overflow-x: auto; }
+.registry-scroll { --registry-min-width: 980px; overflow-x: auto; }
 .filter-grid {
   display: grid;
-  grid-template-columns: 180fr 100fr 100fr 100fr 100fr 120fr 100fr 240fr 150fr;
+  grid-template-columns: 154fr 78fr 72fr 72fr 72fr 102fr 80fr 210fr 140fr;
   width: 100%;
-  min-width: 1190px;
+  min-width: var(--registry-min-width);
   margin-bottom: 12px;
 }
 .filter-cell {
@@ -396,13 +396,16 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 5px;
   box-sizing: border-box;
 }
 .filter-cell :deep(.el-input),
 .filter-cell :deep(.el-select) { width: 100%; }
+.filter-cell :deep(.el-input__wrapper),
+.filter-cell :deep(.el-select__wrapper) { padding-inline: 7px; }
+.filter-cell :deep(.el-select__wrapper) { gap: 4px; }
 .owner-cell :deep(.el-input) { width: auto; flex: 1; min-width: 0; }
 .action-cell :deep(.el-button) { width: 100%; }
-.registry-table { min-width: 1190px; }
+.registry-table { min-width: var(--registry-min-width); }
 .row-actions { white-space: nowrap; }
 </style>

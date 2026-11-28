@@ -372,7 +372,7 @@ describe('TC-E2E-803 管理端旅程', () => {
     expect(localStorage.getItem('ocap_admin_name')).toBe('admin01')
 
     // 4 管理端布局：品牌位、9 个一级、顶栏无横排导航与退出（US-223/224，AC-223-01、AC-224-01）
-    expect(wrapper.find('aside.admin-side .side-brand').text()).toBe('赛博@红枫岭 · 管理后台')
+    expect(wrapper.find('aside.admin-side .side-brand').attributes('aria-label')).toBe('赛博@红枫岭 · 管理后台')
     expect(wrapper.findAll('aside.admin-side .side-nav > .side-item .side-label').map((e) => e.text())).toEqual(
       ['业主清册', '申诉', '房屋关系', '业委会席位', '审批流程', '财务', '账号', '内容管理', '审计/配置']
     )

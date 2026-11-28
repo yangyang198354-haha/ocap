@@ -153,6 +153,25 @@ html[data-theme="bento"] .auth-card .el-button--primary:not(.is-link, .is-text, 
   animation: auth-aurora-button 8s ease-in-out infinite alternate;
 }
 
+html[data-theme="bento"][data-perf="low"] .auth-panel {
+  background: var(--surface);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+html[data-theme="bento"][data-perf="low"] .auth-shell::before,
+html[data-theme="bento"][data-perf="low"] .auth-shell::after,
+html[data-theme="bento"][data-perf="low"] .auth-art::before {
+  filter: none;
+}
+html[data-theme="bento"][data-perf="low"] .auth-shell::before,
+html[data-theme="bento"][data-perf="low"] .auth-shell::after,
+html[data-theme="bento"][data-perf="low"] .auth-art,
+html[data-theme="bento"][data-perf="low"] .auth-art::before,
+html[data-theme="bento"][data-perf="low"] .auth-art::after,
+html[data-theme="bento"][data-perf="low"] .auth-panel,
+html[data-theme="bento"][data-perf="low"] .auth-card .el-button--primary {
+  animation: none;
+}
+
 @keyframes auth-neon-ambient { from { transform: translate(-3%, -2%) scale(1); } to { transform: translate(4%, 3%) scale(1.1); } }
 @keyframes auth-neon-haze { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @keyframes auth-neon-divider { from { background-position: 0 0; opacity: .65; } to { background-position: 0 100%; opacity: 1; } }

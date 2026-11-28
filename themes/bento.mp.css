@@ -1,6 +1,7 @@
 /* 小程序风格 B：深浅交替数据块、大圆角入口 */
 /* 极光背景：与 Web 同色系；小程序禁用无限循环动画（TC-UNIT-205），此处保留静态多层柔光 */
 .theme-bento.theme-root {
+  --mp-button-primary-fill: var(--accent);
   background-color: #E6EBF8;
   background-image:
     radial-gradient(60% 34% at 12% 4%, rgba(79,70,229,.50), transparent 70%),

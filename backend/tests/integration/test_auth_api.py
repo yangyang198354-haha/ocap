@@ -1,6 +1,11 @@
 """PHASE_08 集成测试：认证、账号与个人信息。"""
-from django.core import mail
+from datetime import timedelta
 
+from django.core import mail
+from rest_framework.exceptions import AuthenticationFailed
+
+from apps.accounts.models import AuthToken
+from apps.accounts.services import AccountService, _sha256
 from tests.support import ApiTestBase, next_phone
 
 
@@ -70,6 +75,26 @@ class RegistrationAndLoginTests(ApiTestBase):
                         {"identifier": user.account_no, "password": password})
         self.assert_ok(resp)
         self.assertTrue(resp.data["token"])
+
+    def test_web_remember_me_lasts_15_days_for_code_and_password(self):
+        user, token = self.make_user()
+        password = "Ocap2026pass"
+        self.assert_ok(self.api("put", "/me/password", {"password": password,
+                                                        "password_confirm": password}, token=token), 204)
+        code = self.request_code(user.phone, "LOGIN")
+        for mode, credentials in (
+            ("code", {"phone": user.phone, "code": code}),
+            ("password", {"identifier": user.phone, "password": password}),
+        ):
+            with self.subTest(mode=mode):
+                login = self.api("post", f"/auth/login/{mode}", {**credentials, "remember_me": True})
+                remembered = self.assert_ok(login).data["token"]
+                row = AuthToken.objects.get(key_hash=_sha256(remembered))
+                self.assertEqual(row.session_kind, "REMEMBER")
+                deadline = row.created_at + timedelta(days=15)
+                self.assertEqual(AccountService.authenticate_token(remembered, now=deadline - timedelta(seconds=1)), user)
+                with self.assertRaises(AuthenticationFailed):
+                    AccountService.authenticate_token(remembered, now=deadline)
 
     def test_logout_revokes_token(self):
         _, token, _ = self.register()

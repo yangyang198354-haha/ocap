@@ -231,10 +231,12 @@ describe('表单字段与流程不变（AC-207-01、AC-207-02、AC-209-06、AC-2
     adminHttp.get.mockResolvedValue({ theme: 'terminal' })
     vi.spyOn(ElMessage, 'success').mockImplementation(() => {})
     const { wrapper, router } = await mountPage(AdminLogin)
-    await wrapper.find('input[placeholder="管理员账号"]').setValue('admin01')
-    await wrapper.find('input[placeholder="密码"]').setValue('Ocap2026pass')
-    await wrapper.findAll('button').find((b) => b.text() === '登录').trigger('click')
+    const form = wrapper.get('#admin-password-login')
+    form.get('input[autocomplete="username"]').element.value = 'admin01'
+    form.get('input[autocomplete="current-password"]').element.value = 'Ocap2026pass'
+    await form.get('button[type="submit"]').trigger('click')
     await flush()
+    expect(adminHttp.post).toHaveBeenCalledWith('/admin/auth/login', { username: 'admin01', password: 'Ocap2026pass' })
     expect(localStorage.getItem('ocap_admin_token')).toBe('atok')
     expect(localStorage.getItem(ADMIN_NAME_KEY)).toBe('admin01')
     expect(localStorage.getItem('ocap_admin_theme')).toBe('terminal')

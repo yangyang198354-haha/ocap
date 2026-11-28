@@ -1,9 +1,11 @@
 <template>
   <AuthShell surface="admin" subtitle="管理后台登录">
     <div class="card auth-form-card">
-      <el-input v-model="username" placeholder="管理员账号" />
-      <el-input v-model="password" type="password" placeholder="密码" show-password style="margin-top: 10px" />
-      <el-button type="primary" style="width: 100%; margin-top: 14px" :loading="loading" @click="login">登录</el-button>
+      <form id="admin-password-login" method="post" @submit.prevent="login">
+        <el-input id="admin-login-username" v-model="username" name="username" autocomplete="username" placeholder="管理员账号" aria-label="管理员账号" />
+        <el-input id="admin-login-password" v-model="password" name="password" type="password" autocomplete="current-password" placeholder="密码" aria-label="密码" show-password style="margin-top: 10px" />
+        <el-button type="primary" native-type="submit" style="width: 100%; margin-top: 14px" :loading="loading">登录</el-button>
+      </form>
       <p class="muted">管理后台登录不支持"记住我"。</p>
     </div>
   </AuthShell>
@@ -25,10 +27,13 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 
-async function login() {
+async function login(event) {
+  const fields = event ? new FormData(event.currentTarget) : null
+  const account = fields?.get('username') ?? username.value
+  const secret = fields?.get('password') ?? password.value
   loading.value = true
   try {
-    const result = await admin.login(username.value, password.value)
+    const result = await admin.login(account, secret)
     setToken(result.token, true)
     saveAdminName(result.admin?.username)
     await useAdminThemeStore().reconcile()

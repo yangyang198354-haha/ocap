@@ -53,9 +53,10 @@ def _check_client(payload) -> str:
 
 
 def _session_kind(payload, *, default: str = "IDLE") -> str:
+    client = _check_client(payload)
     if bool(payload.get("remember_me")):
-        return "EXTENDED"
-    if _check_client(payload) == "miniapp" and SystemConfig.get("session.miniapp_extended"):
+        return "EXTENDED" if client == "miniapp" else "REMEMBER"
+    if client == "miniapp" and SystemConfig.get("session.miniapp_extended"):
         return "EXTENDED"
     return default
 

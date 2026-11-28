@@ -294,12 +294,10 @@ describe('个人中心 me/* 各页（原 Me.vue）', () => {
 describe('登录页、导航与内容详情', () => {
   it('TC-UNIT-535 / AC-163-01：密码登录输入框提示为"账号或手机号"，不含"邮箱"', async () => {
     const { wrapper } = await mountPage(Login)
-    const inputs = wrapper.findAll('input')
-    const idInput = inputs.find((i) => i.attributes('placeholder') === '账号或手机号')
-    expect(idInput).toBeTruthy()
-    const pane = wrapper.findAll('.el-tab-pane').find((p) => p.text() === '' && p.find('input[placeholder="账号或手机号"]').exists())
-    const passwordPaneText = (pane || wrapper.find('input[placeholder="账号或手机号"]').element.closest('.el-tab-pane')).outerHTML
-    expect(passwordPaneText).not.toContain('邮箱')
+    await wrapper.get('#tab-password').trigger('click')
+    const form = wrapper.get('#portal-password-login')
+    expect(form.get('input[name="identifier"]').attributes('placeholder')).toBe('账号或手机号')
+    expect(form.html()).not.toContain('邮箱')
   })
 
   it('TC-UNIT-577 / AC-154-04、AC-166-01：左侧导航（原：顶部导航）——非成员无"报销/备用金""收入表""待办"；委员三者可见；"个人中心"移入右上角菜单，不在导航内', async () => {

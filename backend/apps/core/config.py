@@ -36,6 +36,7 @@ DEFAULTS: dict[str, Any] = {
     "attachment.avatar_max_bytes": 2097152,
     "session.idle_seconds": 1800,
     "session.extended_seconds": 604800,
+    "session.remember_seconds": 15 * 24 * 3600,
     "session.admin_idle_seconds": 1800,
     "session.miniapp_extended": True,
     "claim.amount_max": "1000000.00",

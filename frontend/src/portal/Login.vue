@@ -3,27 +3,33 @@
     <div class="card auth-form-card">
       <el-tabs v-model="tab">
         <el-tab-pane label="验证码" name="code">
-          <el-input v-model="form.phone" placeholder="手机号" maxlength="11" />
-          <div class="row" style="margin-top: 10px">
-            <el-input v-model="form.code" placeholder="验证码" maxlength="6" style="flex: 1" />
-            <el-button :disabled="counting > 0" @click="sendCode">{{ counting ? `${counting}s` : '获取验证码' }}</el-button>
-          </div>
-          <el-checkbox v-model="form.remember" style="margin-top: 10px">记住我（7 天）</el-checkbox>
-          <el-button type="primary" style="width: 100%; margin-top: 12px" :loading="loading" @click="loginCode">登录</el-button>
+          <form v-if="tab === 'code'" id="portal-sms-login" method="post" @submit.prevent="loginCode">
+            <el-input id="portal-sms-phone" v-model="form.phone" name="phone" type="tel" autocomplete="tel" placeholder="手机号" aria-label="手机号" maxlength="11" />
+            <div class="row" style="margin-top: 10px">
+              <el-input id="portal-sms-code" v-model="form.code" name="sms_code" inputmode="numeric" autocomplete="one-time-code" placeholder="验证码" aria-label="短信验证码" maxlength="6" style="flex: 1" />
+              <el-button :disabled="counting > 0" @click="sendCode">{{ counting ? `${counting}s` : '获取验证码' }}</el-button>
+            </div>
+            <el-checkbox v-model="form.remember" style="margin-top: 10px">记住我（15 天）</el-checkbox>
+            <el-button type="primary" native-type="submit" style="width: 100%; margin-top: 12px" :loading="loading">登录</el-button>
+          </form>
         </el-tab-pane>
         <el-tab-pane label="密码" name="password">
-          <el-input v-model="form.identifier" placeholder="账号或手机号" />
-          <el-input v-model="form.password" type="password" placeholder="密码" style="margin-top: 10px" show-password />
-          <el-checkbox v-model="form.remember" style="margin-top: 10px">记住我（7 天）</el-checkbox>
-          <el-button type="primary" style="width: 100%; margin-top: 12px" :loading="loading" @click="loginPassword">登录</el-button>
+          <form v-if="tab === 'password'" id="portal-password-login" method="post" @submit.prevent="loginPassword">
+            <el-input id="portal-login-identifier" v-model="form.identifier" name="identifier" autocomplete="username" placeholder="账号或手机号" aria-label="账号或手机号" />
+            <el-input id="portal-login-password" v-model="form.password" name="password" type="password" autocomplete="current-password" placeholder="密码" aria-label="密码" style="margin-top: 10px" show-password />
+            <el-checkbox v-model="form.remember" style="margin-top: 10px">记住我（15 天）</el-checkbox>
+            <el-button type="primary" native-type="submit" style="width: 100%; margin-top: 12px" :loading="loading">登录</el-button>
+          </form>
         </el-tab-pane>
         <el-tab-pane label="邮箱" name="email">
-          <el-input v-model="form.email" placeholder="邮箱" />
-          <div class="row" style="margin-top: 10px">
-            <el-input v-model="form.emailCode" placeholder="验证码" maxlength="6" style="flex: 1" />
-            <el-button :disabled="counting > 0" @click="sendEmailCode">{{ counting ? `${counting}s` : '获取验证码' }}</el-button>
-          </div>
-          <el-button type="primary" style="width: 100%; margin-top: 12px" :loading="loading" @click="loginEmail">登录</el-button>
+          <form v-if="tab === 'email'" id="portal-email-login" method="post" @submit.prevent="loginEmail">
+            <el-input id="portal-login-email" v-model="form.email" name="email" inputmode="email" autocomplete="email" placeholder="邮箱" aria-label="邮箱" />
+            <div class="row" style="margin-top: 10px">
+              <el-input id="portal-email-code" v-model="form.emailCode" name="email_code" inputmode="numeric" autocomplete="one-time-code" placeholder="验证码" aria-label="邮箱验证码" maxlength="6" style="flex: 1" />
+              <el-button :disabled="counting > 0" @click="sendEmailCode">{{ counting ? `${counting}s` : '获取验证码' }}</el-button>
+            </div>
+            <el-button type="primary" native-type="submit" style="width: 100%; margin-top: 12px" :loading="loading">登录</el-button>
+          </form>
         </el-tab-pane>
       </el-tabs>
       <div class="row" style="justify-content: space-between; margin-top: 14px">
@@ -106,7 +112,13 @@ async function run(fn) {
 }
 
 const loginCode = () => run(() => authApi.loginByCode(form.phone, form.code, form.remember))
-const loginPassword = () => run(() => authApi.loginByPassword(form.identifier, form.password, form.remember))
+function loginPassword(event) {
+  // 密码管理器填入的值可能没有触发 Vue 的 input 事件。
+  const fields = event ? new FormData(event.currentTarget) : null
+  const identifier = fields?.get('identifier') ?? form.identifier
+  const password = fields?.get('password') ?? form.password
+  return run(() => authApi.loginByPassword(identifier, password, form.remember))
+}
 const loginEmail = () => run(() => authApi.loginByEmail(form.email, form.emailCode, form.remember))
 
 onMounted(async () => {

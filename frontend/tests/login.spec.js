@@ -32,6 +32,12 @@ describe('Web 手机号登录（US-006）', () => {
       throw new Error(`未预期的请求 ${url}`)
     })
     const { wrapper } = await mountPage(Login)
+    const smsForm = wrapper.get('#portal-sms-login')
+    expect(smsForm.text()).toContain('记住我（15 天）')
+    expect(smsForm.get('input[name="phone"]').attributes('autocomplete')).toBe('tel')
+    expect(smsForm.get('input[name="sms_code"]').attributes('autocomplete')).toBe('one-time-code')
+    expect(smsForm.get('input[name="sms_code"]').element.value).toBe('')
+    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
     wrapper.vm.form.phone = '13800000001'
     await wrapper.vm.sendCode()
     expect(http.post).toHaveBeenCalledWith('/auth/codes', {
@@ -51,9 +57,17 @@ describe('Web 手机号登录（US-006）', () => {
   it('TC-WEB-032 密码登录：POST /auth/login/password {identifier,password,remember_me}；成功保存令牌（AC-006-02）', async () => {
     http.post.mockResolvedValue({ token: 'PWD-TOKEN', user: { id: 3 }, is_new: false })
     const { wrapper } = await mountPage(Login)
-    wrapper.vm.form.identifier = '13800000002'
-    wrapper.vm.form.password = 'Ocap2026pass'
-    await wrapper.vm.loginPassword()
+    await wrapper.get('#tab-password').trigger('click')
+    expect(wrapper.find('#portal-sms-code').exists()).toBe(false)
+    const passwordForm = wrapper.get('#portal-password-login')
+    expect(passwordForm.text()).toContain('记住我（15 天）')
+    const identifier = passwordForm.get('input[autocomplete="username"]')
+    const password = passwordForm.get('input[autocomplete="current-password"]')
+    expect(passwordForm.get('button[type="submit"]').text()).toBe('登录')
+    // 模拟只更新原生控件、未触发 Vue 输入事件的浏览器填充。
+    identifier.element.value = '13800000002'
+    password.element.value = 'Ocap2026pass'
+    await passwordForm.trigger('submit')
     await flushPromises()
     expect(http.post).toHaveBeenCalledWith('/auth/login/password', {
       identifier: '13800000002', password: 'Ocap2026pass', remember_me: false

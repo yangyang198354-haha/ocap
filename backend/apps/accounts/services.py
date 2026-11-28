@@ -278,8 +278,9 @@ class AccountService:
                .filter(key_hash=_sha256(key)).first())
         if row is None:
             raise AuthenticationFailed("无效令牌")
-        if row.session_kind == "EXTENDED":
-            if now - row.created_at >= timedelta(seconds=int(SystemConfig.get("session.extended_seconds"))):
+        if row.session_kind in ("EXTENDED", "REMEMBER"):
+            config_key = "session.remember_seconds" if row.session_kind == "REMEMBER" else "session.extended_seconds"
+            if now - row.created_at >= timedelta(seconds=int(SystemConfig.get(config_key))):
                 row.delete()
                 raise AuthenticationFailed("登录已过期")
         else:

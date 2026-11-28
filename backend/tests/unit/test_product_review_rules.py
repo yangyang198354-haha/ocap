@@ -91,14 +91,16 @@ class SessionKindTests(TestCase):
                 _check_client({"client": bad})
 
     def test_tc_unit_511_session_kind_rules(self):
-        """TC-UNIT-511 / AC-155-01~03：miniapp 或 remember_me → EXTENDED；Web 缺省 IDLE；配置关闭 miniapp 延长时回到 IDLE。"""
+        """TC-UNIT-511 / AC-155-01~03：小程序默认 EXTENDED；Web 勾选记住我使用 REMEMBER，未勾选为 IDLE。"""
         self.assertEqual(_session_kind({"client": "miniapp"}), "EXTENDED")
-        self.assertEqual(_session_kind({"remember_me": True}), "EXTENDED")
+        self.assertEqual(_session_kind({"remember_me": True}), "REMEMBER")
+        self.assertEqual(_session_kind({"client": "web", "remember_me": True}), "REMEMBER")
         self.assertEqual(_session_kind({}), "IDLE")
         self.assertEqual(_session_kind({"client": "web"}), "IDLE")
         self.assertEqual(_session_kind({}, default="EXTENDED"), "EXTENDED")
         SystemConfig.set("session.miniapp_extended", False, None)
         self.assertEqual(_session_kind({"client": "miniapp"}), "IDLE")
+        self.assertEqual(_session_kind({"client": "miniapp", "remember_me": True}), "EXTENDED")
 
 
 class IdentityRulesTests(TestCase):

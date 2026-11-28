@@ -77,7 +77,7 @@ class WeChatIdentity(models.Model):
 
 class AuthToken(models.Model):
     PRINCIPALS = [("MEMBER", "用户"), ("ADMIN", "管理员")]
-    KINDS = [("IDLE", "闲置"), ("EXTENDED", "延长")]
+    KINDS = [("IDLE", "闲置"), ("EXTENDED", "延长"), ("REMEMBER", "记住我")]
 
     key_hash = models.CharField(max_length=64, unique=True)
     principal = models.CharField(max_length=8, choices=PRINCIPALS)

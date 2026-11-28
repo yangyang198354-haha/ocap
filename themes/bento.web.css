@@ -437,12 +437,14 @@ html[data-theme="bento"] .home-housing .card-icon { background: #e7f1fe; color: 
 /* The moving ribbon and its static top-left contrast layer sit behind the welcome text. */
 html[data-theme="bento"] .home-hero {
   isolation: isolate;
-  border: 0;
+  border: 1px solid rgba(255,255,255,.16);
   background: radial-gradient(ellipse at 70% 100%, #7abdef, transparent 45%),
     radial-gradient(ellipse at 83% 20%, #e98cba, transparent 38%),
     radial-gradient(ellipse at 20% 12%, #7882c6, transparent 55%),
     linear-gradient(126deg, #5d4791, #8952b2 54%, #a061b8);
   border-radius: var(--bento-showcase-radius);
+  box-sizing: border-box;
+  justify-content: center;
   padding: 26px;
   box-shadow: 0 20px 42px -27px rgba(82,50,181,.55);
 }
@@ -465,9 +467,14 @@ html[data-theme="bento"] .home-hero::after {
     radial-gradient(ellipse at 98% 100%, #ffcfdbbf, transparent 32%);
 }
 html[data-theme="bento"] .home-hero .label { color: #fff; font-size: 15px; }
-html[data-theme="bento"] .home-greeting { margin: 10px 0 4px; font-size: 36px; color: white; }
+html[data-theme="bento"] .home-greeting {
+  margin: 12px 0 14px;
+  font-size: clamp(30px, 2.5vw, 38px);
+  line-height: 1.16;
+  color: white;
+}
 html[data-theme="bento"] .home-greeting .grad-text { color: white; background: none; -webkit-text-fill-color: white; }
-html[data-theme="bento"] .home-meta { color: #fff; font-size: 16px; }
+html[data-theme="bento"] .home-meta { margin: 0; color: #fff; font-size: 16px; line-height: 1.5; }
 html[data-theme="bento"] .home-hero .home-meta .link,
 html[data-theme="bento"] .home-hero .home-meta .el-button { color: #fff; text-decoration: underline; }
 html[data-theme="bento"] .home-feed-item { border-radius: 0; margin: 0; padding: 12px 0; }
@@ -481,7 +488,8 @@ html[data-theme="bento"] .el-table th.el-table__cell { color: #5e4bb3; letter-sp
 @media (min-width: 768px) {
   html[data-theme="bento"] .layout-main .page.home { padding-top: clamp(24px, 2.8vw, 72px); }
   html[data-theme="bento"] .home-grid { gap: clamp(14px, .94vw, 24px); }
-  html[data-theme="bento"] .home-grid > .card { padding: 24px; }
+  /* min-height 按外框计算，避免 padding 把「我的房屋 / 待我处理」撑高，把欢迎卡连带拉成超大色块 */
+  html[data-theme="bento"] .home-grid > .card { padding: 24px; box-sizing: border-box; }
   html[data-theme="bento"] .home-housing, html[data-theme="bento"] .home-review,
   html[data-theme="bento"] .home-votes, html[data-theme="bento"] .home-todo { min-height: clamp(108px, 7.5vw, 192px); }
   html[data-theme="bento"] .home-accounts, html[data-theme="bento"] .home-management { min-height: clamp(280px, 17.6vw, 450px); }
@@ -514,6 +522,11 @@ html[data-theme="bento"] .page.home { container: bento-home / inline-size; }
 html[data-theme="bento"] .housing-identity .housing-summary {
   background-color: var(--surface);
   background-image: linear-gradient(112deg, var(--surface), color-mix(in srgb, var(--surface) 92%, var(--accent-2)));
+}
+html[data-theme="bento"] .housing-identity .housing-summary-badge {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 58%, #DB2777 100%);
+  color: #FFFFFF;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 10px 22px -12px rgba(79,70,229,.55);
 }
 html[data-theme="bento"] .housing-identity .summary-tag,
 html[data-theme="bento"] .housing-identity .housing-role {

@@ -16,6 +16,12 @@
 body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); }
 a { color: var(--accent-text); text-decoration: none; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Element Plus 的输入控件由外层 wrapper 绘制焦点环（.el-input__wrapper.is-focus / .el-select__wrapper.is-focused），
+   内层已自带焦点样式；这里取消内层原生 input/textarea 的 outline，避免下拉选择时出现“外框 + 内框”双层高亮。 */
+.el-input__inner:focus-visible,
+.el-select__input:focus-visible,
+.el-textarea__inner:focus,
+.el-textarea__inner:focus-visible { outline: none; }
 
 .page { max-width: 1180px; margin: 0 auto; padding: 16px; }
 .card {
@@ -306,7 +312,7 @@ html[data-theme="terminal"] .business-page .business-record:focus-within { box-s
 .home-hero { position: relative; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
 .home-hero-scan { display: none; }
 .home-hero-main { position: relative; z-index: 1; }
-.home-greeting { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 8px 0; }
+.home-greeting { font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; margin: 8px 0 12px; }
 .home-meta { margin: 2px 0; }
 .home-metrics { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; }
 .todo-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }

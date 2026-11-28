@@ -11,10 +11,15 @@
         </div>
         <template v-else>
           <section class="card business-panel business-summary business-enter housing-summary" aria-label="身份信息">
-            <dl class="housing-field summary-identity">
-              <dt>汇总身份：</dt><dd><el-tag class="summary-tag" size="large">{{ housing.summary.label }}</el-tag></dd>
-            </dl>
-            <dl class="housing-field real-names"><dt>真实姓名：</dt><dd>{{ (housing.real_names || []).join('、') || '—' }}</dd></dl>
+            <div class="housing-summary-main">
+              <span class="housing-summary-badge" aria-hidden="true"><UiIcon name="user" /></span>
+              <div class="housing-summary-copy">
+                <dl class="housing-field summary-identity">
+                  <dt>汇总身份：</dt><dd><el-tag class="summary-tag" size="large">{{ housing.summary.label }}</el-tag></dd>
+                </dl>
+                <dl class="housing-field real-names"><dt>真实姓名：</dt><dd>{{ (housing.real_names || []).join('、') || '—' }}</dd></dl>
+              </div>
+            </div>
             <el-button class="housing-certify" type="primary" @click="goPick">认证产权</el-button>
           </section>
 
@@ -74,6 +79,7 @@
 
 <script setup>
 import PageHead from '@/shared/PageHead.vue'
+import UiIcon from '../UiIcon.vue'
 import { onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
@@ -174,17 +180,35 @@ onMounted(async () => {
   background: var(--accent);
 }
 .review-tab-label { display: inline-flex; align-items: center; gap: 8px; }
+/* 身份概览：徽标 + 上下两行信息，右侧操作；避免旧版三等分把信息拉散 */
 .housing-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
-  gap: 14px 20px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
   margin-bottom: 22px;
 }
-.housing-field { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; }
-.housing-field dt { color: var(--muted); }
+.housing-summary-main { display: flex; align-items: center; gap: 16px; flex: 1 1 320px; min-width: 0; }
+.housing-summary-badge {
+  width: clamp(48px, 3.6vw, 58px); height: clamp(48px, 3.6vw, 58px); flex: none;
+  display: grid; place-items: center; border-radius: 50%;
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.housing-summary-badge .ui-icon { width: 46%; height: 46%; }
+.housing-summary-copy { display: grid; gap: 8px; min-width: 0; }
+.housing-field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0; }
+.housing-field dt { color: var(--muted); font-size: 13px; }
 .housing-field dd { min-width: 0; margin: 0; font-weight: 650; overflow-wrap: anywhere; }
-.housing-certify { min-height: var(--hit-min); }
+.summary-identity dt { font-size: 14px; }
+.summary-identity .summary-tag {
+  height: auto; padding: 5px 14px; border-radius: 999px;
+  font-size: 17px; font-weight: 700; line-height: 1.35; letter-spacing: .01em;
+}
+.real-names { font-size: 13px; }
+.housing-certify { flex: none; min-height: var(--hit-min); }
 .housing-section-title { margin-block: 0 12px; }
 .housing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .housing-property {
@@ -203,8 +227,9 @@ onMounted(async () => {
 .housing-property-details > .el-button { justify-self: start; }
 .housing-resident { gap: 4px 10px; margin-top: 6px; }
 @media (max-width: 767.98px) {
-  .housing-grid, .housing-summary { grid-template-columns: minmax(0, 1fr); }
-  .housing-certify { justify-self: start; }
+  .housing-grid { grid-template-columns: minmax(0, 1fr); }
+  .housing-summary-main { flex-basis: 100%; }
+  .housing-certify { margin-left: 0; }
   .housing-property { min-height: 0; gap: 14px; }
 }
 </style>
